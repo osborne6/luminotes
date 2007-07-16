@@ -1,0 +1,20 @@
+* html,* html body {
+  background: #fafafa url(/static/images/1x1.png) fixed;
+}
+
+#toolbar {
+  position: absolute;
+  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 20 : document.body.scrollTop + 20 );
+  margin-left: -7em;
+}
+
+#status_area {
+  position: absolute;
+  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop : document.body.scrollTop );
+}
+
+#content {
+  position: absolute;
+  left: 0em;
+  top: 0em;
+}

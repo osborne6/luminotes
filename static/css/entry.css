@@ -1,0 +1,36 @@
+body {
+  padding: 0.75em;
+}
+
+h3 {
+  margin-bottom: 0.5em;
+}
+
+.button {
+  border-style: outset;
+  border-width: 0px;
+  background-color: #d0e0f0;
+  outline: none;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.button:hover {
+  background-color: #ffcc66;
+}
+
+.text_field {
+  margin-top: 0.25em;
+  padding: 0.25em;
+  border: #999999 1px solid;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+ul li {
+  margin-top: 0.5em;
+}
+
+ol li {
+  margin-top: 0.5em;
+}

@@ -1,0 +1,60 @@
+body {
+  padding: 1em;
+  background-color: #fafafa;
+  text-align: center;
+}
+
+#center_area {
+  margin: 0 auto;
+  text-align: center;
+  width: 50em;
+}
+
+.entry_frame {
+  text-align: left;
+  margin: 0em;
+  padding: 1.25em;
+  border: 1px solid #999999;
+  margin-bottom: 0.75em;
+  background-color: #ffffff;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+h1 {
+  margin-top: 0em;
+}
+
+h3 {
+  margin-top: 0em;
+  margin-bottom: 0.5em;
+}
+
+.button {
+  border-style: outset;
+  border-width: 0px;
+  background-color: #d0e0f0;
+  outline: none;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.button:hover {
+  background-color: #ffcc66;
+}
+
+.text_field {
+  margin-top: 0.25em;
+  padding: 0.25em;
+  border: #999999 1px solid;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+ul li {
+  margin-top: 0.5em;
+}
+
+ol li {
+  margin-top: 0.5em;
+}

@@ -1,0 +1,26 @@
+To use the Limited Medium wiki, please see the included README file instead of
+this INSTALL file. This file contains details about installing the Limited
+Medium server, which you shouldn't need if you only want to make a wiki.
+
+First, install the prerequisites:
+
+ * Python 2.5
+ * CherryPy 2.2
+ * simplejson 1.3
+
+If you're interested in running unit tests, also install:
+
+  * nose 0.9.0
+
+Run the server in development mode:
+
+  python2.5 limitedmedium.py -d
+
+Connect to the following URL in a web browser running on the same machine:
+
+  http://localhost:8080/
+
+You can run unit tests by running:
+
+  nosetests
+
