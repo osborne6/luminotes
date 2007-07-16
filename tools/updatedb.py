@@ -63,6 +63,7 @@ class Initializer( object ):
     for entry in startup_entries:
       main_notebook.add_startup_entry( entry )
 
+    main_notebook.name = u"Luminotes"
     self.database.save( main_notebook )
 
 
