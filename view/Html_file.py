@@ -36,5 +36,5 @@ class Html_file( Html ):
           id = u"center_area",
         ),
       ),
-      A( "Limited Medium", href = "http://url.to.limited.medium.goes.here" ),
+      A( "Luminotes", href = "http://luminotes.com/" ),
     )

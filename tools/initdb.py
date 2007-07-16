@@ -48,7 +48,7 @@ class Initializer( object ):
     # create the main notebook and all of its entries
     self.database.next_id( self.scheduler.thread )
     main_notebook_id = ( yield Scheduler.SLEEP )
-    self.main_notebook = Notebook( main_notebook_id, u"Limited Medium" )
+    self.main_notebook = Notebook( main_notebook_id, u"Luminotes" )
 
     for ( filename, startup ) in self.ENTRY_FILES:
       full_filename = os.path.join( self.HTML_PATH, filename )

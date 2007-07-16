@@ -1,6 +1,6 @@
-To use the Limited Medium wiki, please see the included README file instead of
-this INSTALL file. This file contains details about installing the Limited
-Medium server, which you shouldn't need if you only want to make a wiki.
+To use Luminotes, please see the included README file instead of this INSTALL
+file. This file contains details about installing the Luminotes server, which
+you shouldn't need if you only want to make a wiki.
 
 First, install the prerequisites:
 
@@ -14,7 +14,7 @@ If you're interested in running unit tests, also install:
 
 Run the server in development mode:
 
-  python2.5 limitedmedium.py -d
+  python2.5 luminotes.py -d
 
 Connect to the following URL in a web browser running on the same machine:
 

@@ -1,58 +1,13 @@
-Limited Medium
+Luminotes is a personal wiki notebook for organizing your notes and ideas. For
+more information, see:
 
-http://somewhere
+  http://luminotes.com/
 
-Limited Medium is a lightweight personal wiki notebook for organizing your
-notes and ideas. It's designed for:
-
- * Writers. Keep track of your characters, plots, and scenes.
- * Students. Take notes and make links between related concepts.
- * Game designers. Build up your world one detail at a time.
- * Creative types. If you've outgrown a Word doc or text file full of
-   disorganized notes, Limited Medium can help.
-
-Here's how Limited Medium differs from other personal wikis:
-
- * What you see is what you mean. You can forget about markup or markdown.
- * Integrated viewing and editing. Update any wiki entry without switching
-   back and forth.
- * View multiple wiki entries at once. Perfect for notes and brainstorming.
- * Access your wiki from anywhere. All your work is automatically saved to the
-   server.
- * Use any sort of link titles you want. Wiki links aren't expected to
-   LookLikeThis.
-
-Limited Medium also has the following features:
-
- * Built-in searching. A single search looks through every word in the entire
-   wiki.
-
-Limited Medium makes use of some advanced browser features, so not all
-browsers will work for editing your wiki. Supported browsers include:
-
- * Internet Explorer 6+
- * Firefox 1.5+
- * SeaMonkey 1.0+
- * Iceweasel 1.5+
- * Iceape 1.0+
-
-The following web browsers are known not to work with Limited Medium:
-
- * Safari
- * Opera
- * Konqueror
- * Lynx
-
-If you're looking for a personal wiki with more minimal browser requirements,
-you might want to try TiddlyWiki. If you're looking for a more general-purpose
-wiki for multiple users, check out MoinMoin.
-
-If you'd like to actually install the Limited Medium server, see the INSTALL
-file.
+If you'd like to actually install the Luminotes server, see the INSTALL file.
 
 Enjoy!
 
-Limited Medium Copyright (C) 2007 Dan Helfman
+Luminotes Copyright (C) 2007 Dan Helfman
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

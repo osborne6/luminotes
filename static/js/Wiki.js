@@ -54,7 +54,7 @@ Wiki.prototype.display_user = function ( result ) {
     var notebook = result.notebooks[ i ];
     if ( notebook.object_id != this.notebook_id ) {
       appendChildNodes( span, createDOM( "a", {
-        "href": ( notebook.name == "Limited Medium" ) ? "/" : "/notebooks/" + notebook.object_id,
+        "href": ( notebook.name == "Luminotes" ) ? "/" : "/notebooks/" + notebook.object_id,
         "id": "notebook_" + notebook.object_id
       }, notebook.name ) );
       appendChildNodes( span, createDOM( "br" ) );
@@ -93,7 +93,7 @@ Wiki.prototype.populate = function ( result ) {
   this.notebook = result.notebook;
   var self = this;
 
-  if ( this.notebook.name != "Limited Medium" )
+  if ( this.notebook.name != "Luminotes" )
     replaceChildNodes( "notebook_name", createDOM( "h3", this.notebook.name ) );
   
   if ( this.notebook.read_write ) {

@@ -8,7 +8,7 @@ settings = {
     "base_url_filter.on": True,
     "base_url_filter.use_x_forwarded_host": True,
     "server.log_to_screen": False,
-    "server.log_file": "limitedmedium.log",
-    "server.log_access_file": "limitedmedium.log",
+    "server.log_file": "luminotes.log",
+    "server.log_access_file": "luminotes.log",
   },
 }

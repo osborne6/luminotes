@@ -35,7 +35,7 @@ class Main_page( Page ):
               id = u"search_and_user_area",
             ),
             Div(
-              H2( A( u"Limited Medium", href = "/" ), class_ = "page_title" ),
+              H2( A( u"Luminotes", href = "/" ), class_ = "page_title" ),
               H4( A( u"personal wiki notebook", href = "/" ), class_ = u"page_title" ),
               id = u"title_area",
             ),
