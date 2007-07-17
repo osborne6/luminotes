@@ -2,7 +2,7 @@ import re
 import cherrypy
 from model.User import User
 from model.Notebook import Notebook
-from model.Entry import Entry
+from model.Note import Note
 from Scheduler import Scheduler
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error
@@ -134,12 +134,12 @@ class Users( object ):
     notebook_id = ( yield Scheduler.SLEEP )
     notebook = Notebook( notebook_id, u"my notebook" )
 
-    # create a startup entry for this user's notebook
+    # create a startup note for this user's notebook
     self.__database.next_id( self.__scheduler.thread )
-    entry_id = ( yield Scheduler.SLEEP )
-    entry = Entry( entry_id, file( u"static/html/welcome to your wiki.html" ).read() )
-    notebook.add_entry( entry )
-    notebook.add_startup_entry( entry )
+    note_id = ( yield Scheduler.SLEEP )
+    note = Note( note_id, file( u"static/html/welcome to your wiki.html" ).read() )
+    notebook.add_note( note )
+    notebook.add_startup_note( note )
 
     # actually create the new user
     self.__database.next_id( self.__scheduler.thread )

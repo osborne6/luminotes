@@ -1,23 +1,32 @@
 from copy import copy
-from Entry import Entry
+from Note import Note
 from Persistent import Persistent
 
 
 class Notebook( Persistent ):
+  def __setstate__(self, state):
+    if "_Notebook__entries" in state:
+      state[ "_Notebook__notes" ] = state[ "_Notebook__entries" ]
+      del( state[ "_Notebook__entries" ] )
+    if "_Notebook__startup_entries" in state:
+      state[ "_Notebook__startup_notes" ] = state[ "_Notebook__startup_entries" ]
+      del( state[ "_Notebook__startup_entries" ] )
+    self.__dict__.update(state)
+
   """
-  A collection of wiki entries.
+  A collection of wiki notes.
   """
 
-  class UnknownEntryError( ValueError ):
+  class UnknownNoteError( ValueError ):
     """
-    Indicates that an accessed entry is not in this notebook.
+    Indicates that an accessed note is not in this notebook.
     """
-    def __init__( self, entry_id ):
-      ValueError.__init__( self, entry_id )
+    def __init__( self, note_id ):
+      ValueError.__init__( self, note_id )
 
   def __init__( self, id, name ):
     """
-    Create a new entry with the given id and name.
+    Create a new note with the given id and name.
 
     @type id: unicode
     @param id: id of the notebook
@@ -28,117 +37,117 @@ class Notebook( Persistent ):
     """
     Persistent.__init__( self, id )
     self.__name = name
-    self.__entries = {}         # map of entry id to entry
-    self.__titles = {}          # map of entry title to entry
-    self.__startup_entries = [] # list of entries shown on startup
+    self.__notes = {}         # map of note id to note
+    self.__titles = {}          # map of note title to note
+    self.__startup_notes = [] # list of notes shown on startup
 
-  def add_entry( self, entry ):
+  def add_note( self, note ):
     """
-    Add an entry to this notebook.
+    Add an note to this notebook.
 
-    @type entry: Entry
-    @param entry: entry to add
+    @type note: Note
+    @param note: note to add
     """
     self.update_revision()
-    self.__entries[ entry.object_id ] = entry
-    self.__titles[ entry.title ] = entry
+    self.__notes[ note.object_id ] = note
+    self.__titles[ note.title ] = note
 
-  def remove_entry( self, entry ):
+  def remove_note( self, note ):
     """
-    Remove an entry from this notebook.
+    Remove an note from this notebook.
 
-    @type entry: Entry
-    @param entry: entry to remove
+    @type note: Note
+    @param note: note to remove
     @rtype: bool
-    @return: True if the entry was removed, False if the entry wasn't in this notebook
+    @return: True if the note was removed, False if the note wasn't in this notebook
     """
-    if self.__entries.pop( entry.object_id, None ):
+    if self.__notes.pop( note.object_id, None ):
       self.update_revision()
-      self.__titles.pop( entry.title, None )
-      if entry in self.__startup_entries:
-        self.__startup_entries.remove( entry )
+      self.__titles.pop( note.title, None )
+      if note in self.__startup_notes:
+        self.__startup_notes.remove( note )
       return True
 
     return False
       
-  def lookup_entry( self, entry_id ):
+  def lookup_note( self, note_id ):
     """
-    Return the entry in this notebook with the given id.
+    Return the note in this notebook with the given id.
 
-    @type entry_id: unicode
-    @param entry_id: id of the entry to return
-    @rtype: Entry or NoneType
-    @return: entry corresponding to the entry id or None
+    @type note_id: unicode
+    @param note_id: id of the note to return
+    @rtype: Note or NoneType
+    @return: note corresponding to the note id or None
     """
-    return self.__entries.get( entry_id )
+    return self.__notes.get( note_id )
 
-  def lookup_entry_by_title( self, title ):
+  def lookup_note_by_title( self, title ):
     """
-    Return the entry in this notebook with the given title.
+    Return the note in this notebook with the given title.
 
     @type title: unicode
-    @param title: title of the entry to return
-    @rtype: Entry or NoneType
-    @return: entry corresponding to the title or None
+    @param title: title of the note to return
+    @rtype: Note or NoneType
+    @return: note corresponding to the title or None
     """
     return self.__titles.get( title )
 
-  def update_entry( self, entry, contents ):
+  def update_note( self, note, contents ):
     """
-    Update the given entry with new contents. Bail if the entry's contents are unchanged.
+    Update the given note with new contents. Bail if the note's contents are unchanged.
 
-    @type entry: Entry
-    @param entry: entry to update
+    @type note: Note
+    @param note: note to update
     @type contents: unicode
-    @param contents: new textual contents for the entry
-    @raises UnknownEntryError: entry to update is not in this notebook
+    @param contents: new textual contents for the note
+    @raises UnknownNoteError: note to update is not in this notebook
     """
-    old_entry = self.__entries.get( entry.object_id )
-    if old_entry is None:
-      raise Notebook.UnknownEntryError( entry.object_id )
+    old_note = self.__notes.get( note.object_id )
+    if old_note is None:
+      raise Notebook.UnknownNoteError( note.object_id )
 
-    if contents == old_entry.contents:
+    if contents == old_note.contents:
       return
 
     self.update_revision()
-    self.__titles.pop( entry.title, None )
+    self.__titles.pop( note.title, None )
 
-    entry.contents = contents
+    note.contents = contents
 
-    self.__titles[ entry.title ] = entry
+    self.__titles[ note.title ] = note
 
-  def add_startup_entry( self, entry ):
+  def add_startup_note( self, note ):
     """
-    Add the given entry to be shown on startup. It must already be an entry in this notebook.
+    Add the given note to be shown on startup. It must already be an note in this notebook.
 
-    @type entry: unicode
-    @param entry: entry to be added for startup
+    @type note: unicode
+    @param note: note to be added for startup
     @rtype: bool
-    @return: True if the entry was added for startup
-    @raises UnknownEntryError: given entry is not in this notebook
+    @return: True if the note was added for startup
+    @raises UnknownNoteError: given note is not in this notebook
     """
-    if self.__entries.get( entry.object_id ) is None:
-      raise Notebook.UnknownEntryError( entry.object_id )
+    if self.__notes.get( note.object_id ) is None:
+      raise Notebook.UnknownNoteError( note.object_id )
     
-    if not entry in self.__startup_entries:
+    if not note in self.__startup_notes:
       self.update_revision()
-      self.__startup_entries.append( entry )
+      self.__startup_notes.append( note )
       return True
 
     return False
 
-  def remove_startup_entry( self, entry ):
+  def remove_startup_note( self, note ):
     """
-    Remove the given entry from being shown on startup.
+    Remove the given note from being shown on startup.
 
-    @type entry: unicode
-    @param entry: entry to be removed from startup
+    @type note: unicode
+    @param note: note to be removed from startup
     @rtype: bool
-    @return: True if the entry was removed from startup
+    @return: True if the note was removed from startup
     """
-    if entry in self.__startup_entries:
+    if note in self.__startup_notes:
       self.update_revision()
-      self.__startup_entries.remove( entry )
+      self.__startup_notes.remove( note )
       return True
 
     return False
@@ -147,7 +156,7 @@ class Notebook( Persistent ):
     d = Persistent.to_dict( self )
     d.update( dict(
       name = self.__name,
-      startup_entries = copy( self.startup_entries ),
+      startup_notes = copy( self.startup_notes ),
       read_write = True,
     ) )
 
@@ -158,5 +167,5 @@ class Notebook( Persistent ):
     self.update_revision()
 
   name = property( lambda self: self.__name, __set_name )
-  startup_entries = property( lambda self: copy( self.__startup_entries ) )
-  entries = property( lambda self: self.__entries.values() )
+  startup_notes = property( lambda self: copy( self.__startup_notes ) )
+  notes = property( lambda self: self.__notes.values() )

@@ -4,15 +4,15 @@ from Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
 
 
 class Html_file( Html ):
-  ENTRY_LINK_PATTERN = re.compile( u'<a\s+href="\/entries\/([a-z0-9]*)"\s*>', re.IGNORECASE )
+  ENTRY_LINK_PATTERN = re.compile( u'<a\s+href="\/notes\/([a-z0-9]*)"\s*>', re.IGNORECASE )
 
-  def __init__( self, notebook_name, entries ):
-    relinked_entries = {} # map from entry id to relinked entry contents
+  def __init__( self, notebook_name, notes ):
+    relinked_notes = {} # map from note id to relinked note contents
 
-    # relink all entry links so they point to named anchors within the page
-    for entry in entries:
-      contents = self.ENTRY_LINK_PATTERN.sub( r'<a href="#entry_\1">', entry.contents )
-      relinked_entries[ entry.object_id ] = contents
+    # relink all note links so they point to named anchors within the page
+    for note in notes:
+      contents = self.ENTRY_LINK_PATTERN.sub( r'<a href="#note_\1">', note.contents )
+      relinked_notes[ note.object_id ] = contents
 
     cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=wiki.html"
 
@@ -27,12 +27,12 @@ class Html_file( Html ):
         Div(
           H1( notebook_name ),
           [ Span(
-            A( name = u"entry_%s" % entry.object_id ),
+            A( name = u"note_%s" % note.object_id ),
             Div(
-              relinked_entries[ entry.object_id ],
-              class_ = u"entry_frame",
+              relinked_notes[ note.object_id ],
+              class_ = u"note_frame",
             ),
-          ) for entry in entries ],
+          ) for note in notes ],
           id = u"center_area",
         ),
       ),

@@ -133,19 +133,19 @@ a:hover {
   font-size: 0.75em;
 }
 
-#entries {
+#notes {
   text-align: left;
   margin-top: 1em;
   margin-bottom: 1em;
 }
 
-.entry_controls {
+.note_controls {
   float: right;
   margin-right: 1.5em;
   font-size: 0.75em;
 }
 
-.entry_button {
+.note_button {
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
@@ -155,11 +155,11 @@ a:hover {
   -webkit-border-radius: 0.25em;
 }
 
-.entry_button:hover {
+.note_button:hover {
   background-color: #ffcc66;
 }
 
-.entry_frame {
+.note_frame {
   margin: 0em;
   padding: 0em;
   overflow: hidden;
@@ -172,7 +172,7 @@ a:hover {
   -webkit-border-radius: 0.5em;
 }
 
-.focused_entry_frame {
+.focused_note_frame {
   border: 2px solid black;
 }
 

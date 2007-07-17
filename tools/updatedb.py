@@ -4,13 +4,13 @@ import os
 import os.path
 from controller.Database import Database
 from controller.Scheduler import Scheduler
-from model.Entry import Entry
+from model.Note import Note
 
 
 class Initializer( object ):
   HTML_PATH = u"static/html"
-  ENTRY_FILES = [ # the second element of the tuple is whether to show the entry on startup
-    #( u"navigation.html", True ), # skip for now, since the navigtaion entry doesn't have a title
+  ENTRY_FILES = [ # the second element of the tuple is whether to show the note on startup
+    #( u"navigation.html", True ), # skip for now, since the navigtaion note doesn't have a title
     ( u"about.html", True ),
     ( u"features.html", True ),
     ( u"take a tour.html", False ),
@@ -37,31 +37,31 @@ class Initializer( object ):
     self.database.load( u"anonymous", self.scheduler.thread )
     anonymous = ( yield Scheduler.SLEEP )
     main_notebook = anonymous.notebooks[ 0 ]._Read_only_notebook__wrapped
-    startup_entries = []
+    startup_notes = []
 
-    # update all of the entries in the main notebook
+    # update all of the notes in the main notebook
     for ( filename, startup ) in self.ENTRY_FILES:
       full_filename = os.path.join( self.HTML_PATH, filename )
       contents = file( full_filename ).read()
 
       title = filename.replace( u".html", u"" )
-      entry = main_notebook.lookup_entry_by_title( title )
+      note = main_notebook.lookup_note_by_title( title )
 
-      if entry:
-        main_notebook.update_entry( entry, contents )
-      # if for some reason the entry isn't present, create it
+      if note:
+        main_notebook.update_note( note, contents )
+      # if for some reason the note isn't present, create it
       else:
         self.database.next_id( self.scheduler.thread )
-        entry_id = ( yield Scheduler.SLEEP )
-        entry = Entry( entry_id, contents )
-        main_notebook.add_entry( entry )
+        note_id = ( yield Scheduler.SLEEP )
+        note = Note( note_id, contents )
+        main_notebook.add_note( note )
 
-      main_notebook.remove_startup_entry( entry )
+      main_notebook.remove_startup_note( note )
       if startup:
-        startup_entries.append( entry )
+        startup_notes.append( note )
 
-    for entry in startup_entries:
-      main_notebook.add_startup_entry( entry )
+    for note in startup_notes:
+      main_notebook.add_startup_note( note )
 
     main_notebook.name = u"Luminotes"
     self.database.save( main_notebook )

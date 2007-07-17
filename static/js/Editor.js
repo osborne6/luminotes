@@ -1,23 +1,23 @@
-entry_titles = {} // map from entry title to the open editor for that entry
+note_titles = {} // map from note title to the open editor for that note
 
-function Editor( id, entry_text, insert_after_iframe_id, read_write, startup, highlight, focus ) {
-  this.initial_text = entry_text;
+function Editor( id, note_text, insert_after_iframe_id, read_write, startup, highlight, focus ) {
+  this.initial_text = note_text;
   this.id = id;
   this.read_write = read_write;
-  this.startup = startup || false; // whether this Editor is for a startup entry
+  this.startup = startup || false; // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
   this.init_focus = focus || false;
-  var iframe_id = "entry_" + id;
+  var iframe_id = "note_" + id;
 
   var self = this;
   this.document = null;
   this.iframe = createDOM( "iframe", {
-    "src": "/notebooks/blank_entry/" + id,
+    "src": "/notebooks/blank_note/" + id,
     "frameBorder": "0",
     "scrolling": "no",
     "id": iframe_id,
     "name": iframe_id,
-    "class": "entry_frame"
+    "class": "note_frame"
   } );
   this.iframe.editor = this;
   this.title = null;
@@ -25,19 +25,19 @@ function Editor( id, entry_text, insert_after_iframe_id, read_write, startup, hi
   if ( read_write ) {
     this.delete_button = createDOM( "input", {
       "type": "button",
-      "class": "entry_button",
+      "class": "note_button",
       "id": "delete_" + iframe_id,
       "value": "delete",
-      "title": "delete entry [ctrl-d]"
+      "title": "delete note [ctrl-d]"
     } );
     connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
 
     this.options_button = createDOM( "input", {
       "type": "button",
-      "class": "entry_button",
+      "class": "note_button",
       "id": "options_" + iframe_id,
       "value": "options",
-      "title": "entry options"
+      "title": "note options"
     } );
     connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
   }
@@ -45,15 +45,15 @@ function Editor( id, entry_text, insert_after_iframe_id, read_write, startup, hi
   if ( read_write || !startup ) {
     this.hide_button = createDOM( "input", {
       "type": "button",
-      "class": "entry_button",
+      "class": "note_button",
       "id": "hide_" + iframe_id,
       "value": "hide",
-      "title": "hide entry [ctrl-h]"
+      "title": "hide note [ctrl-h]"
     } );
     connect( this.hide_button, "onclick", function ( event ) { signal( self, "hide_clicked", event ); } );
   }
 
-  this.entry_controls = createDOM( "span", { "class": "entry_controls" },
+  this.note_controls = createDOM( "span", { "class": "note_controls" },
     this.delete_button ? this.delete_button : null,
     this.delete_button ? " " : null,
     this.options_button ? this.options_button : null,
@@ -64,18 +64,18 @@ function Editor( id, entry_text, insert_after_iframe_id, read_write, startup, hi
   // if an iframe has been given to insert this new editor after, then insert the new editor's
   // iframe. otherwise just append the iframe for the new editor
   if ( insert_after_iframe_id ) {
-    insertSiblingNodesAfter( insert_after_iframe_id, this.entry_controls );
-    insertSiblingNodesAfter( this.entry_controls, this.iframe );
+    insertSiblingNodesAfter( insert_after_iframe_id, this.note_controls );
+    insertSiblingNodesAfter( this.note_controls, this.iframe );
   } else {
-    appendChildNodes( "entries", this.entry_controls );
-    appendChildNodes( "entries", this.iframe );
+    appendChildNodes( "notes", this.note_controls );
+    appendChildNodes( "notes", this.iframe );
   }
 }
 
 // second stage of construction, invoked by the iframe's body onload handler. do not call directly.
 // four-stage construction is only necessary because IE is such a piece of shit
 function editor_loaded( id ) {
-  var iframe = getElement( "entry_" + id );
+  var iframe = getElement( "note_" + id );
   setTimeout( function () { iframe.editor.init_document(); }, 1 );
 }
 
@@ -121,7 +121,7 @@ Editor.prototype.finish_init = function () {
   connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
 
-  // special-case: connect any submit buttons within the contents of this entry
+  // special-case: connect any submit buttons within the contents of this note
   var signup_button = withDocument( this.document, function () { return getElement( "signup_button" ); } );
   if ( signup_button ) {
     var signup_form = withDocument( this.document, function () { return getElement( "signup_form" ); } );
@@ -256,24 +256,24 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
   var id;
   var link_title = scrapeText( link );
-  var editor = entry_titles[ link_title ];
+  var editor = note_titles[ link_title ];
   var href_leaf = link.href.split( "/" ).pop();
-  // if the link's title corresponds to an open entry id, set that as the link's destination
+  // if the link's title corresponds to an open note id, set that as the link's destination
   if ( editor ) {
     id = editor.id;
-    link.href = "/entries/" + id;
-  // if this is a new link, get a new entry id and set it for the link's destination
+    link.href = "/notes/" + id;
+  // if this is a new link, get a new note id and set it for the link's destination
   } else if ( href_leaf == "new" ) {
     signal( this, "load_editor_by_title", link_title, this.iframe.id );
     return;
   // otherwise, use the id from link's current destination
   } else {
-    // the last part of the current link's href is the entry id
+    // the last part of the current link's href is the note id
     id = href_leaf;
   }
 
-  // find the entry corresponding to the linked id, or create a new entry
-  var iframe = getElement( "entry_" + id );
+  // find the note corresponding to the linked id, or create a new note
+  var iframe = getElement( "note_" + id );
   if ( iframe ) {
     iframe.editor.highlight();
     return;
@@ -283,18 +283,18 @@ Editor.prototype.mouse_clicked = function ( event ) {
 }
 
 Editor.prototype.scrape_title = function () {
-  // scrape the entry title out of the editor
+  // scrape the note title out of the editor
   var heading = getFirstElementByTagAndClassName( "h3", null, this.document );
   if ( !heading ) return;
   var title = scrapeText( heading );
 
-  // delete the previous title (if any) from the entry_titles map
+  // delete the previous title (if any) from the note_titles map
   if ( this.title )
-    delete entry_titles[ this.title ];
+    delete note_titles[ this.title ];
 
-  // record the new title in entry_titles
+  // record the new title in note_titles
   this.title = title;
-  entry_titles[ this.title ] = this;
+  note_titles[ this.title ] = this;
 }
 
 Editor.prototype.focused = function () {
@@ -325,13 +325,13 @@ Editor.prototype.start_link = function () {
       var container = range.startContainer;
       range.setStart( container, range.startOffset - 1 );
 
-      this.exec_command( "createLink", "/entries/new" );
+      this.exec_command( "createLink", "/notes/new" );
 
       container.nodeValue = "";
       selection.collapse( container, 0 );
     // otherwise, just create a link with the selected text as the link title
     } else {
-      this.exec_command( "createLink", "/entries/new" );
+      this.exec_command( "createLink", "/notes/new" );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -344,7 +344,7 @@ Editor.prototype.start_link = function () {
       range.select();
     }
 
-    this.exec_command( "createLink", "/entries/new" );
+    this.exec_command( "createLink", "/notes/new" );
   }
 }
 
@@ -422,10 +422,10 @@ Editor.prototype.contents = function () {
 
 Editor.prototype.shutdown = function( event ) {
   if ( this.title )
-    delete entry_titles[ this.title ];
+    delete note_titles[ this.title ];
 
   var iframe = this.iframe;
-  var entry_controls = this.entry_controls;
+  var note_controls = this.note_controls;
   disconnectAll( this );
   disconnectAll( this.delete_button );
   disconnectAll( this.options_button );
@@ -435,7 +435,7 @@ Editor.prototype.shutdown = function( event ) {
   disconnectAll( this.document );
   blindUp( iframe, options = { "duration": 0.5, afterFinish: function () {
     try {
-      removeElement( entry_controls );
+      removeElement( note_controls );
       removeElement( iframe );
     } catch ( e ) { }
   } } );

@@ -6,13 +6,13 @@ from controller.Database import Database
 from controller.Scheduler import Scheduler
 from model.Notebook import Notebook
 from model.Read_only_notebook import Read_only_notebook
-from model.Entry import Entry
+from model.Note import Note
 from model.User import User
 
 
 class Initializer( object ):
   HTML_PATH = u"static/html"
-  ENTRY_FILES = [ # the second element of the tuple is whether to show the entry on startup
+  ENTRY_FILES = [ # the second element of the tuple is whether to show the note on startup
     ( u"navigation.html", True ),
     ( u"about.html", True ),
     ( u"features.html", True ),
@@ -45,7 +45,7 @@ class Initializer( object ):
       self.scheduler.wait_for( thread )
 
   def create_main_notebook( self ):
-    # create the main notebook and all of its entries
+    # create the main notebook and all of its notes
     self.database.next_id( self.scheduler.thread )
     main_notebook_id = ( yield Scheduler.SLEEP )
     self.main_notebook = Notebook( main_notebook_id, u"Luminotes" )
@@ -55,13 +55,13 @@ class Initializer( object ):
       contents = file( full_filename ).read()
 
       self.database.next_id( self.scheduler.thread )
-      entry_id = ( yield Scheduler.SLEEP )
+      note_id = ( yield Scheduler.SLEEP )
 
-      entry = Entry( entry_id, contents )
-      self.main_notebook.add_entry( entry )
+      note = Note( note_id, contents )
+      self.main_notebook.add_note( note )
 
       if startup:
-        self.main_notebook.add_startup_entry( entry )
+        self.main_notebook.add_startup_note( note )
 
     self.database.save( self.main_notebook )
 
@@ -80,16 +80,16 @@ class Initializer( object ):
     self.database.save( self.anonymous )
 
   def create_user_notebook( self ):
-    # create the user notebook along with a startup entry
+    # create the user notebook along with a startup note
     self.database.next_id( self.scheduler.thread )
     user_notebook_id = ( yield Scheduler.SLEEP )
     self.user_notebook = Notebook( user_notebook_id, u"my notebook" )
 
     self.database.next_id( self.scheduler.thread )
-    entry_id = ( yield Scheduler.SLEEP )
-    entry = Entry( entry_id, u"<h3>" )
-    self.user_notebook.add_entry( entry )
-    self.user_notebook.add_startup_entry( entry )
+    note_id = ( yield Scheduler.SLEEP )
+    note = Note( note_id, u"<h3>" )
+    self.user_notebook.add_note( note )
+    self.user_notebook.add_startup_note( note )
 
     self.database.save( self.user_notebook )
 

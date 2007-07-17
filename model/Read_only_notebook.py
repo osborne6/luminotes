@@ -9,11 +9,11 @@ class Read_only_notebook( Persistent ):
     Persistent.__init__( self, id )
     self.__wrapped = notebook
 
-  def lookup_entry( self, entry_id ):
-    return self.__wrapped.lookup_entry( entry_id )
+  def lookup_note( self, note_id ):
+    return self.__wrapped.lookup_note( note_id )
 
-  def lookup_entry_by_title( self, title ):
-    return self.__wrapped.lookup_entry_by_title( title )
+  def lookup_note_by_title( self, title ):
+    return self.__wrapped.lookup_note_by_title( title )
 
   def to_dict( self ):
     d = self.__wrapped.to_dict()
@@ -25,5 +25,5 @@ class Read_only_notebook( Persistent ):
     return d
 
   name = property( lambda self: self.__wrapped.name )
-  entries = property( lambda self: self.__wrapped.entries )
-  startup_entries = property( lambda self: self.__wrapped.startup_entries )
+  notes = property( lambda self: self.__wrapped.notes )
+  startup_notes = property( lambda self: self.__wrapped.startup_notes )

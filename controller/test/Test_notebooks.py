@@ -3,7 +3,7 @@ import cgi
 from Test_controller import Test_controller
 from controller.Scheduler import Scheduler
 from model.Notebook import Notebook
-from model.Entry import Entry
+from model.Note import Note
 from model.User import User
 
 
@@ -14,7 +14,7 @@ class Test_notebooks( Test_controller ):
     self.notebook = None
     self.anon_notebook = None
     self.unknown_notebook_id = "17"
-    self.unknown_entry_id = "42"
+    self.unknown_note_id = "42"
     self.username = u"mulder"
     self.password = u"trustno1"
     self.email_address = u"outthere@example.com"
@@ -35,13 +35,13 @@ class Test_notebooks( Test_controller ):
     self.notebook = Notebook( ( yield Scheduler.SLEEP ), u"notebook" )
 
     self.database.next_id( self.scheduler.thread )
-    self.entry = Entry( ( yield Scheduler.SLEEP ), u"<h3>my title</h3>blah" )
-    self.notebook.add_entry( self.entry )
-    self.notebook.add_startup_entry( self.entry )
+    self.note = Note( ( yield Scheduler.SLEEP ), u"<h3>my title</h3>blah" )
+    self.notebook.add_note( self.note )
+    self.notebook.add_startup_note( self.note )
 
     self.database.next_id( self.scheduler.thread )
-    self.entry2 = Entry( ( yield Scheduler.SLEEP ), u"<h3>other title</h3>whee" )
-    self.notebook.add_entry( self.entry2 )
+    self.note2 = Note( ( yield Scheduler.SLEEP ), u"<h3>other title</h3>whee" )
+    self.notebook.add_note( self.note2 )
     self.database.save( self.notebook )
 
     self.database.next_id( self.scheduler.thread )
@@ -73,8 +73,8 @@ class Test_notebooks( Test_controller ):
     notebook = result[ "notebook" ]
 
     assert notebook.object_id == self.notebook.object_id
-    assert len( notebook.startup_entries ) == 1
-    assert notebook.startup_entries[ 0 ] == self.entry
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
 
   def test_contents_without_login( self ):
     result = self.http_get(
@@ -84,269 +84,269 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" )
 
-  def test_load_entry( self ):
+  def test_load_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/load_entry/", dict(
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
+    note = result[ "note" ]
 
-    assert entry.object_id == self.entry.object_id
-    assert entry.title == self.entry.title
-    assert entry.contents == self.entry.contents
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
 
-  def test_load_entry_without_login( self ):
-    result = self.http_post( "/notebooks/load_entry/", dict(
+  def test_load_note_without_login( self ):
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_load_entry_with_unknown_notebook( self ):
+  def test_load_note_with_unknown_notebook( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/load_entry/", dict(
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.unknown_notebook_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_load_unknown_entry( self ):
+  def test_load_unknown_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/load_entry/", dict(
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.unknown_entry_id,
+      note_id = self.unknown_note_id,
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
-    assert entry == None
+    note = result[ "note" ]
+    assert note == None
 
-  def test_load_entry_by_title( self ):
+  def test_load_note_by_title( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = self.entry.title,
+      note_title = self.note.title,
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
+    note = result[ "note" ]
 
-    assert entry.object_id == self.entry.object_id
-    assert entry.title == self.entry.title
-    assert entry.contents == self.entry.contents
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
 
-  def test_load_entry_by_title_without_login( self ):
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+  def test_load_note_by_title_without_login( self ):
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = self.entry.title,
+      note_title = self.note.title,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_load_entry_by_title_with_unknown_notebook( self ):
+  def test_load_note_by_title_with_unknown_notebook( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.unknown_notebook_id,
-      entry_title = self.entry.title,
+      note_title = self.note.title,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_load_unknown_entry_by_title( self ):
+  def test_load_unknown_note_by_title( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = "unknown title",
+      note_title = "unknown title",
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
-    assert entry == None
+    note = result[ "note" ]
+    assert note == None
 
-  def test_save_entry( self, startup = False ):
+  def test_save_note( self, startup = False ):
     self.login()
 
-    # save over an existing entry supplying new contents and a new title
-    new_entry_contents = u"<h3>new title</h3>new blah"
-    result = self.http_post( "/notebooks/save_entry/", dict(
+    # save over an existing note supplying new contents and a new title
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
-      contents = new_entry_contents,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
       startup = startup,
     ), session_id = self.session_id )
 
     assert result[ "saved" ] == True
 
     # make sure the old title can no longer be loaded
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = "my title",
+      note_title = "my title",
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
-    assert entry == None
+    note = result[ "note" ]
+    assert note == None
 
     # make sure the new title is now loadable
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = "new title",
+      note_title = "new title",
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
+    note = result[ "note" ]
 
-    assert entry.object_id == self.entry.object_id
-    assert entry.title == self.entry.title
-    assert entry.contents == self.entry.contents
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
 
-    # check that the entry is / is not a startup entry
+    # check that the note is / is not a startup note
     if startup:
-      assert entry in self.notebook.startup_entries
+      assert note in self.notebook.startup_notes
     else:
-      assert not entry in self.notebook.startup_entries
+      assert not note in self.notebook.startup_notes
 
-  def test_save_startup_entry( self ):
-    self.test_save_entry( startup = True )
+  def test_save_startup_note( self ):
+    self.test_save_note( startup = True )
 
-  def test_save_entry_without_login( self, startup = False ):
-    # save over an existing entry supplying new contents and a new title
-    new_entry_contents = u"<h3>new title</h3>new blah"
-    result = self.http_post( "/notebooks/save_entry/", dict(
+  def test_save_note_without_login( self, startup = False ):
+    # save over an existing note supplying new contents and a new title
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
-      contents = new_entry_contents,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
       startup = startup,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_save_startup_entry_without_login( self ):
-    self.test_save_entry_without_login( startup = True )
+  def test_save_startup_note_without_login( self ):
+    self.test_save_note_without_login( startup = True )
 
-  def test_save_entry_with_unknown_notebook( self ):
+  def test_save_note_with_unknown_notebook( self ):
     self.login()
 
-    # save over an existing entry supplying new contents and a new title
-    new_entry_contents = u"<h3>new title</h3>new blah"
-    result = self.http_post( "/notebooks/save_entry/", dict(
+    # save over an existing note supplying new contents and a new title
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.unknown_notebook_id,
-      entry_id = self.entry.object_id,
-      contents = new_entry_contents,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
       startup = False,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_save_new_entry( self, startup = False ):
+  def test_save_new_note( self, startup = False ):
     self.login()
 
-    # save a completely new entry
-    new_entry = Entry( "55", u"<h3>newest title</h3>foo" )
-    result = self.http_post( "/notebooks/save_entry/", dict(
+    # save a completely new note
+    new_note = Note( "55", u"<h3>newest title</h3>foo" )
+    result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = new_entry.object_id,
-      contents = new_entry.contents,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
       startup = startup,
     ), session_id = self.session_id )
 
     assert result[ "saved" ] == True
 
     # make sure the new title is now loadable
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = new_entry.title,
+      note_title = new_note.title,
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
+    note = result[ "note" ]
 
-    assert entry.object_id == new_entry.object_id
-    assert entry.title == new_entry.title
-    assert entry.contents == new_entry.contents
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == new_note.contents
 
-    # check that the entry is / is not a startup entry
+    # check that the note is / is not a startup note
     if startup:
-      assert entry in self.notebook.startup_entries
+      assert note in self.notebook.startup_notes
     else:
-      assert not entry in self.notebook.startup_entries
+      assert not note in self.notebook.startup_notes
 
-  def test_save_new_startup_entry( self ):
-    self.test_save_new_entry( startup = True )
+  def test_save_new_startup_note( self ):
+    self.test_save_new_note( startup = True )
 
-  def test_save_new_entry_with_disallowed_tags( self ):
+  def test_save_new_note_with_disallowed_tags( self ):
     self.login()
 
-    # save a completely new entry
+    # save a completely new note
     title_with_tags = u"<h3>my title</h3>"
     junk = u"foo<script>haxx0r</script>"
     more_junk = u"<p style=\"evil\">blah</p>"
-    new_entry = Entry( "55", title_with_tags + junk + more_junk )
+    new_note = Note( "55", title_with_tags + junk + more_junk )
 
-    result = self.http_post( "/notebooks/save_entry/", dict(
+    result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = new_entry.object_id,
-      contents = new_entry.contents,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
       startup = False,
     ), session_id = self.session_id )
 
     assert result[ "saved" ] == True
 
     # make sure the new title is now loadable
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = new_entry.title,
+      note_title = new_note.title,
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
+    note = result[ "note" ]
 
     expected_contents = title_with_tags + cgi.escape( junk ) + u"<p>blah</p>"
 
-    assert entry.object_id == new_entry.object_id
-    assert entry.title == new_entry.title
-    assert entry.contents == expected_contents
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == expected_contents
 
-  def test_save_new_entry_with_bad_characters( self ):
+  def test_save_new_note_with_bad_characters( self ):
     self.login()
 
-    # save a completely new entry
+    # save a completely new note
     contents = "<h3>newest title</h3>foo"
     junk = "\xa0bar"
-    new_entry = Entry( "55", contents + junk )
-    result = self.http_post( "/notebooks/save_entry/", dict(
+    new_note = Note( "55", contents + junk )
+    result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = new_entry.object_id,
-      contents = new_entry.contents,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
       startup = False,
     ), session_id = self.session_id )
 
     assert result[ "saved" ] == True
 
     # make sure the new title is now loadable
-    result = self.http_post( "/notebooks/load_entry_by_title/", dict(
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
-      entry_title = new_entry.title,
+      note_title = new_note.title,
     ), session_id = self.session_id )
 
-    entry = result[ "entry" ]
+    note = result[ "note" ]
 
-    assert entry.object_id == new_entry.object_id
-    assert entry.title == new_entry.title
-    assert entry.contents == contents + " bar"
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == contents + " bar"
 
-  def test_add_startup_entry( self ):
+  def test_add_startup_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/add_startup_entry/", dict(
+    result = self.http_post( "/notebooks/add_startup_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry2.object_id,
+      note_id = self.note2.object_id,
     ), session_id = self.session_id )
 
-    # test that the added entry shows up in notebook.startup_entries
+    # test that the added note shows up in notebook.startup_notes
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
       session_id = self.session_id,
@@ -354,27 +354,27 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
 
-    assert len( notebook.startup_entries ) == 2
-    assert notebook.startup_entries[ 0 ] == self.entry
-    assert notebook.startup_entries[ 1 ] == self.entry2
+    assert len( notebook.startup_notes ) == 2
+    assert notebook.startup_notes[ 0 ] == self.note
+    assert notebook.startup_notes[ 1 ] == self.note2
 
-  def test_add_startup_entry_without_login( self ):
-    result = self.http_post( "/notebooks/add_startup_entry/", dict(
+  def test_add_startup_note_without_login( self ):
+    result = self.http_post( "/notebooks/add_startup_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry2.object_id,
+      note_id = self.note2.object_id,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_add_startup_entry_with_unknown_notebook( self ):
+  def test_add_startup_note_with_unknown_notebook( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/add_startup_entry/", dict(
+    result = self.http_post( "/notebooks/add_startup_note/", dict(
       notebook_id = self.unknown_notebook_id,
-      entry_id = self.entry2.object_id,
+      note_id = self.note2.object_id,
     ), session_id = self.session_id )
 
-    # test that notebook.startup_entries hasn't changed
+    # test that notebook.startup_notes hasn't changed
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
       session_id = self.session_id,
@@ -382,18 +382,18 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
 
-    assert len( notebook.startup_entries ) == 1
-    assert notebook.startup_entries[ 0 ] == self.entry
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
 
-  def test_add_startup_unknown_entry( self ):
+  def test_add_startup_unknown_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/add_startup_entry/", dict(
+    result = self.http_post( "/notebooks/add_startup_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.unknown_entry_id,
+      note_id = self.unknown_note_id,
     ), session_id = self.session_id )
 
-    # test that notebook.startup_entries hasn't changed
+    # test that notebook.startup_notes hasn't changed
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
       session_id = self.session_id,
@@ -401,18 +401,18 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
 
-    assert len( notebook.startup_entries ) == 1
-    assert notebook.startup_entries[ 0 ] == self.entry
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
 
-  def test_remove_startup_entry( self ):
+  def test_remove_startup_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/remove_startup_entry/", dict(
+    result = self.http_post( "/notebooks/remove_startup_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    # test that the remove entry no longer shows up in notebook.startup_entries
+    # test that the remove note no longer shows up in notebook.startup_notes
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
       session_id = self.session_id,
@@ -420,25 +420,25 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
 
-    assert len( notebook.startup_entries ) == 0
+    assert len( notebook.startup_notes ) == 0
 
-  def test_remove_startup_entry_without_login( self ):
-    result = self.http_post( "/notebooks/remove_startup_entry/", dict(
+  def test_remove_startup_note_without_login( self ):
+    result = self.http_post( "/notebooks/remove_startup_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_remove_startup_entry_with_unknown_notebook( self ):
+  def test_remove_startup_note_with_unknown_notebook( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/remove_startup_entry/", dict(
+    result = self.http_post( "/notebooks/remove_startup_note/", dict(
       notebook_id = self.unknown_notebook_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    # test that notebook.startup_entries hasn't changed
+    # test that notebook.startup_notes hasn't changed
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
       session_id = self.session_id,
@@ -446,18 +446,18 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
 
-    assert len( notebook.startup_entries ) == 1
-    assert notebook.startup_entries[ 0 ] == self.entry
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
 
-  def test_remove_startup_unknown_entry( self ):
+  def test_remove_startup_unknown_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/remove_startup_entry/", dict(
+    result = self.http_post( "/notebooks/remove_startup_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.unknown_entry_id,
+      note_id = self.unknown_note_id,
     ), session_id = self.session_id )
 
-    # test that notebook.startup_entries hasn't changed
+    # test that notebook.startup_notes hasn't changed
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
       session_id = self.session_id,
@@ -465,69 +465,69 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
 
-    assert len( notebook.startup_entries ) == 1
-    assert notebook.startup_entries[ 0 ] == self.entry
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
 
-  def test_delete_entry( self ):
+  def test_delete_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/delete_entry/", dict(
+    result = self.http_post( "/notebooks/delete_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    # test that the delete entry is actually deleted
-    result = self.http_post( "/notebooks/load_entry/", dict(
+    # test that the delete note is actually deleted
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    assert result.get( "entry" ) == None
+    assert result.get( "note" ) == None
 
-  def test_delete_entry_without_login( self ):
-    result = self.http_post( "/notebooks/delete_entry/", dict(
+  def test_delete_note_without_login( self ):
+    result = self.http_post( "/notebooks/delete_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
 
-  def test_delete_entry_with_unknown_notebook( self ):
+  def test_delete_note_with_unknown_notebook( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/delete_entry/", dict(
+    result = self.http_post( "/notebooks/delete_note/", dict(
       notebook_id = self.unknown_notebook_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    # test that the entry hasn't been deleted
-    result = self.http_post( "/notebooks/load_entry/", dict(
+    # test that the note hasn't been deleted
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    entry = result.get( "entry" )
-    assert entry.object_id == self.entry.object_id
+    note = result.get( "note" )
+    assert note.object_id == self.note.object_id
 
-  def test_delete_unknown_entry( self ):
+  def test_delete_unknown_note( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/delete_entry/", dict(
+    result = self.http_post( "/notebooks/delete_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.unknown_entry_id,
+      note_id = self.unknown_note_id,
     ), session_id = self.session_id )
 
-    # test that the entry hasn't been deleted
-    result = self.http_post( "/notebooks/load_entry/", dict(
+    # test that the note hasn't been deleted
+    result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
-      entry_id = self.entry.object_id,
+      note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    entry = result.get( "entry" )
-    assert entry.object_id == self.entry.object_id
+    note = result.get( "note" )
+    assert note.object_id == self.note.object_id
 
-  def test_blank_entry( self ):
-    result = self.http_get( "/notebooks/blank_entry/5" )
+  def test_blank_note( self ):
+    result = self.http_get( "/notebooks/blank_note/5" )
     assert result[ u"id" ] == u"5"
 
   def test_search( self ):
@@ -540,10 +540,10 @@ class Test_notebooks( Test_controller ):
       search_text = search_text,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 1
-    assert entries[ 0 ].object_id == self.entry.object_id
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note.object_id
 
   def test_search_without_login( self ):
     search_text = u"bla"
@@ -565,10 +565,10 @@ class Test_notebooks( Test_controller ):
       search_text = search_text,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 1
-    assert entries[ 0 ].object_id == self.entry.object_id
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note.object_id
 
   def test_empty_search( self ):
     self.login()
@@ -580,9 +580,9 @@ class Test_notebooks( Test_controller ):
       search_text = search_text,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 0
+    assert len( notes ) == 0
 
   def test_search_with_no_results( self ):
     self.login()
@@ -594,17 +594,17 @@ class Test_notebooks( Test_controller ):
       search_text = search_text,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 0
+    assert len( notes ) == 0
 
   def test_search_title_and_contents( self ):
     self.login()
 
-    # ensure that entries with titles matching the search text show up before entries with only
+    # ensure that notes with titles matching the search text show up before notes with only
     # contents matching the search text
-    entry3 = Entry( "55", u"<h3>blah</h3>foo" )
-    self.notebook.add_entry( entry3 )
+    note3 = Note( "55", u"<h3>blah</h3>foo" )
+    self.notebook.add_note( note3 )
 
     self.database.save( self.notebook )
 
@@ -615,11 +615,11 @@ class Test_notebooks( Test_controller ):
       search_text = search_text,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 2
-    assert entries[ 0 ].object_id == entry3.object_id
-    assert entries[ 1 ].object_id == self.entry.object_id
+    assert len( notes ) == 2
+    assert notes[ 0 ].object_id == note3.object_id
+    assert notes[ 1 ].object_id == self.note.object_id
 
   def test_search_html_tags( self ):
     self.login()
@@ -631,25 +631,25 @@ class Test_notebooks( Test_controller ):
       search_text = search_text,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 0
+    assert len( notes ) == 0
 
-  def test_recent_entries( self ):
+  def test_recent_notes( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/recent_entries/", dict(
+    result = self.http_post( "/notebooks/recent_notes/", dict(
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 
-    entries = result.get( "entries" )
+    notes = result.get( "notes" )
 
-    assert len( entries ) == 2
-    assert entries[ 0 ].object_id == self.entry2.object_id
-    assert entries[ 1 ].object_id == self.entry.object_id
+    assert len( notes ) == 2
+    assert notes[ 0 ].object_id == self.note2.object_id
+    assert notes[ 1 ].object_id == self.note.object_id
 
-  def test_recent_entries_without_login( self ):
-    result = self.http_post( "/notebooks/recent_entries/", dict(
+  def test_recent_notes_without_login( self ):
+    result = self.http_post( "/notebooks/recent_notes/", dict(
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 
@@ -658,8 +658,8 @@ class Test_notebooks( Test_controller ):
   def test_download_html( self ):
     self.login()
 
-    entry3 = Entry( "55", u"<h3>blah</h3>foo" )
-    self.notebook.add_entry( entry3 )
+    note3 = Note( "55", u"<h3>blah</h3>foo" )
+    self.notebook.add_note( note3 )
 
     result = self.http_get(
       "/notebooks/download_html/%s" % self.notebook.object_id,
@@ -667,26 +667,26 @@ class Test_notebooks( Test_controller ):
     )
     assert result.get( "notebook_name" ) == self.notebook.name
 
-    entries = result.get( "entries" )
-    assert len( entries ) == len( self.notebook.entries )
-    startup_entry_allowed = True
+    notes = result.get( "notes" )
+    assert len( notes ) == len( self.notebook.notes )
+    startup_note_allowed = True
     previous_revision = None
 
-    # assert that startup entries come first, then normal entries in descending revision order
-    for entry in entries:
-      if entry in self.notebook.startup_entries:
-        assert startup_entry_allowed
+    # assert that startup notes come first, then normal notes in descending revision order
+    for note in notes:
+      if note in self.notebook.startup_notes:
+        assert startup_note_allowed
       else:
-        startup_entry_allowed = False
-        assert entry in self.notebook.entries
+        startup_note_allowed = False
+        assert note in self.notebook.notes
         if previous_revision:
-          assert entry.revision < previous_revision
+          assert note.revision < previous_revision
 
-        previous_revision = entry.revision
+        previous_revision = note.revision
       
   def test_download_html( self ):
-    entry3 = Entry( "55", u"<h3>blah</h3>foo" )
-    self.notebook.add_entry( entry3 )
+    note3 = Note( "55", u"<h3>blah</h3>foo" )
+    self.notebook.add_note( note3 )
 
     result = self.http_get(
       "/notebooks/download_html/%s" % self.notebook.object_id,

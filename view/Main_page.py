@@ -42,7 +42,7 @@ class Main_page( Page ):
             id = u"top_area",
           ),
           Div(
-            id = u"entries",
+            id = u"notes",
           ),
           id = u"center_area",
         ),

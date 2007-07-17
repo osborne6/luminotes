@@ -3,22 +3,31 @@ from Persistent import Persistent
 from controller.Html_nuker import Html_nuker
 
 
-class Entry( Persistent ):
+class Note( Persistent ):
+  def __setstate__(self, state):
+    if "_Entry__title" in state:
+      state[ "_Note__title" ] = state[ "_Entry__title" ]
+      del( state[ "_Entry__title" ] )
+    if "_Entry__contents" in state:
+      state[ "_Note__contents" ] = state[ "_Entry__contents" ]
+      del( state[ "_Entry__contents" ] )
+    self.__dict__ = state
+
   """
-  An single textual wiki entry.
+  An single textual wiki note.
   """
   TITLE_PATTERN = re.compile( u"<h3>(.*)</h3>", flags = re.IGNORECASE )
 
   def __init__( self, id, contents = None ):
     """
-    Create a new entry with the given id and contents.
+    Create a new note with the given id and contents.
 
     @type id: unicode
-    @param id: id of the entry
+    @param id: id of the note
     @type contents: unicode or NoneType
-    @param contents: initial contents of the entry (optional)
-    @rtype: Entry
-    @return: newly constructed entry
+    @param contents: initial contents of the note (optional)
+    @rtype: Note
+    @return: newly constructed note
     """
     Persistent.__init__( self, id )
     self.__title = None
@@ -31,7 +40,7 @@ class Entry( Persistent ):
     self.__contents = contents
 
     # parse title out of the beginning of the contents
-    result = Entry.TITLE_PATTERN.search( contents )
+    result = Note.TITLE_PATTERN.search( contents )
 
     if result:
       self.__title = result.groups()[ 0 ]

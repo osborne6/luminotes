@@ -77,8 +77,8 @@ class Test_users( Test_controller ):
     assert notebooks[ 0 ] == self.anon_notebook
     notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
-    assert len( notebook.entries ) == 1
-    assert len( notebook.startup_entries ) == 1
+    assert len( notebook.notes ) == 1
+    assert len( notebook.startup_notes ) == 1
 
   def test_signup_with_different_passwords( self ):
     result = self.http_post( "/users/signup", dict(

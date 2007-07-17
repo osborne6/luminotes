@@ -9,10 +9,10 @@ from Expire import strongly_expire
 from Html_nuker import Html_nuker
 from Async import async
 from model.Notebook import Notebook
-from model.Entry import Entry
+from model.Note import Note
 from view.Main_page import Main_page
 from view.Json import Json
-from view.Entry_page import Entry_page
+from view.Note_page import Note_page
 from view.Html_file import Html_file
 
 
@@ -74,10 +74,10 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
-    entry_id = Valid_id(),
+    note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def load_entry( self, notebook_id, entry_id, user_id ):
+  def load_note( self, notebook_id, note_id, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -86,12 +86,12 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if notebook is None:
-      entry = None
+      note = None
     else:
-      entry = notebook.lookup_entry( entry_id )
+      note = notebook.lookup_note( note_id )
 
     yield dict(
-      entry = entry,
+      note = note,
     )
 
   @expose( view = Json )
@@ -102,10 +102,10 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
-    entry_title = Valid_string( min = 1, max = 500 ),
+    note_title = Valid_string( min = 1, max = 500 ),
     user_id = Valid_id( none_okay = True ),
   )
-  def load_entry_by_title( self, notebook_id, entry_title, user_id ):
+  def load_note_by_title( self, notebook_id, note_title, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -114,12 +114,12 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if notebook is None:
-      entry = None
+      note = None
     else:
-      entry = notebook.lookup_entry_by_title( entry_title )
+      note = notebook.lookup_note_by_title( note_title )
 
     yield dict(
-      entry = entry,
+      note = note,
     )
 
   @expose( view = Json )
@@ -129,12 +129,12 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
-    entry_id = Valid_id(),
+    note_id = Valid_id(),
     contents = Valid_string( min = 1, max = 25000, escape_html = False ),
     startup = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
   )
-  def save_entry( self, notebook_id, entry_id, contents, startup, user_id ):
+  def save_note( self, notebook_id, note_id, contents, startup, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -148,20 +148,20 @@ class Notebooks( object ):
       )
       return
 
-    self.__database.load( entry_id, self.__scheduler.thread )
-    entry = ( yield Scheduler.SLEEP )
+    self.__database.load( note_id, self.__scheduler.thread )
+    note = ( yield Scheduler.SLEEP )
 
-    # if the entry is already in the database, load it and update it. otherwise, create it
-    if entry and entry in notebook.entries:
-      notebook.update_entry( entry, contents )
+    # if the note is already in the database, load it and update it. otherwise, create it
+    if note and note in notebook.notes:
+      notebook.update_note( note, contents )
     else:
-      entry = Entry( entry_id, contents )
-      notebook.add_entry( entry )
+      note = Note( note_id, contents )
+      notebook.add_note( note )
 
     if startup:
-      notebook.add_startup_entry( entry )
+      notebook.add_startup_note( note )
     else:
-      notebook.remove_startup_entry( entry )
+      notebook.remove_startup_note( note )
 
     self.__database.save( notebook )
 
@@ -176,10 +176,10 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
-    entry_id = Valid_id(),
+    note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def add_startup_entry( self, notebook_id, entry_id, user_id ):
+  def add_startup_note( self, notebook_id, note_id, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -191,11 +191,11 @@ class Notebooks( object ):
       yield dict()
       return # TODO: raising an exception here would be nice
 
-    self.__database.load( entry_id, self.__scheduler.thread )
-    entry = ( yield Scheduler.SLEEP )
+    self.__database.load( note_id, self.__scheduler.thread )
+    note = ( yield Scheduler.SLEEP )
 
-    if entry:
-      notebook.add_startup_entry( entry )
+    if note:
+      notebook.add_startup_note( note )
       self.__database.save( notebook )
 
     yield dict()
@@ -207,10 +207,10 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
-    entry_id = Valid_id(),
+    note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def remove_startup_entry( self, notebook_id, entry_id, user_id ):
+  def remove_startup_note( self, notebook_id, note_id, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -222,11 +222,11 @@ class Notebooks( object ):
       yield dict()
       return # TODO: raising an exception here would be nice
 
-    self.__database.load( entry_id, self.__scheduler.thread )
-    entry = ( yield Scheduler.SLEEP )
+    self.__database.load( note_id, self.__scheduler.thread )
+    note = ( yield Scheduler.SLEEP )
 
-    if entry:
-      notebook.remove_startup_entry( entry )
+    if note:
+      notebook.remove_startup_note( note )
       self.__database.save( notebook )
 
     yield dict()
@@ -238,10 +238,10 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
-    entry_id = Valid_id(),
+    note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def delete_entry( self, notebook_id, entry_id, user_id ):
+  def delete_note( self, notebook_id, note_id, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -253,18 +253,18 @@ class Notebooks( object ):
       yield dict()
       return # TODO: raising an exception here would be nice
 
-    self.__database.load( entry_id, self.__scheduler.thread )
-    entry = ( yield Scheduler.SLEEP )
+    self.__database.load( note_id, self.__scheduler.thread )
+    note = ( yield Scheduler.SLEEP )
 
-    if entry:
-      notebook.remove_entry( entry )
+    if note:
+      notebook.remove_note( note )
       self.__database.save( notebook )
 
     yield dict()
 
-  @expose( view = Entry_page )
+  @expose( view = Note_page )
   @validate( id = Valid_id() )
-  def blank_entry( self, id ):
+  def blank_note( self, id ):
     return dict( id = id )
 
   @expose( view = Json )
@@ -288,7 +288,7 @@ class Notebooks( object ):
 
     if not notebook:
       yield dict(
-        entries = [],
+        notes = [],
       )
       return
 
@@ -298,16 +298,16 @@ class Notebooks( object ):
     nuker = Html_nuker()
 
     if len( search_text ) > 0:
-      for entry in notebook.entries:
-        if search_text in nuker.nuke( entry.title ).lower():
-          title_matches.append( entry )
-        elif search_text in nuker.nuke( entry.contents ).lower():
-          content_matches.append( entry )
+      for note in notebook.notes:
+        if search_text in nuker.nuke( note.title ).lower():
+          title_matches.append( note )
+        elif search_text in nuker.nuke( note.contents ).lower():
+          content_matches.append( note )
 
-    entries = title_matches + content_matches
+    notes = title_matches + content_matches
 
     yield dict(
-      entries = entries,
+      notes = notes,
     )
 
   @expose( view = Json )
@@ -320,7 +320,7 @@ class Notebooks( object ):
     notebook_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def recent_entries( self, notebook_id, user_id ):
+  def recent_notes( self, notebook_id, user_id ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -330,16 +330,16 @@ class Notebooks( object ):
 
     if not notebook:
       yield dict(
-        entries = [],
+        notes = [],
       )
       return
 
     RECENT_COUNT = 10
-    entries = notebook.entries
-    entries.sort( lambda a, b: cmp( b.revision, a.revision ) )
+    notes = notebook.notes
+    notes.sort( lambda a, b: cmp( b.revision, a.revision ) )
 
     yield dict(
-      entries = entries[ :RECENT_COUNT ],
+      notes = notes[ :RECENT_COUNT ],
     )
 
   @expose( view = Html_file )
@@ -363,16 +363,16 @@ class Notebooks( object ):
     if not notebook:
       yield dict(
         notebook_name = None,
-        entries = [],
+        notes = [],
       )
       return
 
-    normal_entries = list( set( notebook.entries ) - set( notebook.startup_entries ) )
-    normal_entries.sort( lambda a, b: -cmp( a.revision, b.revision ) )
+    normal_notes = list( set( notebook.notes ) - set( notebook.startup_notes ) )
+    normal_notes.sort( lambda a, b: -cmp( a.revision, b.revision ) )
     
     yield dict(
       notebook_name = notebook.name,
-      entries = notebook.startup_entries + normal_entries,
+      notes = notebook.startup_notes + normal_notes,
     )
 
   @async
