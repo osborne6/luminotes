@@ -4,17 +4,6 @@ from controller.Html_nuker import Html_nuker
 
 
 class Note( Persistent ):
-  def __setstate__(self, state):
-    if "_Entry__title" in state:
-      state[ "_Note__title" ] = state[ "_Entry__title" ]
-      del( state[ "_Entry__title" ] )
-      self.update_revision()
-    if "_Entry__contents" in state:
-      state[ "_Note__contents" ] = state[ "_Entry__contents" ]
-      del( state[ "_Entry__contents" ] )
-      self.update_revision()
-    self.__dict__.update( state )
-
   """
   An single textual wiki note.
   """
