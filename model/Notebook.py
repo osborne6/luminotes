@@ -8,9 +8,11 @@ class Notebook( Persistent ):
     if "_Notebook__entries" in state:
       state[ "_Notebook__notes" ] = state[ "_Notebook__entries" ]
       del( state[ "_Notebook__entries" ] )
+      self.update_revision()
     if "_Notebook__startup_entries" in state:
       state[ "_Notebook__startup_notes" ] = state[ "_Notebook__startup_entries" ]
       del( state[ "_Notebook__startup_entries" ] )
+      self.update_revision()
     self.__dict__.update(state)
 
   """
@@ -38,12 +40,12 @@ class Notebook( Persistent ):
     Persistent.__init__( self, id )
     self.__name = name
     self.__notes = {}         # map of note id to note
-    self.__titles = {}          # map of note title to note
+    self.__titles = {}        # map of note title to note
     self.__startup_notes = [] # list of notes shown on startup
 
   def add_note( self, note ):
     """
-    Add an note to this notebook.
+    Add a note to this notebook.
 
     @type note: Note
     @param note: note to add
@@ -54,7 +56,7 @@ class Notebook( Persistent ):
 
   def remove_note( self, note ):
     """
-    Remove an note from this notebook.
+    Remove a note from this notebook.
 
     @type note: Note
     @param note: note to remove
@@ -118,7 +120,7 @@ class Notebook( Persistent ):
 
   def add_startup_note( self, note ):
     """
-    Add the given note to be shown on startup. It must already be an note in this notebook.
+    Add the given note to be shown on startup. It must already be a note in this notebook.
 
     @type note: unicode
     @param note: note to be added for startup
@@ -128,7 +130,7 @@ class Notebook( Persistent ):
     """
     if self.__notes.get( note.object_id ) is None:
       raise Notebook.UnknownNoteError( note.object_id )
-    
+
     if not note in self.__startup_notes:
       self.update_revision()
       self.__startup_notes.append( note )

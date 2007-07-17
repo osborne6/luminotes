@@ -7,7 +7,9 @@ from controller.Html_nuker import Html_nuker
 class Entry( Persistent ):
   def __setstate__(self, state):
     self.__dict__.update(state)
-    self.__class__ = Note
+    if self.__class__ != Note:
+      self.update_revision()
+      self.__class__ = Note
 
   """
   An single textual wiki entry.
