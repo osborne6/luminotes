@@ -4,14 +4,14 @@ from Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
 
 
 class Html_file( Html ):
-  ENTRY_LINK_PATTERN = re.compile( u'<a\s+href="\/notes\/([a-z0-9]*)"\s*>', re.IGNORECASE )
+  NOTE_LINK_PATTERN = re.compile( u'<a\s+href="\/notes\/([a-z0-9]*)"\s*>', re.IGNORECASE )
 
   def __init__( self, notebook_name, notes ):
     relinked_notes = {} # map from note id to relinked note contents
 
     # relink all note links so they point to named anchors within the page
     for note in notes:
-      contents = self.ENTRY_LINK_PATTERN.sub( r'<a href="#note_\1">', note.contents )
+      contents = self.NOTE_LINK_PATTERN.sub( r'<a href="#note_\1">', note.contents )
       relinked_notes[ note.object_id ] = contents
 
     cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=wiki.html"
