@@ -291,14 +291,14 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-t: title
     } else if ( code == 84 ) {
       this.toggle_button( event, "title", "h3" );
-    // ctrl-l: unordered list
-    } else if ( code == 76 ) {
+    // ctrl-u: unordered list
+    } else if ( code == 85 ) {
       this.toggle_button( event, "insertUnorderedList" );
     // ctrl-n: ordered list
     } else if ( code == 49 ) {
       this.toggle_button( event, "insertOrderedList" );
-    // ctrl-e: make an note link
-    } else if ( code == 69 ) {
+    // ctrl-l: make a note link
+    } else if ( code == 76 ) {
       this.toggle_link_button( event );
     // ctrl-n: new note
     } else if ( code == 78 ) {
