@@ -372,7 +372,7 @@ class Notebooks( object ):
     
     yield dict(
       notebook_name = notebook.name,
-      notes = notebook.startup_notes + normal_notes,
+      notes = [ note for note in notebook.startup_notes + normal_notes if note is not None ],
     )
 
   @async
