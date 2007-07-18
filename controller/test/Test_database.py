@@ -168,6 +168,73 @@ class Test_database( object ):
     self.scheduler.add( g )
     self.scheduler.wait_for( g )
 
+  def test_reload( self ):
+    def gen():
+      basic_obj = Some_object( object_id = "5", value = 1 )
+
+      self.database.save( basic_obj, self.scheduler.thread )
+      yield Scheduler.SLEEP
+      if self.clear_cache: self.database.clear_cache()
+
+      def setstate( self, state ):
+        state[ "_Some_object__value" ] = 55
+        self.__dict__.update( state )
+
+      Some_object.__setstate__ = setstate
+
+      self.database.reload( basic_obj.object_id, self.scheduler.thread )
+      yield Scheduler.SLEEP
+      delattr( Some_object, "__setstate__" )
+      if self.clear_cache: self.database.clear_cache()
+
+      self.database.load( basic_obj.object_id, self.scheduler.thread )
+      obj = ( yield Scheduler.SLEEP )
+
+      assert obj.object_id == basic_obj.object_id
+      assert obj.value == 55
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+  def test_reload_revision( self ):
+    def gen():
+      basic_obj = Some_object( object_id = "5", value = 1 )
+      original_revision = basic_obj.revision
+      original_revision_id = basic_obj.revision_id()
+
+      self.database.save( basic_obj, self.scheduler.thread )
+      yield Scheduler.SLEEP
+      if self.clear_cache: self.database.clear_cache()
+
+      basic_obj.value = 2
+
+      self.database.save( basic_obj, self.scheduler.thread )
+      yield Scheduler.SLEEP
+      if self.clear_cache: self.database.clear_cache()
+
+      def setstate( self, state ):
+        state[ "_Some_object__value" ] = 55
+        self.__dict__.update( state )
+
+      Some_object.__setstate__ = setstate
+
+      self.database.reload( original_revision_id, self.scheduler.thread )
+      yield Scheduler.SLEEP
+      delattr( Some_object, "__setstate__" )
+      if self.clear_cache: self.database.clear_cache()
+
+      self.database.load( basic_obj.object_id, self.scheduler.thread, revision = original_revision )
+      obj = ( yield Scheduler.SLEEP )
+
+      assert obj.object_id == basic_obj.object_id
+      assert obj.revision == original_revision
+      assert obj.value == 55
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
   def test_next_id( self ):
     def gen():
       self.database.next_id( self.scheduler.thread )
