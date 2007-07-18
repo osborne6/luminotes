@@ -17,11 +17,8 @@ class Reloader( object ):
 
   def reload_database( self ):
     for key in self.database._Database__db.keys():
-      self.database.load( key, self.scheduler.thread )
-      value = ( yield Scheduler.SLEEP )
-      if value is None: continue
-      self.database.save( value, self.scheduler.thread )
-      value = ( yield Scheduler.SLEEP )
+      self.database.reload( key, self.scheduler.thread )
+      yield Scheduler.SLEEP 
 
     yield None
 
