@@ -327,8 +327,16 @@ Editor.prototype.start_link = function () {
 
       this.exec_command( "createLink", "/notes/new" );
 
-      container.nodeValue = "";
-      selection.collapse( container, 0 );
+      var links = getElementsByTagAndClassName( "a", null, parent = this.document );
+      for ( var i in links ) {
+        var link = links[ i ];
+        var char_code = link.firstChild.nodeValue.charCodeAt( 0 );
+        // look for links titled with a space or nbsp character
+        if ( link.firstChild.nodeValue.length == 1 && char_code == 0x20 || char_code == 0xa0 ) {
+          link.firstChild.nodeValue = "";
+          selection.collapse( link.firstChild, 0 );
+        }
+      }
     // otherwise, just create a link with the selected text as the link title
     } else {
       this.exec_command( "createLink", "/notes/new" );
