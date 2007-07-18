@@ -371,7 +371,7 @@ Editor.prototype.end_link = function () {
     // by appending a temporary span, selecting it, and then immediately removing it
     var span = this.document.createElement( "span" );
     span.innerHTML = "&nbsp;";
-    range.parentElement().parentNode.appendChild( span );
+    range.parentElement().appendChild( span );
     range.moveToElementText( span );
     range.select();
     range.pasteHTML( "" );
