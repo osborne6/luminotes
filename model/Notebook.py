@@ -4,15 +4,6 @@ from Persistent import Persistent
 
 
 class Notebook( Persistent ):
-  def __setstate__(self, state):
-    if "_Notebook__entries" in state:
-      state[ "_Notebook__notes" ] = state[ "_Notebook__entries" ]
-      del( state[ "_Notebook__entries" ] )
-    if "_Notebook__startup_entries" in state:
-      state[ "_Notebook__startup_notes" ] = state[ "_Notebook__startup_entries" ]
-      del( state[ "_Notebook__startup_entries" ] )
-    self.__dict__.update(state)
-
   """
   A collection of wiki notes.
   """
