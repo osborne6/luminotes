@@ -32,7 +32,7 @@ class Html_nuker( HTMLParser ):
         "lt": "<",
         "gt": ">",
         "quot": '"',
-      }.get ( ref ) )
+      }.get ( ref, "" ) )
 
   def handle_comment( self, comment ):
     pass
