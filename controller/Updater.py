@@ -24,7 +24,7 @@ def wait_for_update( function ):
     try:
       return queue.get( block = True, timeout = TIMEOUT_SECONDS )
     except Empty:
-      return { "error": u"A timeout occurred when processing your request. Please try again." }
+      return { "error": u"A timeout occurred when processing your request. Please try again or contact support@luminotes.com" }
 
   return get_message
 
@@ -65,6 +65,7 @@ def update_client( function ):
         result = error.to_dict()
         queue.put( result )
       else:
+        queue.put( { "error": u"An error occurred when processing your request. Please try again or contact support@luminotes.com" } )
         raise
   
   return put_message
