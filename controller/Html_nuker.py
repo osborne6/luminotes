@@ -17,11 +17,11 @@ class Html_nuker( HTMLParser ):
       
   def handle_charref( self, ref ):
     if self.allow_refs:
-      self.result.append( ref )
+      self.result.append( "&#%s;" % ref )
 
   def handle_entityref( self, ref ):
     if self.allow_refs:
-      self.result.append( ref )
+      self.result.append( "&%s;" % ref )
 
   def handle_comment( self, comment ):
     pass
