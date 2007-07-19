@@ -635,6 +635,24 @@ class Test_notebooks( Test_controller ):
 
     assert len( notes ) == 0
 
+  def test_search_character_refs( self ):
+    self.login()
+
+    note3 = Note( "55", u"<h3>foo: bar</h3>baz" )
+    self.notebook.add_note( note3 )
+
+    search_text = "oo: b"
+
+    result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == note3.object_id
+
   def test_recent_notes( self ):
     self.login()
 

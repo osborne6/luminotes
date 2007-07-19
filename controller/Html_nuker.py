@@ -4,7 +4,7 @@ from formatter import AbstractFormatter, NullWriter
 
 class Html_nuker( HTMLParser ):
   """
-  Nukes HTML of all tags.
+  Nukes HTML of all tags, and optionally all entity/characters references.
   """
   def __init__( self, allow_refs = False ):
     HTMLParser.__init__( self, AbstractFormatter( NullWriter() ) )
@@ -16,12 +16,23 @@ class Html_nuker( HTMLParser ):
       self.result.append( data )
       
   def handle_charref( self, ref ):
+    ref = int( ref )
     if self.allow_refs:
       self.result.append( "&#%s;" % ref )
+    # convert ascii references to their character equivalents
+    elif ref >= 32 and ref < 128:
+      self.result.append( chr( ref ) )
 
   def handle_entityref( self, ref ):
     if self.allow_refs:
       self.result.append( "&%s;" % ref )
+    else:
+      self.result.append( {
+        "amp": "&",
+        "lt": "<",
+        "gt": ">",
+        "quot": '"',
+      }.get ( ref ) )
 
   def handle_comment( self, comment ):
     pass
