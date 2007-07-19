@@ -335,7 +335,7 @@ class Notebooks( object ):
       return
 
     RECENT_COUNT = 10
-    notes = notebook.notes
+    notes = [ note for note in notebook.notes if note is not None ]
     notes.sort( lambda a, b: cmp( b.revision, a.revision ) )
 
     yield dict(
