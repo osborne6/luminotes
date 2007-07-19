@@ -323,7 +323,7 @@ Editor.prototype.start_link = function () {
       this.insert_html( "&nbsp;" );
       var range = selection.getRangeAt( 0 );
       var container = range.startContainer;
-      range.setStart( container, range.startOffset - 1 );
+      range.setStart( container, ( range.startOffset ? range.startOffset - 1 : 0 ) );
 
       this.exec_command( "createLink", "/notes/new" );
 
