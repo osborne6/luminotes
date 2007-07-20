@@ -1,5 +1,5 @@
 from Page import Page
-from Tags import Input, Div, H2, H4, A
+from Tags import Input, Div, Noscript, H2, H4, A
 from Search_form import Search_form
 from Link_area import Link_area
 from Toolbar import Toolbar
@@ -43,6 +43,13 @@ class Main_page( Page ):
           ),
           Div(
             id = u"notes",
+          ),
+          Noscript(
+            u"""
+            Luminotes is a personal wiki notebook for organizing your notes and ideas. It also
+            happens to require Javascript. So if you'd like to check out this site, please enable
+            Javascript in your web browser. Sorry for the inconvenience.
+            """,
           ),
           id = u"center_area",
         ),
