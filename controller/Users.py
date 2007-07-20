@@ -123,7 +123,7 @@ class Users( object ):
     if password != password_repeat:
       raise Signup_error( u"The passwords you entered do not match. Please try again." )
 
-    self.__database.load( username, self.__scheduler.thread )
+    self.__database.load( "User %s" % username, self.__scheduler.thread )
     user = ( yield Scheduler.SLEEP )
 
     if user is not None:
@@ -166,7 +166,7 @@ class Users( object ):
     login_button = unicode,
   )
   def login( self, username, password, login_button ):
-    self.__database.load( username, self.__scheduler.thread )
+    self.__database.load( "User %s" % username, self.__scheduler.thread )
     user = ( yield Scheduler.SLEEP )
 
     if user is None or user.check_password( password ) is False:
@@ -205,7 +205,7 @@ class Users( object ):
   )
   def current( self, user_id ):
     # if there's no logged-in user, default to the anonymous user
-    self.__database.load( user_id or u"anonymous", self.__scheduler.thread )
+    self.__database.load( user_id or u"User anonymous", self.__scheduler.thread )
     user = ( yield Scheduler.SLEEP )
 
     if not user:
@@ -217,7 +217,7 @@ class Users( object ):
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     if user_id:
-      self.__database.load( u"anonymous", self.__scheduler.thread )
+      self.__database.load( u"User anonymous", self.__scheduler.thread )
       anonymous = ( yield Scheduler.SLEEP )
       notebooks = anonymous.notebooks
     else:

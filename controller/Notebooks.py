@@ -378,7 +378,7 @@ class Notebooks( object ):
   @async
   def check_access( self, notebook_id, user_id, callback ):
     # check if the anonymous user has access to this notebook
-    self.__database.load( u"anonymous", self.__scheduler.thread )
+    self.__database.load( u"User anonymous", self.__scheduler.thread )
     anonymous = ( yield Scheduler.SLEEP )
 
     access = False

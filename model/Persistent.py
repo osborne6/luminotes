@@ -17,6 +17,9 @@ class Persistent( object ):
   def make_revision_id( object_id, revision ):
     return "%s %s" % ( object_id, revision )
 
+  def full_secondary_id( self ):
+    return "%s %s" % ( type( self ).__name__, self.secondary_id )
+
   def to_dict( self ):
     return dict(
       object_id = self.__object_id,

@@ -60,12 +60,12 @@ class Database( object ):
 
     object_id = unicode( obj.object_id ).encode( "utf8" )
     revision_id = unicode( obj.revision_id() ).encode( "utf8" )
-    secondary_id = obj.secondary_id and unicode( obj.secondary_id ).encode( "utf8" ) or None
+    secondary_id = obj.secondary_id and unicode( obj.full_secondary_id() ).encode( "utf8" ) or None
 
     # update the cache with this saved object
     self.__cache[ object_id ] = obj
     self.__cache[ revision_id ] = copy( obj )
-    if obj.secondary_id:
+    if secondary_id:
       self.__cache[ secondary_id ] = obj
 
     # set the pickler up to save persistent ids for every object except for the obj passed in, which
@@ -81,7 +81,7 @@ class Database( object ):
     self.__db.put( revision_id, pickled )
 
     # write the pickled object id (only) to the database under its secondary id
-    if obj.secondary_id:
+    if secondary_id:
       buffer = StringIO()
       pickler = cPickle.Pickler( buffer, protocol = -1 )
       pickler.persistent_id = lambda o: self.__persistent_id( o )
