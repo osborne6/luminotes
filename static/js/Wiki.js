@@ -524,56 +524,74 @@ Wiki.prototype.clear_pulldowns = function () {
 }
 
 Wiki.prototype.toggle_editor_options = function ( event, editor ) {
-  new Pulldown( this.notebook_id, this.invoker, editor );
+  // if the pulldown is already open, then just close it
+  var pulldown_id = "options_" + editor.id;
+  var existing_div = getElement( pulldown_id );
+  if ( existing_div ) {
+    existing_div.pulldown.shutdown();
+    return;
+  }
+
+  new Options_pulldown( this.notebook_id, this.invoker, editor );
   event.stop();
 }
 
 connect( window, "onload", function ( event ) { new Wiki(); } );
 
 
-function Pulldown( notebook_id, invoker, editor ) {
-  // if the pulldown is already open, then just close it
-  var existing_div = getElement( "options_" + editor.id );
-  if ( existing_div ) {
-    existing_div.pulldown.shutdown();
-    return;
-  }
-
+function Pulldown( notebook_id, pulldown_id, button ) {
   this.notebook_id = notebook_id;
-  this.invoker = invoker;
-  this.editor = editor;
-  this.div = createDOM( "div", { "id": "options_" + editor.id, "class": "pulldown" } );
+  this.div = createDOM( "div", { "id": pulldown_id, "class": "pulldown" } );
   this.div.pulldown = this;
   addElementClass( this.div, "invisible" );
 
   this.close_button = createDOM( "input", { "type": "button", "value": " x ", "class": "pulldown_button" } );
+
+  appendChildNodes( this.div, this.close_button );
+  appendChildNodes( document.body, this.div );
+
+  var self = this;
+  connect( this.close_button, "onclick", function ( event ) { self.shutdown(); event.stop(); } );
+
+  // position the pulldown under the button that opened it
+  var position = getElementPosition( button );
+  var button_dimensions = getElementDimensions( button );
+  var div_dimensions = getElementDimensions( this.div );
+  position.x -= div_dimensions.w - button_dimensions.w;
+  position.y += button_dimensions.h;
+  setElementPosition( this.div, position );
+
+  removeElementClass( this.div, "invisible" );
+} 
+
+Pulldown.prototype.shutdown = function () {
+  disconnectAll( this.close_button );
+  removeElement( this.div );
+}
+
+
+Options_pulldown = function ( notebook_id, invoker, editor ) {
+  Pulldown.call( this, notebook_id, "options_" + editor.id, editor.options_button );
+
+  this.invoker = invoker;
+  this.editor = editor;
   this.startup_checkbox = createDOM( "input", { "type": "checkbox" } );
   this.startup_toggle = createDOM( "span", { "class": "pulldown_toggle" },
     this.startup_checkbox,
     "show on startup"
   );
 
-  appendChildNodes( this.div, this.close_button );
   appendChildNodes( this.div, this.startup_toggle );
-  appendChildNodes( document.body, this.div );
   this.startup_checkbox.checked = editor.startup;
 
   var self = this;
   connect( this.startup_toggle, "onclick", function ( event ) { self.startup_clicked( event ); event.stop(); } );
-  connect( this.close_button, "onclick", function ( event ) { self.shutdown(); event.stop(); } );
+}
 
-  // position the options pulldown under the options button
-  var position = getElementPosition( editor.options_button );
-  var options_dimensions = getElementDimensions( editor.options_button );
-  var div_dimensions = getElementDimensions( this.div );
-  position.x -= div_dimensions.w - options_dimensions.w;
-  position.y += options_dimensions.h;
-  setElementPosition( this.div, position );
+Options_pulldown.prototype = Pulldown;
+Options_pulldown.prototype.constructor = Options_pulldown;
 
-  removeElementClass( this.div, "invisible" );
-} 
-
-Pulldown.prototype.startup_clicked = function ( event ) {
+Options_pulldown.prototype.startup_clicked = function ( event ) {
   if ( event.target() != this.startup_checkbox )
     this.startup_checkbox.checked = this.startup_checkbox.checked ? false : true;
   this.editor.startup = this.startup_checkbox.checked;
@@ -589,8 +607,8 @@ Pulldown.prototype.startup_clicked = function ( event ) {
   }
 }
 
-Pulldown.prototype.shutdown = function () {
-  disconnectAll( this.close_button );
+Options_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
   disconnectAll( this.startup_toggle );
-  removeElement( this.div );
 }
