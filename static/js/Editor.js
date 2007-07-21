@@ -330,11 +330,16 @@ Editor.prototype.start_link = function () {
       var links = getElementsByTagAndClassName( "a", null, parent = this.document );
       for ( var i in links ) {
         var link = links[ i ];
-        var char_code = link.firstChild.nodeValue.charCodeAt( 0 );
+        var link_title = scrapeText( link );
+        var char_code = link_title.charCodeAt( 0 );
         // look for links titled with a space or nbsp character
-        if ( link.firstChild.nodeValue.length == 1 && char_code == 0x20 || char_code == 0xa0 ) {
-          link.firstChild.nodeValue = "";
-          selection.collapse( link.firstChild, 0 );
+        if ( link_title.length == 1 && char_code == 0x20 || char_code == 0xa0 ) {
+          for ( var j in link.childNodes ) {
+            var child = link.childNodes[ j ];
+            if ( child.nodeType == 3 ) // type of text node
+              child.nodeValue = "";
+          }
+          selection.collapse( link, 0 );
         }
       }
     // otherwise, just create a link with the selected text as the link title
