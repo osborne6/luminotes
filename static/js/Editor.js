@@ -323,7 +323,29 @@ Editor.prototype.start_link = function () {
       this.insert_html( "&nbsp;" );
       var range = selection.getRangeAt( 0 );
       var container = range.startContainer;
-      range.setStart( container, ( range.startOffset ? range.startOffset - 1 : 0 ) );
+
+      // if for some reason the inserted &nbsp; isn't in the container we expect it to be in, use
+      // the previous sibling container instead
+      if ( range.startOffset == 0 ) {
+        var previous = null;
+        for ( i in container.parentNode.childNodes ) {
+          var child = container.parentNode.childNodes[ i ];
+
+          if ( child == container ) {
+            container = previous;
+            // descend into the sibling container until a text node is found
+            while ( container.firstChild && container.firstChild.noteType != 3 )
+              container = container.firstChild;
+            break;
+          }
+
+          previous = child;
+        }
+        // assume the &nbsp; got subsumed into the end of the sibling container
+        range.setStart( container, container.nodeValue.length - 1 );
+      } else {
+        range.setStart( container, range.startOffset - 1 );
+      }
 
       this.exec_command( "createLink", "/notes/new" );
 
