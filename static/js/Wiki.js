@@ -456,23 +456,13 @@ Wiki.prototype.display_search_results = function ( result ) {
     notes[ note.object_id ] = note;
   }
 
-  // hide all existing editors except those for startup notes or search results
+  // close already-open editors that are also in the search results, so they're not shown twice
   var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
   for ( var i in iframes ) {
     var iframe = iframes[ i ];
 
-    // don't hide an existing note if it's in the search results
-    if ( notes[ iframe.editor.id ] ) {
-      iframe.editor.highlight( false );
-      delete notes[ iframe.editor.id ];
-      continue;
-    }
-
-    // don't hide an existing note if it's a read-only startup note
-    if ( iframe.editor.startup && !iframe.editor.read_write )
-      continue;
-
-    iframe.editor.shutdown();
+    if ( notes[ iframe.editor.id ] )
+      iframe.editor.shutdown();
   }
 
   // if there are no search results, indicate that and bail
