@@ -445,25 +445,9 @@ Wiki.prototype.search = function ( event ) {
 }
 
 Wiki.prototype.display_search_results = function ( result ) {
+  // TODO: somehow highlight the search term within the search results?
   // before displaying the search results, save the current focused editor
   this.save_editor();
-
-  // TODO: somehow highlight the search term within the search results?
-  // make a map of note object id to note
-  var notes = {};
-  for ( var i in result.notes ) {
-    var note = result.notes[ i ];
-    notes[ note.object_id ] = note;
-  }
-
-  // close already-open editors that are also in the search results, so they're not shown twice
-  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
-  for ( var i in iframes ) {
-    var iframe = iframes[ i ];
-
-    if ( notes[ iframe.editor.id ] )
-      iframe.editor.shutdown();
-  }
 
   // if there are no search results, indicate that and bail
   if ( result.notes.length == 0 ) {
@@ -472,12 +456,22 @@ Wiki.prototype.display_search_results = function ( result ) {
   }
 
   // create an editor for each note search result, focusing the first one
-  var i = 0;
-  for ( var id in notes ) {
-    var note = notes[ id ];
+  for ( var i in result.notes ) {
+    var note = result.notes[ i ]
     var focus = ( i == 0 );
-    this.create_editor( id, note.contents, undefined, undefined, false, focus );
-    i += 1;
+
+    // if the editor is already open, just move it down to be with the result of the search results
+    var iframe = getElement( "note_" + note.object_id );
+    if ( iframe ) {
+      removeElement( iframe.editor.note_controls );
+      removeElement( iframe );
+      appendChildNodes( "notes", iframe.editor.note_controls );
+      appendChildNodes( "notes", iframe );
+      iframe.editor.highlight( focus );
+      continue;
+    }
+
+    this.create_editor( note.object_id, note.contents, undefined, undefined, false, focus );
   }
 }
 
