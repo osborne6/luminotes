@@ -160,13 +160,13 @@ Editor.prototype.highlight = function ( scroll ) {
     scroll = true;
 
   if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight is broken in Opera
-    if ( scroll ) ScrollTo( this.iframe );
+    if ( scroll ) ScrollTo( this.note_controls );
     pulsate( this.iframe, options = { "pulses": 1, "duration": 0.5 } );
   } else if ( this.iframe.contentDocument ) { // browsers such as Firefox
-    if ( scroll ) ScrollTo( this.iframe );
+    if ( scroll ) ScrollTo( this.note_controls );
     Highlight( this.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
   } else { // browsers such as IE
-    if ( scroll ) ScrollTo( this.iframe );
+    if ( scroll ) ScrollTo( this.note_controls );
     if ( this.document && this.document.body )
       Highlight( this.document.body, options = { "queue": { "scope": "highlight", "limit": 1 } } );
   }
