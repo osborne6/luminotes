@@ -299,6 +299,7 @@ class Notebooks( object ):
 
     if len( search_text ) > 0:
       for note in notebook.notes:
+      	if note is None: continue
         if search_text in nuker.nuke( note.title ).lower():
           title_matches.append( note )
         elif search_text in nuker.nuke( note.contents ).lower():
