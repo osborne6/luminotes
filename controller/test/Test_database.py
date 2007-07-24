@@ -84,7 +84,7 @@ class Test_database( object ):
       self.database.save( basic_obj, self.scheduler.thread )
       yield Scheduler.SLEEP
       if self.clear_cache: self.database.clear_cache()
-      self.database.load( u"foo", self.scheduler.thread )
+      self.database.load( u"Some_object foo", self.scheduler.thread )
       obj = ( yield Scheduler.SLEEP )
 
       assert obj.object_id == basic_obj.object_id
