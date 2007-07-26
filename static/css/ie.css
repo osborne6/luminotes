@@ -18,3 +18,8 @@
   left: 0em;
   top: 0em;
 }
+
+.pulldown {
+  height: expression( this.scrollHeight > 200 ? "200px" : "auto" );
+  width: expression( this.scrollHeight > 200 ? "12em" : "auto" );
+}
