@@ -174,6 +174,7 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     # save over an existing note supplying new contents and a new title
+    previous_revision = self.note.revision
     new_note_contents = u"<h3>new title</h3>new blah"
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -182,7 +183,7 @@ class Test_notebooks( Test_controller ):
       startup = startup,
     ), session_id = self.session_id )
 
-    assert result[ "saved" ] == True
+    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -248,6 +249,7 @@ class Test_notebooks( Test_controller ):
 
     # save a completely new note
     new_note = Note( "55", u"<h3>newest title</h3>foo" )
+    previous_revision = new_note.revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = new_note.object_id,
@@ -255,7 +257,7 @@ class Test_notebooks( Test_controller ):
       startup = startup,
     ), session_id = self.session_id )
 
-    assert result[ "saved" ] == True
+    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -286,6 +288,7 @@ class Test_notebooks( Test_controller ):
     junk = u"foo<script>haxx0r</script>"
     more_junk = u"<p style=\"evil\">blah</p>"
     new_note = Note( "55", title_with_tags + junk + more_junk )
+    previous_revision = new_note.revision
 
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -294,7 +297,7 @@ class Test_notebooks( Test_controller ):
       startup = False,
     ), session_id = self.session_id )
 
-    assert result[ "saved" ] == True
+    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -317,6 +320,7 @@ class Test_notebooks( Test_controller ):
     contents = "<h3>newest title</h3>foo"
     junk = "\xa0bar"
     new_note = Note( "55", contents + junk )
+    previous_revision = new_note.revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = new_note.object_id,
@@ -324,7 +328,7 @@ class Test_notebooks( Test_controller ):
       startup = False,
     ), session_id = self.session_id )
 
-    assert result[ "saved" ] == True
+    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(

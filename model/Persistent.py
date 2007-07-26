@@ -33,6 +33,7 @@ class Persistent( object ):
     return dict(
       object_id = self.__object_id,
       revision = self.__revision,
+      revisions_list = self.__revisions_list,
     )
 
   object_id = property( lambda self: self.__object_id )

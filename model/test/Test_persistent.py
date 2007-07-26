@@ -35,6 +35,7 @@ class Test_persistent( object ):
 
     assert d.get( "object_id" ) == self.object_id
     assert d.get( "revision" ) == self.obj.revision
+    assert d.get( "revisions_list" ) == self.obj.revisions_list
 
 
 class Test_persistent_with_secondary_id( object ):

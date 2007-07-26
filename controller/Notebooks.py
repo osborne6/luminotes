@@ -19,7 +19,7 @@ from view.Html_file import Html_file
 class Access_error( Exception ):
   def __init__( self, message = None ):
     if message is None:
-      message = u"You don't have access to that notebook."
+      message = u"You don't have access to this notebook."
 
     Exception.__init__( self, message )
     self.__message = message
@@ -143,18 +143,17 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict(
-        saved = False,
-      )
-      return
+      raise Access_error()
 
     self.__database.load( note_id, self.__scheduler.thread )
     note = ( yield Scheduler.SLEEP )
 
     # if the note is already in the database, load it and update it. otherwise, create it
     if note and note in notebook.notes:
+      orig_revision = note.revision
       notebook.update_note( note, contents )
     else:
+      orig_revision = None
       note = Note( note_id, contents )
       notebook.add_note( note )
 
@@ -165,9 +164,10 @@ class Notebooks( object ):
 
     self.__database.save( notebook )
 
-    yield dict(
-      saved = True,
-    )
+    if note.revision == orig_revision:
+      yield dict( new_revision = None )
+    else:
+      yield dict( new_revision = note.revision )
 
   @expose( view = Json )
   @wait_for_update
@@ -188,8 +188,7 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict()
-      return # TODO: raising an exception here would be nice
+      raise Access_error()
 
     self.__database.load( note_id, self.__scheduler.thread )
     note = ( yield Scheduler.SLEEP )
@@ -219,8 +218,7 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict()
-      return # TODO: raising an exception here would be nice
+      raise Access_error()
 
     self.__database.load( note_id, self.__scheduler.thread )
     note = ( yield Scheduler.SLEEP )
@@ -250,8 +248,7 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict()
-      return # TODO: raising an exception here would be nice
+      raise Access_error()
 
     self.__database.load( note_id, self.__scheduler.thread )
     note = ( yield Scheduler.SLEEP )
@@ -287,10 +284,7 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict(
-        notes = [],
-      )
-      return
+      raise Access_error()
 
     search_text = search_text.lower()
     title_matches = []
@@ -330,10 +324,7 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict(
-        notes = [],
-      )
-      return
+      raise Access_error()
 
     RECENT_COUNT = 10
     notes = [ note for note in notebook.notes if note is not None ]
@@ -362,11 +353,7 @@ class Notebooks( object ):
     notebook = ( yield Scheduler.SLEEP )
 
     if not notebook:
-      yield dict(
-        notebook_name = None,
-        notes = [],
-      )
-      return
+      raise Access_error()
 
     normal_notes = list( set( notebook.notes ) - set( notebook.startup_notes ) )
     normal_notes.sort( lambda a, b: -cmp( a.revision, b.revision ) )

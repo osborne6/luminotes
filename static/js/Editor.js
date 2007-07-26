@@ -1,8 +1,9 @@
 note_titles = {} // map from note title to the open editor for that note
 
-function Editor( id, note_text, insert_after_iframe_id, read_write, startup, highlight, focus ) {
-  this.initial_text = note_text;
+function Editor( id, note_text, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
   this.id = id;
+  this.initial_text = note_text;
+  this.revisions_list = revisions_list;
   this.read_write = read_write;
   this.startup = startup || false; // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
@@ -32,6 +33,15 @@ function Editor( id, note_text, insert_after_iframe_id, read_write, startup, hig
     } );
     connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
 
+    this.changes_button = createDOM( "input", {
+      "type": "button",
+      "class": "note_button",
+      "id": "changes_" + iframe_id,
+      "value": "changes",
+      "title": "previous revisions"
+    } );
+    connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
+
     this.options_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",
@@ -56,6 +66,8 @@ function Editor( id, note_text, insert_after_iframe_id, read_write, startup, hig
   this.note_controls = createDOM( "span", { "class": "note_controls" },
     this.delete_button ? this.delete_button : null,
     this.delete_button ? " " : null,
+    this.changes_button ? this.changes_button : null,
+    this.changes_button ? " " : null,
     this.options_button ? this.options_button : null,
     this.options_button ? " " : null,
     this.hide_button ? this.hide_button : null
@@ -463,6 +475,7 @@ Editor.prototype.shutdown = function( event ) {
   var note_controls = this.note_controls;
   disconnectAll( this );
   disconnectAll( this.delete_button );
+  disconnectAll( this.changes_button );
   disconnectAll( this.options_button );
   disconnectAll( this.hide_button );
   disconnectAll( iframe );

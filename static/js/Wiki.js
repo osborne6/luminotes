@@ -122,12 +122,13 @@ Wiki.prototype.populate = function ( result ) {
     if ( !note ) continue;
     this.startup_notes[ note.object_id ] = true;
     var focus = ( i == 0 );
-    this.create_editor( note.object_id, note.contents, undefined, undefined, false, focus );
+    this.create_editor( note.object_id, note.contents, note.revisions_list, undefined, undefined, false, focus );
   }
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
-  this.clear_pulldowns();
+  if ( !hasElementClass( event.target(), "pulldown_checkbox" ) )
+    this.clear_pulldowns();
 
   // unless a background div was clicked, bail
   var node_name = event.target().nodeName.toLowerCase();
@@ -150,7 +151,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, true, true );
+  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, true, true );
 }
 
 Wiki.prototype.load_editor = function ( note_title, insert_after_iframe_id, note_id ) {
@@ -186,10 +187,10 @@ Wiki.prototype.parse_loaded_editor = function ( result, insert_after_iframe_id, 
     var note_text = "<h3>" + note_title;
   }
 
-  this.create_editor( id, note_text, insert_after_iframe_id, note_title, true, false );
+  this.create_editor( id, note_text, result.note.revisions_list, insert_after_iframe_id, note_title, true, false );
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, insert_after_iframe_id, note_title, highlight, focus ) {
+Wiki.prototype.create_editor = function ( id, note_text, revisions_list, insert_after_iframe_id, note_title, highlight, focus ) {
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -229,12 +230,13 @@ Wiki.prototype.create_editor = function ( id, note_text, insert_after_iframe_id,
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, note_text, undefined, this.read_write, startup, highlight, focus );
+  var editor = new Editor( id, note_text, revisions_list, undefined, this.read_write, startup, highlight, focus );
 
   if ( this.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
     connect( editor, "key_pressed", this, "editor_key_pressed" );
     connect( editor, "delete_clicked", function ( event ) { self.delete_editor( event, editor ) } );
+    connect( editor, "changes_clicked", function ( event ) { self.toggle_editor_changes( event, editor ) } );
     connect( editor, "options_clicked", function ( event ) { self.toggle_editor_options( event, editor ) } );
     connect( editor, "focused", this, "editor_focused" );
   }
@@ -420,6 +422,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
   if ( !editor )
     editor = this.focused_editor;
 
+  var self = this;
   if ( editor && !editor.empty() ) {
     // TODO: do something with the result other than just ignoring it
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
@@ -427,7 +430,16 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
       "note_id": editor.id,
       "contents": editor.contents(),
       "startup": editor.startup
-    }, null, null, fire_and_forget );
+    }, function ( result ) { self.update_editor_revisions( result, editor ); }, null, fire_and_forget );
+  }
+}
+
+Wiki.prototype.update_editor_revisions = function ( result, editor ) {
+  if ( result.new_revision ) {
+    if ( !editor.revisions_list )
+      editor.revisions_list = new Array();
+
+    editor.revisions_list.push( result.new_revision );
   }
 }
 
@@ -471,7 +483,7 @@ Wiki.prototype.display_search_results = function ( result ) {
       continue;
     }
 
-    this.create_editor( note.object_id, note.contents, undefined, undefined, false, focus );
+    this.create_editor( note.object_id, note.contents, note.revisions_list, undefined, undefined, false, focus );
   }
 }
 
@@ -507,6 +519,19 @@ Wiki.prototype.clear_pulldowns = function () {
   }
 }
 
+Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
+  // if the pulldown is already open, then just close it
+  var pulldown_id = "changes_" + editor.id;
+  var existing_div = getElement( pulldown_id );
+  if ( existing_div ) {
+    existing_div.pulldown.shutdown();
+    return;
+  }
+
+  new Changes_pulldown( this.notebook_id, this.invoker, editor );
+  event.stop();
+}
+
 Wiki.prototype.toggle_editor_options = function ( event, editor ) {
   // if the pulldown is already open, then just close it
   var pulldown_id = "options_" + editor.id;
@@ -529,19 +554,14 @@ function Pulldown( notebook_id, pulldown_id, button ) {
   this.div.pulldown = this;
   addElementClass( this.div, "invisible" );
 
-  this.close_button = createDOM( "input", { "type": "button", "value": " x ", "class": "pulldown_button" } );
-
-  appendChildNodes( this.div, this.close_button );
   appendChildNodes( document.body, this.div );
 
   var self = this;
-  connect( this.close_button, "onclick", function ( event ) { self.shutdown(); event.stop(); } );
 
   // position the pulldown under the button that opened it
   var position = getElementPosition( button );
   var button_dimensions = getElementDimensions( button );
   var div_dimensions = getElementDimensions( this.div );
-  position.x -= div_dimensions.w - button_dimensions.w;
   position.y += button_dimensions.h;
   setElementPosition( this.div, position );
 
@@ -549,7 +569,6 @@ function Pulldown( notebook_id, pulldown_id, button ) {
 } 
 
 Pulldown.prototype.shutdown = function () {
-  disconnectAll( this.close_button );
   removeElement( this.div );
 }
 
@@ -559,16 +578,17 @@ Options_pulldown = function ( notebook_id, invoker, editor ) {
 
   this.invoker = invoker;
   this.editor = editor;
-  this.startup_checkbox = createDOM( "input", { "type": "checkbox" } );
-  this.startup_toggle = createDOM( "span", { "class": "pulldown_toggle" },
-    this.startup_checkbox,
+  this.startup_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox" } );
+  this.startup_toggle = createDOM( "a", { "href": "", "class": "pulldown_link" },
     "show on startup"
   );
 
+  appendChildNodes( this.div, this.startup_checkbox );
   appendChildNodes( this.div, this.startup_toggle );
   this.startup_checkbox.checked = editor.startup;
 
   var self = this;
+  connect( this.startup_checkbox, "onclick", function ( event ) { self.startup_clicked( event ); } );
   connect( this.startup_toggle, "onclick", function ( event ) { self.startup_clicked( event ); event.stop(); } );
 }
 
@@ -596,3 +616,35 @@ Options_pulldown.prototype.shutdown = function () {
 
   disconnectAll( this.startup_toggle );
 }
+
+
+Changes_pulldown = function ( notebook_id, invoker, editor ) {
+  Pulldown.call( this, notebook_id, "changes_" + editor.id, editor.changes_button );
+
+  this.invoker = invoker;
+  this.editor = editor;
+  
+  // display list of revision timestamps in reverse chronological order
+  if ( isUndefinedOrNull( this.editor.revisions_list ) ) {
+    appendChildNodes( this.div, createDOM( "span", "This note has no previous changes." ) );
+    return;
+  }
+
+  var revisions_list = clone( this.editor.revisions_list );
+  revisions_list.reverse();
+
+  for ( var i = 0; i < revisions_list.length; ++i ) {
+    var revision = revisions_list[ i ];
+    revision = revision.split( /\.\d/ )[ 0 ]; // strip off seconds from the timestamp
+    var href = "/notebooks/" + this.notebook_id + "?" + queryString(
+      [ "note_id", "revision" ],
+      [ this.editor.id, revision ]
+    );
+//    appendChildNodes( this.div, createDOM( "a", { "href": href, "class": "pulldown_link" }, revision ) );
+    appendChildNodes( this.div, createDOM( "span", {}, revision ) );
+    appendChildNodes( this.div, createDOM( "br" ) );
+  }
+}
+
+Changes_pulldown.prototype = Pulldown;
+Changes_pulldown.prototype.constructor = Changes_pulldown;
