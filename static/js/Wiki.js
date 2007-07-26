@@ -182,12 +182,14 @@ Wiki.prototype.parse_loaded_editor = function ( result, insert_after_iframe_id, 
   if ( result.note ) {
     var id = result.note.object_id
     var note_text = result.note.contents;
+    var revisions_list = result.note.revisions_list;
   } else {
     var id = null;
     var note_text = "<h3>" + note_title;
+    var revisions_list = new Array();
   }
 
-  this.create_editor( id, note_text, result.note.revisions_list, insert_after_iframe_id, note_title, true, false );
+  this.create_editor( id, note_text, revisions_list, insert_after_iframe_id, note_title, true, false );
 }
 
 Wiki.prototype.create_editor = function ( id, note_text, revisions_list, insert_after_iframe_id, note_title, highlight, focus ) {
