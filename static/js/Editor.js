@@ -250,6 +250,10 @@ Editor.prototype.key_released = function ( event ) {
 }
 
 Editor.prototype.mouse_clicked = function ( event ) {
+  // we only want to deal with left mouse button clicks
+  if ( event.mouse().button.middle || event.mouse().button.right )
+    return;
+
   event.stop();
   signal( this, "state_changed", this );
 
