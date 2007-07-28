@@ -2,13 +2,6 @@ from datetime import datetime
 
 
 class Persistent( object ):
-  def __setstate__( self, state ):
-    key = "_Persistent__revisions_list"
-    if key not in state:
-      state[ key ] = [ state[ "_Persistent__revision" ] ]
-
-    self.__dict__.update( state )
-
   def __init__( self, object_id, secondary_id = None ):
     self.__object_id = object_id
     self.__secondary_id = secondary_id
