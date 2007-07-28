@@ -38,10 +38,12 @@ class Notebooks( object ):
   @expose( view = Main_page )
   @validate(
     notebook_id = Valid_id(),
+    note_id = Valid_id(),
   )
-  def default( self, notebook_id ):
+  def default( self, notebook_id, note_id = None ):
     return dict(
       notebook_id = notebook_id,
+      note_id = note_id,
     )
 
   @expose( view = Json )
@@ -52,9 +54,10 @@ class Notebooks( object ):
   @update_client
   @validate(
     notebook_id = Valid_id(),
+    note_id = Valid_id( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def contents( self, notebook_id, user_id ):
+  def contents( self, notebook_id, note_id = None, user_id = None ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -64,6 +67,7 @@ class Notebooks( object ):
 
     yield dict(
       notebook = notebook,
+      note = notebook.lookup_note( note_id ),
     )
 
   @expose( view = Json )
