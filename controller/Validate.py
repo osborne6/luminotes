@@ -134,7 +134,7 @@ class Valid_bool( object ):
     raise ValueError()
 
 
-def validate( **kwarg_types ):
+def validate( **expected ):
   """
   validate() can be used to require that the arguments of the decorated method successfully pass
   through particular validators. The validate() method itself is evaluated where it is used as a
@@ -177,64 +177,62 @@ def validate( **kwarg_types ):
       args = list( args )
       args_index = 1 # skip the self argument
 
-      for ( arg_name, arg_type ) in kwarg_types.items():
-        if arg_name == u"kwargs":
-          key_type = kwarg_types[ u"kwargs" ].keys()[ 0 ]
-          value_type = kwarg_types[ u"kwargs" ].values()[ 0 ]
+      # determine the expected argument names from the decorated function itself
+      code = function.func_code
+      expected_names = code.co_varnames[ : code.co_argcount ]
 
-          for ( key, value ) in kwargs.items():
-            if key not in kwarg_types:
-              del( kwargs[ key ] )
-              try:
-                kwargs[ str( key_type( key ) ) ] = value_type( value )
-              except ( ValueError, TypeError ):
-                raise Validation_error( key, value, value_type )
+      # validate each of the expected arguments
+      for expected_name in expected_names:
+        if expected_name == u"self": continue
+        expected_type = expected.get( expected_name )        
 
-          continue
-
-        # look for arg_name in kwargs and store the validated value there
-        if arg_name in kwargs:
-          value = kwargs.get( arg_name )
-          # if there's a tuple of multiple validators for this arg_name, use all of them
-          if isinstance( arg_type, tuple ):
-            for validator in arg_type:
+        # look for expected_name in kwargs and store the validated value there
+        if expected_name in kwargs:
+          value = kwargs.get( expected_name )
+          # if there's a tuple of multiple validators for this expected_name, use all of them
+          if isinstance( expected_type, tuple ):
+            for validator in expected_type:
               try:
                 value = validator( value )
               except ( ValueError, TypeError ):
-                raise Validation_error( arg_name, value, validator )
-            kwargs[ str( arg_name ) ] = value
+                raise Validation_error( expected_name, value, validator )
+            kwargs[ str( expected_name ) ] = value
           # otherwise, there's just a single validator
           else:
             try:
-              kwargs[ str( arg_name ) ] = arg_type( value )
+              kwargs[ str( expected_name ) ] = expected_type( value )
             except ( ValueError, TypeError ):
-              raise Validation_error( arg_name, value, arg_type )
+              raise Validation_error( expected_name, value, expected_type )
           continue
 
-        # arg_name wasn't found in kwargs, so use args instead
+        # expected_name wasn't found in kwargs, so look for it in args. if it's not there either,
+        # raise unless there's a default value for the argument in the decorated function
         if args_index >= len( args ):
-          raise Validation_error( arg_name, None, arg_type, message = u"is required" )
+          if function.func_defaults and args_index >= len( args ) - len( function.func_defaults ):
+            continue
+          raise Validation_error( expected_name, None, expected_type, message = u"is required" )
         value = args[ args_index ]
 
-        # if there's a tuple of multiple validators for this arg_name, use all of them
-        if isinstance( arg_type, tuple ):
-          for validator in arg_type:
+        # if there's a tuple of multiple validators for this expected_name, use all of them
+        if isinstance( expected_type, tuple ):
+          for validator in expected_type:
             try:
               value = validator( value )
             except ( ValueError, TypeError ):
-              raise Validation_error( arg_name, value, validator )
+              raise Validation_error( expected_name, value, validator )
           args[ args_index ] = value
         # otherwise, there's just a single validator
         else:
           try:
-            args[ args_index ] = arg_type( value )
+            args[ args_index ] = expected_type( value )
           except ( ValueError, TypeError ):
-            raise Validation_error( arg_name, value, arg_type )
+            raise Validation_error( expected_name, value, expected_type )
         args_index += 1
 
+      # if there are any unexpected arguments, raise
       for ( arg_name, arg_value ) in kwargs.items():
-        if not arg_name in kwarg_types:
-          print arg_name, kwarg_types
+        if not arg_name in expected_names:
+          print arg_name, expected
           raise Validation_error( arg_name, arg_value, None, message = u"is an unknown argument" )
 
       return function( *args, **kwargs )

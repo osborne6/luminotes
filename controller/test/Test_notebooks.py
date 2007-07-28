@@ -62,6 +62,12 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"notebook_id" ) == self.notebook.object_id
 
+  def test_default_with_note( self ):
+    result = self.http_get( "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, self.note.object_id ) )
+    
+    assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert result.get( u"note_id" ) == self.note.object_id
+
   def test_contents( self ):
     self.login()
 
@@ -75,6 +81,24 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == self.notebook.object_id
     assert len( notebook.startup_notes ) == 1
     assert notebook.startup_notes[ 0 ] == self.note
+
+  def test_contents_with_note( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/contents?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+      session_id = self.session_id,
+    )
+
+    notebook = result[ "notebook" ]
+
+    assert notebook.object_id == self.notebook.object_id
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
 
   def test_contents_without_login( self ):
     result = self.http_get(

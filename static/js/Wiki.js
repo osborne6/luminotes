@@ -16,7 +16,8 @@ function Wiki() {
   if ( this.notebook_id ) {
     this.invoker.invoke(
       "/notebooks/contents", "GET", {
-        "notebook_id": this.notebook_id
+        "notebook_id": this.notebook_id,
+        "note_id": getElement( "note_id" ).value
       },
       function( result ) { self.populate( result ); }
     );
@@ -121,9 +122,17 @@ Wiki.prototype.populate = function ( result ) {
     var note = this.notebook.startup_notes[ i ];
     if ( !note ) continue;
     this.startup_notes[ note.object_id ] = true;
-    var focus = ( i == 0 );
-    this.create_editor( note.object_id, note.contents, note.revisions_list, undefined, undefined, false, focus );
+
+    // don't actually create an editor if a particular note was provided in the result
+    if ( !result.note ) {
+      var focus = ( i == 0 );
+      this.create_editor( note.object_id, note.contents, note.revisions_list, undefined, undefined, false, focus );
+    }
   }
+
+  // if one particular note was provided, then just display an editor for that note
+  if ( result.note )
+    this.create_editor( result.note.object_id, result.note.contents, result.note.revisions_list, undefined, undefined, false, true );
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -214,7 +223,7 @@ Wiki.prototype.create_editor = function ( id, note_text, revisions_list, insert_
     for ( var i in links ) {
       // a link matches if its contained text is the same as this note's title
       if ( scrapeText( links[ i ] ) == note_title )
-        links[ i ].href = "/notes/" + id;
+        links[ i ].href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
     }
   }
 
@@ -232,7 +241,7 @@ Wiki.prototype.create_editor = function ( id, note_text, revisions_list, insert_
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, note_text, revisions_list, undefined, this.read_write, startup, highlight, focus );
+  var editor = new Editor( id, this.notebook_id, note_text, revisions_list, undefined, this.read_write, startup, highlight, focus );
 
   if ( this.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
@@ -575,7 +584,7 @@ Pulldown.prototype.shutdown = function () {
 }
 
 
-Options_pulldown = function ( notebook_id, invoker, editor ) {
+function Options_pulldown( notebook_id, invoker, editor ) {
   Pulldown.call( this, notebook_id, "options_" + editor.id, editor.options_button );
 
   this.invoker = invoker;
@@ -620,7 +629,7 @@ Options_pulldown.prototype.shutdown = function () {
 }
 
 
-Changes_pulldown = function ( notebook_id, invoker, editor ) {
+function Changes_pulldown( notebook_id, invoker, editor ) {
   Pulldown.call( this, notebook_id, "changes_" + editor.id, editor.changes_button );
 
   this.invoker = invoker;

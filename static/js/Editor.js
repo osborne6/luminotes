@@ -1,7 +1,8 @@
 note_titles = {} // map from note title to the open editor for that note
 
-function Editor( id, note_text, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
+function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
   this.id = id;
+  this.notebook_id;
   this.initial_text = note_text;
   this.revisions_list = revisions_list;
   this.read_write = read_write;
@@ -273,11 +274,11 @@ Editor.prototype.mouse_clicked = function ( event ) {
   var id;
   var link_title = scrapeText( link );
   var editor = note_titles[ link_title ];
-  var href_leaf = link.href.split( "/" ).pop();
+  var href_leaf = link.href.split( "?note_id=" ).pop();
   // if the link's title corresponds to an open note id, set that as the link's destination
   if ( editor ) {
     id = editor.id;
-    link.href = "/notes/" + id;
+    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
   // if this is a new link, get a new note id and set it for the link's destination
   } else if ( href_leaf == "new" ) {
     signal( this, "load_editor_by_title", link_title, this.iframe.id );
@@ -363,7 +364,7 @@ Editor.prototype.start_link = function () {
         range.setStart( container, range.startOffset - 1 );
       }
 
-      this.exec_command( "createLink", "/notes/new" );
+      this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
 
       var links = getElementsByTagAndClassName( "a", null, parent = this.document );
       for ( var i in links ) {
@@ -382,7 +383,7 @@ Editor.prototype.start_link = function () {
       }
     // otherwise, just create a link with the selected text as the link title
     } else {
-      this.exec_command( "createLink", "/notes/new" );
+      this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -395,7 +396,7 @@ Editor.prototype.start_link = function () {
       range.select();
     }
 
-    this.exec_command( "createLink", "/notes/new" );
+    this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
   }
 }
 
