@@ -138,7 +138,7 @@ class Database( object ):
       print "error unpickling %s: %s" % ( object_id, pickled )
       return None
     self.__cache[ unicode( obj.object_id ).encode( "utf8" ) ] = obj
-    self.__cache[ unicode( obj.revision_id() ).encode( "utf8" ) ] = obj
+    self.__cache[ unicode( obj.revision_id() ).encode( "utf8" ) ] = copy( obj )
 
     return obj
 

@@ -24,10 +24,11 @@ class Note( Persistent ):
     self.__title = None
     self.__contents = None or ""
 
-    self.__set_contents( contents )
+    self.__set_contents( contents, new_revision = False )
 
-  def __set_contents( self, contents ):
-    self.update_revision()
+  def __set_contents( self, contents, new_revision = True ):
+    if new_revision:
+      self.update_revision()
     self.__contents = contents
 
     # parse title out of the beginning of the contents

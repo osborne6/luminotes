@@ -1,8 +1,8 @@
 # originally from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/496942
 
+import urlparse
 from htmllib import HTMLParser
 from cgi import escape
-from urlparse import urlparse
 from formatter import AbstractFormatter, NullWriter
 from htmlentitydefs import entitydefs
 from xml.sax.saxutils import quoteattr
@@ -120,7 +120,13 @@ class Html_cleaner(HTMLParser):
     self.handle_endtag(tag, None)
 
   def url_is_acceptable(self,url):
-    parsed = urlparse(url)
+    parsed = urlparse.urlparse(url)
+
+    # Work-around a nasty bug. urlparse() caches parsed results and returns them on future calls,
+    # and if the cache isn't cleared here, then a unicode string gets added to the cache, which
+    # freaks out cherrypy when it independently calls urlparse() with the same URL later.
+    urlparse.clear_cache()
+
     return parsed[0] in self.allowed_schemes
 
   def strip(self, rawstring):

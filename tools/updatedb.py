@@ -34,7 +34,7 @@ class Initializer( object ):
       self.scheduler.wait_for( thread )
 
   def update_main_notebook( self ):
-    self.database.load( u"anonymous", self.scheduler.thread )
+    self.database.load( u"User anonymous", self.scheduler.thread )
     anonymous = ( yield Scheduler.SLEEP )
     main_notebook = anonymous.notebooks[ 0 ]._Read_only_notebook__wrapped
     startup_notes = []
@@ -42,7 +42,7 @@ class Initializer( object ):
     # update all of the notes in the main notebook
     for ( filename, startup ) in self.ENTRY_FILES:
       full_filename = os.path.join( self.HTML_PATH, filename )
-      contents = file( full_filename ).read()
+      contents = file( full_filename ).read().replace( "%s", main_notebook.object_id )
 
       title = filename.replace( u".html", u"" )
       note = main_notebook.lookup_note_by_title( title )

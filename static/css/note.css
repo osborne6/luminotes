@@ -27,6 +27,10 @@ h3 {
   -webkit-border-radius: 0.5em;
 }
 
+.small_text {
+  font-size: 0.75em;
+}
+
 ul li {
   margin-top: 0.5em;
 }

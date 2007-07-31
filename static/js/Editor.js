@@ -126,13 +126,13 @@ Editor.prototype.finish_init = function () {
   if ( this.read_write ) {
     connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
     connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
+    connect( this.document, "onblur", function ( event ) { self.blurred( event ); } );
+    connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
+    connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
+    connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
   }
 
   connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
-  connect( this.document, "onblur", function ( event ) { self.blurred( event ); } );
-  connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
-  connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
-  connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
 
   // special-case: connect any submit buttons within the contents of this note
   var signup_button = withDocument( this.document, function () { return getElement( "signup_button" ); } );
@@ -431,6 +431,8 @@ Editor.prototype.focus = function () {
 
 // return true if the specified state is enabled
 Editor.prototype.state_enabled = function ( state_name ) {
+  if ( !this.read_write ) return false;
+
   state_name = state_name.toLowerCase();
   var format_block = this.document.queryCommandValue( "formatblock" ).toLowerCase();
   var heading = ( format_block == "h3" || format_block == "heading 3" );

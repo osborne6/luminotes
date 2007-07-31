@@ -6,7 +6,7 @@ from Toolbar import Toolbar
 
 
 class Main_page( Page ):
-  def __init__( self, notebook_id = None, note_id = None ):
+  def __init__( self, notebook_id = None, note_id = None, revision = None ):
     title = None
 
     Page.__init__(
@@ -14,6 +14,7 @@ class Main_page( Page ):
       title,
       Input( type = u"hidden", name = u"notebook_id", id = u"notebook_id", value = notebook_id or "" ),
       Input( type = u"hidden", name = u"note_id", id = u"note_id", value = note_id or "" ),
+      Input( type = u"hidden", name = u"revision", id = u"revision", value = revision or "" ),
       Div(
         id = u"status_area",
       ),

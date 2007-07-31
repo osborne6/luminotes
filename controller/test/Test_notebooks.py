@@ -1,5 +1,6 @@
 import cherrypy
 import cgi
+from urllib import quote
 from Test_controller import Test_controller
 from controller.Scheduler import Scheduler
 from model.Notebook import Notebook
@@ -68,6 +69,17 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"note_id" ) == self.note.object_id
 
+  def test_default_with_note_and_revision( self ):
+    result = self.http_get( "/notebooks/%s?note_id=%s&revision=%s" % (
+      self.notebook.object_id,
+      self.note.object_id,
+      quote( unicode( self.note.revision ) ),
+    ) )
+    
+    assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert result.get( u"note_id" ) == self.note.object_id
+    assert result.get( u"revision" ) == unicode( self.note.revision )
+
   def test_contents( self ):
     self.login()
 
@@ -87,6 +99,28 @@ class Test_notebooks( Test_controller ):
 
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+      session_id = self.session_id,
+    )
+
+    notebook = result[ "notebook" ]
+
+    assert notebook.object_id == self.notebook.object_id
+    assert len( notebook.startup_notes ) == 1
+    assert notebook.startup_notes[ 0 ] == self.note
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+
+  def test_contents_with_note_and_revision( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/contents?notebook_id=%s&note_id=%s&revision=%s" % (
+        self.notebook.object_id,
+        self.note.object_id,
+        quote( unicode( self.note.revision ) ),
+      ),
       session_id = self.session_id,
     )
 
@@ -121,6 +155,35 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == self.note.title
     assert note.contents == self.note.contents
+
+  def test_load_note_with_revision( self ):
+    self.login()
+
+    # update the note to generate a new revision
+    previous_revision = self.note.revision
+    previous_title = self.note.title
+    previous_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+    ), session_id = self.session_id )
+
+    # load the note by the old revision
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = previous_revision,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    # assert that we get the previous revision of the note, not the new one
+    assert note.object_id == self.note.object_id
+    assert note.revision == previous_revision
+    assert note.title == previous_title
+    assert note.contents == previous_contents
 
   def test_load_note_without_login( self ):
     result = self.http_post( "/notebooks/load_note/", dict(
@@ -510,6 +573,7 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
+    print result
     assert result.get( "note" ) == None
 
   def test_delete_note_without_login( self ):

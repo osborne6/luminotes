@@ -37,6 +37,7 @@ class Test_database( object ):
   def test_save_and_load( self ):
     def gen():
       basic_obj = Some_object( object_id = "5", value = 1 )
+      original_revision = basic_obj.revision
 
       self.database.save( basic_obj, self.scheduler.thread )
       yield Scheduler.SLEEP
@@ -45,6 +46,8 @@ class Test_database( object ):
       obj = ( yield Scheduler.SLEEP )
 
       assert obj.object_id == basic_obj.object_id
+      assert obj.revision == original_revision
+      assert obj.revisions_list == [ original_revision ]
       assert obj.value == basic_obj.value
 
     g = gen()
@@ -54,7 +57,9 @@ class Test_database( object ):
   def test_complex_save_and_load( self ):
     def gen():
       basic_obj = Some_object( object_id = "7", value = 2 )
+      basic_original_revision = basic_obj.revision
       complex_obj = Some_object( object_id = "6", value = basic_obj )
+      complex_original_revision = complex_obj.revision
 
       self.database.save( complex_obj, self.scheduler.thread )
       yield Scheduler.SLEEP
@@ -64,14 +69,20 @@ class Test_database( object ):
       if self.clear_cache: self.database.clear_cache()
 
       assert obj.object_id == complex_obj.object_id
+      assert obj.revision == complex_original_revision
+      assert obj.revisions_list == [ complex_original_revision ]
       assert obj.value.object_id == basic_obj.object_id
       assert obj.value.value == basic_obj.value
+      assert obj.value.revision == basic_original_revision
+      assert obj.value.revisions_list == [ basic_original_revision ]
 
       self.database.load( basic_obj.object_id, self.scheduler.thread )
       obj = ( yield Scheduler.SLEEP )
 
       assert obj.object_id == basic_obj.object_id
       assert obj.value == basic_obj.value
+      assert obj.revision == basic_original_revision
+      assert obj.revisions_list == [ basic_original_revision ]
 
     g = gen()
     self.scheduler.add( g )
@@ -80,6 +91,7 @@ class Test_database( object ):
   def test_save_and_load_by_secondary( self ):
     def gen():
       basic_obj = Some_object( object_id = "5", value = 1, secondary_id = u"foo" )
+      original_revision = basic_obj.revision
 
       self.database.save( basic_obj, self.scheduler.thread )
       yield Scheduler.SLEEP
@@ -89,6 +101,8 @@ class Test_database( object ):
 
       assert obj.object_id == basic_obj.object_id
       assert obj.value == basic_obj.value
+      assert obj.revision == original_revision
+      assert obj.revisions_list == [ original_revision ]
 
     g = gen()
     self.scheduler.add( g )
@@ -97,7 +111,9 @@ class Test_database( object ):
   def test_duplicate_save_and_load( self ):
     def gen():
       basic_obj = Some_object( object_id = "9", value = 3 )
+      basic_original_revision = basic_obj.revision
       complex_obj = Some_object( object_id = "8", value = basic_obj, value2 = basic_obj )
+      complex_original_revision = complex_obj.revision
 
       self.database.save( complex_obj, self.scheduler.thread )
       yield Scheduler.SLEEP
@@ -107,10 +123,19 @@ class Test_database( object ):
       if self.clear_cache: self.database.clear_cache()
 
       assert obj.object_id == complex_obj.object_id
+      assert obj.revision == complex_original_revision
+      assert obj.revisions_list == [ complex_original_revision ]
+
       assert obj.value.object_id == basic_obj.object_id
       assert obj.value.value == basic_obj.value
+      assert obj.value.revision == basic_original_revision
+      assert obj.value.revisions_list == [ basic_original_revision ]
+
       assert obj.value2.object_id == basic_obj.object_id
       assert obj.value2.value == basic_obj.value
+      assert obj.value2.revision == basic_original_revision
+      assert obj.value2.revisions_list == [ basic_original_revision ]
+
       assert obj.value == obj.value2
 
       self.database.load( basic_obj.object_id, self.scheduler.thread )
@@ -118,6 +143,8 @@ class Test_database( object ):
 
       assert obj.object_id == basic_obj.object_id
       assert obj.value == basic_obj.value
+      assert obj.revision == basic_original_revision
+      assert obj.revisions_list == [ basic_original_revision ]
 
     g = gen()
     self.scheduler.add( g )
@@ -143,14 +170,17 @@ class Test_database( object ):
 
       assert obj.object_id == basic_obj.object_id
       assert obj.revision == basic_obj.revision
+      assert obj.revisions_list == [ original_revision, basic_obj.revision ]
       assert obj.value == basic_obj.value
 
       self.database.load( basic_obj.object_id, self.scheduler.thread, revision = original_revision )
-      obj = ( yield Scheduler.SLEEP )
+      revised = ( yield Scheduler.SLEEP )
 
-      assert obj.object_id == basic_obj.object_id
-      assert obj.revision == original_revision
-      assert obj.value == 1
+      assert revised.object_id == basic_obj.object_id
+      assert revised.value == 1
+      assert revised.revision == original_revision
+      assert id( obj.revisions_list ) != id( revised.revisions_list )
+      assert revised.revisions_list == [ original_revision ]
 
     g = gen()
     self.scheduler.add( g )
@@ -171,6 +201,7 @@ class Test_database( object ):
   def test_reload( self ):
     def gen():
       basic_obj = Some_object( object_id = "5", value = 1 )
+      original_revision = basic_obj.revision
 
       self.database.save( basic_obj, self.scheduler.thread )
       yield Scheduler.SLEEP
@@ -192,6 +223,8 @@ class Test_database( object ):
 
       assert obj.object_id == basic_obj.object_id
       assert obj.value == 55
+      assert obj.revision == original_revision
+      assert obj.revisions_list == [ original_revision ]
 
     g = gen()
     self.scheduler.add( g )
@@ -229,6 +262,7 @@ class Test_database( object ):
 
       assert obj.object_id == basic_obj.object_id
       assert obj.revision == original_revision
+      assert obj.revisions_list == [ original_revision ]
       assert obj.value == 55
 
     g = gen()

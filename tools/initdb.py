@@ -52,7 +52,7 @@ class Initializer( object ):
 
     for ( filename, startup ) in self.ENTRY_FILES:
       full_filename = os.path.join( self.HTML_PATH, filename )
-      contents = file( full_filename ).read()
+      contents = file( full_filename ).read().replace( "%s", main_notebook_id )
 
       self.database.next_id( self.scheduler.thread )
       note_id = ( yield Scheduler.SLEEP )

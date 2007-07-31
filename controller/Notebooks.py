@@ -39,11 +39,13 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
+    revision = Valid_string( min = 19, max = 30 ),
   )
-  def default( self, notebook_id, note_id = None ):
+  def default( self, notebook_id, note_id = None, revision = None ):
     return dict(
       notebook_id = notebook_id,
       note_id = note_id,
+      revision = revision,
     )
 
   @expose( view = Json )
@@ -55,33 +57,10 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id( none_okay = True ),
+    revision = Valid_string( min = 0, max = 30 ),
     user_id = Valid_id( none_okay = True ),
   )
-  def contents( self, notebook_id, note_id = None, user_id = None ):
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
-      raise Access_error()
-
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
-
-    yield dict(
-      notebook = notebook,
-      note = notebook.lookup_note( note_id ),
-    )
-
-  @expose( view = Json )
-  @strongly_expire
-  @wait_for_update
-  @grab_user_id
-  @async
-  @update_client
-  @validate(
-    notebook_id = Valid_id(),
-    note_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def load_note( self, notebook_id, note_id, user_id ):
+  def contents( self, notebook_id, note_id = None, revision = None, user_id = None ):
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -93,6 +72,44 @@ class Notebooks( object ):
       note = None
     else:
       note = notebook.lookup_note( note_id )
+
+    if revision:
+      self.__database.load( note_id, self.__scheduler.thread, revision )
+      note = ( yield Scheduler.SLEEP )
+
+    yield dict(
+      notebook = notebook,
+      note = note,
+    )
+
+  @expose( view = Json )
+  @strongly_expire
+  @wait_for_update
+  @grab_user_id
+  @async
+  @update_client
+  @validate(
+    notebook_id = Valid_id(),
+    note_id = Valid_id(),
+    revision = Valid_string( min = 19, max = 30 ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def load_note( self, notebook_id, note_id, revision = None, user_id = None ):
+    self.check_access( notebook_id, user_id, self.__scheduler.thread )
+    if not ( yield Scheduler.SLEEP ):
+      raise Access_error()
+
+    self.__database.load( notebook_id, self.__scheduler.thread )
+    notebook = ( yield Scheduler.SLEEP )
+
+    if notebook is None:
+      note = None
+    else:
+      note = notebook.lookup_note( note_id )
+
+    if revision:
+      self.__database.load( note_id, self.__scheduler.thread, revision )
+      note = ( yield Scheduler.SLEEP )
 
     yield dict(
       note = note,
@@ -264,7 +281,7 @@ class Notebooks( object ):
     yield dict()
 
   @expose( view = Note_page )
-  @validate( id = Valid_id() )
+  @validate( id = Valid_string( min = 1, max = 100 ) )
   def blank_note( self, id ):
     return dict( id = id )
 
@@ -382,7 +399,7 @@ class Notebooks( object ):
       self.__database.load( user_id, self.__scheduler.thread )
       user = ( yield Scheduler.SLEEP )
 
-      if user.has_access( notebook_id ):
+      if user and user.has_access( notebook_id ):
         access = True
 
     yield callback, access

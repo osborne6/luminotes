@@ -10,7 +10,9 @@ class Persistent( object ):
 
   def update_revision( self ):
     self.__revision = datetime.now()
-    self.__revisions_list.append( self.__revision )
+
+    # make a new copy of the list to prevent sharing of this list between different revisions
+    self.__revisions_list = self.__revisions_list + [ self.__revision ]
 
   def revision_id( self ):
     return "%s %s" % ( self.__object_id, self.__revision )
