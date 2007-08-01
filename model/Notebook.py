@@ -152,7 +152,7 @@ class Notebook( Persistent ):
     @rtype bool
     @return: True if the note is a startup note
     """
-    return note.object_id in [ n.object_id for n in self.__startup_notes ]
+    return note.object_id in [ n.object_id for n in self.__startup_notes if n ]
 
   def to_dict( self ):
     d = Persistent.to_dict( self )
