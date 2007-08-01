@@ -12,6 +12,22 @@ a:hover {
   color: #ff6600;
 }
 
+noscript {
+  text-align: left;
+}
+
+noscript h3 {
+  margin-bottom: 0.5em;
+}
+
+ul li {
+  margin-top: 0.5em;
+}
+
+ol li {
+  margin-top: 0.5em;
+}
+
 #center_and_toolbar_area {
   margin: 0 auto;
   text-align: center;

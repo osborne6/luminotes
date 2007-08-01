@@ -47,11 +47,9 @@ class Main_page( Page ):
             id = u"notes",
           ),
           Noscript(
-            u"""
-            Luminotes is a personal wiki notebook for organizing your notes and ideas. It also
-            happens to require Javascript. So if you'd like to check out this site, please enable
-            Javascript in your web browser. Sorry for the inconvenience.
-            """,
+            Div( file( u"static/html/about.html" ).read() ),
+            Div( file( u"static/html/features.html" ).read().replace( u"href=", u"disabled=" ) ),
+            Div( file( u"static/html/no javascript.html" ).read() ),
           ),
           id = u"center_area",
         ),

@@ -5,6 +5,7 @@ class Page( Html ):
   def __init__( self, title, *children, **attrs ):
     head_types = ( Link, Script, Meta )   # node types to move to the Head section
     app_name = u"Luminotes"
+    if not title: title = u"personal wiki notebook"
 
     if "id" not in attrs:
       attrs[ "id" ] = u"content"
