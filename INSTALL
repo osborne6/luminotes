@@ -8,11 +8,16 @@ First, install the prerequisites:
  * CherryPy 2.2
  * simplejson 1.3
 
-If you're interested in running unit tests, also install:
 
-  * nose 0.9.0
+development mode
+----------------
 
-Run the server in development mode:
+Running the Luminotes server in development mode is convenient for testing out
+changes, because it uses CherryPy's built-in web server with auto-reload
+enabled, so the server will automatically reload any modified source files as
+soon as they're modified.
+
+To start the server in development mode:
 
   python2.5 luminotes.py -d
 
@@ -20,7 +25,53 @@ Connect to the following URL in a web browser running on the same machine:
 
   http://localhost:8081/
 
-You can run unit tests by running:
+
+production mode
+---------------
+
+Production mode is intended for a live production web site, so you can skip
+this section entirely if you don't care about running such a site. Production
+mode doesn't support auto-reload, and logging goes to file (luminotes.log)
+instead of the console, but performance should be better than in development
+mode.
+
+If you want to use SSL, Edit static/js/Editor.js and change the value of
+form_base_url to the URL of your SSL server. For instance:
+
+  form_base_url = "https://luminotes.com";
+
+Then you'll need to configure your web server to forward requests for
+non-static pages to CherryPy. These instructions are for Apache, but in
+theory, Luminotes should work with just about any web server.
+
+In your Apache configuration file, enable mod_rewrite and add the following
+rewrite rules:
+
+  RewriteEngine on
+  RewriteRule ^/favicon.ico /path/to/luminotes/static/images/favicon.ico [L]
+  RewriteRule ^/static/(.*) /path/to/luminotes/static/$1 [L]
+  RewriteRule ^(.*) http://127.0.0.1:8081$1 [P]
+
+You should change the paths to point to wherever Luminotes happens to be
+installed. These rules cause Apache to serve static files itself, while
+passing through requests for dynamic pages to the CherryPy web server running
+locally.
+
+To actually start the production mode server:
+
+  python2.5 luminotes.py
+
+Then you should be able to connect to the site at whatever domain you've
+configured Apache to serve.
+
+
+unit tests
+----------
+
+If you're interested in running unit tests, install:
+
+  * nose 0.9.0
+
+Then you can run unit tests by running:
 
   nosetests
-
