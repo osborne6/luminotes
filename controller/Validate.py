@@ -232,7 +232,6 @@ def validate( **expected ):
       # if there are any unexpected arguments, raise
       for ( arg_name, arg_value ) in kwargs.items():
         if not arg_name in expected_names:
-          print arg_name, expected
           raise Validation_error( arg_name, arg_value, None, message = u"is an unknown argument" )
 
       return function( *args, **kwargs )
