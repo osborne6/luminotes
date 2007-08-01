@@ -1,3 +1,4 @@
+form_base_url = "";
 note_titles = {} // map from note title to the open editor for that note
 
 function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
@@ -139,7 +140,7 @@ Editor.prototype.finish_init = function () {
   if ( signup_button ) {
     var signup_form = withDocument( this.document, function () { return getElement( "signup_form" ); } );
     connect( signup_button, "onclick", function ( event ) {
-      signal( self, "submit_form", "/users/signup", signup_form ); event.stop();
+      signal( self, "submit_form", form_base_url + "/users/signup", signup_form ); event.stop();
     } );
   }
 
@@ -147,7 +148,7 @@ Editor.prototype.finish_init = function () {
   if ( login_button ) {
     var login_form = withDocument( this.document, function () { return getElement( "login_form" ); } );
     connect( login_button, "onclick", function ( event ) {
-      signal( self, "submit_form", "/users/login", login_form ); event.stop();
+      signal( self, "submit_form", form_base_url + "/users/login", login_form ); event.stop();
     } );
   }
 
