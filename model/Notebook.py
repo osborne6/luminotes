@@ -55,7 +55,7 @@ class Notebook( Persistent ):
     if self.__notes.pop( note.object_id, None ):
       self.update_revision()
       self.__titles.pop( note.title, None )
-      if note in self.__startup_notes:
+      if self.is_startup_note( note ):
         self.__startup_notes.remove( note )
       return True
 
@@ -111,7 +111,7 @@ class Notebook( Persistent ):
     """
     Add the given note to be shown on startup. It must already be a note in this notebook.
 
-    @type note: unicode
+    @type note: Note
     @param note: note to be added for startup
     @rtype: bool
     @return: True if the note was added for startup
@@ -120,7 +120,7 @@ class Notebook( Persistent ):
     if self.__notes.get( note.object_id ) is None:
       raise Notebook.UnknownNoteError( note.object_id )
 
-    if not note in self.__startup_notes:
+    if not self.is_startup_note( note ):
       self.update_revision()
       self.__startup_notes.append( note )
       return True
@@ -131,17 +131,28 @@ class Notebook( Persistent ):
     """
     Remove the given note from being shown on startup.
 
-    @type note: unicode
+    @type note: Note
     @param note: note to be removed from startup
     @rtype: bool
     @return: True if the note was removed from startup
     """
-    if note in self.__startup_notes:
+    if self.is_startup_note( note ):
       self.update_revision()
       self.__startup_notes.remove( note )
       return True
 
     return False
+
+  def is_startup_note( self, note ):
+    """
+    Return whether the given note is a startup note.
+
+    @type note: Note
+    @param note: note to test for startup status
+    @rtype bool
+    @return: True if the note is a startup note
+    """
+    return note.object_id in [ n.object_id for n in self.__startup_notes ]
 
   def to_dict( self ):
     d = Persistent.to_dict( self )

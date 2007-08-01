@@ -36,7 +36,9 @@ class Test_notebooks( Test_controller ):
     self.notebook = Notebook( ( yield Scheduler.SLEEP ), u"notebook" )
 
     self.database.next_id( self.scheduler.thread )
-    self.note = Note( ( yield Scheduler.SLEEP ), u"<h3>my title</h3>blah" )
+    note_id = ( yield Scheduler.SLEEP )
+    self.note = Note( note_id, u"<h3>my title</h3>blah" )
+    self.note_duplicate = Note( note_id, u"<h3>my title</h3>blah" )
     self.notebook.add_note( self.note )
     self.notebook.add_startup_note( self.note )
 
@@ -559,6 +561,15 @@ class Test_notebooks( Test_controller ):
     assert len( notebook.startup_notes ) == 1
     assert notebook.startup_notes[ 0 ] == self.note
 
+  def test_is_startup_note( self ):
+    self.login()
+
+    assert self.notebook.is_startup_note( self.note ) == True
+    assert self.notebook.is_startup_note( self.note2 ) == False
+
+    # make sure that a different note object with the same id as self.note is considered a startup note
+    assert self.notebook.is_startup_note( self.note_duplicate ) == True
+
   def test_delete_note( self ):
     self.login()
 
@@ -784,7 +795,7 @@ class Test_notebooks( Test_controller ):
 
     # assert that startup notes come first, then normal notes in descending revision order
     for note in notes:
-      if note in self.notebook.startup_notes:
+      if self.notebook.is_startup_note( note ):
         assert startup_note_allowed
       else:
         startup_note_allowed = False
