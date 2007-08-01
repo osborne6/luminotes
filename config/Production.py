@@ -10,5 +10,6 @@ settings = {
     "server.log_to_screen": False,
     "server.log_file": "luminotes.log",
     "server.log_access_file": "luminotes.log",
+    "server.log_tracebacks": True,
   },
 }

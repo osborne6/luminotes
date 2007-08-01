@@ -3,7 +3,7 @@ import cherrypy
 
 settings = { 
   "global": {
-    "server.socket_port": 8080,
+    "server.socket_port": 8081,
     "server.environment": "production",
     "session_filter.on": True,
     "session_filter.storage_type": "file",
