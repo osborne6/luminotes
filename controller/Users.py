@@ -103,9 +103,10 @@ def update_auth( function ):
 
 
 class Users( object ):
-  def __init__( self, scheduler, database ):
+  def __init__( self, scheduler, database, http_url ):
     self.__scheduler = scheduler
     self.__database = database
+    self.__http_url = http_url
 
   @expose( view = Json )
   @update_auth
@@ -227,6 +228,7 @@ class Users( object ):
     yield dict(
       user = user,
       notebooks = notebooks,
+      http_url = self.__http_url,
     )
 
   scheduler = property( lambda self: self.__scheduler )

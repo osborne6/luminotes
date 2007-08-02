@@ -13,7 +13,8 @@ class Test_controller( object ):
     cherrypy.lowercase_api = True
     self.scheduler = Scheduler()
     self.database = Database( self.scheduler, database_path = None )
-    cherrypy.root = Root( self.scheduler, self.database )
+    self.settings = { u"global": { u"luminotes.http_url" : u"http://luminotes.com" } }
+    cherrypy.root = Root( self.scheduler, self.database, self.settings )
     cherrypy.config.update( Common.settings )
     cherrypy.config.update( { u"server.log_to_screen": False } )
     cherrypy.server.start( init_only = True, server_class = None )

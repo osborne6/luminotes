@@ -9,18 +9,20 @@ def main( args ):
   scheduler = Scheduler()
   database = Database( scheduler, "data.db" )
 
-  cherrypy.lowercase_api = True
-  root = Root( scheduler, database )
-  cherrypy.root = root
-
   cherrypy.config.update( Common.settings )
 
   if len( args ) > 0 and args[ 0 ] == "-d":
     from config import Development
-    cherrypy.config.update( Development.settings )
+    settings = Development.settings
   else:
     from config import Production
-    cherrypy.config.update( Production.settings )
+    settings = Production.settings
+
+  cherrypy.config.update( settings )
+
+  cherrypy.lowercase_api = True
+  root = Root( scheduler, database, cherrypy.config.configMap )
+  cherrypy.root = root
 
   if scheduler.shutdown not in cherrypy.server.on_stop_server_list:
     cherrypy.server.on_stop_server_list.append( scheduler.shutdown )

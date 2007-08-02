@@ -139,9 +139,11 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ] == self.user
     assert result[ u"notebooks" ] == [ self.anon_notebook ] + self.notebooks
+    assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
 
   def test_current_without_login( self ):
     result = self.http_get( "/users/current" )
 
     assert result[ u"user" ].username == "anonymous"
     assert result[ u"notebooks" ] == [ self.anon_notebook ]
+    assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )

@@ -14,11 +14,11 @@ from view.Not_found_page import Not_found_page
 
 
 class Root( object ):
-  def __init__( self, scheduler, database ):
+  def __init__( self, scheduler, database, settings ):
     self.__scheduler = scheduler
     self.__database = database
     self.__notebooks = Notebooks( scheduler, database )
-    self.__users = Users( scheduler, database )
+    self.__users = Users( scheduler, database, settings[ u"global" ].get( u"luminotes.http_url", u"" ) )
 
   @expose( view = Main_page )
   def index( self ):

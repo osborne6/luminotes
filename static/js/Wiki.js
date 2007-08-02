@@ -68,7 +68,7 @@ Wiki.prototype.display_user = function ( result ) {
   replaceChildNodes( "user_area", span );
   appendChildNodes( span, "logged in as " + result.user.username );
   appendChildNodes( span, " | " );
-  appendChildNodes( span, createDOM( "a", { "href": "/", "id": "logout_link" }, "logout" ) );
+  appendChildNodes( span, createDOM( "a", { "href": result.http_url + "/", "id": "logout_link" }, "logout" ) );
 
   var self = this;
   connect( "recent_notes_link", "onclick", function ( event ) {

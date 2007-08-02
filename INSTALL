@@ -35,9 +35,11 @@ mode doesn't support auto-reload, and logging goes to file (luminotes.log)
 instead of the console, but performance should be better than in development
 mode.
 
-If you want to use SSL, edit config/Common.py and change the value of
-luminotes.https_url to the URL of your SSL server. For instance:
+If you want to use SSL, edit config/Common.py and change the values of
+luminotes.http_url and luminotes.https_url based on the domain you're using.
+For instance:
 
+  "luminotes.http_url": "http://luminotes.com",
   "luminotes.https_url": "https://luminotes.com",
 
 Then you'll need to configure your web server to forward requests for
