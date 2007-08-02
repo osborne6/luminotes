@@ -72,7 +72,7 @@ unit tests
 
 If you're interested in running unit tests, install:
 
-  * nose 0.9.0
+ * nose 0.9.0
 
 Then you can run unit tests by running:
 

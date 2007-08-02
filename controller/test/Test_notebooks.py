@@ -584,7 +584,6 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    print result
     assert result.get( "note" ) == None
 
   def test_delete_note_without_login( self ):

@@ -1,4 +1,6 @@
 import cherrypy
+from model.User import User
+from controller.Scheduler import Scheduler
 from Test_controller import Test_controller
 
 
@@ -6,9 +8,35 @@ class Test_root( Test_controller ):
   def setUp( self ):
     Test_controller.setUp( self )
 
+    self.username = u"mulder"
+    self.password = u"trustno1"
+    self.email_address = u"outthere@example.com"
+    self.user = None
+    self.session_id = None
+
+    thread = self.make_user()
+    self.scheduler.add( thread )
+    self.scheduler.wait_for( thread )
+
+  def make_user( self ):
+    self.database.next_id( self.scheduler.thread )
+    self.user = User( ( yield Scheduler.SLEEP ), self.username, self.password, self.email_address, [] )
+    self.database.save( self.user )
+
   def test_index( self ):
     result = self.http_get( "/" )
     assert result
+
+  def test_index_after_login( self ):
+    self.login()
+
+    result = self.http_get(
+      "/",
+      session_id = self.session_id,
+    )
+
+    assert result.get( u"redirect" )
+    assert result.get( u"redirect" ).startswith( self.settings[ u"global" ][ u"luminotes.https_url" ] )
 
   def test_next_id( self ):
     result = self.http_get( "/next_id" )
@@ -32,3 +60,11 @@ class Test_root( Test_controller ):
     headers = result.get( u"headers" )
     status = headers.get( u"status" )
     assert u"404" in status
+
+  def login( self ):
+    result = self.http_post( "/users/login", dict(
+      username = self.username,
+      password = self.password,
+      login_button = u"login",
+    ) )
+    self.session_id = result[ u"session_id" ]

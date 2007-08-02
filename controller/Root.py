@@ -17,6 +17,7 @@ class Root( object ):
   def __init__( self, scheduler, database, settings ):
     self.__scheduler = scheduler
     self.__database = database
+    self.__settings = settings
     self.__notebooks = Notebooks( scheduler, database )
     self.__users = Users( scheduler, database, settings[ u"global" ].get( u"luminotes.http_url", u"" ) )
 
@@ -25,6 +26,11 @@ class Root( object ):
     """
     Provide the information necessary to display the web site's front page.
     """
+    # if the user is logged in and not using https, then redirect to the https version of the page (if available)
+    https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
+    if cherrypy.session.get( "user_id" ) and https_url and not cherrypy.request.browser_url.startswith( https_url ):
+      return dict( redirect = https_url )
+
     return dict()
 
   @expose( view = Json )
