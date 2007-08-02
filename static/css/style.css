@@ -31,19 +31,19 @@ ol li {
 #center_and_toolbar_area {
   margin: 0 auto;
   text-align: center;
-  width: 60em;
+  width: 80%;
+  max-width: 60em;
 }
 
 #toolbar {
   position: fixed;
-  width: 5em;
   margin-top: 5em;
   z-index: 1;
 }
 
 #toolbar ul li {
   list-style: none;
-  text-indent: -4em;
+  text-indent: -2em;
   margin-top: 0em;
   margin-left: 0em;
   margin-bottom: 0.25em;
@@ -93,6 +93,7 @@ ol li {
 #link_area {
   text-align: left;
   float: right;
+  margin-left: 1em;
   margin-top: 1em;
   margin-right: 2em;
   font-size: 0.75em;
@@ -107,7 +108,8 @@ ol li {
 #center_area {
   margin: 0 auto;
   text-align: center;
-  width: 50em;
+  width: 79%;
+  max-width: 55em;
 }
 
 #status_area {
@@ -126,6 +128,7 @@ ol li {
 #search_and_user_area {
   float: right;
   margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 #search_area {
