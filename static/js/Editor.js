@@ -1,4 +1,3 @@
-form_base_url = "";
 note_titles = {} // map from note title to the open editor for that note
 
 function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
@@ -140,7 +139,7 @@ Editor.prototype.finish_init = function () {
   if ( signup_button ) {
     var signup_form = withDocument( this.document, function () { return getElement( "signup_form" ); } );
     connect( signup_button, "onclick", function ( event ) {
-      signal( self, "submit_form", form_base_url + "/users/signup", signup_form ); event.stop();
+      signal( self, "submit_form", "/users/signup", signup_form ); event.stop();
     } );
   }
 
@@ -148,7 +147,7 @@ Editor.prototype.finish_init = function () {
   if ( login_button ) {
     var login_form = withDocument( this.document, function () { return getElement( "login_form" ); } );
     connect( login_button, "onclick", function ( event ) {
-      signal( self, "submit_form", form_base_url + "/users/login", login_form ); event.stop();
+      signal( self, "submit_form", "/users/login", login_form ); event.stop();
     } );
   }
 
@@ -256,9 +255,6 @@ Editor.prototype.mouse_clicked = function ( event ) {
   if ( event.mouse().button.middle || event.mouse().button.right )
     return;
 
-  event.stop();
-  signal( this, "state_changed", this );
-
   // search through the tree of elements containing the clicked target. if a link isn't found, bail
   var link = event.target()
   while ( link.nodeName != "A" ) {
@@ -266,8 +262,14 @@ Editor.prototype.mouse_clicked = function ( event ) {
     if ( !link )
       return;
   }
-  if ( !link.href )
+
+  // ignore external links pointing outside of this wiki (indicated by the presence of a link
+  // target), and let the browser handle them normally
+  if ( !link.href || link.target )
     return;
+
+  event.stop();
+  signal( this, "state_changed", this );
 
   // in case the link is to ourself, first grab the most recent version of our title
   this.scrape_title();

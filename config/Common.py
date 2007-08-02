@@ -15,5 +15,6 @@ settings = {
     "encoding_filter.encoding": "utf-8",
     "decoding_filter.on": True,
     "decoding_filter.encoding": "utf-8",
+    "luminotes.https_url": "",
   },
 }

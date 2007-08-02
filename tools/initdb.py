@@ -12,7 +12,7 @@ from model.User import User
 
 class Initializer( object ):
   HTML_PATH = u"static/html"
-  ENTRY_FILES = [ # the second element of the tuple is whether to show the note on startup
+  NOTE_FILES = [ # the second element of the tuple is whether to show the note on startup
     ( u"navigation.html", True ),
     ( u"about.html", True ),
     ( u"features.html", True ),
@@ -29,15 +29,11 @@ class Initializer( object ):
     self.database = database
     self.main_notebook = None
     self.read_only_main_notebook = None
-    self.user_notebook = None
-    self.user = None
     self.anonymous = None
 
     threads = (
       self.create_main_notebook(),
       self.create_anonymous_user(),
-      self.create_user_notebook(),
-      self.create_user(),
     )
 
     for thread in threads:
@@ -50,25 +46,28 @@ class Initializer( object ):
     main_notebook_id = ( yield Scheduler.SLEEP )
     self.main_notebook = Notebook( main_notebook_id, u"Luminotes" )
 
-    for ( filename, startup ) in self.ENTRY_FILES:
-      full_filename = os.path.join( self.HTML_PATH, filename )
-      contents = file( full_filename ).read().replace( "%s", main_notebook_id )
+    # create the read-only view of the main notebook
+    self.database.next_id( self.scheduler.thread )
+    read_only_main_notebook_id = ( yield Scheduler.SLEEP )
+    self.read_only_main_notebook = Read_only_notebook( read_only_main_notebook_id, self.main_notebook )
 
+    # create an id for each note
+    note_ids = {}
+    for ( filename, startup ) in self.NOTE_FILES:
       self.database.next_id( self.scheduler.thread )
-      note_id = ( yield Scheduler.SLEEP )
+      note_ids[ filename ] = ( yield Scheduler.SLEEP )
 
-      note = Note( note_id, contents )
+    for ( filename, startup ) in self.NOTE_FILES:
+      full_filename = os.path.join( self.HTML_PATH, filename )
+      contents = fix_note_contents( file( full_filename ).read(), read_only_main_notebook_id, note_ids )
+
+      note = Note( note_ids[ filename ], contents )
       self.main_notebook.add_note( note )
 
       if startup:
         self.main_notebook.add_startup_note( note )
 
     self.database.save( self.main_notebook )
-
-    # create the read-only view of the main notebook
-    self.database.next_id( self.scheduler.thread )
-    read_only_main_notebook_id = ( yield Scheduler.SLEEP )
-    self.read_only_main_notebook = Read_only_notebook( read_only_main_notebook_id, self.main_notebook )
     self.database.save( self.read_only_main_notebook )
 
   def create_anonymous_user( self ):
@@ -79,29 +78,6 @@ class Initializer( object ):
     self.anonymous = User( anonymous_user_id, u"anonymous", None, None, notebooks )
     self.database.save( self.anonymous )
 
-  def create_user_notebook( self ):
-    # create the user notebook along with a startup note
-    self.database.next_id( self.scheduler.thread )
-    user_notebook_id = ( yield Scheduler.SLEEP )
-    self.user_notebook = Notebook( user_notebook_id, u"my notebook" )
-
-    self.database.next_id( self.scheduler.thread )
-    note_id = ( yield Scheduler.SLEEP )
-    note = Note( note_id, u"<h3>" )
-    self.user_notebook.add_note( note )
-    self.user_notebook.add_startup_note( note )
-
-    self.database.save( self.user_notebook )
-
-  def create_user( self ):
-    # create the user
-    self.database.next_id( self.scheduler.thread )
-    user_id = ( yield Scheduler.SLEEP )
-    notebooks = [ self.user_notebook ]
-    self.user = User( user_id, u"witten", u"dev", u"witten@torsion.org", notebooks )
-
-    self.database.save( self.user )
-
 
 def main():
   if os.path.exists( "data.db" ):
@@ -111,6 +87,32 @@ def main():
   database = Database( scheduler, "data.db" )
   initializer = Initializer( scheduler, database )
   scheduler.wait_until_idle()
+
+
+def fix_note_contents( contents, notebook_id, note_ids ):
+  import re
+  from config.Common import settings
+
+  LINK_PATTERN = re.compile( '(<a href=")([^"]+?note_id=)([^"]*)("[^>]*>)([^<]*)(</a>)' )
+
+  # plug in the notebook id where appropriate
+  contents = contents.replace( "%s", notebook_id )
+
+  # stitch together note links to use the actual note ids of the referenced notes.
+  # also, use the https URL for certain links if one is configured
+  def fix_link( match ):
+    title = match.group( 5 )
+    https_url = u""
+
+    if title in ( u"try it out", u"login" ):
+      https_url = settings[ u"global" ].get( u"luminotes.https_url", u"" )
+
+    return u"".join( [
+      match.group( 1 ), https_url, match.group( 2 ), note_ids[ title + ".html" ], match.group( 3 ),
+      match.group( 4 ), match.group( 5 ), match.group( 6 ),
+    ] )
+
+  return LINK_PATTERN.sub( fix_link, contents )
 
 
 if __name__ == "__main__":

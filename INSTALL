@@ -17,7 +17,7 @@ changes, because it uses CherryPy's built-in web server with auto-reload
 enabled, so the server will automatically reload any modified source files as
 soon as they're modified.
 
-To start the server in development mode:
+To start the server in development mode, run:
 
   python2.5 luminotes.py -d
 
@@ -35,10 +35,10 @@ mode doesn't support auto-reload, and logging goes to file (luminotes.log)
 instead of the console, but performance should be better than in development
 mode.
 
-If you want to use SSL, Edit static/js/Editor.js and change the value of
-form_base_url to the URL of your SSL server. For instance:
+If you want to use SSL, edit config/Common.py and change the value of
+luminotes.https_url to the URL of your SSL server. For instance:
 
-  form_base_url = "https://luminotes.com";
+  "luminotes.https_url": "https://luminotes.com",
 
 Then you'll need to configure your web server to forward requests for
 non-static pages to CherryPy. These instructions are for Apache, but in
@@ -57,7 +57,7 @@ installed. These rules cause Apache to serve static files itself, while
 passing through requests for dynamic pages to the CherryPy web server running
 locally.
 
-To actually start the production mode server:
+To actually start the production mode server, run:
 
   python2.5 luminotes.py
 
