@@ -124,7 +124,7 @@ class Test_users( Test_controller ):
   def test_logout( self ):
     result = self.http_post( "/users/logout", dict() )
 
-    assert result[ u"redirect" ] == u"/"
+    assert result[ u"redirect" ] == self.settings[ u"global" ].get( u"luminotes.http_url" ) + u"/"
     assert result[ u"deauthenticated" ]
 
   def test_current_after_login( self ):

@@ -191,7 +191,7 @@ class Users( object ):
   @update_client
   def logout( self ):
     yield dict(
-      redirect = u"/",
+      redirect = self.__http_url + u"/",
       deauthenticated = True,
     )
 
