@@ -108,7 +108,7 @@ def fix_note_contents( contents, notebook_id, note_ids ):
       https_url = settings[ u"global" ].get( u"luminotes.https_url", u"" )
 
     return u"".join( [
-      match.group( 1 ), https_url, match.group( 2 ), note_ids[ title + ".html" ], match.group( 3 ),
+      match.group( 1 ), https_url, match.group( 2 ), note_ids[ title + ".html" ],
       match.group( 4 ), match.group( 5 ), match.group( 6 ),
     ] )
 
