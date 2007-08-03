@@ -15,6 +15,12 @@ class Notebook( Persistent ):
     def __init__( self, note_id ):
       ValueError.__init__( self, note_id )
 
+  def __setstate__( self, state ):
+    if "_Notebook__trash" not in state:
+      state[ "_Notebook__trash" ] = None
+
+    self.__dict__.update( state )
+
   def __init__( self, id, name, trash = None ):
     """
     Create a new note with the given id and name.
