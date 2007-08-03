@@ -28,7 +28,9 @@ class Root( object ):
     """
     # if the user is logged in and not using https, then redirect to the https version of the page (if available)
     https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
-    if cherrypy.session.get( "user_id" ) and https_url and not cherrypy.request.browser_url.startswith( https_url ):
+    https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
+    
+    if cherrypy.session.get( "user_id" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
       return dict( redirect = https_url )
 
     return dict()
