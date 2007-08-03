@@ -17,6 +17,7 @@ class Read_only_notebook( Persistent ):
 
   def to_dict( self ):
     d = self.__wrapped.to_dict()
+    del( d[ "trash" ] ) # don't expose the trash to read-only views of this notebook
     d.update( dict(
       object_id = self.object_id,
       read_write = False,
@@ -25,5 +26,6 @@ class Read_only_notebook( Persistent ):
     return d
 
   name = property( lambda self: self.__wrapped.name )
+  trash = None # read-only access doesn't give you access to the Notebook's trash
   notes = property( lambda self: self.__wrapped.notes )
   startup_notes = property( lambda self: self.__wrapped.startup_notes )

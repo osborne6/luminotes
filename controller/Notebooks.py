@@ -276,6 +276,10 @@ class Notebooks( object ):
 
     if note:
       notebook.remove_note( note )
+
+      if notebook.trash:
+        notebook.trash.add_note( note )
+
       self.__database.save( notebook )
 
     yield dict()

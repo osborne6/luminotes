@@ -75,8 +75,11 @@ class Test_users( Test_controller ):
     notebooks = result[ u"notebooks" ]
     assert len( notebooks ) == 2
     assert notebooks[ 0 ] == self.anon_notebook
+    assert notebooks[ 0 ].trash == None
+
     notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
+    assert notebook.trash
     assert len( notebook.notes ) == 1
     assert len( notebook.startup_notes ) == 1
 

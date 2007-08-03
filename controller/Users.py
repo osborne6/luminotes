@@ -130,10 +130,14 @@ class Users( object ):
     if user is not None:
       raise Signup_error( u"Sorry, that username is not available. Please try something else." )
 
-    # create a notebook for this user
+    # create a notebook for this user, along with a trash for that notebook
+    self.__database.next_id( self.__scheduler.thread )
+    trash_id = ( yield Scheduler.SLEEP )
+    trash = Notebook( trash_id, u"trash" )
+
     self.__database.next_id( self.__scheduler.thread )
     notebook_id = ( yield Scheduler.SLEEP )
-    notebook = Notebook( notebook_id, u"my notebook" )
+    notebook = Notebook( notebook_id, u"my notebook", trash )
 
     # create a startup note for this user's notebook
     self.__database.next_id( self.__scheduler.thread )

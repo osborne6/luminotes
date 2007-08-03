@@ -5,7 +5,7 @@ from model.Notebook import Notebook
 
 class Test_user( object ):
   def setUp( self ):
-    self.object_id = 17
+    self.object_id = u"17"
     self.username = u"bob"
     self.password = u"foobar"
     self.email_address = u"bob@example.com"
@@ -43,7 +43,7 @@ class Test_user( object ):
 
   def test_set_notebooks( self ):
     previous_revision = self.user.revision
-    notebook_id = 33
+    notebook_id = u"33"
     notebook = Notebook( notebook_id, u"my notebook" )
     self.user.notebooks = [ notebook ]
     
@@ -54,13 +54,15 @@ class Test_user( object ):
 
 class Test_user_with_notebooks( object ):
   def setUp( self ):
-    self.object_id = 17
+    self.object_id = u"17"
     self.username = u"bob"
     self.password = u"foobar"
     self.email_address = u"bob@example.com"
+    trash = Notebook( u"32", u"trash" )
+
     self.notebooks = [
-      Notebook( 33, u"my notebook" ),
-      Notebook( 34, u"my other notebook" ),
+      Notebook( u"33", u"my notebook", trash ),
+      Notebook( u"34", u"my other notebook" ),
     ]
 
     self.user = User( self.object_id, self.username, self.password, self.email_address, self.notebooks )
@@ -80,7 +82,7 @@ class Test_user_with_notebooks( object ):
 
   def test_set_new_notebooks( self ):
     previous_revision = self.user.revision
-    notebook_id = 35
+    notebook_id = u"35"
     notebook = Notebook( notebook_id, u"my new notebook" )
     self.user.notebooks = [ notebook ]
     
@@ -91,7 +93,17 @@ class Test_user_with_notebooks( object ):
   def test_has_access_true( self ):
     assert self.user.has_access( self.notebooks[ 0 ].object_id ) == True
 
-  def test_has_access_true( self ):
-    notebook_id = 35
+  def test_has_access_false( self ):
+    notebook_id = u"35"
     notebook = Notebook( notebook_id, u"my new notebook" )
+    assert self.user.has_access( notebook.object_id ) == False
+
+  def test_has_access_to_trash_true( self ):
+    assert self.user.has_access( self.notebooks[ 0 ].trash.object_id ) == True
+
+  def test_has_access_to_trash_false( self ):
+    notebook_id = u"35"
+    trash_id = u"36"
+    trash = Notebook( trash_id, u"trash" )
+    notebook = Notebook( notebook_id, u"my new notebook", trash )
     assert self.user.has_access( notebook.object_id ) == False

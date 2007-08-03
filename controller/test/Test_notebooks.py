@@ -33,7 +33,9 @@ class Test_notebooks( Test_controller ):
 
   def make_notebooks( self ):
     self.database.next_id( self.scheduler.thread )
-    self.notebook = Notebook( ( yield Scheduler.SLEEP ), u"notebook" )
+    self.trash = Notebook( ( yield Scheduler.SLEEP ), u"trash", )
+    self.database.next_id( self.scheduler.thread )
+    self.notebook = Notebook( ( yield Scheduler.SLEEP ), u"notebook", self.trash )
 
     self.database.next_id( self.scheduler.thread )
     note_id = ( yield Scheduler.SLEEP )
@@ -578,13 +580,23 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    # test that the delete note is actually deleted
+    # test that the deleted note is actually deleted
     result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
     assert result.get( "note" ) == None
+
+    # test that the note get moved to the trash
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note
+    assert note.object_id == self.note.object_id
 
   def test_delete_note_without_login( self ):
     result = self.http_post( "/notebooks/delete_note/", dict(

@@ -65,6 +65,10 @@ class User( Persistent ):
     if notebook_id in [ notebook.object_id for notebook in self.__notebooks ]:
       return True
 
+    # a user who has read-write access to a notebook also has access to that notebook's trash
+    if notebook_id in [ notebook.trash.object_id for notebook in self.__notebooks if notebook.trash ]:
+      return True
+
     return False
 
   def to_dict( self ):

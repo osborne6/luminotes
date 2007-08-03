@@ -15,7 +15,7 @@ class Notebook( Persistent ):
     def __init__( self, note_id ):
       ValueError.__init__( self, note_id )
 
-  def __init__( self, id, name ):
+  def __init__( self, id, name, trash = None ):
     """
     Create a new note with the given id and name.
 
@@ -23,11 +23,14 @@ class Notebook( Persistent ):
     @param id: id of the notebook
     @type name: unicode
     @param name: name of this notebook
+    @type trash: Notebook or NoneType
+    @param trash: where deleted notes within this Notebook go to die (optional)
     @rtype: Notebook
     @return: newly constructed notebook
     """
     Persistent.__init__( self, id )
     self.__name = name
+    self.__trash = trash
     self.__notes = {}         # map of note id to note
     self.__titles = {}        # map of note title to note
     self.__startup_notes = [] # list of notes shown on startup
@@ -158,6 +161,7 @@ class Notebook( Persistent ):
     d = Persistent.to_dict( self )
     d.update( dict(
       name = self.__name,
+      trash = self.__trash,
       startup_notes = copy( self.startup_notes ),
       read_write = True,
     ) )
@@ -169,5 +173,6 @@ class Notebook( Persistent ):
     self.update_revision()
 
   name = property( lambda self: self.__name, __set_name )
+  trash = property( lambda self: self.__trash )
   startup_notes = property( lambda self: copy( self.__startup_notes ) )
   notes = property( lambda self: self.__notes.values() )

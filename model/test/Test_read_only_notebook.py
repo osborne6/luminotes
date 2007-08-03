@@ -8,10 +8,13 @@ class Test_read_only_notebook( object ):
   def setUp( self ):
     self.object_id = "17"
     self.read_only_id = "22"
+    self.trash_id = 18
     self.name = u"my notebook"
+    self.trash_name = u"trash"
 
-    self.notebook = Notebook( self.object_id, self.name )
-    self.note = Note( "18", u"<h3>title</h3>blah" )
+    self.trash = Notebook( self.trash_id, self.trash_name )
+    self.notebook = Notebook( self.object_id, self.name, self.trash )
+    self.note = Note( "19", u"<h3>title</h3>blah" )
     self.notebook.add_note( self.note )
     self.notebook.add_startup_note( self.note )
 
@@ -20,6 +23,7 @@ class Test_read_only_notebook( object ):
   def test_create( self ):
     assert self.read_only.object_id == self.read_only_id
     assert self.read_only.name == self.name
+    assert self.read_only.trash == None
     assert self.read_only.notes == [ self.note ]
     assert self.read_only.startup_notes == [ self.note ]
 
@@ -70,4 +74,5 @@ class Test_read_only_notebook( object ):
 
     assert d.get( "object_id" ) == self.read_only_id
     assert d.get( "name" ) == self.name
+    assert d.get( "trash" ) == None
     assert d.get( "read_write" ) == False

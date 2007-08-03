@@ -5,15 +5,21 @@ from model.Note import Note
 
 class Test_notebook( object ):
   def setUp( self ):
-    self.object_id = 17
+    self.object_id = "17"
+    self.trash_id = "18"
     self.name = u"my notebook"
+    self.trash_name = u"trash"
 
-    self.notebook = Notebook( self.object_id, self.name )
-    self.note = Note( 18, u"<h3>title</h3>blah" )
+    self.trash = Notebook( self.trash_id, self.trash_name )
+    self.notebook = Notebook( self.object_id, self.name, self.trash )
+    self.note = Note( "19", u"<h3>title</h3>blah" )
 
   def test_create( self ):
     assert self.notebook.object_id == self.object_id
     assert self.notebook.name == self.name
+    assert self.notebook.trash
+    assert self.notebook.trash.object_id == self.trash_id
+    assert self.notebook.trash.name == self.trash_name
 
   def test_set_name( self ):
     new_name = u"my new notebook"
@@ -162,6 +168,7 @@ class Test_notebook( object ):
     d = self.notebook.to_dict()
 
     assert d.get( "name" ) == self.name
+    assert d.get( "trash" ) == self.trash
     assert d.get( "startup_notes" ) == []
     assert d.get( "read_write" ) == True
 
@@ -172,5 +179,6 @@ class Test_notebook( object ):
     d = self.notebook.to_dict()
 
     assert d.get( "name" ) == self.name
+    assert d.get( "trash" ) == self.trash
     assert d.get( "startup_notes" ) == [ self.note ]
     assert d.get( "read_write" ) == True
