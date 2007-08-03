@@ -38,6 +38,18 @@ class Test_root( Test_controller ):
     assert result.get( u"redirect" )
     assert result.get( u"redirect" ).startswith( self.settings[ u"global" ][ u"luminotes.https_url" ] )
 
+  def test_index_with_https_after_login( self ):
+    self.login()
+
+    result = self.http_get(
+      "/",
+      session_id = self.session_id,
+      pretend_https = True,
+    )
+
+    assert result
+    assert result.get( u"redirect" ) is None
+
   def test_next_id( self ):
     result = self.http_get( "/next_id" )
 

@@ -46,18 +46,26 @@ Then you'll need to configure your web server to forward requests for
 non-static pages to CherryPy. These instructions are for Apache, but in
 theory, Luminotes should work with just about any web server.
 
-In your Apache configuration file, enable mod_rewrite and add the following
-rewrite rules:
+In your Apache configuration file, enable mod_rewrite and mod_proxy, then add
+the following rewrite rules to the settings for your VirtualHost:
 
   RewriteEngine on
   RewriteRule ^/favicon.ico /path/to/luminotes/static/images/favicon.ico [L]
   RewriteRule ^/static/(.*) /path/to/luminotes/static/$1 [L]
   RewriteRule ^(.*) http://127.0.0.1:8081$1 [P]
 
-You should change the paths to point to wherever Luminotes happens to be
-installed. These rules cause Apache to serve static files itself, while
-passing through requests for dynamic pages to the CherryPy web server running
-locally.
+You should change the paths in the rules above to point to wherever Luminotes
+happens to be installed. These rules cause Apache to serve static files
+itself, while passing through requests for dynamic pages to the CherryPy web
+server running locally.
+
+If you want to use SSL, add these same rules to the settings for your
+SSL-enabled VirtualHost as well, but change the IP in the last rule from
+127.0.0.1 to 127.0.0.2. This hack allows the Luminotes server to distinguish
+between SSL and non-SSL requests by looking at the proxy IP. Without this,
+Luminotes would have no way of knowing whether a particular request was
+encrypted when received by Apache. (There are ways to do this in a less hacky
+manner with Apache 2, but not Apache 1.)
 
 To actually start the production mode server, run:
 

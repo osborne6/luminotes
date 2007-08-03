@@ -17,6 +17,8 @@ class Test_controller( object ):
       u"global": {
         u"luminotes.http_url" : u"http://luminotes.com",
         u"luminotes.https_url" : u"https://luminotes.com",
+        u"luminotes.http_proxy_ip" : u"127.0.0.1",
+        u"luminotes.https_proxy_ip" : u"127.0.0.2",
       },
     }
 
@@ -34,7 +36,7 @@ class Test_controller( object ):
     cherrypy.server.stop()
     self.scheduler.shutdown()
 
-  def http_get( self, http_path, headers = None, session_id = None):
+  def http_get( self, http_path, headers = None, session_id = None, pretend_https = False ):
     """
     Perform an HTTP GET with the given path on the test server. Return the result dict as returned
     by the invoked method.
@@ -45,7 +47,12 @@ class Test_controller( object ):
     if session_id:
       headers.append( ( u"Cookie", "session_id=%s" % session_id ) ) # will break if unicode is used for the value
 
-    request = cherrypy.server.request( u"127.0.0.1", u"127.0.0.5" )
+    if pretend_https:
+      proxy_ip = self.settings[ "global" ].get( u"luminotes.https_proxy_ip" )
+    else:
+      proxy_ip = self.settings[ "global" ].get( u"luminotes.http_proxy_ip" )
+
+    request = cherrypy.server.request( ( proxy_ip, 1234 ), u"127.0.0.5" )
     response = request.run( "GET %s HTTP/1.0" % http_path, headers = headers, rfile = StringIO() )
     session_id = response.simple_cookie.get( u"session_id" )
     if session_id: session_id = session_id.value
@@ -84,7 +91,7 @@ class Test_controller( object ):
     if session_id:
       headers.append( ( u"Cookie", "session_id=%s" % session_id ) ) # will break if unicode is used for the value
 
-    request = cherrypy.server.request( u"127.0.0.1", u"127.0.0.5" )
+    request = cherrypy.server.request( ( u"127.0.0.1", 1234 ), u"127.0.0.5" )
     response = request.run( "POST %s HTTP/1.0" % http_path, headers = headers, rfile = StringIO( post_data ) )
     session_id = response.simple_cookie.get( u"session_id" )
     if session_id: session_id = session_id.value
