@@ -58,7 +58,7 @@ ol li {
   height: 2em;
   width: 2em;
   font-family: times, serif;
-  font-size: 1.25em;
+  font-size: 125%;
   outline: none;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
@@ -96,11 +96,12 @@ ol li {
   margin-left: 1em;
   margin-top: 1em;
   margin-right: 2em;
-  font-size: 0.75em;
+  font-size: 85%;
+  line-height: 140%;
 }
 
 #link_area h3 {
-  font-size: 1em;
+  font-size: 100%;
   margin-top: 1.5em;
   margin-bottom: 0.25em;
 }
@@ -149,7 +150,7 @@ ol li {
 #user_area {
   text-align: right;
   margin-bottom: 1em;
-  font-size: 0.75em;
+  font-size: 85%;
 }
 
 #notes {
@@ -161,14 +162,14 @@ ol li {
 .note_controls {
   float: right;
   margin-right: 1.5em;
-  font-size: 0.75em;
+  font-size: 85%;
 }
 
 .note_button {
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
-  font-size: 1em;
+  font-size: 100%;
   outline: none;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
@@ -220,7 +221,7 @@ ol li {
   max-height: 20em;
   overflow: auto;
   padding: 0.5em;
-  font-size: 0.75em;
+  font-size: 85%;
   border: 1px solid #000000;
   background: #ffff99;
   -moz-border-radius: 0.25em;
