@@ -278,7 +278,47 @@ class Notebooks( object ):
       notebook.remove_note( note )
 
       if notebook.trash:
+        note.deleted_from = notebook.object_id
         notebook.trash.add_note( note )
+        notebook.trash.add_startup_note( note )
+
+      self.__database.save( notebook )
+
+    yield dict()
+
+  @expose( view = Json )
+  @wait_for_update
+  @grab_user_id
+  @async
+  @update_client
+  @validate(
+    notebook_id = Valid_id(),
+    note_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def undelete_note( self, notebook_id, note_id, user_id ):
+    self.check_access( notebook_id, user_id, self.__scheduler.thread )
+    if not ( yield Scheduler.SLEEP ):
+      raise Access_error()
+
+    self.__database.load( notebook_id, self.__scheduler.thread )
+    notebook = ( yield Scheduler.SLEEP )
+
+    if not notebook:
+      raise Access_error()
+
+    self.__database.load( note_id, self.__scheduler.thread )
+    note = ( yield Scheduler.SLEEP )
+
+    if note and notebook.trash:
+      if note.deleted_from != notebook_id:
+        raise Access_error()
+
+      notebook.trash.remove_note( note )
+
+      note.deleted_from = None
+      notebook.add_note( note )
+      notebook.add_startup_note( note )
 
       self.__database.save( notebook )
 

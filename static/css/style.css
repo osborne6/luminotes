@@ -162,14 +162,13 @@ ol li {
 .note_controls {
   float: right;
   margin-right: 1.5em;
-  font-size: 85%;
 }
 
 .note_button {
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
-  font-size: 100%;
+  font-size: 85%;
   outline: none;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
@@ -240,20 +239,51 @@ ol li {
 
 .message {
   padding: 0.5em;
-  border: 1px solid #550000;
   margin-bottom: 0.5em;
-  color: #ffffff;
-  background-color: #ff3333;
+  font-weight: bold;
+  background-color: #ffcc66;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
 }
 
 .message_inner {
   padding: 0.5em;
+  background-color: #ffaa44;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.error {
+  padding: 0.5em;
+  border: 1px solid #550000;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #ff3333;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.error_inner {
+  padding: 0.5em;
   color: #ffffff;
   background-color: #dd1111;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
+}
+
+.message_button {
+  border-style: outset;
+  border-width: 0px;
+  background-color: #d0e0f0;
+  font-size: 85%;
+  outline: none;
+  -moz-border-radius: 0.25em;
+  -webkit-border-radius: 0.25em;
+}
+
+.message_button:hover {
+  background-color: #ffee88;
 }
 
 .status_text {

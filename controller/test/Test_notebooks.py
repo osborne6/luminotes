@@ -597,6 +597,7 @@ class Test_notebooks( Test_controller ):
     note = result.get( "note" )
     assert note
     assert note.object_id == self.note.object_id
+    assert note.deleted_from == self.notebook.object_id
 
   def test_delete_note_without_login( self ):
     result = self.http_post( "/notebooks/delete_note/", dict(
@@ -639,6 +640,116 @@ class Test_notebooks( Test_controller ):
 
     note = result.get( "note" )
     assert note.object_id == self.note.object_id
+
+  def test_undelete_note( self ):
+    self.login()
+
+    # first delete the note
+    self.http_post( "/notebooks/delete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.unknown_note_id,
+    ), session_id = self.session_id )
+
+    # then undelete it
+    self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    # test that the undeleted note is actually undeleted
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from == None
+
+    # test that the note is no longer in the trash
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "note" ) == None
+
+  def test_undelete_note_without_login( self ):
+    result = self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+  def test_undelete_note_with_unknown_notebook( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.unknown_notebook_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+    # test that the note hasn't been undeleted
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from == self.notebook.object_id
+
+  def test_undelete_unknown_note( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.unknown_note_id,
+    ), session_id = self.session_id )
+
+    # test that the note hasn't been deleted
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from == None
+
+  def test_undelete_note_from_incorrect_notebook( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.anon_notebook,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+    # test that the note hasn't been undeleted
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from == self.notebook.object_id
 
   def test_blank_note( self ):
     result = self.http_get( "/notebooks/blank_note/5" )

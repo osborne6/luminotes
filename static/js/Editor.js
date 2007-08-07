@@ -1,9 +1,10 @@
 note_titles = {} // map from note title to the open editor for that note
 
-function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
+function Editor( id, notebook_id, note_text, deleted_from, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
   this.id = id;
   this.notebook_id;
   this.initial_text = note_text;
+  this.deleted_from = deleted_from || null;
   this.revisions_list = revisions_list;
   this.read_write = read_write;
   this.startup = startup || false; // whether this Editor is for a startup note
@@ -29,7 +30,7 @@ function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe
       "type": "button",
       "class": "note_button",
       "id": "delete_" + iframe_id,
-      "value": "delete",
+      "value": "delete" + ( this.deleted_from ? " forever" : "" ),
       "title": "delete note [ctrl-d]"
     } );
     connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
@@ -43,14 +44,25 @@ function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe
     } );
     connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
 
-    this.options_button = createDOM( "input", {
-      "type": "button",
-      "class": "note_button",
-      "id": "options_" + iframe_id,
-      "value": "options",
-      "title": "note options"
-    } );
-    connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
+    if ( this.deleted_from ) {
+      this.undelete_button = createDOM( "input", {
+        "type": "button",
+        "class": "note_button",
+        "id": "undelete_" + iframe_id,
+        "value": "undelete",
+        "title": "undelete note"
+      } );
+      connect( this.undelete_button, "onclick", function ( event ) { signal( self, "undelete_clicked", event ); } );
+    } else {
+      this.options_button = createDOM( "input", {
+        "type": "button",
+        "class": "note_button",
+        "id": "options_" + iframe_id,
+        "value": "options",
+        "title": "note options"
+      } );
+      connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
+    }
   }
 
   if ( read_write || !startup ) {
@@ -71,6 +83,8 @@ function Editor( id, notebook_id, note_text, revisions_list, insert_after_iframe
     this.changes_button ? " " : null,
     this.options_button ? this.options_button : null,
     this.options_button ? " " : null,
+    this.undelete_button ? this.undelete_button : null,
+    this.undelete_button ? " " : null,
     this.hide_button ? this.hide_button : null
   );
 

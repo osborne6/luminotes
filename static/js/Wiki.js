@@ -8,7 +8,7 @@ function Wiki() {
   this.startup_notes = new Array(); // map of startup notes: note id to bool
   this.invoker = new Invoker();
 
-  connect( this.invoker, "error_message", this, "display_message" );
+  connect( this.invoker, "error_message", this, "display_error" );
   connect( "search_form", "onsubmit", this, "search" );
 
   // get info on the requested notebook (if any)
@@ -44,12 +44,9 @@ Wiki.prototype.display_user = function ( result ) {
   if ( result.user.username == "anonymous" )
     return;
 
-  // display links for current notebook a list of other notebooks that the user has access to
+  // display links for current notebook and a list of other notebooks that the user has access to
   var span = createDOM( "span" );
-  replaceChildNodes( "notebook_area", span );
-  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook_id, "id": "recent_notes_link" }, "recent notes" ) );
-  appendChildNodes( span, createDOM( "br" ) );
-  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook_id, "id": "download_html_link" }, "download as html" ) );
+  replaceChildNodes( "other_notebooks_area", span );
 
   appendChildNodes( span, createDOM( "h3", "other notebooks" ) );
   for ( var i in result.notebooks ) {
@@ -71,19 +68,6 @@ Wiki.prototype.display_user = function ( result ) {
   appendChildNodes( span, createDOM( "a", { "href": result.http_url + "/", "id": "logout_link" }, "logout" ) );
 
   var self = this;
-  connect( "recent_notes_link", "onclick", function ( event ) {
-    self.invoker.invoke(
-      "/notebooks/recent_notes", "GET", { "notebook_id": self.notebook_id },
-      function( result ) { self.display_search_results( result ); }
-    );
-    event.stop();
-  } );
-
-
-  connect( "download_html_link", "onclick", function ( event ) {
-    self.save_editor( null, true );
-  } );
-
   connect( "logout_link", "onclick", function ( event ) {
     self.save_editor( null, true );
     self.invoker.invoke( "/users/logout", "POST" );
@@ -95,12 +79,21 @@ Wiki.prototype.populate = function ( result ) {
   this.notebook = result.notebook;
   var self = this;
 
-  if ( this.notebook.name != "Luminotes" )
-    replaceChildNodes( "notebook_name", createDOM( "h3", this.notebook.name ) );
-  
+  var span = createDOM( "span" );
+  replaceChildNodes( "notebook_area", span );
+
+  appendChildNodes( span, createDOM( "h3", this.notebook.name ) );
+  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link" }, "recent notes" ) );
+  appendChildNodes( span, createDOM( "br" ) );
+  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link" }, "download as html" ) );
+
   if ( this.notebook.read_write ) {
     this.read_write = true;
     removeElementClass( "toolbar", "undisplayed" );
+
+    appendChildNodes( span, createDOM( "br" ) );
+    if ( this.notebook.trash )
+      appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.trash.object_id, "id": "trash_link" }, "trash" ) );
 
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
@@ -118,7 +111,21 @@ Wiki.prototype.populate = function ( result ) {
     );
   }
 
+  var self = this;
+  connect( "recent_notes_link", "onclick", function ( event ) {
+    self.invoker.invoke(
+      "/notebooks/recent_notes", "GET", { "notebook_id": self.notebook.object_id },
+      function( result ) { self.display_loaded_notes( result ); }
+    );
+    event.stop();
+  } );
+
+  connect( "download_html_link", "onclick", function ( event ) {
+    self.save_editor( null, true );
+  } );
+
   // create an editor for each startup note in the received notebook, focusing the first one
+  var focus = true;
   for ( var i in this.notebook.startup_notes ) {
     var note = this.notebook.startup_notes[ i ];
     if ( !note ) continue;
@@ -126,8 +133,8 @@ Wiki.prototype.populate = function ( result ) {
 
     // don't actually create an editor if a particular note was provided in the result
     if ( !result.note ) {
-      var focus = ( i == 0 );
-      this.create_editor( note.object_id, note.contents, note.revisions_list, undefined, undefined, this.read_write, false, focus );
+      this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, undefined, this.read_write, false, focus );
+      focus = false;
     }
   }
 
@@ -135,7 +142,7 @@ Wiki.prototype.populate = function ( result ) {
   var read_write = this.read_write;
   if ( getElement( "revision" ).value ) read_write = false;
   if ( result.note )
-    this.create_editor( result.note.object_id, result.note.contents, result.note.revisions_list, undefined, undefined, read_write, false, true );
+    this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, undefined, read_write, false, true );
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -163,7 +170,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
+  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
 }
 
 Wiki.prototype.load_editor = function ( note_title, insert_after_iframe_id, note_id, revision ) {
@@ -196,10 +203,12 @@ Wiki.prototype.parse_loaded_editor = function ( result, insert_after_iframe_id, 
     var id = result.note.object_id;
     if ( revision ) id += " " + revision;
     var note_text = result.note.contents;
+    var deleted_from = result.note.deleted;
     var revisions_list = result.note.revisions_list;
   } else {
     var id = null;
     var note_text = "<h3>" + note_title;
+    var deleted_from = null;
     var revisions_list = new Array();
   }
 
@@ -208,10 +217,10 @@ Wiki.prototype.parse_loaded_editor = function ( result, insert_after_iframe_id, 
   else
     var read_write = this.read_write;
 
-  this.create_editor( id, note_text, revisions_list, insert_after_iframe_id, note_title, read_write, true, false );
+  this.create_editor( id, note_text, deleted_from, revisions_list, insert_after_iframe_id, note_title, read_write, true, false );
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, revisions_list, insert_after_iframe_id, note_title, read_write, highlight, focus ) {
+Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, insert_after_iframe_id, note_title, read_write, highlight, focus ) {
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -257,12 +266,13 @@ Wiki.prototype.create_editor = function ( id, note_text, revisions_list, insert_
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, this.notebook_id, note_text, revisions_list, undefined, read_write, startup, highlight, focus );
+  var editor = new Editor( id, this.notebook_id, note_text, deleted_from, revisions_list, undefined, read_write, startup, highlight, focus );
 
   if ( this.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
     connect( editor, "key_pressed", this, "editor_key_pressed" );
     connect( editor, "delete_clicked", function ( event ) { self.delete_editor( event, editor ) } );
+    connect( editor, "undelete_clicked", function ( event ) { self.undelete_editor_via_trash( event, editor ) } );
     connect( editor, "changes_clicked", function ( event ) { self.toggle_editor_changes( event, editor ) } );
     connect( editor, "options_clicked", function ( event ) { self.toggle_editor_options( event, editor ) } );
     connect( editor, "focused", this, "editor_focused" );
@@ -429,6 +439,8 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     if ( this.startup_notes[ editor.id ] )
       delete this.startup_notes[ editor.id ];
 
+    this.save_editor( editor, true );
+
     if ( this.read_write && editor.read_write ) {
       this.invoker.invoke( "/notebooks/delete_note", "POST", { 
         "notebook_id": this.notebook_id,
@@ -440,6 +452,67 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
       this.focused_editor = null;
 
     editor.shutdown();
+  }
+
+  if ( this.notebook.trash ) {
+    var undo_button = createDOM( "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "undo",
+      "title": "undo deletion"
+    } );
+    this.display_message( "The note has been moved to the trash.", [ undo_button ] )
+    var self = this;
+    connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor ); } );
+  }
+
+  event.stop();
+}
+
+Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  if ( !editor ) {
+    editor = this.focused_editor;
+    this.focused_editor = null;
+  }
+
+  if ( editor ) {
+    if ( this.startup_notes[ editor.id ] )
+      delete this.startup_notes[ editor.id ];
+
+    this.save_editor( editor, true );
+
+    if ( this.read_write && editor.read_write ) {
+      this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
+        "notebook_id": editor.deleted_from,
+        "note_id": editor.id
+      } );
+    }
+
+    if ( editor == this.focused_editor )
+      this.focused_editor = null;
+
+    editor.shutdown();
+  }
+
+  event.stop();
+}
+
+Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  if ( editor ) {
+    if ( this.read_write && editor.read_write ) {
+      this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
+        "notebook_id": this.notebook_id,
+        "note_id": editor.id
+      } );
+    }
+
+    this.load_editor( "Note not found.", null, editor.id, null );
   }
 
   event.stop();
@@ -475,56 +548,90 @@ Wiki.prototype.search = function ( event ) {
 
   var self = this;
   this.invoker.invoke( "/notebooks/search", "GET", { "notebook_id": this.notebook_id },
-    function( result ) { self.display_search_results( result ); },
+    function( result ) { self.display_loaded_notes( result ); },
     "search_form"
   );
 
   event.stop();
 }
 
-Wiki.prototype.display_search_results = function ( result ) {
+Wiki.prototype.display_loaded_notes = function ( result ) {
   // TODO: somehow highlight the search term within the search results?
   // before displaying the search results, save the current focused editor
   this.save_editor();
 
   // if there are no search results, indicate that and bail
   if ( result.notes.length == 0 ) {
-    this.display_message( "No matching notes." );
+    this.display_error( "No matching notes." );
     return;
   }
 
   // create an editor for each note search result, focusing the first one
+  var focus = true;
   for ( var i in result.notes ) {
     var note = result.notes[ i ]
-    var focus = ( i == 0 );
 
-    // if the editor is already open, just move it down to be with the result of the search results
+    // if the editor is already open, just move it down to be with the rest of the search results
     var iframe = getElement( "note_" + note.object_id );
     if ( iframe ) {
+      // if this a startup note in a read-only notebook, don't move it
+      if ( !this.read_write && iframe.editor.startup )
+        continue
       removeElement( iframe.editor.note_controls );
       removeElement( iframe );
       appendChildNodes( "notes", iframe.editor.note_controls );
       appendChildNodes( "notes", iframe );
       iframe.editor.highlight( focus );
+      focus = false;
       continue;
     }
 
-    this.create_editor( note.object_id, note.contents, note.revisions_list, undefined, undefined, this.read_write, false, focus );
+    this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, undefined, this.read_write, focus, focus );
+    focus = false;
   }
 }
 
-Wiki.prototype.display_message = function ( text ) {
+Wiki.prototype.display_message = function ( text, buttons ) {
   this.clear_messages();
   this.clear_pulldowns();
 
-  var inner_div = DIV( { "class": "message_inner" }, text );
+  var inner_div = DIV( { "class": "message_inner" }, text + " " );
+  for ( var i in buttons ) {
+    appendChildNodes( inner_div, buttons[ i ] );
+  }
+
   var div = DIV( { "class": "message" }, inner_div );
+  div.buttons = buttons;
+
+  appendChildNodes( "notes", div );
+  ScrollTo( div );
+}
+
+Wiki.prototype.display_error = function ( text ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  var inner_div = DIV( { "class": "error_inner" }, text );
+  var div = DIV( { "class": "error" }, inner_div );
   appendChildNodes( "notes", div );
   ScrollTo( div );
 }
 
 Wiki.prototype.clear_messages = function () {
   var results = getElementsByTagAndClassName( "div", "message" );
+
+  for ( var i in results ) {
+    var result = results[ i ];
+    blindUp( result, options = { "duration": 0.5, afterFinish: function () {
+      try {
+        for ( var j in result.buttons )
+          disconnectAll( result.buttons[ j ] );
+        removeElement( result );
+      } catch ( e ) { }
+    } } );
+  }
+
+  var results = getElementsByTagAndClassName( "div", "error" );
 
   for ( var i in results ) {
     var result = results[ i ];
