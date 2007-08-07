@@ -13,11 +13,11 @@ class Not_found_page( Page ):
         H2( title ),
         P(
           u"This is not the page you're looking for. If you care, please",
-          A( "let us know about it.", href = "/about/contact" ),
+          A( "let us know about it.", href = "mailto:support@luminotes.com" ),
         ),
         P(
           u"Thanks!",
         ),
-        class_ = u"box",
+        class_ = u"error_box",
       ),
     )

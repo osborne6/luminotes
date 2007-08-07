@@ -294,3 +294,9 @@ ol li {
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
 }
+
+.error_box {
+  text-align: left;
+  margin-left: 2em;
+  margin-right: 2em;
+}

@@ -13,7 +13,7 @@ class Error_page( Page ):
         H2( title ),
         P(
           u"Something went wrong! If you care, please",
-          A( "let us know about it.", href = "/about/contact" ),
+          A( "let us know about it.", href = "mailto:support@luminotes.com" ),
           u"Be sure to include the following information:",
         ),
         Ul(
@@ -31,6 +31,6 @@ class Error_page( Page ):
           If Javascript isn't enabled in your browser, please enable it.
           """,
         ),
-        class_ = u"box",
+        class_ = u"error_box",
       ),
     )
