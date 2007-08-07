@@ -16,6 +16,8 @@ class Initializer( object ):
     ( u"features.html", True ),
     ( u"take a tour.html", False ),
     ( u"try it out.html", False ),
+    ( u"faq.html", False ),
+    ( u"contact us.html", False ),
     ( u"login.html", False ),
     ( u"password reset.html", False ),
     ( u"supported browsers.html", False ),
@@ -47,7 +49,9 @@ class Initializer( object ):
     for ( filename, startup ) in self.NOTE_FILES:
       title = filename.replace( u".html", u"" )
       note = main_notebook.lookup_note_by_title( title )
-      note_ids[ filename ] = note.object_id
+
+      if note is not None:
+        note_ids[ filename ] = note.object_id
 
     # update the navigation note if its id was given
     if self.navigation_note_id:

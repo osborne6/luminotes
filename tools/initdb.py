@@ -18,6 +18,8 @@ class Initializer( object ):
     ( u"features.html", True ),
     ( u"take a tour.html", False ),
     ( u"try it out.html", False ),
+    ( u"faq.html", False ),
+    ( u"contact us.html", False ),
     ( u"login.html", False ),
     ( u"password reset.html", False ),
     ( u"supported browsers.html", False ),
@@ -108,7 +110,7 @@ def fix_note_contents( contents, notebook_id, note_ids ):
       https_url = settings[ u"global" ].get( u"luminotes.https_url", u"" )
 
     return u"".join( [
-      match.group( 1 ), https_url, match.group( 2 ), note_ids[ title + ".html" ],
+      match.group( 1 ), https_url, match.group( 2 ), note_ids.get( title + u".html", u"new" ),
       match.group( 4 ), match.group( 5 ), match.group( 6 ),
     ] )
 
