@@ -212,7 +212,7 @@ class Database( object ):
   @async
   def next_id( self, callback ):
     """
-    Generate the next available object id, and yielded the provided callback generator with the
+    Generate the next available object id, and yield the provided callback generator with the
     object id as its argument.
 
     @type callback: generator

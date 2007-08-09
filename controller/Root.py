@@ -14,7 +14,22 @@ from view.Not_found_page import Not_found_page
 
 
 class Root( object ):
+  """
+  The root of the controller hierarchy, corresponding to the "/" URL.
+  """
   def __init__( self, scheduler, database, settings ):
+    """
+    Create a new Root object with the given settings.
+
+    @type scheduler: controller.Scheduler
+    @param scheduler: scheduler to use for asynchronous calls
+    @type database: controller.Database
+    @param database: database to use for all controllers
+    @type settings: dict
+    @param settings: CherryPy-style settings with top-level "global" key
+    @rtype: Root
+    @return: newly constructed Root
+    """
     self.__scheduler = scheduler
     self.__database = database
     self.__settings = settings
@@ -24,7 +39,8 @@ class Root( object ):
   @expose( view = Main_page )
   def index( self ):
     """
-    Provide the information necessary to display the web site's front page.
+    Provide the information necessary to display the web site's front page, potentially performing
+    a redirect to the https version of the page.
     """
     # if the user is logged in and not using https, then redirect to the https version of the page (if available)
     https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
@@ -40,6 +56,13 @@ class Root( object ):
   @async
   @update_client
   def next_id( self ):
+    """
+    Return the next available database object id. This id is guaranteed to be unique to the
+    database.
+
+    @rtype: json dict
+    @return: { 'next_id': nextid }
+    """
     self.__database.next_id( self.__scheduler.thread )
     next_id = ( yield Scheduler.SLEEP )
 

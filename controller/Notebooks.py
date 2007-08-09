@@ -31,7 +31,20 @@ class Access_error( Exception ):
 
 
 class Notebooks( object ):
+  """
+  Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
+  """
   def __init__( self, scheduler, database ):
+    """
+    Create a new Notebooks object.
+
+    @type scheduler: controller.Scheduler
+    @param scheduler: scheduler to use for asynchronous calls
+    @type database: controller.Database
+    @param database: database that notebooks are stored in
+    @rtype: Notebooks
+    @return: newly constructed Notebooks
+    """
     self.__scheduler = scheduler
     self.__database = database
 
@@ -42,6 +55,20 @@ class Notebooks( object ):
     revision = Valid_string( min = 19, max = 30 ),
   )
   def default( self, notebook_id, note_id = None, revision = None ):
+    """
+    Provide the information necessary to display the page for a particular notebook. If a
+    particular note id is given without a revision, then the most recent version of that note is
+    displayed.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook to display
+    @type note_id: unicode or NoneType
+    @param note_id: id of single note in this notebook to display (optional)
+    @type revision: unicode or NoneType
+    @param revision: revision timestamp of the provided note (optional)
+    @rtype: unicode
+    @return: rendered HTML page
+    """
     return dict(
       notebook_id = notebook_id,
       note_id = note_id,
@@ -61,6 +88,22 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def contents( self, notebook_id, note_id = None, revision = None, user_id = None ):
+    """
+    Return the information on particular notebook, including the contents of its startup notes.
+    Optionally include the contents of a single requested note as well.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to return
+    @type note_id: unicode or NoneType
+    @param note_id: id of single note in this notebook to return (optional)
+    @type revision: unicode or NoneType
+    @param revision: revision timestamp of the provided note (optional)
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'notebook': notebookdict, 'note': notedict or None }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -95,6 +138,21 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def load_note( self, notebook_id, note_id, revision = None, user_id = None ):
+    """
+    Return the information on a particular note by its id.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note to return
+    @type revision: unicode or NoneType
+    @param revision: revision timestamp of the note (optional)
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'note': notedict or None }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -127,6 +185,19 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def load_note_by_title( self, notebook_id, note_title, user_id ):
+    """
+    Return the information on a particular note by its title.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_title: unicode
+    @param note_title: title of the note to return
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'note': notedict or None }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -156,6 +227,26 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def save_note( self, notebook_id, note_id, contents, startup, user_id ):
+    """
+    Save a new revision of the given note. This function will work both for creating a new note and
+    for updating an existing note. If the note exists and the given contents are identical to the
+    existing contents, then no saving takes place and a new_revision of None is returned. Otherwise
+    this method returns the timestamp of the new revision.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note to save
+    @type contents: unicode
+    @param contents: new textual contents of the note, including its title
+    @type startup: bool
+    @param startup: whether the note should be displayed on startup
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'new_revision': new revision of saved note, or None }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -201,6 +292,20 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def add_startup_note( self, notebook_id, note_id, user_id ):
+    """
+    Designate a particular note to be shown upon startup, e.g. whenever its notebook is displayed.
+    The given note must already be within this notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note to show on startup
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -231,6 +336,20 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def remove_startup_note( self, notebook_id, note_id, user_id ):
+    """
+    Prevent a particular note from being shown on startup, e.g. whenever its notebook is displayed.
+    The given note must already be within this notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note to no longer show on startup
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -261,6 +380,20 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def delete_note( self, notebook_id, note_id, user_id ):
+    """
+    Delete the given note from its notebook and move it to the notebook's trash. The note is added
+    as a startup note within the trash.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note to delete
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -297,6 +430,20 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def undelete_note( self, notebook_id, note_id, user_id ):
+    """
+    Undelete the given note from the trash, moving it back into its notebook. The note is added
+    as a startup note within its notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note was in
+    @type note_id: unicode
+    @param note_id: id of note to undelete
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -327,6 +474,14 @@ class Notebooks( object ):
   @expose( view = Note_page )
   @validate( id = Valid_string( min = 1, max = 100 ) )
   def blank_note( self, id ):
+    """
+    Provide the information necessary to display a blank note frame to be filled in by the client.
+
+    @param id: unicode
+    @type id: id of the note
+    @rtype: unicode
+    @return: rendered HTML page
+    """
     return dict( id = id )
 
   @expose( view = Json )
@@ -341,6 +496,21 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def search( self, notebook_id, search_text, user_id ):
+    """
+    Search the notes within a particular notebook for the given search text. Note that the search
+    is case-insensitive, and all HTML tags are ignored. The matching notes are returned with title
+    matches first, followed by all other matches.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to search
+    @type note_id: unicode
+    @param note_id: search term
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'notes': [ matching notes ] }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -381,6 +551,17 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def recent_notes( self, notebook_id, user_id ):
+    """
+    Return several of the most recently updated notes, sorting by reverse chronological order.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to pull recent notes from
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'notes': [ recent notes ] }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
@@ -410,6 +591,17 @@ class Notebooks( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def download_html( self, notebook_id, user_id ):
+    """
+    Download the entire contents of the given notebook as a stand-alone HTML page (no Javascript).
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to download
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: unicode
+    @return: rendered HTML page
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
       raise Access_error()
