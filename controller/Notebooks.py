@@ -103,6 +103,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: { 'notebook': notebookdict, 'note': notedict or None }
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -152,6 +153,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: { 'note': notedict or None }
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -197,6 +199,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: { 'note': notedict or None }
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -246,6 +249,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: { 'new_revision': new revision of saved note, or None }
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -305,6 +309,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: {}
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -349,6 +354,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: {}
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -393,6 +399,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: {}
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -443,6 +450,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: {}
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -481,6 +489,7 @@ class Notebooks( object ):
     @type id: id of the note
     @rtype: unicode
     @return: rendered HTML page
+    @raise Validation_error: the argument is invalid
     """
     return dict( id = id )
 
@@ -510,6 +519,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: { 'notes': [ matching notes ] }
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -561,6 +571,7 @@ class Notebooks( object ):
     @rtype: json dict
     @return: { 'notes': [ recent notes ] }
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):
@@ -601,6 +612,7 @@ class Notebooks( object ):
     @rtype: unicode
     @return: rendered HTML page
     @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
     """
     self.check_access( notebook_id, user_id, self.__scheduler.thread )
     if not ( yield Scheduler.SLEEP ):

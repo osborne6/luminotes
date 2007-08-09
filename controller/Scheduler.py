@@ -84,9 +84,14 @@ class Scheduler( object ):
       self.__idle.release()
       yield None
 
-  # used for unit tests
   IDLE_SLEEP_SECONDS = 0.01
   def wait_for( self, thread ):
+    """
+    Block until the given thread exits. Intended for use in unit tests only.
+
+    @type thread: generator
+    @param thread: thread to wait for
+    """
     while thread in self.__running or thread in self.__sleeping:
       sleep( self.IDLE_SLEEP_SECONDS )
 
@@ -94,15 +99,32 @@ class Scheduler( object ):
       raise self.__last_error
 
   def wait_until_idle( self ):
+    """
+    Block until all threads have exited. Intended for use in unit tests only.
+    """
     while len( self.__running ) > 1 or len( self.__sleeping ) > 0:
       sleep( self.IDLE_SLEEP_SECONDS )
 
   def sleep( self, thread ):
+    """
+    Put the given thread to sleep so that is is no longer actively running.
+
+    @type thread: generator
+    @param thread: thread to put to sleep
+    """
     self.__idle.acquire( blocking = False )
     self.__sleeping.append( thread )
     self.__running.remove( thread )
 
   def add( self, thread, *args ):
+    """
+    Add the given thread to the running list for this Scheduler, and wake it up if it's asleep.
+
+    @type thread: generator
+    @param thread: thread to add
+    @type args: tuple
+    @param args: arguments to send() to the given thread when it is executed
+    """
     self.__idle.release()
 
     if thread in self.__sleeping:
@@ -116,6 +138,9 @@ class Scheduler( object ):
       self.__messages[ thread ].append( args )
 
   def shutdown( self ):
+    """
+    Stop all running threads and shutdown the Scheduler.
+    """
     self.__done = True
     self.__idle.release()
     self.__scheduler_thread.join()

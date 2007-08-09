@@ -39,7 +39,8 @@ def update_client( function ):
 
   Note that this decorator itself is a generator function and works by passing along next()/send()
   calls to its decorated generator. Only yielded values that are dictionaries are sent to the
-  client. All other yielded values are in turn yielded by this decorator itself.
+  client via the provided queue. All other types of yielded values are in turn yielded by this
+  decorator itself.
   """
   def put_message( *args, **kwargs ):
     # look in the called function's kwargs for the queue where results should be sent

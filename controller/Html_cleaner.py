@@ -7,9 +7,11 @@ from formatter import AbstractFormatter, NullWriter
 from htmlentitydefs import entitydefs
 from xml.sax.saxutils import quoteattr
 
+
 def xssescape(text):
-  """Gets rid of < and > and & and, for good measure, :"""
+  """Gets rid of < and > and & and, for good measure"""
   return escape(text, quote=True)
+
 
 class Html_cleaner(HTMLParser):
   """

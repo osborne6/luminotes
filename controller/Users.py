@@ -103,7 +103,22 @@ def update_auth( function ):
 
 
 class Users( object ):
+  """
+  Controller for dealing with users, corresponding to the "/users" URL.
+  """
   def __init__( self, scheduler, database, http_url ):
+    """
+    Create a new Users object.
+
+    @type scheduler: controller.Scheduler
+    @param scheduler: scheduler to use for asynchronous calls
+    @type database: controller.Database
+    @param database: database that users are stored in
+    @type http_url: unicode
+    @param http_url: base URL to use for non-SSL http requests, or an empty string
+    @rtype: Users
+    @return: newly constructed Users
+    """
     self.__scheduler = scheduler
     self.__database = database
     self.__http_url = http_url
@@ -121,6 +136,25 @@ class Users( object ):
     signup_button = unicode,
   )
   def signup( self, username, password, password_repeat, email_address, signup_button ):
+    """
+    Create a new User based on the given information. Start that user with their own Notebook and a
+    "welcome to your wiki" Note. For convenience, login the newly created user as well.
+
+    @type username: unicode (alphanumeric only)
+    @param username: username to use for this new user
+    @type password: unicode
+    @param password: password to use
+    @type password_repeat: unicode
+    @param password_repeat: password to use, again
+    @type email_address: unicode
+    @param email_address: user's email address
+    @type signup_button: unicode
+    @param signup_button: ignored
+    @rtype: json dict
+    @return: { 'redirect': url, 'authenticated': userdict }
+    @raise Signup_error: passwords don't match or the username is unavailable
+    @raise Validation_error: one of the arguments is invalid
+    """
     if password != password_repeat:
       raise Signup_error( u"The passwords you entered do not match. Please try again." )
 
@@ -171,6 +205,19 @@ class Users( object ):
     login_button = unicode,
   )
   def login( self, username, password, login_button ):
+    """
+    Attempt to authenticate the user. If successful, associate the given user with the current
+    session.
+
+    @type username: unicode (alphanumeric only)
+    @param username: username to login
+    @type password: unicode
+    @param password: the user's password
+    @rtype: json dict
+    @return: { 'redirect': url, 'authenticated': userdict }
+    @raise Authentication_error: invalid username or password
+    @raise Validation_error: one of the arguments is invalid
+    """
     self.__database.load( "User %s" % username, self.__scheduler.thread )
     user = ( yield Scheduler.SLEEP )
 
@@ -194,6 +241,12 @@ class Users( object ):
   @async
   @update_client
   def logout( self ):
+    """
+    Deauthenticate the user and log them out of their current session.
+
+    @rtype: json dict
+    @return: { 'redirect': url, 'deauthenticated': True }
+    """
     yield dict(
       redirect = self.__http_url + u"/",
       deauthenticated = True,
@@ -209,6 +262,15 @@ class Users( object ):
     user_id = Valid_id( none_okay = True ),
   )
   def current( self, user_id ):
+    """
+    Return information on the currently logged-in user. If not logged in, default to the anonymous
+    user.
+
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'user': userdict or None, 'notebooks': notebooksdict, 'http_url': url }
+    """
     # if there's no logged-in user, default to the anonymous user
     self.__database.load( user_id or u"User anonymous", self.__scheduler.thread )
     user = ( yield Scheduler.SLEEP )
@@ -217,6 +279,7 @@ class Users( object ):
       yield dict(
         user = None,
         notebooks = None,
+        http_url = u"",
       )
       return
 
