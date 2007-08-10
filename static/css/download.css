@@ -2,18 +2,20 @@ body {
   padding: 1em;
   background-color: #fafafa;
   text-align: center;
+  line-height: 140%;
 }
 
 #center_area {
   margin: 0 auto;
   text-align: center;
-  width: 50em;
+  width: 75%;
+  max-width: 50em;
 }
 
 .note_frame {
   text-align: left;
   margin: 0em;
-  padding: 1.25em;
+  padding: 1.5em;
   border: 1px solid #999999;
   margin-bottom: 0.75em;
   background-color: #ffffff;
@@ -27,7 +29,7 @@ h1 {
 
 h3 {
   margin-top: 0em;
-  margin-bottom: 0.5em;
+  margin-bottom: 1em;
 }
 
 .button {
