@@ -8,6 +8,11 @@ First, install the prerequisites:
  * CherryPy 2.2
  * simplejson 1.3
 
+In Debian GNU/Linux, you can issue the following command to install these
+packages:
+
+  apt-get install python2.5 python-cherrypy python-simplejson
+
 
 development mode
 ----------------
@@ -35,13 +40,6 @@ mode doesn't support auto-reload, and logging goes to file (luminotes.log)
 instead of the console, but performance should be better than in development
 mode.
 
-If you want to use SSL, edit config/Common.py and change the values of
-luminotes.http_url and luminotes.https_url based on the domain you're using.
-For instance:
-
-  "luminotes.http_url": "http://luminotes.com",
-  "luminotes.https_url": "https://luminotes.com",
-
 Then you'll need to configure your web server to forward requests for
 non-static pages to CherryPy. These instructions are for Apache, but in
 theory, Luminotes should work with just about any web server.
@@ -59,20 +57,28 @@ happens to be installed. These rules cause Apache to serve static files
 itself, while passing through requests for dynamic pages to the CherryPy web
 server running locally.
 
-If you want to use SSL, add these same rules to the settings for your
-SSL-enabled VirtualHost as well, but change the IP in the last rule from
-127.0.0.1 to 127.0.0.2. This hack allows the Luminotes server to distinguish
-between SSL and non-SSL requests by looking at the proxy IP. Without this,
-Luminotes would have no way of knowing whether a particular request was
-encrypted when received by Apache. (There are ways to do this in a less hacky
-manner with Apache 2, but not Apache 1.)
+If you want to use SSL, procure and install an SSL cert for use with Apache.
+Add the above mod_rewrite rules to the settings for your SSL-enabled
+VirtualHost, but change the IP in the last rule from 127.0.0.1 to 127.0.0.2.
+This hack allows the Luminotes server to distinguish between SSL and non-SSL
+requests by looking at the proxy IP. Without this, Luminotes would have no way
+of knowing whether a particular request was encrypted when received by Apache.
+(There are ways to do this in a less hacky manner with Apache 2, but not
+Apache 1.)
 
-To actually start the production mode server, run:
+To configure the Luminotes server for SSL support, edit config/Common.py and
+change the values of luminotes.http_url and luminotes.https_url based on the
+domain you're using. For instance:
+
+  "luminotes.http_url": "http://luminotes.com",
+  "luminotes.https_url": "https://luminotes.com",
+
+Then to actually start the production mode server, run:
 
   python2.5 luminotes.py
 
-Then you should be able to connect to the site at whatever domain you've
-configured Apache to serve.
+You should be able to connect to the site at whatever domain you've configured
+Apache to serve.
 
 
 unit tests
