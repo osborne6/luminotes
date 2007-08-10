@@ -265,6 +265,9 @@ Editor.prototype.key_released = function ( event ) {
 }
 
 Editor.prototype.mouse_clicked = function ( event ) {
+  // update the state no matter what, in case the cursor has moved
+  signal( this, "state_changed", this );
+
   // we only want to deal with left mouse button clicks
   if ( event.mouse().button.middle || event.mouse().button.right )
     return;
@@ -283,7 +286,6 @@ Editor.prototype.mouse_clicked = function ( event ) {
     return;
 
   event.stop();
-  signal( this, "state_changed", this );
 
   // in case the link is to ourself, first grab the most recent version of our title
   this.scrape_title();
