@@ -173,7 +173,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
 }
 
-Wiki.prototype.load_editor = function ( note_title, insert_after_iframe_id, note_id, revision ) {
+Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision ) {
   var self = this;
 
   this.invoker.invoke(
@@ -182,11 +182,11 @@ Wiki.prototype.load_editor = function ( note_title, insert_after_iframe_id, note
       "note_id": note_id,
       "revision": revision
     },
-    function ( result ) { self.parse_loaded_editor( result, insert_after_iframe_id, note_title, revision ); }
+    function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision ); }
   );
 }
 
-Wiki.prototype.load_editor_by_title = function ( note_title, insert_after_iframe_id ) {
+Wiki.prototype.load_editor_by_title = function ( note_title, from_iframe_id ) {
   var self = this;
 
   this.invoker.invoke(
@@ -194,11 +194,11 @@ Wiki.prototype.load_editor_by_title = function ( note_title, insert_after_iframe
       "notebook_id": this.notebook_id,
       "note_title": note_title
     },
-    function ( result ) { self.parse_loaded_editor( result, insert_after_iframe_id, note_title ); }
+    function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title ); }
   );
 }
 
-Wiki.prototype.parse_loaded_editor = function ( result, insert_after_iframe_id, note_title, revision ) {
+Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_title, revision ) {
   if ( result.note ) {
     var id = result.note.object_id;
     if ( revision ) id += " " + revision;
@@ -217,10 +217,10 @@ Wiki.prototype.parse_loaded_editor = function ( result, insert_after_iframe_id, 
   else
     var read_write = this.read_write;
 
-  this.create_editor( id, note_text, deleted_from, revisions_list, insert_after_iframe_id, note_title, read_write, true, false );
+  this.create_editor( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, true, false );
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, insert_after_iframe_id, note_title, read_write, highlight, focus ) {
+Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, highlight, focus ) {
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -236,26 +236,13 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
     }
   }
 
-  // update any matching links in insert_after_iframe_id with the id of this new editor
-  if ( insert_after_iframe_id ) {
-    var links = getElementsByTagAndClassName( "a", null, getElement( insert_after_iframe_id ).editor.document );
+  // update any matching links in from_iframe_id with the id of this new editor
+  if ( from_iframe_id ) {
+    var links = getElementsByTagAndClassName( "a", null, getElement( from_iframe_id ).editor.document );
     for ( var i in links ) {
       // a link matches if its contained text is the same as this note's title
       if ( scrapeText( links[ i ] ) == note_title )
         links[ i ].href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
-    }
-  }
-
-  // if an iframe has been given to insert this new editor after, then hide all subsequent non-startup editors
-  if ( insert_after_iframe_id ) {
-    var sibling = getElement( insert_after_iframe_id ).nextSibling;
-    while ( sibling ) {
-      var nextSibling = sibling.nextSibling;
-
-      if ( sibling.editor && ( this.read_write || !sibling.editor.startup ) )
-        sibling.editor.shutdown();
-
-      sibling = nextSibling;
     }
   }
 
