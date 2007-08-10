@@ -499,6 +499,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
       } );
     }
 
+    this.startup_notes[ editor.id ] = true;
     this.load_editor( "Note not found.", null, editor.id, null );
   }
 
