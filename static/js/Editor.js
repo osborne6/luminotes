@@ -2,7 +2,7 @@ note_titles = {} // map from note title to the open editor for that note
 
 function Editor( id, notebook_id, note_text, deleted_from, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
   this.id = id;
-  this.notebook_id;
+  this.notebook_id = notebook_id;
   this.initial_text = note_text;
   this.deleted_from = deleted_from || null;
   this.revisions_list = revisions_list;
