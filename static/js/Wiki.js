@@ -559,16 +559,9 @@ Wiki.prototype.display_loaded_notes = function ( result ) {
   for ( var i in result.notes ) {
     var note = result.notes[ i ]
 
-    // if the editor is already open, just move it down to be with the rest of the search results
+    // if the editor is already open, just skip it
     var iframe = getElement( "note_" + note.object_id );
     if ( iframe ) {
-      // if this a startup note in a read-only notebook, don't move it
-      if ( !this.read_write && iframe.editor.startup )
-        continue
-      removeElement( iframe.editor.note_controls );
-      removeElement( iframe );
-      appendChildNodes( "notes", iframe.editor.note_controls );
-      appendChildNodes( "notes", iframe );
       iframe.editor.highlight( focus );
       focus = false;
       continue;
