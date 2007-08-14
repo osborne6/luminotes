@@ -315,7 +315,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
   }
 
   // otherwise, load the note for that id
-  signal( this, "load_editor", link_title, this.iframe.id, id );
+  signal( this, "load_editor", link_title, this.iframe.id, id, null, link );
 }
 
 Editor.prototype.scrape_title = function () {

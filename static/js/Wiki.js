@@ -174,7 +174,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
 }
 
-Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision ) {
+Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision, link ) {
   var self = this;
 
   // if there's not a valid destination note id, then load by title instead of by id
@@ -185,7 +185,7 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
         "note_title": note_title,
         "revision": revision
       },
-      function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision ); }
+      function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision, link ); }
     );
     return;
   }
@@ -196,16 +196,15 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
       "note_id": note_id,
       "revision": revision
     },
-    function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision ); }
+    function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision, link ); }
   );
 }
 
-Wiki.prototype.resolve_link = function ( note_title, link, force ) {
-  // if the link already has an id and the force flag isn't set, then the link is already resolved,
-  // so we can just bail
+Wiki.prototype.resolve_link = function ( note_title, link ) {
+  // if the link already has an id, then the link is already resolved so we can just bail
   if ( link.href ) {
     var id = parse_query( link ).note_id;
-    if ( id != "new" && id != "null" && !force )
+    if ( id != "new" && id != "null" )
       return;
   }
 
@@ -224,7 +223,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, force ) {
   );
 }
 
-Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_title, revision ) {
+Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_title, revision, link ) {
   if ( result.note ) {
     var id = result.note.object_id;
     if ( revision ) id += " " + revision;
@@ -243,7 +242,11 @@ Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_tit
   else
     var read_write = this.read_write;
 
-  this.create_editor( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, true, false );
+  id = this.create_editor( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, true, false );
+
+  // if a link that launched this editor was provided, update it with the created note's id
+  if ( link && id )
+    link.href = "/notebooks/" + self.notebook_id + "?note_id=" + id;
 }
 
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, highlight, focus ) {
@@ -885,8 +888,17 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
     return;
   }
 
-  // if this link has an actual destination note id set, then load that note, displaying its title
-  // and a preview of its contents
+  // if this link has an actual destination note id set, then see if that note is already open. if
+  // so, display its title and a preview of its contents
+  var iframe = getElement( "note_" + id );
+  if ( iframe ) {
+    self.title_field.value = iframe.editor.title;
+    self.display_preview( iframe.editor.title, iframe.editor.document );
+    return;
+  }
+
+  // otherwise, load the destination note from the server, displaying its title and a preview of
+  // its contents
   this.invoker.invoke(
     "/notebooks/load_note", "GET", {
       "notebook_id": this.notebook_id,
@@ -908,9 +920,12 @@ Link_pulldown.prototype = Pulldown;
 Link_pulldown.prototype.constructor = Link_pulldown;
 
 Link_pulldown.prototype.display_preview = function ( title, contents ) {
-  var contents_node = createDOM( "span", {} );
-  contents_node.innerHTML = contents;
-  var contents = scrapeText( contents_node );
+  // if contents is a string rather than a DOM node, make it into a DOM node
+  if ( !contents.nodeType ) {
+    var contents_node = createDOM( "span", {} );
+    contents_node.innerHTML = contents;
+    contents = scrapeText( contents_node );
+  }
 
   // remove the title from the scraped contents text
   if ( contents.indexOf( title ) == 0 )
