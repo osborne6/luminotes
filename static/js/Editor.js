@@ -179,7 +179,6 @@ Editor.prototype.finish_init = function () {
   this.scrape_title();
   if ( this.init_focus )
     this.focus();
-  signal( this, "state_changed", this );
 }
 
 Editor.prototype.highlight = function ( scroll ) {
@@ -247,6 +246,24 @@ Editor.prototype.resize = function () {
   setElementDimensions( this.iframe, dimensions );
 }
 
+Editor.prototype.resolve_link = function ( link ) {
+  // in case the link is to ourself, first grab the most recent version of our title
+  this.scrape_title();
+
+  var id;
+  var link_title = scrapeText( link );
+  var editor = note_titles[ link_title ];
+  // if the link's title corresponds to an open note id, set that as the link's destination
+  if ( editor ) {
+    id = editor.id;
+    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
+  // otherwise, resolve the link by looking up the link's title on the server
+  } else {
+    signal( this, "resolve_link", link_title, link );
+    return;
+  }
+}
+
 Editor.prototype.key_pressed = function ( event ) {
   signal( this, "key_pressed", this, event );
 
@@ -287,34 +304,17 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
   event.stop();
 
-  // in case the link is to ourself, first grab the most recent version of our title
-  this.scrape_title();
-
-  var id;
-  var link_title = scrapeText( link );
-  var editor = note_titles[ link_title ];
-  var href_leaf = link.href.split( "?note_id=" ).pop();
-  // if the link's title corresponds to an open note id, set that as the link's destination
-  if ( editor ) {
-    id = editor.id;
-    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
-  // if this is a new link, get a new note id and set it for the link's destination
-  } else if ( href_leaf == "new" ) {
-    signal( this, "load_editor_by_title", link_title, this.iframe.id );
-    return;
-  // otherwise, use the id from link's current destination
-  } else {
-    // the last part of the current link's href is the note id
-    id = href_leaf;
-  }
-
-  // find the note corresponding to the linked id, or create a new note
+  // if the note corresponding to the linked id is already open, highlight it
+  var query = parse_query( link );
+  var link_title = query.title || scrapeText( link );
+  var id = query.note_id;
   var iframe = getElement( "note_" + id );
   if ( iframe ) {
     iframe.editor.highlight();
     return;
   }
 
+  // otherwise, load the note for that id
   signal( this, "load_editor", link_title, this.iframe.id, id );
 }
 
@@ -385,24 +385,22 @@ Editor.prototype.start_link = function () {
 
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
 
-      var links = getElementsByTagAndClassName( "a", null, parent = this.document );
-      for ( var i in links ) {
-        var link = links[ i ];
-        var link_title = scrapeText( link );
-        var char_code = link_title.charCodeAt( 0 );
-        // look for links titled with a space or nbsp character
-        if ( link_title.length == 1 && char_code == 0x20 || char_code == 0xa0 ) {
-          for ( var j in link.childNodes ) {
-            var child = link.childNodes[ j ];
-            if ( child.nodeType == 3 ) // type of text node
-              child.nodeValue = "";
-          }
-          selection.collapse( link, 0 );
+      // nuke the link title and collapse the selection, yielding a tasty new link that's completely
+      // titleless and unselected
+      var link = this.find_link_at_cursor();
+      if ( link ) {
+        for ( var j in link.childNodes ) {
+          var child = link.childNodes[ j ];
+          if ( child.nodeType == 3 ) // type of text node
+            child.nodeValue = "";
         }
+        selection.collapse( link, 0 );
       }
     // otherwise, just create a link with the selected text as the link title
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
+      var link = this.find_link_at_cursor();
+      signal( this, "resolve_link", scrapeText( link ), link );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -413,13 +411,18 @@ Editor.prototype.start_link = function () {
       range.text = " ";
       range.moveStart( "character", -1 );
       range.select();
+      this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
+    } else {
+      this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
+      var link = this.find_link_at_cursor();
+      signal( this, "resolve_link", scrapeText( link ), link );
     }
-
-    this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
   }
 }
 
 Editor.prototype.end_link = function () {
+  var link = this.find_link_at_cursor();
+
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     this.exec_command( "unlink" );
   } else if ( this.document.selection ) { // browsers such as IE
@@ -439,6 +442,49 @@ Editor.prototype.end_link = function () {
     range.select();
     range.pasteHTML( "" );
   }
+
+  var query = parse_query( link );
+  var link_title = query.title || scrapeText( link );
+  signal( this, "resolve_link", link_title, link );
+}
+
+Editor.prototype.find_link_at_cursor = function () {
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    var link = selection.anchorNode;
+
+    while ( link.nodeName != "A" ) {
+      link = link.parentNode;
+      if ( !link )
+        break;
+    }
+
+    if ( link ) return link;
+
+    // well, that didn't work, so try the selection's focus node instead
+    link = selection.focusNode;
+
+    while ( link.nodeName != "A" ) {
+      link = link.parentNode;
+      if ( !link )
+        return null;
+    }
+
+    return link;
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    var link = range.parentElement();
+
+    while ( link.nodeName != "A" ) {
+      link = link.parentNode;
+      if ( !link )
+        return null;
+    }
+
+    return link;
+  }
+
+  return null;
 }
 
 Editor.prototype.focus = function () {
@@ -514,3 +560,9 @@ Editor.prototype.shutdown = function( event ) {
     } catch ( e ) { }
   } } );
 }
+
+// convenience function for parsing a link that has an href URL containing a query string
+function parse_query( link ) {
+  return parseQueryString( link.href.split( "?" ).pop() );
+}
+

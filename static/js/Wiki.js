@@ -6,6 +6,7 @@ function Wiki() {
   this.notebook_id = getElement( "notebook_id" ).value;
   this.read_write = false;
   this.startup_notes = new Array(); // map of startup notes: note id to bool
+  this.link_pulldowns = new Array(); // map of link pulldowns: link object to pulldown
   this.invoker = new Invoker();
 
   connect( this.invoker, "error_message", this, "display_error" );
@@ -176,6 +177,19 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision ) {
   var self = this;
 
+  // if there's not a valid destination note id, then load by title instead of by id
+  if ( note_id == "new" || note_id == "null" ) {
+    this.invoker.invoke(
+      "/notebooks/load_note_by_title", "GET", {
+        "notebook_id": this.notebook_id,
+        "note_title": note_title,
+        "revision": revision
+      },
+      function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision ); }
+    );
+    return;
+  }
+
   this.invoker.invoke(
     "/notebooks/load_note", "GET", {
       "notebook_id": this.notebook_id,
@@ -186,15 +200,27 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
   );
 }
 
-Wiki.prototype.load_editor_by_title = function ( note_title, from_iframe_id ) {
-  var self = this;
+Wiki.prototype.resolve_link = function ( note_title, link, force ) {
+  // if the link already has an id and the force flag isn't set, then the link is already resolved,
+  // so we can just bail
+  if ( link.href ) {
+    var id = parse_query( link ).note_id;
+    if ( id != "new" && id != "null" && !force )
+      return;
+  }
 
+  if ( note_title.length == 0 )
+    return;
+
+  var self = this;
   this.invoker.invoke(
-    "/notebooks/load_note_by_title", "GET", {
+    "/notebooks/lookup_note_id", "GET", {
       "notebook_id": this.notebook_id,
       "note_title": note_title
     },
-    function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title ); }
+    function ( result ) {
+      link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note_id;
+    }
   );
 }
 
@@ -222,7 +248,6 @@ Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_tit
 
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, highlight, focus ) {
   this.clear_messages();
-  this.clear_pulldowns();
 
   var self = this;
   if ( isUndefinedOrNull( id ) ) {
@@ -266,7 +291,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
   }
 
   connect( editor, "load_editor", this, "load_editor" );
-  connect( editor, "load_editor_by_title", this, "load_editor_by_title" );
+  connect( editor, "resolve_link", this, "resolve_link" );
   connect( editor, "hide_clicked", function ( event ) { self.hide_editor( event, editor ) } );
   connect( editor, "submit_form", function ( url, form ) {
     self.invoker.invoke( url, "POST", null, null, form );
@@ -277,16 +302,38 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
 
 Wiki.prototype.editor_state_changed = function ( editor ) {
   this.update_toolbar();
+  this.display_link_pulldown( editor );
+}
+
+Wiki.prototype.display_link_pulldown = function ( editor ) {
+  var link = editor.find_link_at_cursor();
+
+  if ( !link ) {
+    this.clear_pulldowns();
+    return;
+  }
+
+  var pulldown = this.link_pulldowns[ link ];
+  if ( pulldown )
+    pulldown.update_position();
+
+  // if the cursor is now on a link, display a link pulldown if there isn't already one open
+  if ( hasElementClass( "createLink", "button_down" ) ) {
+    if ( !pulldown ) {
+      this.clear_pulldowns();
+      new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+    }
+  }
 }
 
 Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
   this.clear_messages();
-  this.clear_pulldowns();
 
   if ( editor )
     addElementClass( editor.iframe, "focused_note_frame" );
 
   if ( this.focused_editor && this.focused_editor != editor ) {
+    this.clear_pulldowns();
     removeElementClass( this.focused_editor.iframe, "focused_note_frame" );
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
@@ -388,6 +435,8 @@ Wiki.prototype.toggle_link_button = function ( event ) {
       this.focused_editor.start_link();
     else
       this.focused_editor.end_link();
+
+    this.display_link_pulldown( this.focused_editor );
   }
 
   event.stop();
@@ -666,26 +715,50 @@ Wiki.prototype.toggle_editor_options = function ( event, editor ) {
 connect( window, "onload", function ( event ) { new Wiki(); } );
 
 
-function Pulldown( wiki, notebook_id, pulldown_id, button ) {
+function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to ) {
   this.wiki = wiki;
   this.notebook_id = notebook_id;
   this.div = createDOM( "div", { "id": pulldown_id, "class": "pulldown" } );
   this.div.pulldown = this;
+  this.anchor = anchor;
+  this.relative_to = relative_to;
+
   addElementClass( this.div, "invisible" );
 
   appendChildNodes( document.body, this.div );
-
-  var self = this;
-
-  // position the pulldown under the button that opened it
-  var position = getElementPosition( button );
-  var button_dimensions = getElementDimensions( button );
-  var div_dimensions = getElementDimensions( this.div );
-  position.y += button_dimensions.h;
+  var position = calculate_position( anchor, relative_to );
   setElementPosition( this.div, position );
 
   removeElementClass( this.div, "invisible" );
-} 
+}
+
+function calculate_position( anchor, relative_to ) {
+  // position the pulldown under the anchor
+  var position = getElementPosition( anchor );
+
+  if ( relative_to ) {
+    var relative_pos = getElementPosition( relative_to );
+    if ( relative_pos ) {
+      position.x += relative_pos.x;
+      position.y += relative_pos.y;
+    }
+  }
+
+  var anchor_dimensions = getElementDimensions( anchor );
+
+  // if the anchor has no height, move the position down a bit an arbitrary amount
+  if ( anchor_dimensions.h == 0 )
+    position.y += 8;
+  else
+    position.y += anchor_dimensions.h + 4;
+
+  return position;
+}
+
+Pulldown.prototype.update_position = function () {
+  var position = calculate_position( this.anchor, this.relative_to );
+  setElementPosition( this.div, position );
+}
 
 Pulldown.prototype.shutdown = function () {
   removeElement( this.div );
@@ -773,9 +846,132 @@ Changes_pulldown.prototype.link_clicked = function( event, note_id ) {
   event.stop();
 }
 
-Options_pulldown.prototype.shutdown = function () {
+Changes_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
 
   for ( var i in this.links )
     disconnectAll( this.links[ i ] );
+}
+
+
+function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
+  wiki.link_pulldowns[ link ] = this;
+  this.link = link;
+
+  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe );
+
+  this.invoker = invoker;
+  this.editor = editor;
+  this.title_field = createDOM( "input", { "class": "text_field", "size": "25", "maxlength": "256" } );
+  this.note_preview = createDOM( "span", {} );
+  this.previous_title = "";
+
+  var self = this;
+  connect( this.title_field, "onclick", function ( event ) { self.title_field_clicked( event ); } );
+  connect( this.title_field, "onchange", function ( event ) { self.title_field_changed( event ); } );
+  connect( this.title_field, "onblur", function ( event ) { self.title_field_changed( event ); } );
+  connect( this.title_field, "onkeydown", function ( event ) { self.title_field_key_pressed( event ); } );
+
+  appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "links to: " ) );
+  appendChildNodes( this.div, this.title_field );
+  appendChildNodes( this.div, this.note_preview );
+
+  var query = parse_query( link );
+  var link_title = query.title || scrapeText( link );
+  var id = query.note_id;
+  if ( id == "new" || id == "null" ) {
+    this.title_field.value = link_title;
+    replaceChildNodes( self.note_preview, "empty note" );
+    return;
+  }
+
+  // if this link has an actual destination note id set, then load that note, displaying its title
+  // and a preview of its contents
+  this.invoker.invoke(
+    "/notebooks/load_note", "GET", {
+      "notebook_id": this.notebook_id,
+      "note_id": id
+    },
+    function ( result ) {
+      if ( result.note ) {
+        self.title_field.value = result.note.title;
+        self.display_preview( result.note.title, result.note.contents );
+      } else {
+        self.title_field.value = link_title;
+        replaceChildNodes( self.note_preview, "empty note" );
+      }
+    }
+  );
+}
+
+Link_pulldown.prototype = Pulldown;
+Link_pulldown.prototype.constructor = Link_pulldown;
+
+Link_pulldown.prototype.display_preview = function ( title, contents ) {
+  var contents_node = createDOM( "span", {} );
+  contents_node.innerHTML = contents;
+  var contents = scrapeText( contents_node );
+
+  // remove the title from the scraped contents text
+  if ( contents.indexOf( title ) == 0 )
+    contents = contents.substr( title.length );
+
+  if ( contents.length == 0 ) {
+    replaceChildNodes( this.note_preview, "empty note" );
+  } else {
+    var max_preview_length = 40;
+    var preview = contents.substr( 0, max_preview_length ) + ( ( contents.length > max_preview_length ) ? "..." : "" );
+    replaceChildNodes( this.note_preview, preview );
+  }
+}
+
+Link_pulldown.prototype.title_field_clicked = function ( event ) {
+  event.stop();
+}
+
+Link_pulldown.prototype.title_field_changed = function ( event ) {
+  // if the title is actually unchanged, then bail
+  if ( this.title_field.value == this.previous_title )
+    return;
+
+  var self = this;
+  replaceChildNodes( this.note_preview, "" );
+  this.previous_title = this.title_field.value;
+
+  this.invoker.invoke(
+    "/notebooks/load_note_by_title", "GET", {
+      "notebook_id": this.notebook_id,
+      "note_title": this.title_field.value
+    },
+    function ( result ) {
+      if ( result.note ) {
+        self.link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note.object_id;
+        self.display_preview( result.note.title, result.note.contents );
+      } else {
+        self.link.href = "/notebooks/" + self.notebook_id + "?title=" + self.title_field.value + "&note_id=null";
+        replaceChildNodes( self.note_preview, "empty note" );
+      }
+    }
+  );
+}
+
+Link_pulldown.prototype.title_field_key_pressed = function ( event ) {
+  // if enter is pressed, consider the title field altered. this is necessary because IE neglects
+  // to issue an onchange event when enter is pressed in an input field
+  if ( event.key().code == 13 ) {
+    this.title_field_changed();
+    event.stop();
+  }
+}
+
+Link_pulldown.prototype.update_position = function ( anchor, relative_to ) {
+  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+}
+
+Link_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
+  disconnectAll( this.title_field );
+  if ( this.link )
+    delete this.wiki.link_pulldowns[ this.link ];
 }

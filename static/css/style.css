@@ -300,3 +300,15 @@ ol li {
   margin-left: 2em;
   margin-right: 2em;
 }
+
+.field_label {
+  font-weight: bold;
+}
+
+.text_field {
+  margin-right: 0.5em;
+  padding: 0.25em;
+  border: #999999 1px solid;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}

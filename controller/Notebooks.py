@@ -218,6 +218,48 @@ class Notebooks( object ):
     )
 
   @expose( view = Json )
+  @strongly_expire
+  @wait_for_update
+  @grab_user_id
+  @async
+  @update_client
+  @validate(
+    notebook_id = Valid_id(),
+    note_title = Valid_string( min = 1, max = 500 ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def lookup_note_id( self, notebook_id, note_title, user_id ):
+    """
+    Return a note's id by looking up its title.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_title: unicode
+    @param note_title: title of the note id to return
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'note_id': noteid or None }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    self.check_access( notebook_id, user_id, self.__scheduler.thread )
+    if not ( yield Scheduler.SLEEP ):
+      raise Access_error()
+
+    self.__database.load( notebook_id, self.__scheduler.thread )
+    notebook = ( yield Scheduler.SLEEP )
+
+    if notebook is None:
+      note = None
+    else:
+      note = notebook.lookup_note_by_title( note_title )
+
+    yield dict(
+      note_id = note and note.object_id or None,
+    )
+
+  @expose( view = Json )
   @wait_for_update
   @grab_user_id
   @async

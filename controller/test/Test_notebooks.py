@@ -261,6 +261,44 @@ class Test_notebooks( Test_controller ):
     note = result[ "note" ]
     assert note == None
 
+  def test_lookup_note_id( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/lookup_note_id/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = self.note.title,
+    ), session_id = self.session_id )
+
+    assert result.get( "note_id" ) == self.note.object_id
+
+  def test_lookup_note_id_without_login( self ):
+    result = self.http_post( "/notebooks/lookup_note_id/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = self.note.title,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+  def test_lookup_note_id_with_unknown_notebook( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/lookup_note_id/", dict(
+      notebook_id = self.unknown_notebook_id,
+      note_title = self.note.title,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+  def test_lookup_unknown_note_id( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/lookup_note_id/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "unknown title",
+    ), session_id = self.session_id )
+
+    assert result.get( "note_id" ) == None
+
   def test_save_note( self, startup = False ):
     self.login()
 
