@@ -920,11 +920,14 @@ Link_pulldown.prototype = Pulldown;
 Link_pulldown.prototype.constructor = Link_pulldown;
 
 Link_pulldown.prototype.display_preview = function ( title, contents ) {
-  // if contents is a string rather than a DOM node, make it into a DOM node
-  if ( !contents.nodeType ) {
+  // if contents is a DOM node, just scrape its text
+  if ( contents.nodeType ) {
+    contents = strip( scrapeText( contents ) );
+  // otherwise, assume contents is a string, so put it into a DOM node and then scrape its contents
+  } else {
     var contents_node = createDOM( "span", {} );
     contents_node.innerHTML = contents;
-    contents = scrapeText( contents_node );
+    contents = strip( scrapeText( contents_node ) );
   }
 
   // remove the title from the scraped contents text
