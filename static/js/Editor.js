@@ -251,15 +251,15 @@ Editor.prototype.resolve_link = function ( link ) {
   this.scrape_title();
 
   var id;
-  var link_title = scrapeText( link );
-  var editor = note_titles[ link_title ];
+  var title = link_title( link );
+  var editor = note_titles[ title ];
   // if the link's title corresponds to an open note id, set that as the link's destination
   if ( editor ) {
     id = editor.id;
     link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
   // otherwise, resolve the link by looking up the link's title on the server
   } else {
-    signal( this, "resolve_link", link_title, link );
+    signal( this, "resolve_link", title, link );
     return;
   }
 }
@@ -304,18 +304,23 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
   event.stop();
 
-  // if the note corresponding to the linked id is already open, highlight it
+  // if the note corresponding to the link's id or title is already open, highlight it
   var query = parse_query( link );
-  var link_title = query.title || scrapeText( link );
+  var title = link_title( link, query );
   var id = query.note_id;
   var iframe = getElement( "note_" + id );
   if ( iframe ) {
     iframe.editor.highlight();
     return;
   }
+  var editor = note_titles[ title ];
+  if ( editor ) {
+    editor.highlight();
+    return;
+  }
 
   // otherwise, load the note for that id
-  signal( this, "load_editor", link_title, this.iframe.id, id, null, link );
+  signal( this, "load_editor", title, this.iframe.id, id, null, link );
 }
 
 Editor.prototype.scrape_title = function () {
@@ -400,7 +405,7 @@ Editor.prototype.start_link = function () {
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
       var link = this.find_link_at_cursor();
-      signal( this, "resolve_link", scrapeText( link ), link );
+      signal( this, "resolve_link", strip( scrapeText( link ) ), link );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -415,7 +420,7 @@ Editor.prototype.start_link = function () {
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
       var link = this.find_link_at_cursor();
-      signal( this, "resolve_link", scrapeText( link ), link );
+      signal( this, "resolve_link", strip( scrapeText( link ) ), link );
     }
   }
 }
@@ -444,7 +449,7 @@ Editor.prototype.end_link = function () {
   }
 
   var query = parse_query( link );
-  var link_title = query.title || scrapeText( link );
+  var link_title = query.title || strip( scrapeText( link ) );
   signal( this, "resolve_link", link_title, link );
 }
 
@@ -566,3 +571,17 @@ function parse_query( link ) {
   return parseQueryString( link.href.split( "?" ).pop() );
 }
 
+// convenience function for getting a link's title (stripped of whitespace), either from a query
+// argument in the href or from the actual link title
+function link_title( link, query ) {
+  if ( !query )
+    query = parse_query( link );
+
+  var link_title = strip( query.title || scrapeText( link ) );
+
+  // work around an IE quirk in which link titles are sometimes 0xa0
+  if ( link_title.charCodeAt( 0 ) == 160 )
+    return "";
+
+  return link_title;
+}
