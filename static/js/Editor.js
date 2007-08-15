@@ -568,6 +568,9 @@ Editor.prototype.shutdown = function( event ) {
 
 // convenience function for parsing a link that has an href URL containing a query string
 function parse_query( link ) {
+  if ( !link.href )
+    return new Array();
+
   return parseQueryString( link.href.split( "?" ).pop() );
 }
 
