@@ -1,5 +1,3 @@
-note_titles = {} // map from note title to the open editor for that note
-
 function Editor( id, notebook_id, note_text, deleted_from, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
   this.id = id;
   this.notebook_id = notebook_id;
@@ -246,24 +244,6 @@ Editor.prototype.resize = function () {
   setElementDimensions( this.iframe, dimensions );
 }
 
-Editor.prototype.resolve_link = function ( link ) {
-  // in case the link is to ourself, first grab the most recent version of our title
-  this.scrape_title();
-
-  var id;
-  var title = link_title( link );
-  var editor = note_titles[ title ];
-  // if the link's title corresponds to an open note id, set that as the link's destination
-  if ( editor ) {
-    id = editor.id;
-    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
-  // otherwise, resolve the link by looking up the link's title on the server
-  } else {
-    signal( this, "resolve_link", title, link );
-    return;
-  }
-}
-
 Editor.prototype.key_pressed = function ( event ) {
   signal( this, "key_pressed", this, event );
 
@@ -304,22 +284,10 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
   event.stop();
 
-  // if the note corresponding to the link's id or title is already open, highlight it
+  // load the note corresponding to the clicked link
   var query = parse_query( link );
   var title = link_title( link, query );
   var id = query.note_id;
-  var iframe = getElement( "note_" + id );
-  if ( iframe ) {
-    iframe.editor.highlight();
-    return;
-  }
-  var editor = note_titles[ title ];
-  if ( editor ) {
-    editor.highlight();
-    return;
-  }
-
-  // otherwise, load the note for that id
   signal( this, "load_editor", title, this.iframe.id, id, null, link );
 }
 
@@ -329,13 +297,9 @@ Editor.prototype.scrape_title = function () {
   if ( !heading ) return;
   var title = scrapeText( heading );
 
-  // delete the previous title (if any) from the note_titles map
-  if ( this.title )
-    delete note_titles[ this.title ];
-
-  // record the new title in note_titles
+  // issue a signal that the title has changed and save off the new title
+  signal( this, "title_changed", this, this.title, title );
   this.title = title;
-  note_titles[ this.title ] = this;
 }
 
 Editor.prototype.focused = function () {
@@ -351,6 +315,13 @@ Editor.prototype.empty = function () {
     return false; // we don't know yet whether it's empty
 
   return ( scrapeText( this.document.body ).length == 0 );
+}
+
+Editor.prototype.contents = function () {
+  if ( !this.document.body )
+    return ""
+
+  return scrapeText( this.document.body );
 }
 
 Editor.prototype.start_link = function () {
@@ -405,7 +376,7 @@ Editor.prototype.start_link = function () {
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
       var link = this.find_link_at_cursor();
-      signal( this, "resolve_link", strip( scrapeText( link ) ), link );
+      signal( this, "resolve_link", link_title( link ), link );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -420,7 +391,7 @@ Editor.prototype.start_link = function () {
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
       var link = this.find_link_at_cursor();
-      signal( this, "resolve_link", strip( scrapeText( link ) ), link );
+      signal( this, "resolve_link", link_title( link ), link );
     }
   }
 }
@@ -448,9 +419,7 @@ Editor.prototype.end_link = function () {
     range.pasteHTML( "" );
   }
 
-  var query = parse_query( link );
-  var link_title = query.title || strip( scrapeText( link ) );
-  signal( this, "resolve_link", link_title, link );
+  signal( this, "resolve_link", link_title( link ), link );
 }
 
 Editor.prototype.find_link_at_cursor = function () {
@@ -545,9 +514,7 @@ Editor.prototype.contents = function () {
 }
 
 Editor.prototype.shutdown = function( event ) {
-  if ( this.title )
-    delete note_titles[ this.title ];
-
+  signal( this, "title_changed", this, this.title, null );
   var iframe = this.iframe;
   var note_controls = this.note_controls;
   disconnectAll( this );

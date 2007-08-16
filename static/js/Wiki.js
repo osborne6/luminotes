@@ -5,8 +5,8 @@ function Wiki() {
   this.notebook = null;
   this.notebook_id = getElement( "notebook_id" ).value;
   this.read_write = false;
-  this.startup_notes = new Array(); // map of startup notes: note id to bool
-  this.link_pulldowns = new Array(); // map of link pulldowns: link object to pulldown
+  this.startup_notes = new Array();  // map of startup notes: note id to bool
+  this.open_editors = new Array();   // map of open notes: note title to editor
   this.invoker = new Invoker();
 
   connect( this.invoker, "error_message", this, "display_error" );
@@ -175,11 +175,10 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 }
 
 Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision, link ) {
-  var self = this;
-
   // if a link is given with an open link pulldown, then ignore the note title given and use the
   // one from the pulldown instead
-  var pulldown = this.link_pulldowns[ link ];
+  var pulldown = link.pulldown;
+  var pulldown_title = undefined;
   if ( pulldown ) {
     pulldown_title = strip( pulldown.title_field.value );
     if ( pulldown_title )
@@ -188,7 +187,27 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
       pulldown.title_field.value = note_title;
   }
 
+  // if the note corresponding to the link's id is already open, highlight it and bail, but only if
+  // we didn't pull a title from an open link pulldown
+  if ( !pulldown_title ) {
+    var iframe = getElement( "note_" + note_id );
+    if ( iframe ) {
+      iframe.editor.highlight();
+      link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note_id;
+      return;
+    }
+  }
+
+  // if the note corresponding to the link's title is already open, highlight it and bail
+  var editor = this.open_editors[ note_title ];
+  if ( editor ) {
+    editor.highlight();
+    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+    return;
+  }
+
   // if there's not a valid destination note id, then load by title instead of by id
+  var self = this;
   if ( note_id == "new" || note_id == "null" ) {
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
@@ -211,25 +230,43 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
   );
 }
 
-Wiki.prototype.resolve_link = function ( note_title, link ) {
-  // if the link already has an id, then the link is already resolved so we can just bail
-  if ( link.href ) {
-    var id = parse_query( link ).note_id;
-    if ( id != "new" && id != "null" )
-      return;
-  }
+Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
+  var id = parse_query( link ).note_id;
+  if ( !id ) return;
+
+  // if the link already has a valid-looking id, it's already resolved, so bail
+  if ( !callback && id != "new" && id != "null" )
+    return;
 
   if ( note_title.length == 0 )
     return;
 
+  // if the note corresponding to the link's title is already open, resolve the link and bail
+  var editor = this.open_editors[ note_title ];
+  if ( editor ) {
+    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+    if ( callback )
+      callback( editor.contents() );
+    return;
+  }
+
   var self = this;
   this.invoker.invoke(
-    "/notebooks/lookup_note_id", "GET", {
+    "/notebooks/" + ( callback ? "load_note_by_title" : "lookup_note_id" ), "GET", {
       "notebook_id": this.notebook_id,
       "note_title": note_title
     },
     function ( result ) {
-      link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note_id;
+      if ( result && ( result.note || result.note_id ) ) {
+        link.href = "/notebooks/" + self.notebook_id + "?note_id=" + ( result.note ? result.note.object_id : result.note_id );
+      } else {
+        link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
+          [ "title", "note_id" ],
+          [ note_title, "null" ]
+        );
+      }
+      if ( callback )
+        callback( ( result && result.note ) ? result.note.contents : null );
     }
   );
 }
@@ -275,16 +312,6 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
     }
   }
 
-  // update any matching links in from_iframe_id with the id of this new editor
-  if ( from_iframe_id ) {
-    var links = getElementsByTagAndClassName( "a", null, getElement( from_iframe_id ).editor.document );
-    for ( var i in links ) {
-      // a link matches if its contained text is the same as this note's title
-      if ( link_title( links[ i ] ) == note_title )
-        links[ i ].href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
-    }
-  }
-
   // for read-only notes within read-write notebooks, tack the revision timestamp onto the start of the note text
   if ( !read_write && this.read_write && revisions_list && revisions_list.length ) {
     var short_revision = this.brief_revision( revisions_list[ revisions_list.length - 1 ] );
@@ -296,6 +323,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
 
   if ( this.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
+    connect( editor, "title_changed", this, "editor_title_changed" );
     connect( editor, "key_pressed", this, "editor_key_pressed" );
     connect( editor, "delete_clicked", function ( event ) { self.delete_editor( event, editor ) } );
     connect( editor, "undelete_clicked", function ( event ) { self.undelete_editor_via_trash( event, editor ) } );
@@ -319,6 +347,13 @@ Wiki.prototype.editor_state_changed = function ( editor ) {
   this.display_link_pulldown( editor );
 }
 
+Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) {
+  delete this.open_editors[ old_title ];
+
+  if ( new_title != null )
+    this.open_editors[ new_title ] = editor;
+}
+
 Wiki.prototype.display_link_pulldown = function ( editor ) {
   var link = editor.find_link_at_cursor();
 
@@ -327,7 +362,7 @@ Wiki.prototype.display_link_pulldown = function ( editor ) {
     return;
   }
 
-  var pulldown = this.link_pulldowns[ link ];
+  var pulldown = link.pulldown;
   if ( pulldown )
     pulldown.update_position();
 
@@ -876,7 +911,7 @@ Changes_pulldown.prototype.shutdown = function () {
 
 
 function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
-  wiki.link_pulldowns[ link ] = this;
+  link.pulldown = this;
   this.link = link;
 
   Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe );
@@ -910,8 +945,8 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   // so, display its title and a preview of its contents
   var iframe = getElement( "note_" + id );
   if ( iframe ) {
-    self.title_field.value = iframe.editor.title;
-    self.display_preview( iframe.editor.title, iframe.editor.document );
+    this.title_field.value = iframe.editor.title;
+    this.display_preview( iframe.editor.title, iframe.editor.document );
     return;
   }
 
@@ -938,6 +973,11 @@ Link_pulldown.prototype = Pulldown;
 Link_pulldown.prototype.constructor = Link_pulldown;
 
 Link_pulldown.prototype.display_preview = function ( title, contents ) {
+  if ( !contents ) {
+    replaceChildNodes( this.note_preview, "empty note" );
+    return;
+  }
+
   // if contents is a DOM node, just scrape its text
   if ( contents.nodeType ) {
     contents = strip( scrapeText( contents ) );
@@ -970,29 +1010,14 @@ Link_pulldown.prototype.title_field_changed = function ( event ) {
   if ( this.title_field.value == this.previous_title )
     return;
 
-  var self = this;
   replaceChildNodes( this.note_preview, "" );
   var title = strip( this.title_field.value );
   this.previous_title = title;
 
-  this.invoker.invoke(
-    "/notebooks/load_note_by_title", "GET", {
-      "notebook_id": this.notebook_id,
-      "note_title": title
-    },
-    function ( result ) {
-      if ( result.note ) {
-        self.link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note.object_id;
-        self.display_preview( result.note.title, result.note.contents );
-      } else {
-        self.link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
-          [ "title", "note_id" ],
-          [ title, "null" ]
-        );
-        replaceChildNodes( self.note_preview, "empty note" );
-      }
-    }
-  );
+  var self = this;
+  this.wiki.resolve_link( title, this.link, function ( contents ) {
+    self.display_preview( title, contents );
+  } );
 }
 
 Link_pulldown.prototype.title_field_key_pressed = function ( event ) {
@@ -1013,5 +1038,5 @@ Link_pulldown.prototype.shutdown = function () {
 
   disconnectAll( this.title_field );
   if ( this.link )
-    delete this.wiki.link_pulldowns[ this.link ];
+    this.link.pulldown = null;
 }
