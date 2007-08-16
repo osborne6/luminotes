@@ -934,12 +934,26 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   appendChildNodes( this.div, this.title_field );
   appendChildNodes( this.div, this.note_preview );
 
+  // if the note has no destination note id set, try loading the note from the server by title
   var query = parse_query( link );
   var title = link_title( link, query );
   var id = query.note_id;
-  if ( id == "new" || id == "null" ) {
-    this.title_field.value = title;
-    replaceChildNodes( self.note_preview, "empty note" );
+  if ( ( id == "new" || id == "null" ) && title.length > 0 ) {
+    this.invoker.invoke(
+      "/notebooks/load_note_by_title", "GET", {
+        "notebook_id": this.notebook_id,
+        "note_title": title
+      },
+      function ( result ) {
+        if ( result.note ) {
+          self.title_field.value = result.note.title;
+          self.display_preview( result.note.title, result.note.contents );
+        } else {
+          self.title_field.value = title;
+          replaceChildNodes( self.note_preview, "empty note" );
+        }
+      }
+    );
     return;
   }
 
