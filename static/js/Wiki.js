@@ -144,6 +144,9 @@ Wiki.prototype.populate = function ( result ) {
   if ( getElement( "revision" ).value ) read_write = false;
   if ( result.note )
     this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, undefined, read_write, false, true );
+
+  if ( !this.notebook.trash && this.notebook.startup_notes.length == 0 && !result.note )
+    this.display_message( "There are no notes here." )
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
