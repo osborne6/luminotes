@@ -1018,6 +1018,7 @@ Link_pulldown.prototype.display_preview = function ( title, contents ) {
 }
 
 Link_pulldown.prototype.title_field_clicked = function ( event ) {
+  this.title_field.select();
   event.stop();
 }
 
