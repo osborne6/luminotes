@@ -177,14 +177,16 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision, link ) {
   // if a link is given with an open link pulldown, then ignore the note title given and use the
   // one from the pulldown instead
-  var pulldown = link.pulldown;
-  var pulldown_title = undefined;
-  if ( pulldown ) {
-    pulldown_title = strip( pulldown.title_field.value );
-    if ( pulldown_title )
-      note_title = pulldown_title;
-    else
-      pulldown.title_field.value = note_title;
+  if ( link ) {
+    var pulldown = link.pulldown;
+    var pulldown_title = undefined;
+    if ( pulldown ) {
+      pulldown_title = strip( pulldown.title_field.value );
+      if ( pulldown_title )
+        note_title = pulldown_title;
+      else
+        pulldown.title_field.value = note_title;
+    }
   }
 
   // if the note corresponding to the link's id is already open, highlight it and bail, but only if
