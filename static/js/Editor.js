@@ -276,11 +276,19 @@ Editor.prototype.mouse_clicked = function ( event ) {
     if ( !link )
       return;
   }
+  if ( !link.href ) return;
 
-  // ignore external links pointing outside of this wiki (indicated by the presence of a link
-  // target), and let the browser handle them normally
-  if ( !link.href || link.target )
+  // links with targets are considered to be external links pointing outside of this wiki
+  if ( link.target ) {
+    // if this is a read-only editor, bail and let the browser handle the link normally
+    if ( !this.read_write ) return;
+    
+    // otherwise, this is a read-write editor, so we've got to launch the external link ourselves.
+    // note that this ignores what the link target actually contains and assumes it's "_new"
+    window.open( link.href );
+    event.stop();
     return;
+  }
 
   event.stop();
 
@@ -315,13 +323,6 @@ Editor.prototype.empty = function () {
     return false; // we don't know yet whether it's empty
 
   return ( scrapeText( this.document.body ).length == 0 );
-}
-
-Editor.prototype.contents = function () {
-  if ( !this.document.body )
-    return ""
-
-  return scrapeText( this.document.body );
 }
 
 Editor.prototype.start_link = function () {

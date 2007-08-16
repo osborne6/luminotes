@@ -189,6 +189,15 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
     }
   }
 
+  // if the title looks like a URL, then make it a link to an external site
+  if ( /^\w+:\/\//.test( note_title ) ) {
+    link.target = "_new";
+    link.href = note_title;
+    window.open( link.href );
+    return
+  }
+  link.removeAttribute( "target" );
+
   // if the note corresponding to the link's id is already open, highlight it and bail, but only if
   // we didn't pull a title from an open link pulldown
   if ( !pulldown_title ) {
@@ -210,7 +219,7 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
 
   // if there's not a valid destination note id, then load by title instead of by id
   var self = this;
-  if ( note_id == "new" || note_id == "null" ) {
+  if ( note_id == undefined || note_id == "new" || note_id == "null" ) {
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
         "notebook_id": this.notebook_id,
@@ -233,11 +242,19 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
 }
 
 Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
+  // if the title looks like a URL, then make it a link to an external site
+  if ( /^\w+:\/\//.test( note_title ) ) {
+    link.target = "_new";
+    link.href = note_title;
+    if ( callback ) callback( "web link" );
+    return
+  }
+  link.removeAttribute( "target" );
+
   var id = parse_query( link ).note_id;
-  if ( !id ) return;
 
   // if the link already has a valid-looking id, it's already resolved, so bail
-  if ( !callback && id != "new" && id != "null" )
+  if ( !callback && id != undefined && id != "new" && id != "null" )
     return;
 
   if ( note_title.length == 0 )
@@ -920,7 +937,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
 
   this.invoker = invoker;
   this.editor = editor;
-  this.title_field = createDOM( "input", { "class": "text_field", "size": "25", "maxlength": "256" } );
+  this.title_field = createDOM( "input", { "class": "text_field", "size": "30", "maxlength": "256" } );
   this.note_preview = createDOM( "span", {} );
   this.previous_title = "";
 
@@ -934,11 +951,18 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   appendChildNodes( this.div, this.title_field );
   appendChildNodes( this.div, this.note_preview );
 
+  // links with targets are considered links to external sites
+  if ( link.target ) {
+    self.title_field.value = link.href;
+    replaceChildNodes( self.note_preview, "web link" );
+    return;
+  }
+
   // if the note has no destination note id set, try loading the note from the server by title
   var query = parse_query( link );
   var title = link_title( link, query );
   var id = query.note_id;
-  if ( ( id == "new" || id == "null" ) && title.length > 0 ) {
+  if ( ( id == undefined || id == "new" || id == "null" ) && title.length > 0 ) {
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
         "notebook_id": this.notebook_id,

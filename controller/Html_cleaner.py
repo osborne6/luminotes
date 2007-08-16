@@ -53,7 +53,7 @@ class Html_cleaner(HTMLParser):
     # "on" tags, like "onhover," would not be smart.  Also be very careful
     # of "background" and "style."
     self.allowed_attributes = {
-      'a': [ 'href' ],
+      'a': [ 'href', 'target' ],
     }
 
     # The only schemes allowed in URLs (for href and src attributes).
