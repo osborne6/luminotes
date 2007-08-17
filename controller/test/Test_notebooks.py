@@ -793,7 +793,23 @@ class Test_notebooks( Test_controller ):
     result = self.http_get( "/notebooks/blank_note/5" )
     assert result[ u"id" ] == u"5"
 
-  def test_search( self ):
+  def test_search_titles_without_titles_only( self ):
+    self.login()
+
+    search_text = u"other"
+
+    result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+      titles_only = False,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note2.object_id
+
+  def test_search_contents_without_titles_only( self ):
     self.login()
 
     search_text = u"bla"
@@ -801,6 +817,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = False,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
@@ -808,12 +825,44 @@ class Test_notebooks( Test_controller ):
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == self.note.object_id
 
+  def test_search_titles_with_titles_only( self ):
+    self.login()
+
+    search_text = u"other"
+
+    result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+      titles_only = True,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note2.object_id
+
+  def test_search_contents_with_titles_only( self ):
+    self.login()
+
+    search_text = u"bla"
+
+    result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+      titles_only = True,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 0
+
   def test_search_without_login( self ):
     search_text = u"bla"
 
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = True,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
@@ -826,6 +875,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = False,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
@@ -841,6 +891,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = True,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
@@ -855,6 +906,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = True,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
@@ -876,6 +928,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = False,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
@@ -892,6 +945,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = True,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
@@ -909,6 +963,7 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/search/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
+      titles_only = True,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )

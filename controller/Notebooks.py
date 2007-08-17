@@ -545,8 +545,9 @@ class Notebooks( object ):
     notebook_id = Valid_id(),
     search_text = Valid_string( min = 0, max = 100 ),
     user_id = Valid_id( none_okay = True ),
+    titles_only = Valid_bool(),
   )
-  def search( self, notebook_id, search_text, user_id ):
+  def search( self, notebook_id, search_text, titles_only, user_id ):
     """
     Search the notes within a particular notebook for the given search text. Note that the search
     is case-insensitive, and all HTML tags are ignored. The matching notes are returned with title
@@ -554,8 +555,10 @@ class Notebooks( object ):
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to search
-    @type note_id: unicode
-    @param note_id: search term
+    @type search_text: unicode
+    @param search_text: search term
+    @type titles_only: bool
+    @param titles_only: if true, only search titles. if false, search all note titles and contents
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
@@ -583,7 +586,7 @@ class Notebooks( object ):
       	if note is None: continue
         if search_text in nuker.nuke( note.title ).lower():
           title_matches.append( note )
-        elif search_text in nuker.nuke( note.contents ).lower():
+        elif not titles_only and search_text in nuker.nuke( note.contents ).lower():
           content_matches.append( note )
 
     notes = title_matches + content_matches
