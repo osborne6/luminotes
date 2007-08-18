@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.5
 
 import os
 import os.path
@@ -91,6 +91,8 @@ class Initializer( object ):
 
 
 def main( args ):
+  print "IMPORTANT: Stop the Luminotes server before running this program."
+
   scheduler = Scheduler()
   database = Database( scheduler, "data.db" )
   initializer = Initializer( scheduler, database, args and args[ 0 ] or None )

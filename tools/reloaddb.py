@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.5
 
 import os
 import os.path
@@ -24,6 +24,8 @@ class Reloader( object ):
 
 
 def main():
+  print "IMPORTANT: Stop the Luminotes server before running this program."
+
   scheduler = Scheduler()
   database = Database( scheduler, "data.db" )
   initializer = Reloader( scheduler, database )
