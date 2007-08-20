@@ -963,6 +963,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
 
   var self = this;
   connect( this.title_field, "onclick", function ( event ) { self.title_field_clicked( event ); } );
+  connect( this.title_field, "onfocus", function ( event ) { self.title_field_focused( event ); } );
   connect( this.title_field, "onchange", function ( event ) { self.title_field_changed( event ); } );
   connect( this.title_field, "onblur", function ( event ) { self.title_field_changed( event ); } );
   connect( this.title_field, "onkeydown", function ( event ) { self.title_field_key_pressed( event ); } );
@@ -1062,8 +1063,11 @@ Link_pulldown.prototype.display_preview = function ( title, contents ) {
 }
 
 Link_pulldown.prototype.title_field_clicked = function ( event ) {
-  this.title_field.select();
   event.stop();
+}
+
+Link_pulldown.prototype.title_field_focused = function ( event ) {
+  this.title_field.select();
 }
 
 Link_pulldown.prototype.title_field_changed = function ( event ) {
