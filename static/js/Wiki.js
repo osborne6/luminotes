@@ -86,9 +86,9 @@ Wiki.prototype.populate = function ( result ) {
   replaceChildNodes( "notebook_area", span );
 
   appendChildNodes( span, createDOM( "h3", this.notebook.name ) );
-  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link" }, "recent notes" ) );
+  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" ) );
   appendChildNodes( span, createDOM( "br" ) );
-  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link" }, "download as html" ) );
+  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link", "title": "Download a stand-alone copy of the entire wiki notebook." }, "download as html" ) );
 
   if ( this.notebook.read_write ) {
     this.read_write = true;
@@ -96,7 +96,7 @@ Wiki.prototype.populate = function ( result ) {
 
     appendChildNodes( span, createDOM( "br" ) );
     if ( this.notebook.trash )
-      appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.trash.object_id, "id": "trash_link" }, "trash" ) );
+      appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.trash.object_id, "id": "trash_link", "title": "Look here for notes you've deleted." }, "trash" ) );
 
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
