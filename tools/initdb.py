@@ -99,8 +99,9 @@ def fix_note_contents( contents, notebook_id, note_ids ):
 
   LINK_PATTERN = re.compile( '(<a href=")([^"]+?note_id=)([^"]*)("[^>]*>)([^<]*)(</a>)' )
 
-  # plug in the notebook id where appropriate
+  # plug in the notebook id and support email address where appropriate
   contents = contents.replace( "%s", notebook_id )
+  contents = contents.replace( "support@luminotes.com", settings[ u"global" ].get( u"luminotes.support_email", u"" ) )
 
   # stitch together note links to use the actual note ids of the referenced notes.
   # also, use the https URL for certain links if one is configured

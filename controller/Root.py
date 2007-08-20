@@ -77,13 +77,13 @@ class Root( object ):
     if status == 404:
       cherrypy.response.headerMap[ u"Status" ] = u"404 Not Found"
       cherrypy.response.status = status
-      cherrypy.response.body = [ unicode( Not_found_page() ) ]
+      cherrypy.response.body = [ unicode( Not_found_page( self.__settings[ u"global" ].get( u"luminotes.support_email" ) ) ) ]
       return
 
     import traceback
     traceback.print_exc()
 
-    cherrypy.response.body = [ unicode( Error_page() ) ]
+    cherrypy.response.body = [ unicode( Error_page( self.__settings[ u"global" ].get( u"luminotes.support_email" ) ) ) ]
 
   scheduler = property( lambda self: self.__scheduler )
   database = property( lambda self: self.__database )

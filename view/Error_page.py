@@ -3,7 +3,7 @@ from Tags import Div, H2, P, A, Ul, Li, Strong
 
 
 class Error_page( Page ):
-  def __init__( self ):
+  def __init__( self, support_email ):
     title = u"uh oh"
 
     Page.__init__(
@@ -13,7 +13,7 @@ class Error_page( Page ):
         H2( title ),
         P(
           u"Something went wrong! If you care, please",
-          A( "let us know about it.", href = "mailto:support@luminotes.com" ),
+          A( "let us know about it.", href = "mailto:%s" % support_email ),
           u"Be sure to include the following information:",
         ),
         Ul(

@@ -19,5 +19,6 @@ settings = {
     "luminotes.https_url": "",
     "luminotes.http_proxy_ip": "127.0.0.1",
     "luminotes.https_proxy_ip": "127.0.0.2",
+    "luminotes.support_email": "support@luminotes.com",
   },
 }
