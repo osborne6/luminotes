@@ -879,7 +879,7 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
   connect( this.startup_toggle, "onclick", function ( event ) { self.startup_clicked( event ); event.stop(); } );
 }
 
-Options_pulldown.prototype = Pulldown;
+Options_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Options_pulldown.prototype.constructor = Options_pulldown;
 
 Options_pulldown.prototype.startup_clicked = function ( event ) {
@@ -932,7 +932,7 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
   }
 }
 
-Changes_pulldown.prototype = Pulldown;
+Changes_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Changes_pulldown.prototype.constructor = Changes_pulldown;
 
 Changes_pulldown.prototype.link_clicked = function( event, note_id ) {
@@ -1030,7 +1030,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   );
 }
 
-Link_pulldown.prototype = Pulldown;
+Link_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Link_pulldown.prototype.constructor = Link_pulldown;
 
 Link_pulldown.prototype.display_preview = function ( title, contents ) {
@@ -1137,7 +1137,7 @@ function Search_pulldown( wiki, notebook_id, titles_only ) {
   connect( this.everything_toggle, "onclick", function ( event ) { self.everything_clicked( event ); } );
 }
 
-Search_pulldown.prototype = Pulldown;
+Search_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Search_pulldown.prototype.constructor = Search_pulldown;
 
 Search_pulldown.prototype.titles_clicked = function ( event ) {
