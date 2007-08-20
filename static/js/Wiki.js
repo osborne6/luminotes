@@ -866,7 +866,7 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
   this.invoker = invoker;
   this.editor = editor;
   this.startup_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox" } );
-  this.startup_toggle = createDOM( "a", { "href": "", "class": "pulldown_link" },
+  this.startup_toggle = createDOM( "a", { "href": "", "class": "pulldown_link", "title": "Display this note whenever the notebook is loaded." },
     "show on startup"
   );
 
@@ -1111,11 +1111,11 @@ function Search_pulldown( wiki, notebook_id, titles_only ) {
   Pulldown.call( this, wiki, notebook_id, "search_pulldown", getElement( "search_button" ) );
 
   this.titles_radio = createDOM( "input", { "type": "radio", "class": "pulldown_radio" } );
-  this.titles_toggle = createDOM( "a", { "href": "", "class": "pulldown_link" },
+  this.titles_toggle = createDOM( "a", { "href": "", "class": "pulldown_link", "title": "Search only note titles." },
     "titles only"
   );
   this.everything_radio = createDOM( "input", { "type": "radio", "class": "pulldown_radio" } );
-  this.everything_toggle = createDOM( "a", { "href": "", "class": "pulldown_link" },
+  this.everything_toggle = createDOM( "a", { "href": "", "class": "pulldown_link", "title": "Search everything, including note titles and contents." },
     "everything"
   );
 
