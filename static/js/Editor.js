@@ -333,46 +333,17 @@ Editor.prototype.start_link = function () {
     // if no text is selected, then insert a link with a placeholder nbsp as the link title, and
     // then immediately remove the link title once the link is created
     if ( selection.toString().length == 0 ) {
-      this.insert_html( "&nbsp;" );
       var range = selection.getRangeAt( 0 );
-      var container = range.startContainer;
-
-      // if for some reason the inserted &nbsp; isn't in the container we expect it to be in, use
-      // the previous sibling container instead
-      if ( range.startOffset == 0 ) {
-        var previous = null;
-        for ( i in container.parentNode.childNodes ) {
-          var child = container.parentNode.childNodes[ i ];
-
-          if ( child == container ) {
-            container = previous;
-            // descend into the sibling container until a text node is found
-            while ( container.firstChild && container.firstChild.noteType != 3 )
-              container = container.firstChild;
-            break;
-          }
-
-          previous = child;
-        }
-        // assume the &nbsp; got subsumed into the end of the sibling container
-        range.setStart( container, container.nodeValue.length - 1 );
-      } else {
-        range.setStart( container, range.startOffset - 1 );
-      }
+      var nbsp = this.document.createTextNode( "\xa0" ); // \xa0 is &nbsp;
+      range.insertNode( nbsp );
+      range.selectNode( nbsp );
 
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
 
       // nuke the link title and collapse the selection, yielding a tasty new link that's completely
       // titleless and unselected
-      var link = this.find_link_at_cursor();
-      if ( link ) {
-        for ( var j in link.childNodes ) {
-          var child = link.childNodes[ j ];
-          if ( child.nodeType == 3 ) // type of text node
-            child.nodeValue = "";
-        }
-        selection.collapse( link, 0 );
-      }
+      nbsp.nodeValue = "";
+      selection.collapse( nbsp.parentNode, 0 );
     // otherwise, just create a link with the selected text as the link title
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
