@@ -320,7 +320,7 @@ Editor.prototype.blurred = function () {
 
 Editor.prototype.empty = function () {
   if ( !this.document || !this.document.body )
-    return false; // we don't know yet whether it's empty
+    return true; // consider it empty as of now
 
   return ( scrapeText( this.document.body ).length == 0 );
 }
@@ -493,8 +493,12 @@ Editor.prototype.shutdown = function( event ) {
   disconnectAll( this.options_button );
   disconnectAll( this.hide_button );
   disconnectAll( iframe );
-  disconnectAll( this.document.body );
-  disconnectAll( this.document );
+
+  if ( this.document ) {
+    disconnectAll( this.document.body );
+    disconnectAll( this.document );
+  }
+
   blindUp( iframe, options = { "duration": 0.5, afterFinish: function () {
     try {
       removeElement( note_controls );
