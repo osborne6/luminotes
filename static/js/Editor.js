@@ -319,7 +319,7 @@ Editor.prototype.blurred = function () {
 }
 
 Editor.prototype.empty = function () {
-  if ( !this.document.body )
+  if ( !this.document || !this.document.body )
     return false; // we don't know yet whether it's empty
 
   return ( scrapeText( this.document.body ).length == 0 );
@@ -333,17 +333,15 @@ Editor.prototype.start_link = function () {
     // if no text is selected, then insert a link with a placeholder nbsp as the link title, and
     // then immediately remove the link title once the link is created
     if ( selection.toString().length == 0 ) {
-      var range = selection.getRangeAt( 0 );
-      var nbsp = this.document.createTextNode( "\xa0" ); // \xa0 is &nbsp;
-      range.insertNode( nbsp );
-      range.selectNode( nbsp );
+      this.insert_html( '<span id="placeholder_title"> </span>' );
+      var placeholder = withDocument( this.document, function () { return getElement( "placeholder_title" ); } );
+      selection.selectAllChildren( placeholder );
 
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
 
       // nuke the link title and collapse the selection, yielding a tasty new link that's completely
       // titleless and unselected
-      nbsp.nodeValue = "";
-      selection.collapse( nbsp.parentNode, 0 );
+      removeElement( placeholder );
     // otherwise, just create a link with the selected text as the link title
     } else {
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
