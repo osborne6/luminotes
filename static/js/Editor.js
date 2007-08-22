@@ -339,6 +339,10 @@ Editor.prototype.start_link = function () {
 
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
 
+      // hack to prevent Firefox from erasing spaces before links that happen to be at the end of list items
+      var sentinel = createDOM( "span" );
+      insertSiblingNodesBefore( placeholder.parentNode, sentinel );
+
       // nuke the link title and collapse the selection, yielding a tasty new link that's completely
       // titleless and unselected
       removeElement( placeholder );
