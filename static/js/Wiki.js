@@ -192,16 +192,16 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
       else
         pulldown.title_field.value = note_title;
     }
-  }
 
-  // if the title looks like a URL, then make it a link to an external site
-  if ( /^\w+:\/\//.test( note_title ) ) {
-    link.target = "_new";
-    link.href = note_title;
-    window.open( link.href );
-    return
+    // if the title looks like a URL, then make it a link to an external site
+    if ( /^\w+:\/\//.test( note_title ) ) {
+      link.target = "_new";
+      link.href = note_title;
+      window.open( link.href );
+      return
+    }
+    link.removeAttribute( "target" );
   }
-  link.removeAttribute( "target" );
 
   // if the note corresponding to the link's id is already open, highlight it and bail, but only if
   // we didn't pull a title from an open link pulldown
