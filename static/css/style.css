@@ -248,6 +248,7 @@ ol li {
 
 .message_inner {
   padding: 0.5em;
+  line-height: 140%;
   background-color: #ffaa44;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
@@ -266,6 +267,7 @@ ol li {
 
 .error_inner {
   padding: 0.5em;
+  line-height: 140%;
   color: #ffffff;
   background-color: #dd1111;
   -moz-border-radius: 0.5em;

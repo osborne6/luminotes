@@ -568,19 +568,19 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     if ( editor == this.focused_editor )
       this.focused_editor = null;
 
-    editor.shutdown();
-  }
+    if ( this.notebook.trash && !editor.empty() ) {
+      var undo_button = createDOM( "input", {
+        "type": "button",
+        "class": "message_button",
+        "value": "undo",
+        "title": "undo deletion"
+      } );
+      this.display_message( "The note has been moved to the trash.", [ undo_button ] )
+      var self = this;
+      connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor ); } );
+    }
 
-  if ( this.notebook.trash ) {
-    var undo_button = createDOM( "input", {
-      "type": "button",
-      "class": "message_button",
-      "value": "undo",
-      "title": "undo deletion"
-    } );
-    this.display_message( "The note has been moved to the trash.", [ undo_button ] )
-    var self = this;
-    connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor ); } );
+    editor.shutdown();
   }
 
   event.stop();
@@ -636,28 +636,60 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
   event.stop();
 }
 
+Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
+  this.clear_pulldowns();
+
+  // display the two revisions for comparison by the user
+  this.load_editor( editor.title, null, editor.id, previous_revision );
+  this.load_editor( editor.title, null, editor.id );
+}
+
 Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
   if ( !editor )
     editor = this.focused_editor;
 
   var self = this;
   if ( editor && editor.read_write && !editor.empty() ) {
+    var revisions = editor.revisions_list;
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook_id,
       "note_id": editor.id,
       "contents": editor.contents(),
-      "startup": editor.startup
+      "startup": editor.startup,
+      "previous_revision": revisions.length ? revisions[ revisions.length - 1 ] : "None"
     }, function ( result ) { self.update_editor_revisions( result, editor ); }, null, fire_and_forget );
   }
 }
 
 Wiki.prototype.update_editor_revisions = function ( result, editor ) {
-  if ( result.new_revision ) {
-    if ( !editor.revisions_list )
-      editor.revisions_list = new Array();
+  // if there's not a newly saved revision, then the contents are unchanged, so bail
+  if ( !result.new_revision )
+    return;
 
-    editor.revisions_list.push( result.new_revision );
+  var revisions = editor.revisions_list;
+  var client_previous_revision = revisions.length ? revisions[ revisions.length - 1 ] : null;
+
+  // if the server's idea of the previous revision doesn't match the client's, then someone has
+  // gone behind our back and saved the editor's note from another window
+  if ( result.previous_revision != client_previous_revision ) {
+    var compare_button = createDOM( "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "compare versions",
+      "title": "compare your version with the modified version"
+    } );
+    this.display_error( 'Your changes to the note titled "' + editor.title + '" have overwritten changes made in another window.', [ compare_button ] );
+
+    var self = this;
+    connect( compare_button, "onclick", function ( event ) {
+      self.compare_versions( event, editor, result.previous_revision );
+    } );
+
+    revisions.push( result.previous_revision );
   }
+
+  // add the new revision to the editor's revisions list
+  revisions.push( result.new_revision );
 }
 
 Wiki.prototype.search = function ( event ) {
@@ -722,9 +754,8 @@ Wiki.prototype.display_message = function ( text, buttons ) {
   this.clear_pulldowns();
 
   var inner_div = DIV( { "class": "message_inner" }, text + " " );
-  for ( var i in buttons ) {
+  for ( var i in buttons )
     appendChildNodes( inner_div, buttons[ i ] );
-  }
 
   var div = DIV( { "class": "message" }, inner_div );
   div.buttons = buttons;
@@ -733,7 +764,7 @@ Wiki.prototype.display_message = function ( text, buttons ) {
   ScrollTo( div );
 }
 
-Wiki.prototype.display_error = function ( text ) {
+Wiki.prototype.display_error = function ( text, buttons ) {
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -745,8 +776,13 @@ Wiki.prototype.display_error = function ( text ) {
       editor.shutdown();
   }
 
-  var inner_div = DIV( { "class": "error_inner" }, text );
+  var inner_div = DIV( { "class": "error_inner" }, text + " " );
+  for ( var i in buttons )
+    appendChildNodes( inner_div, buttons[ i ] );
+
   var div = DIV( { "class": "error" }, inner_div );
+  div.buttons = buttons;
+
   appendChildNodes( "notes", div );
   ScrollTo( div );
 }

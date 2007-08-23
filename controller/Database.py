@@ -259,7 +259,23 @@ class Valid_id( object ):
     self.__none_okay = none_okay
 
   def __call__( self, value ):
-    if self.__none_okay and value in ( None, "" ): return None
+    if self.__none_okay and value in ( None, "None", "" ): return None
     if self.ID_PATTERN.search( value ): return str( value )
+
+    raise ValueError()
+
+
+class Valid_revision( object ):
+  """
+  Validator for an object id.
+  """
+  REVISION_PATTERN = re.compile( "^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d+$" )
+
+  def __init__( self, none_okay = False ):
+    self.__none_okay = none_okay
+
+  def __call__( self, value ):
+    if self.__none_okay and value in ( None, "None", "" ): return None
+    if self.REVISION_PATTERN.search( value ): return str( value )
 
     raise ValueError()

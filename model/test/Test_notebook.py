@@ -99,17 +99,6 @@ class Test_notebook( object ):
     note = self.notebook.lookup_note_by_title( new_title )
     assert note == self.note
 
-  def test_update_unrevised_note( self ):
-    self.notebook.add_note( self.note )
-    old_title = self.note.title
-
-    revision = self.notebook.revision
-    self.notebook.update_note( self.note, self.note.contents )
-    assert self.notebook.revision == revision
-
-    note = self.notebook.lookup_note( self.note.object_id )
-    assert note == self.note
-
   @raises( Notebook.UnknownNoteError )
   def test_update_unknown_note( self ):
     new_contents = u"<h3>new title</h3>new blah"

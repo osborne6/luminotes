@@ -106,9 +106,6 @@ class Notebook( Persistent ):
     if old_note is None:
       raise Notebook.UnknownNoteError( note.object_id )
 
-    if contents == old_note.contents:
-      return
-
     self.update_revision()
     self.__titles.pop( note.title, None )
 

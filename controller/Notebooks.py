@@ -2,7 +2,7 @@ import cherrypy
 from Scheduler import Scheduler
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool
-from Database import Valid_id
+from Database import Valid_id, Valid_revision
 from Users import grab_user_id
 from Updater import wait_for_update, update_client
 from Expire import strongly_expire
@@ -52,7 +52,7 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
-    revision = Valid_string( min = 19, max = 30 ),
+    revision = Valid_revision(),
   )
   def default( self, notebook_id, note_id = None, revision = None ):
     """
@@ -135,7 +135,7 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
-    revision = Valid_string( min = 19, max = 30 ),
+    revision = Valid_revision(),
     user_id = Valid_id( none_okay = True ),
   )
   def load_note( self, notebook_id, note_id, revision = None, user_id = None ):
@@ -269,14 +269,15 @@ class Notebooks( object ):
     note_id = Valid_id(),
     contents = Valid_string( min = 1, max = 25000, escape_html = False ),
     startup = Valid_bool(),
+    previous_revision = Valid_revision( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def save_note( self, notebook_id, note_id, contents, startup, user_id ):
+  def save_note( self, notebook_id, note_id, contents, startup, previous_revision, user_id ):
     """
     Save a new revision of the given note. This function will work both for creating a new note and
     for updating an existing note. If the note exists and the given contents are identical to the
-    existing contents, then no saving takes place and a new_revision of None is returned. Otherwise
-    this method returns the timestamp of the new revision.
+    existing contents for the given previous_revision, then no saving takes place and a new_revision
+    of None is returned. Otherwise this method returns the timestamp of the new revision.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook the note is in
@@ -286,10 +287,16 @@ class Notebooks( object ):
     @param contents: new textual contents of the note, including its title
     @type startup: bool
     @param startup: whether the note should be displayed on startup
+    @type previous_revision: unicode or NoneType
+    @param previous_revision: previous known revision timestamp of the provided note, or None if
+      the note is new
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: { 'new_revision': new revision of saved note, or None }
+    @return: {
+      'new_revision': new revision of saved note, or None if nothing was saved,
+      'previous_revision': revision immediately before new_revision, or None if the note is new
+    }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -306,26 +313,40 @@ class Notebooks( object ):
     self.__database.load( note_id, self.__scheduler.thread )
     note = ( yield Scheduler.SLEEP )
 
-    # if the note is already in the database, load it and update it. otherwise, create it
+    # if the note is already in the database, load it and update it
     if note and note in notebook.notes:
-      orig_revision = note.revision
-      notebook.update_note( note, contents )
+      # check whether the provided note contents have been changed since the previous revision
+      self.__database.load( note_id, self.__scheduler.thread, previous_revision )
+      old_note = ( yield Scheduler.SLEEP )
+
+      # the note hasn't been changed, so bail without updating it
+      if contents == old_note.contents:
+        previous_revision = note.revision
+        new_revision = None
+      # the note has changed, so update it
+      else:
+        previous_revision = note.revision
+        notebook.update_note( note, contents )
+        new_revision = note.revision
+    # the note is not already in the database, so create it
     else:
-      orig_revision = None
+      previous_revision = None
       note = Note( note_id, contents )
       notebook.add_note( note )
+      new_revision = note.revision
 
     if startup:
-      notebook.add_startup_note( note )
+      startup_changed = notebook.add_startup_note( note )
     else:
-      notebook.remove_startup_note( note )
+      startup_changed = notebook.remove_startup_note( note )
 
-    self.__database.save( notebook )
+    if new_revision or startup_changed:
+      self.__database.save( notebook )
 
-    if note.revision == orig_revision:
-      yield dict( new_revision = None )
-    else:
-      yield dict( new_revision = note.revision )
+    yield dict(
+      new_revision = new_revision,
+      previous_revision = previous_revision,
+    )
 
   @expose( view = Json )
   @wait_for_update
@@ -508,6 +529,12 @@ class Notebooks( object ):
     note = ( yield Scheduler.SLEEP )
 
     if note and notebook.trash:
+      # if the note isn't deleted, and it's already in this notebook, just return
+      if note.deleted_from is None and notebook.lookup_note( note.object_id ):
+        yield dict()
+        return
+
+      # if the note was deleted from a different notebook than the notebook given, raise
       if note.deleted_from != notebook_id:
         raise Access_error()
 

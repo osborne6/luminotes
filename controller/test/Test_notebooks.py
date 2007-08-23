@@ -310,9 +310,11 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
       contents = new_note_contents,
       startup = startup,
+      previous_revision = previous_revision,
     ), session_id = self.session_id )
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "previous_revision" ] == previous_revision
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -359,6 +361,154 @@ class Test_notebooks( Test_controller ):
   def test_save_startup_note_without_login( self ):
     self.test_save_note_without_login( startup = True )
 
+  def test_save_unchanged_note( self, startup = False ):
+    self.login()
+
+    # save over an existing note supplying new contents and a new title
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    # now attempt to save over that note again without changing the contents
+    previous_revision = self.note.revision
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    # assert that the note wasn't actually updated the second time
+    assert result[ "new_revision" ] == None
+    assert result[ "previous_revision" ] == previous_revision
+
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    assert note.revision == previous_revision
+
+  def test_save_unchanged_note_with_startup_change( self, startup = False ):
+    self.login()
+
+    # save over an existing note supplying new contents and a new title
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    # now attempt to save over that note again without changing the contents, but with a change
+    # to its startup flag
+    previous_revision = self.note.revision
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = not startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    # assert that the note wasn't actually updated the second time
+    assert result[ "new_revision" ] == None
+    assert result[ "previous_revision" ] == previous_revision
+
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    assert note.revision == previous_revision
+
+    # assert that the notebook now has the proper startup status for the note
+    if startup:
+      assert note not in self.notebook.startup_notes
+    else:
+      assert note in self.notebook.startup_notes
+
+  def test_save_note_from_an_older_revision( self ):
+    self.login()
+
+    # save over an existing note supplying new contents and a new title
+    first_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    # save over that note again with new contents, providing the original
+    # revision as the previous known revision
+    second_revision = self.note.revision
+    new_note_contents = u"<h3>new new title</h3>new new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    # make sure the second save actually caused an update
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] not in ( first_revision, second_revision )
+    assert result[ "previous_revision" ] == second_revision
+
+    # make sure the first title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the second title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+
   def test_save_note_with_unknown_notebook( self ):
     self.login()
 
@@ -384,9 +534,11 @@ class Test_notebooks( Test_controller ):
       note_id = new_note.object_id,
       contents = new_note.contents,
       startup = startup,
+      previous_revision = None,
     ), session_id = self.session_id )
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "previous_revision" ] == None
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -424,9 +576,11 @@ class Test_notebooks( Test_controller ):
       note_id = new_note.object_id,
       contents = new_note.contents,
       startup = False,
+      previous_revision = None,
     ), session_id = self.session_id )
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "previous_revision" ] == None
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -455,9 +609,11 @@ class Test_notebooks( Test_controller ):
       note_id = new_note.object_id,
       contents = new_note.contents,
       startup = False,
+      previous_revision = None,
     ), session_id = self.session_id )
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "previous_revision" ] == None
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -713,6 +869,36 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "note" ) == None
 
+  def test_undelete_note_that_is_not_deleted( self ):
+    self.login()
+
+    # "undelete" the note
+    result = self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" ) == None
+
+    # test that the "undeleted" is where it should be
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from == None
+
+    # test that the note is not somehow in the trash
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "note" ) == None
+
   def test_undelete_note_without_login( self ):
     result = self.http_post( "/notebooks/undelete_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -788,6 +974,26 @@ class Test_notebooks( Test_controller ):
     note = result.get( "note" )
     assert note.object_id == self.note.object_id
     assert note.deleted_from == self.notebook.object_id
+
+  def test_undelete_note_that_is_not_deleted_from_incorrect_notebook( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/undelete_note/", dict(
+      notebook_id = self.anon_notebook,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+    # test that the note is still in its notebook
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from == None
 
   def test_blank_note( self ):
     result = self.http_get( "/notebooks/blank_note/5" )

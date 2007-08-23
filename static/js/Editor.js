@@ -3,7 +3,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, inser
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
   this.deleted_from = deleted_from || null;
-  this.revisions_list = revisions_list;
+  this.revisions_list = revisions_list || new Array();
   this.read_write = read_write;
   this.startup = startup || false; // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
