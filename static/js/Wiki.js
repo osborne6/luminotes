@@ -206,20 +206,28 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
   // if the note corresponding to the link's id is already open, highlight it and bail, but only if
   // we didn't pull a title from an open link pulldown
   if ( !pulldown_title ) {
-    var iframe = getElement( "note_" + note_id );
+    if ( revision )
+      var iframe = getElement( "note_" + note_id + " " + revision );
+    else
+      var iframe = getElement( "note_" + note_id );
+
     if ( iframe ) {
       iframe.editor.highlight();
-      link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note_id;
+      if ( link )
+        link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note_id;
       return;
     }
   }
 
   // if the note corresponding to the link's title is already open, highlight it and bail
-  var editor = this.open_editors[ note_title ];
-  if ( editor ) {
-    editor.highlight();
-    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
-    return;
+  if ( !revision ) {
+    var editor = this.open_editors[ note_title ];
+    if ( editor ) {
+      editor.highlight();
+      if ( link )
+        link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+      return;
+    }
   }
 
   // if there's not a valid destination note id, then load by title instead of by id
