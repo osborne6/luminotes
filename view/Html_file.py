@@ -33,8 +33,8 @@ class Html_file( Html ):
               class_ = u"note_frame",
             ),
           ) for note in notes ],
+          A( "Luminotes", href = "http://luminotes.com/" ),
           id = u"center_area",
         ),
       ),
-      A( "Luminotes", href = "http://luminotes.com/" ),
     )
