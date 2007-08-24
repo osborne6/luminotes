@@ -296,7 +296,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
   var query = parse_query( link );
   var title = link_title( link, query );
   var id = query.note_id;
-  signal( this, "load_editor", title, this.iframe.id, id, null, link );
+  signal( this, "load_editor", title, id, null, link );
 }
 
 Editor.prototype.scrape_title = function () {

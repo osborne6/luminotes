@@ -136,7 +136,7 @@ Wiki.prototype.populate = function ( result ) {
 
     // don't actually create an editor if a particular note was provided in the result
     if ( !result.note ) {
-      this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, undefined, this.read_write, false, focus );
+      this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, false, focus );
       focus = false;
     }
   }
@@ -145,7 +145,7 @@ Wiki.prototype.populate = function ( result ) {
   var read_write = this.read_write;
   if ( getElement( "revision" ).value ) read_write = false;
   if ( result.note )
-    this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, undefined, read_write, false, true );
+    this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, read_write, false, true );
 
   if ( !this.notebook.trash && this.notebook.startup_notes.length == 0 && !result.note )
     this.display_message( "There are no notes here." )
@@ -176,10 +176,10 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
+  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
 }
 
-Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, revision, link ) {
+Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
   // if a link is given with an open link pulldown, then ignore the note title given and use the
   // one from the pulldown instead
   if ( link ) {
@@ -239,7 +239,7 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
         "note_title": note_title,
         "revision": revision
       },
-      function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision, link ); }
+      function ( result ) { self.parse_loaded_editor( result, note_title, revision, link ); }
     );
     return;
   }
@@ -250,7 +250,7 @@ Wiki.prototype.load_editor = function ( note_title, from_iframe_id, note_id, rev
       "note_id": note_id,
       "revision": revision
     },
-    function ( result ) { self.parse_loaded_editor( result, from_iframe_id, note_title, revision, link ); }
+    function ( result ) { self.parse_loaded_editor( result, note_title, revision, link ); }
   );
 }
 
@@ -303,7 +303,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   );
 }
 
-Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_title, revision, link ) {
+Wiki.prototype.parse_loaded_editor = function ( result, note_title, revision, link ) {
   if ( result.note ) {
     var id = result.note.object_id;
     if ( revision ) id += " " + revision;
@@ -322,14 +322,14 @@ Wiki.prototype.parse_loaded_editor = function ( result, from_iframe_id, note_tit
   else
     var read_write = this.read_write;
 
-  id = this.create_editor( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, true, false );
+  id = this.create_editor( id, note_text, deleted_from, revisions_list, note_title, read_write, true, false );
 
   // if a link that launched this editor was provided, update it with the created note's id
   if ( link && id )
     link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, from_iframe_id, note_title, read_write, highlight, focus ) {
+Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, note_title, read_write, highlight, focus ) {
   this.clear_messages();
 
   var self = this;
@@ -630,7 +630,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
     }
 
     this.startup_notes[ editor.id ] = true;
-    this.load_editor( "Note not found.", null, editor.id, null );
+    this.load_editor( "Note not found.", editor.id, null );
   }
 
   event.stop();
@@ -640,8 +640,8 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
 
   // display the two revisions for comparison by the user
-  this.load_editor( editor.title, null, editor.id, previous_revision );
-  this.load_editor( editor.title, null, editor.id );
+  this.load_editor( editor.title, editor.id, previous_revision );
+  this.load_editor( editor.title, editor.id );
 }
 
 Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
@@ -744,7 +744,7 @@ Wiki.prototype.display_loaded_notes = function ( result ) {
       continue;
     }
 
-    this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, undefined, this.read_write, focus, focus );
+    this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, focus, focus );
     focus = false;
   }
 }
@@ -989,7 +989,7 @@ Changes_pulldown.prototype.constructor = Changes_pulldown;
 
 Changes_pulldown.prototype.link_clicked = function( event, note_id ) {
   var revision = event.target().revision;
-  this.wiki.load_editor( "Revision not found.", null, note_id, revision );
+  this.wiki.load_editor( "Revision not found.", note_id, revision );
   event.stop();
 }
 
