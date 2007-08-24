@@ -313,22 +313,40 @@ class Notebooks( object ):
     self.__database.load( note_id, self.__scheduler.thread )
     note = ( yield Scheduler.SLEEP )
 
-    # if the note is already in the database, load it and update it
-    if note and note in notebook.notes:
-      # check whether the provided note contents have been changed since the previous revision
-      self.__database.load( note_id, self.__scheduler.thread, previous_revision )
-      old_note = ( yield Scheduler.SLEEP )
-
+    # check whether the provided note contents have been changed since the previous revision
+    def update_note( current_notebook, old_note ):
       # the note hasn't been changed, so bail without updating it
       if contents == old_note.contents:
-        previous_revision = note.revision
         new_revision = None
       # the note has changed, so update it
       else:
-        previous_revision = note.revision
         notebook.update_note( note, contents )
         new_revision = note.revision
-    # the note is not already in the database, so create it
+
+      return new_revision
+
+    # if the note is already in the given notebook, load it and update it
+    if note and note in notebook.notes:
+      self.__database.load( note_id, self.__scheduler.thread, previous_revision )
+      old_note = ( yield Scheduler.SLEEP )
+
+      previous_revision = note.revision
+      new_revision = update_note( notebook, old_note )
+
+    # the note is not already in the given notebook, so look for it in the trash
+    elif note and notebook.trash and note in notebook.trash.notes:
+      self.__database.load( note_id, self.__scheduler.thread, previous_revision )
+      old_note = ( yield Scheduler.SLEEP )
+
+      # undelete the note, putting it back in the given notebook
+      previous_revision = note.revision
+      notebook.trash.remove_note( note )
+      note.deleted_from = None
+      notebook.add_note( note )
+
+      new_revision = update_note( notebook, old_note )
+
+    # otherwise, create a new note
     else:
       previous_revision = None
       note = Note( note_id, contents )
