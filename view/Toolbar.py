@@ -8,6 +8,7 @@ class Toolbar( Div ):
       Ul(
         Li( Input( type = u"button", value = u"B", id = u"bold", title = u"bold [ctrl-B]", class_ = u"button" ) ),
         Li( Input( type = u"button", value = u"I", id = u"italic", title = u"italic [ctrl-I]", class_ = u"button" ) ),
+        Li( Input( type = u"button", value = u"U", id = u"underline", title = u"underline [ctrl-U]", class_ = u"button" ) ),
         Li( Input( type = u"button", value = u"T", id = u"title", title = u"title [ctrl-T]", class_ = u"button" ) ),
         Li( Input( type = u"button", value = u"&#149;", id = u"insertUnorderedList", title = u"unordered list [ctrl-U]", class_ = u"button" ) ),
         Li( Input( type = u"button", value = u"1.", id = u"insertOrderedList", title = u"numbered list [ctrl-1]", class_ = u"button" ) ),

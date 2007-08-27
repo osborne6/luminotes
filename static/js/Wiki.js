@@ -101,6 +101,7 @@ Wiki.prototype.populate = function ( result ) {
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
+    connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
     connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title", "h3" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
@@ -442,6 +443,9 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-i: italic
     } else if ( code == 73 ) {
       this.toggle_button( event, "italic" );
+    // ctrl-u: underline
+    } else if ( code == 85 ) {
+      this.toggle_button( event, "underline" );
     // ctrl-t: title
     } else if ( code == 84 ) {
       this.toggle_button( event, "title", "h3" );
@@ -498,6 +502,7 @@ Wiki.prototype.update_toolbar = function() {
   if ( this.focused_editor ) {
     this.update_button( "bold" );
     this.update_button( "italic" );
+    this.update_button( "underline" );
     this.update_button( "title", "h3" );
     this.update_button( "insertUnorderedList" );
     this.update_button( "insertOrderedList" );

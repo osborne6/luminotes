@@ -36,6 +36,7 @@ class Html_cleaner(HTMLParser):
       'ul',
       'p',
       'strong',
+      'u',
     ]
 
     # A list of tags that are forcibly removed from the input. Tags that

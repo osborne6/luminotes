@@ -86,6 +86,10 @@ ol li {
   font-style: italic;
 }
 
+#underline {
+  text-decoration: underline;
+}
+
 #title {
   font-weight: bold;
 }
