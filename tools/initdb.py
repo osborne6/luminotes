@@ -19,7 +19,8 @@ class Initializer( object ):
     ( u"take a tour.html", False ),
     ( u"try it out.html", False ),
     ( u"faq.html", False ),
-    ( u"contact us.html", False ),
+    ( u"meet the team.html", False ),
+    ( u"contact info.html", False ),
     ( u"login.html", False ),
     ( u"password reset.html", False ),
     ( u"supported browsers.html", False ),
@@ -97,7 +98,7 @@ def fix_note_contents( contents, notebook_id, note_ids ):
   import re
   from config.Common import settings
 
-  LINK_PATTERN = re.compile( '(<a href=")([^"]+?note_id=)([^"]*)("[^>]*>)([^<]*)(</a>)' )
+  LINK_PATTERN = re.compile( '(<a\s+href=")([^"]+?note_id=)([^"]*)("[^>]*>)([^<]*)(</a>)' )
 
   # plug in the notebook id and support email address where appropriate
   contents = contents.replace( "%s", notebook_id )
