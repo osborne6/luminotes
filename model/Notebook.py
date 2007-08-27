@@ -162,10 +162,14 @@ class Notebook( Persistent ):
 
   def to_dict( self ):
     d = Persistent.to_dict( self )
+
+    # as an optimization, don't include the revisions list because it's not
+    # currently used anywhere for Notebook objects
+    del d[ "revisions_list" ]
+
     d.update( dict(
       name = self.__name,
       trash = self.__trash,
-      startup_notes = copy( self.startup_notes ),
       read_write = True,
     ) )
 

@@ -3,6 +3,7 @@ from Test_controller import Test_controller
 from controller.Scheduler import Scheduler
 from model.User import User
 from model.Notebook import Notebook
+from model.Note import Note
 
 
 class Test_users( Test_controller ):
@@ -36,6 +37,10 @@ class Test_users( Test_controller ):
 
     self.database.next_id( self.scheduler.thread )
     self.anon_notebook = Notebook( ( yield Scheduler.SLEEP ), u"anon notebook" )
+    self.database.next_id( self.scheduler.thread )
+    self.startup_note = Note( ( yield Scheduler.SLEEP ), u"contents go here" )
+    self.anon_notebook.add_note( self.startup_note )
+    self.anon_notebook.add_startup_note( self.startup_note )
 
     self.database.next_id( self.scheduler.thread )
     self.user = User( ( yield Scheduler.SLEEP ), self.username, self.password, self.email_address, self.notebooks )
@@ -57,7 +62,7 @@ class Test_users( Test_controller ):
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
     assert result[ u"authenticated" ]
 
-  def test_current_after_signup( self ):
+  def test_current_after_signup( self, include_startup_notes = False ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,
       password = self.new_password,
@@ -69,7 +74,10 @@ class Test_users( Test_controller ):
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    result = self.http_get( "/users/current", session_id = session_id )
+    result = self.http_get(
+      "/users/current?include_startup_notes=%s" % include_startup_notes,
+      session_id = session_id,
+    )
 
     assert result[ u"user" ].username == self.new_username
     notebooks = result[ u"notebooks" ]
@@ -82,6 +90,16 @@ class Test_users( Test_controller ):
     assert notebook.trash
     assert len( notebook.notes ) == 1
     assert len( notebook.startup_notes ) == 1
+
+    startup_notes = result[ "startup_notes" ]
+    if include_startup_notes:
+      assert len( startup_notes ) == 1
+      assert startup_notes[ 0 ] == self.startup_note
+    else:
+      assert startup_notes == []
+
+  def test_current_with_startup_notes_after_signup( self ):
+    self.test_current_after_signup( include_startup_notes = True )
 
   def test_signup_with_different_passwords( self ):
     result = self.http_post( "/users/signup", dict(
@@ -130,7 +148,7 @@ class Test_users( Test_controller ):
     assert result[ u"redirect" ] == self.settings[ u"global" ].get( u"luminotes.http_url" ) + u"/"
     assert result[ u"deauthenticated" ]
 
-  def test_current_after_login( self ):
+  def test_current_after_login( self, include_startup_notes = False ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
       password = self.password,
@@ -138,15 +156,40 @@ class Test_users( Test_controller ):
     ) )
     session_id = result[ u"session_id" ]
 
-    result = self.http_get( "/users/current", session_id = session_id )
+    result = self.http_get(
+      "/users/current?include_startup_notes=%s" % include_startup_notes,
+      session_id = session_id,
+    )
 
     assert result[ u"user" ] == self.user
     assert result[ u"notebooks" ] == [ self.anon_notebook ] + self.notebooks
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
 
-  def test_current_without_login( self ):
-    result = self.http_get( "/users/current" )
+    startup_notes = result[ "startup_notes" ]
+    if include_startup_notes:
+      assert len( startup_notes ) == 1
+      assert startup_notes[ 0 ] == self.startup_note
+    else:
+      assert startup_notes == []
+
+  def test_current_with_startup_notes_after_login( self ):
+    self.test_current_after_login( include_startup_notes = True )
+
+  def test_current_without_login( self, include_startup_notes = False ):
+    result = self.http_get(
+      "/users/current?include_startup_notes=%s" % include_startup_notes,
+    )
 
     assert result[ u"user" ].username == "anonymous"
     assert result[ u"notebooks" ] == [ self.anon_notebook ]
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
+
+    startup_notes = result[ "startup_notes" ]
+    if include_startup_notes:
+      assert len( startup_notes ) == 1
+      assert startup_notes[ 0 ] == self.startup_note
+    else:
+      assert startup_notes == []
+
+  def test_current_with_startup_notes_without_login( self ):
+    self.test_current_without_login( include_startup_notes = True )

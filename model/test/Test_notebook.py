@@ -158,8 +158,10 @@ class Test_notebook( object ):
 
     assert d.get( "name" ) == self.name
     assert d.get( "trash" ) == self.trash
-    assert d.get( "startup_notes" ) == []
     assert d.get( "read_write" ) == True
+    assert d.get( "object_id" ) == self.notebook.object_id
+    assert d.get( "revision" )
+    assert d.get( "revisions_list" ) == None
 
   def test_to_dict_with_startup_notes( self ):
     self.notebook.add_note( self.note )
@@ -169,5 +171,7 @@ class Test_notebook( object ):
 
     assert d.get( "name" ) == self.name
     assert d.get( "trash" ) == self.trash
-    assert d.get( "startup_notes" ) == [ self.note ]
     assert d.get( "read_write" ) == True
+    assert d.get( "object_id" ) == self.notebook.object_id
+    assert d.get( "revision" )
+    assert d.get( "revisions_list" ) == None

@@ -5,7 +5,7 @@ from model.Notebook import Notebook
 from model.Note import Note
 from Scheduler import Scheduler
 from Expose import expose
-from Validate import validate, Valid_string, Validation_error
+from Validate import validate, Valid_string, Valid_bool, Validation_error
 from Database import Valid_id
 from Updater import update_client, wait_for_update
 from Expire import strongly_expire
@@ -259,13 +259,16 @@ class Users( object ):
   @async
   @update_client
   @validate(
+    include_startup_notes = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
   )
-  def current( self, user_id ):
+  def current( self, include_startup_notes, user_id ):
     """
     Return information on the currently logged-in user. If not logged in, default to the anonymous
     user.
 
+    @type include_startup_notes: bool
+    @param include_startup_notes: True to return startup notes for the first notebook
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
@@ -295,6 +298,7 @@ class Users( object ):
     yield dict(
       user = user,
       notebooks = notebooks,
+      startup_notes = include_startup_notes and len( notebooks ) > 0 and notebooks[ 0 ].startup_notes or [],
       http_url = self.__http_url,
     )
 

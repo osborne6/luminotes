@@ -59,3 +59,6 @@ class Test_note( object ):
     assert d.get( "contents" ) == self.contents
     assert d.get( "title" ) == self.title
     assert d.get( "deleted_from" ) == None
+    assert d.get( "object_id" ) == self.note.object_id
+    assert d.get( "revision" )
+    assert d.get( "revisions_list" )

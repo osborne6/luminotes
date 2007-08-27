@@ -123,6 +123,7 @@ class Notebooks( object ):
 
     yield dict(
       notebook = notebook,
+      startup_notes = notebook.startup_notes,
       note = note,
     )
 

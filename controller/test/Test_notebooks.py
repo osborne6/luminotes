@@ -93,10 +93,11 @@ class Test_notebooks( Test_controller ):
     )
 
     notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
 
     assert notebook.object_id == self.notebook.object_id
-    assert len( notebook.startup_notes ) == 1
-    assert notebook.startup_notes[ 0 ] == self.note
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ] == self.note
 
   def test_contents_with_note( self ):
     self.login()
@@ -107,10 +108,11 @@ class Test_notebooks( Test_controller ):
     )
 
     notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
 
     assert notebook.object_id == self.notebook.object_id
-    assert len( notebook.startup_notes ) == 1
-    assert notebook.startup_notes[ 0 ] == self.note
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ] == self.note
 
     note = result[ "note" ]
 
@@ -129,10 +131,11 @@ class Test_notebooks( Test_controller ):
     )
 
     notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
 
     assert notebook.object_id == self.notebook.object_id
-    assert len( notebook.startup_notes ) == 1
-    assert notebook.startup_notes[ 0 ] == self.note
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ] == self.note
 
     note = result[ "note" ]
 

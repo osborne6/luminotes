@@ -25,10 +25,15 @@ function Wiki() {
       },
       function( result ) { self.populate( result ); }
     );
+    var include_startup_notes = false;
+  } else {
+    var include_startup_notes = true;
   }
 
   // get info on the current user (logged-in or anonymous)
-  this.invoker.invoke( "/users/current", "GET", null,
+  this.invoker.invoke( "/users/current", "GET", {
+      "include_startup_notes": include_startup_notes
+    },
     function( result ) { self.display_user( result ); }
   );
 }
@@ -41,7 +46,7 @@ Wiki.prototype.display_user = function ( result ) {
   // if no notebook id was requested, then just display the user's default notebook
   if ( !this.notebook_id ) {
     this.notebook_id = result.notebooks[ 0 ].object_id;
-    this.populate( { "notebook" : result.notebooks[ 0 ] } );
+    this.populate( { "notebook" : result.notebooks[ 0 ], "startup_notes": result.startup_notes } );
   }
 
   if ( result.user.username == "anonymous" )
@@ -130,8 +135,8 @@ Wiki.prototype.populate = function ( result ) {
 
   // create an editor for each startup note in the received notebook, focusing the first one
   var focus = true;
-  for ( var i in this.notebook.startup_notes ) {
-    var note = this.notebook.startup_notes[ i ];
+  for ( var i in result.startup_notes ) {
+    var note = result.startup_notes[ i ];
     if ( !note ) continue;
     this.startup_notes[ note.object_id ] = true;
 
@@ -148,7 +153,7 @@ Wiki.prototype.populate = function ( result ) {
   if ( result.note )
     this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, read_write, false, true );
 
-  if ( !this.notebook.trash && this.notebook.startup_notes.length == 0 && !result.note )
+  if ( !this.notebook.trash && result.startup_notes.length == 0 && !result.note )
     this.display_message( "There are no notes here." )
 }
 
