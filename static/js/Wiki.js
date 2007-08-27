@@ -449,8 +449,8 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-t: title
     } else if ( code == 84 ) {
       this.toggle_button( event, "title", "h3" );
-    // ctrl-u: unordered list
-    } else if ( code == 85 ) {
+    // ctrl-period: unordered list
+    } else if ( code == 190 ) {
       this.toggle_button( event, "insertUnorderedList" );
     // ctrl-n: ordered list
     } else if ( code == 49 ) {
