@@ -145,7 +145,6 @@ Wiki.prototype.populate = function ( result ) {
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
     connect( "createLink", "onclick", this, "toggle_link_button" );
     connect( "newNote", "onclick", this, "create_blank_editor" );
-    connect( "html", "onclick", this, "background_clicked" );
 
     // grab the next available object id
     this.invoker.invoke( "/next_id", "POST", null,
@@ -188,18 +187,6 @@ Wiki.prototype.populate = function ( result ) {
 
   if ( !this.notebook.trash && result.startup_notes.length == 0 && !result.note )
     this.display_message( "There are no notes here." )
-}
-
-Wiki.prototype.background_clicked = function ( event ) {
-  if ( !hasElementClass( event.target(), "pulldown_checkbox" ) )
-    this.clear_pulldowns();
-
-  // unless a background div was clicked, bail
-  var node_name = event.target().nodeName.toLowerCase();
-  if ( node_name != "div" && node_name != "html" )
-    return;
-
-  this.create_blank_editor( event );
 }
 
 Wiki.prototype.create_blank_editor = function ( event ) {
