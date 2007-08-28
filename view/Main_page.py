@@ -44,7 +44,18 @@ class Main_page( Page ):
             id = u"top_area",
           ),
           Div(
-            id = u"notes",
+            id = u"notebook_header_area",
+            class_ = u"current_notebook_name",
+          ),
+          Div(
+            Div(
+              Div(
+                id = u"notes",
+              ),
+              id = u"notebook_background",
+            ),
+            id = u"notebook_border",
+            class_ = u"current_notebook_name",
           ),
           Noscript(
             Div( file( u"static/html/about.html" ).read() ),

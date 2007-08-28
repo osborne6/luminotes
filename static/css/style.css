@@ -101,7 +101,7 @@ ol li {
   margin-top: 1em;
   margin-right: 2em;
   font-size: 85%;
-  line-height: 140%;
+  line-height: 100%;
 }
 
 #link_area h3 {
@@ -155,6 +155,27 @@ ol li {
   text-align: right;
   margin-bottom: 1em;
   font-size: 85%;
+}
+
+#notebook_header_area {
+  font-weight: bold;
+  padding: 0.25em;
+  -moz-border-radius: 0.5em 0.5em 0.5em 0;
+  -webkit-border-radius: 0.5em 0.5em 0.5em 0;
+}
+
+#notebook_border {
+  padding: 0 0 0 0.3em;
+  margin-bottom: 1em;
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+}
+
+#notebook_background {
+  padding: 0.25em 0.5em 0 1em;
+  background-color: #fafafa;
+  -moz-border-radius: 0.5em 0 0 0;
+  -webkit-border-radius: 0.5em 0 0 0;
 }
 
 #notes {
@@ -315,6 +336,23 @@ ol li {
   margin-right: 0.5em;
   padding: 0.25em;
   border: #999999 1px solid;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.link_area_item {
+  margin-top: 0.25em;
+  padding: 0.25em 0.25em 0.25em 0.5em;
+}
+
+.current_notebook_name {
+  background-color: #b0d0ff;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.trash_notebook_name {
+  background-color: #c0c0c0;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
 }

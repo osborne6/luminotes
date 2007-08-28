@@ -6,9 +6,9 @@ class Link_area( Div ):
     Div.__init__(
       self,
       Div(
-        id = u"notebook_area",
+        id = u"this_notebook_area",
       ),
       Div(
-        id = u"other_notebooks_area",
+        id = u"notebooks_area",
       ),
     )

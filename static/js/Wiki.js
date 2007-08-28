@@ -52,20 +52,29 @@ Wiki.prototype.display_user = function ( result ) {
   if ( result.user.username == "anonymous" )
     return;
 
-  // display links for current notebook and a list of other notebooks that the user has access to
+  // display links for current notebook and a list of all notebooks that the user has access to
   var span = createDOM( "span" );
-  replaceChildNodes( "other_notebooks_area", span );
+  replaceChildNodes( "notebooks_area", span );
 
-  appendChildNodes( span, createDOM( "h3", "other notebooks" ) );
+  appendChildNodes( span, createDOM( "h3", "notebooks" ) );
+
   for ( var i in result.notebooks ) {
     var notebook = result.notebooks[ i ];
-    if ( notebook.object_id != this.notebook_id ) {
-      appendChildNodes( span, createDOM( "a", {
-        "href": ( notebook.name == "Luminotes" ) ? "/" : "/notebooks/" + notebook.object_id,
-        "id": "notebook_" + notebook.object_id
-      }, notebook.name ) );
-      appendChildNodes( span, createDOM( "br" ) );
+
+    if ( notebook.object_id == this.notebook_id ) {
+      var div_class = "link_area_item current_notebook_name";
+      var header_area = getElement( "notebook_header_area" );
+      replaceChildNodes( header_area, createDOM( "span", {}, notebook.name ) );
+    } else {
+      var div_class = "link_area_item";
     }
+
+    appendChildNodes( span, createDOM( "div", {
+      "class": div_class
+    }, createDOM( "a", {
+      "href": ( notebook.name == "Luminotes" ) ? "/" : "/notebooks/" + notebook.object_id,
+      "id": "notebook_" + notebook.object_id
+    }, notebook.name ) ) );
   }
 
   // display the name of the logged in user and a logout link
@@ -88,20 +97,25 @@ Wiki.prototype.populate = function ( result ) {
   var self = this;
 
   var span = createDOM( "span" );
-  replaceChildNodes( "notebook_area", span );
+  replaceChildNodes( "this_notebook_area", span );
 
   appendChildNodes( span, createDOM( "h3", this.notebook.name ) );
-  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" ) );
-  appendChildNodes( span, createDOM( "br" ) );
-  appendChildNodes( span, createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link", "title": "Download a stand-alone copy of the entire wiki notebook." }, "download as html" ) );
+  appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
+    createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" )
+  ) );
+  appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
+    createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link", "title": "Download a stand-alone copy of the entire wiki notebook." }, "download as html" )
+  ) );
 
   if ( this.notebook.read_write ) {
     this.read_write = true;
     removeElementClass( "toolbar", "undisplayed" );
 
-    appendChildNodes( span, createDOM( "br" ) );
-    if ( this.notebook.trash )
-      appendChildNodes( span, createDOM( "a", { "href": "/notebooks/" + this.notebook.trash.object_id, "id": "trash_link", "title": "Look here for notes you've deleted." }, "trash" ) );
+    if ( this.notebook.trash ) {
+      appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
+        createDOM( "a", { "href": "/notebooks/" + this.notebook.trash.object_id, "id": "trash_link", "title": "Look here for notes you've deleted." }, "trash" )
+      ) );
+    }
 
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
