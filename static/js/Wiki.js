@@ -61,13 +61,9 @@ Wiki.prototype.display_user = function ( result ) {
   for ( var i in result.notebooks ) {
     var notebook = result.notebooks[ i ];
 
-    if ( notebook.object_id == this.notebook_id ) {
-      var div_class = "link_area_item current_notebook_name";
-      var header_area = getElement( "notebook_header_area" );
-      replaceChildNodes( header_area, createDOM( "span", {}, notebook.name ) );
-    } else {
-      var div_class = "link_area_item";
-    }
+    var div_class = "link_area_item";
+    if ( notebook.object_id == this.notebook_id )
+      div_class += " current_notebook_name";
 
     appendChildNodes( span, createDOM( "div", {
       "class": div_class
@@ -96,10 +92,13 @@ Wiki.prototype.populate = function ( result ) {
   this.notebook = result.notebook;
   var self = this;
 
+  var header_area = getElement( "notebook_header_area" );
+  replaceChildNodes( header_area, createDOM( "span", {}, this.notebook.name ) );
+
   var span = createDOM( "span" );
   replaceChildNodes( "this_notebook_area", span );
 
-  appendChildNodes( span, createDOM( "h3", this.notebook.name ) );
+  appendChildNodes( span, createDOM( "h3", "this notebook" ) );
   appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
     createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" )
   ) );
@@ -113,8 +112,28 @@ Wiki.prototype.populate = function ( result ) {
 
     if ( this.notebook.trash ) {
       appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
-        createDOM( "a", { "href": "/notebooks/" + this.notebook.trash.object_id, "id": "trash_link", "title": "Look here for notes you've deleted." }, "trash" )
+        createDOM( "a", {
+          "href": "/notebooks/" + this.notebook.trash.object_id,
+          "id": "trash_link",
+          "title": "Look here for notes you've deleted."
+        }, "trash" )
       ) );
+    } else if ( this.notebook.name == "trash" ) {
+      appendChildNodes( span, createDOM( "div", { "class": "link_area_item current_trash_notebook_name" },
+        createDOM( "a", {
+          "href": "/notebooks/" + this.notebook.object_id,
+          "id": "trash_link",
+          "title": "Look here for notes you've deleted."
+        }, "trash" )
+      ) );
+
+      var header_area = getElement( "notebook_header_area" )
+      removeElementClass( header_area, "current_notebook_name" );
+      addElementClass( header_area, "current_trash_notebook_name" );
+
+      var border = getElement( "notebook_border" )
+      removeElementClass( border, "current_notebook_name" );
+      addElementClass( border, "current_trash_notebook_name" );
     }
 
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );

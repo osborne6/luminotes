@@ -351,8 +351,8 @@ ol li {
   -webkit-border-radius: 0.5em;
 }
 
-.trash_notebook_name {
-  background-color: #c0c0c0;
+.current_trash_notebook_name {
+  background-color: #d0d0d0;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
 }
