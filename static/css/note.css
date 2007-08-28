@@ -4,6 +4,10 @@ body {
   line-height: 140%;
 }
 
+a:hover {
+  color: #ff6600;
+}
+
 h3 {
   margin-bottom: 1em;
 }
