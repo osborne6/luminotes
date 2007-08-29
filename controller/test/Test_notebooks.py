@@ -84,6 +84,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"note_id" ) == self.note.object_id
     assert result.get( u"revision" ) == unicode( self.note.revision )
 
+  def test_default_with_parent( self ):
+    parent_id = "foo"
+    result = self.http_get( "/notebooks/%s?parent_id=%s" % ( self.notebook.object_id, parent_id ) )
+    
+    assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert result.get( u"parent_id" ) == parent_id
+
   def test_contents( self ):
     self.login()
 
