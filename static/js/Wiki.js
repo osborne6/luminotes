@@ -430,7 +430,7 @@ Wiki.prototype.display_link_pulldown = function ( editor ) {
     pulldown.update_position();
 
   // if the cursor is now on a link, display a link pulldown if there isn't already one open
-  if ( hasElementClass( "createLink", "button_down" ) ) {
+  if ( link_title( link ).length > 0 ) {
     if ( !pulldown ) {
       this.clear_pulldowns();
       new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
