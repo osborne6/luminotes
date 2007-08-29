@@ -62,6 +62,9 @@ Wiki.prototype.display_user = function ( result ) {
   for ( var i in result.notebooks ) {
     var notebook = result.notebooks[ i ];
 
+    if ( notebook.name == "Luminotes" )
+      continue;
+
     var div_class = "link_area_item";
     if ( notebook.object_id == this.notebook_id )
       div_class += " current_notebook_name";
@@ -69,7 +72,7 @@ Wiki.prototype.display_user = function ( result ) {
     appendChildNodes( span, createDOM( "div", {
       "class": div_class
     }, createDOM( "a", {
-      "href": ( notebook.name == "Luminotes" ) ? "/" : "/notebooks/" + notebook.object_id,
+      "href": "/notebooks/" + notebook.object_id,
       "id": "notebook_" + notebook.object_id
     }, notebook.name ) ) );
   }
