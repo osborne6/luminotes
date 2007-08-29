@@ -52,9 +52,10 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
+    parent_id = Valid_id(),
     revision = Valid_revision(),
   )
-  def default( self, notebook_id, note_id = None, revision = None ):
+  def default( self, notebook_id, note_id = None, parent_id = None, revision = None ):
     """
     Provide the information necessary to display the page for a particular notebook. If a
     particular note id is given without a revision, then the most recent version of that note is
@@ -64,6 +65,8 @@ class Notebooks( object ):
     @param notebook_id: id of the notebook to display
     @type note_id: unicode or NoneType
     @param note_id: id of single note in this notebook to display (optional)
+    @type parent_id: unicode or NoneType
+    @param parent_id: id of parent notebook to this notebook (optional)
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
     @rtype: unicode
@@ -72,6 +75,7 @@ class Notebooks( object ):
     return dict(
       notebook_id = notebook_id,
       note_id = note_id,
+      parent_id = parent_id,
       revision = revision,
     )
 

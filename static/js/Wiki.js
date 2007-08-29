@@ -4,6 +4,7 @@ function Wiki() {
   this.blank_editor_id = null;
   this.notebook = null;
   this.notebook_id = getElement( "notebook_id" ).value;
+  this.parent_id = getElement( "parent_id" ).value; // id of the notebook containing this one
   this.read_write = false;
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: note title to editor
@@ -93,7 +94,11 @@ Wiki.prototype.populate = function ( result ) {
   var self = this;
 
   var header_area = getElement( "notebook_header_area" );
-  replaceChildNodes( header_area, createDOM( "span", {}, this.notebook.name ) );
+  replaceChildNodes( header_area, createDOM( "b", {}, this.notebook.name ) );
+  if ( this.parent_id ) {
+    appendChildNodes( header_area, createDOM( "span", {}, " | " ) );
+    appendChildNodes( header_area, createDOM( "a", { "href": "/notebooks/" + this.parent_id }, "return to notebook" ) );
+  }
 
   var span = createDOM( "span" );
   replaceChildNodes( "this_notebook_area", span );
@@ -113,7 +118,7 @@ Wiki.prototype.populate = function ( result ) {
     if ( this.notebook.trash ) {
       appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
         createDOM( "a", {
-          "href": "/notebooks/" + this.notebook.trash.object_id,
+          "href": "/notebooks/" + this.notebook.trash.object_id + "?parent_id=" + this.notebook.object_id,
           "id": "trash_link",
           "title": "Look here for notes you've deleted."
         }, "trash" )
@@ -121,7 +126,7 @@ Wiki.prototype.populate = function ( result ) {
     } else if ( this.notebook.name == "trash" ) {
       appendChildNodes( span, createDOM( "div", { "class": "link_area_item current_trash_notebook_name" },
         createDOM( "a", {
-          "href": "/notebooks/" + this.notebook.object_id,
+          "href": location.href,
           "id": "trash_link",
           "title": "Look here for notes you've deleted."
         }, "trash" )
