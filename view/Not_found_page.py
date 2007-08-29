@@ -13,7 +13,7 @@ class Not_found_page( Page ):
         H2( title ),
         P(
           u"This is not the page you're looking for. If you care, please",
-          A( "let us know about it.", href = "mailto:%s" % support_email ),
+          A( "let me know about it.", href = "mailto:%s" % support_email ),
         ),
         P(
           u"Thanks!",

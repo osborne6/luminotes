@@ -13,7 +13,7 @@ class Error_page( Page ):
         H2( title ),
         P(
           u"Something went wrong! If you care, please",
-          A( "let us know about it.", href = "mailto:%s" % support_email ),
+          A( "let me know about it.", href = "mailto:%s" % support_email ),
           u"Be sure to include the following information:",
         ),
         Ul(
