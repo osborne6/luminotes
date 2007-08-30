@@ -200,6 +200,12 @@ Wiki.prototype.populate = function ( result ) {
 Wiki.prototype.create_blank_editor = function ( event ) {
   if ( event ) event.stop();
 
+  // if we're within the trash, don't allow new note creation
+  if ( this.notebook.name == "trash" ) {
+    this.display_error( "You can't create notes in the trash." );
+    return;
+  }
+
   // if there is already a blank editor, then highlight it and bail
   if ( this.blank_editor_id != null ) {
     var blank_iframe_id = "note_" + this.blank_editor_id;
@@ -214,6 +220,11 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 }
 
 Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
+  if ( this.notebook.name == "trash" ) {
+    this.display_message( "If you'd like to use this note, try undeleting it first." );
+    return;
+  }
+
   // if a link is given with an open link pulldown, then ignore the note title given and use the
   // one from the pulldown instead
   if ( link ) {
