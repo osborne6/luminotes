@@ -37,16 +37,10 @@ class Test_users( Test_controller ):
 
     self.database.next_id( self.scheduler.thread )
     self.anon_notebook = Notebook( ( yield Scheduler.SLEEP ), u"anon notebook" )
-
     self.database.next_id( self.scheduler.thread )
-    self.anon_startup_note = Note( ( yield Scheduler.SLEEP ), u"contents go here" )
-    self.anon_notebook.add_note( self.anon_startup_note )
-    self.anon_notebook.add_startup_note( self.anon_startup_note )
-
-    self.database.next_id( self.scheduler.thread )
-    self.startup_note = Note( ( yield Scheduler.SLEEP ), u"other contents go here" )
-    self.notebooks[ 0 ].add_note( self.startup_note )
-    self.notebooks[ 0 ].add_startup_note( self.startup_note )
+    self.startup_note = Note( ( yield Scheduler.SLEEP ), u"contents go here" )
+    self.anon_notebook.add_note( self.startup_note )
+    self.anon_notebook.add_startup_note( self.startup_note )
 
     self.database.next_id( self.scheduler.thread )
     self.user = User( ( yield Scheduler.SLEEP ), self.username, self.password, self.email_address, self.notebooks )
@@ -87,9 +81,11 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.new_username
     notebooks = result[ u"notebooks" ]
-    assert len( notebooks ) == 1
+    assert len( notebooks ) == 2
+    assert notebooks[ 0 ] == self.anon_notebook
+    assert notebooks[ 0 ].trash == None
 
-    notebook = notebooks[ 0 ]
+    notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.trash
     assert len( notebook.notes ) == 1
@@ -98,7 +94,7 @@ class Test_users( Test_controller ):
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
       assert len( startup_notes ) == 1
-      assert u"welcome to your wiki" in startup_notes[ 0 ].contents
+      assert startup_notes[ 0 ] == self.startup_note
     else:
       assert startup_notes == []
 
@@ -166,7 +162,7 @@ class Test_users( Test_controller ):
     )
 
     assert result[ u"user" ] == self.user
-    assert result[ u"notebooks" ] == self.notebooks
+    assert result[ u"notebooks" ] == [ self.anon_notebook ] + self.notebooks
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
 
     startup_notes = result[ "startup_notes" ]
@@ -191,7 +187,7 @@ class Test_users( Test_controller ):
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
       assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ] == self.anon_startup_note
+      assert startup_notes[ 0 ] == self.startup_note
     else:
       assert startup_notes == []
 

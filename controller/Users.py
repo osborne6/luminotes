@@ -286,10 +286,19 @@ class Users( object ):
       )
       return
 
+    # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
+    if user_id:
+      self.__database.load( u"User anonymous", self.__scheduler.thread )
+      anonymous = ( yield Scheduler.SLEEP )
+      notebooks = anonymous.notebooks
+    else:
+      notebooks = []
+    notebooks += user.notebooks
+
     yield dict(
       user = user,
-      notebooks = user.notebooks,
-      startup_notes = include_startup_notes and len( user.notebooks ) > 0 and user.notebooks[ 0 ].startup_notes or [],
+      notebooks = notebooks,
+      startup_notes = include_startup_notes and len( notebooks ) > 0 and notebooks[ 0 ].startup_notes or [],
       http_url = self.__http_url,
     )
 
