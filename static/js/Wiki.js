@@ -50,14 +50,20 @@ Wiki.prototype.display_user = function ( result ) {
     this.populate( { "notebook" : result.notebooks[ 0 ], "startup_notes": result.startup_notes } );
   }
 
-  if ( result.user.username == "anonymous" )
+  var user_span = createDOM( "span" );
+  replaceChildNodes( "user_area", user_span );
+
+  // if not logged in, display a login link
+  if ( result.user.username == "anonymous" && result.login_url ) {
+    appendChildNodes( user_span, createDOM( "a", { "href": result.login_url, "id": "login_link" }, "login" ) );
     return;
+  }
 
   // display links for current notebook and a list of all notebooks that the user has access to
-  var span = createDOM( "span" );
-  replaceChildNodes( "notebooks_area", span );
+  var notebooks_span = createDOM( "span" );
+  replaceChildNodes( "notebooks_area", notebooks_span );
 
-  appendChildNodes( span, createDOM( "h3", "notebooks" ) );
+  appendChildNodes( notebooks_span, createDOM( "h3", "notebooks" ) );
 
   for ( var i in result.notebooks ) {
     var notebook = result.notebooks[ i ];
@@ -69,7 +75,7 @@ Wiki.prototype.display_user = function ( result ) {
     if ( notebook.object_id == this.notebook_id )
       div_class += " current_notebook_name";
 
-    appendChildNodes( span, createDOM( "div", {
+    appendChildNodes( notebooks_span, createDOM( "div", {
       "class": div_class
     }, createDOM( "a", {
       "href": "/notebooks/" + notebook.object_id,
@@ -78,11 +84,9 @@ Wiki.prototype.display_user = function ( result ) {
   }
 
   // display the name of the logged in user and a logout link
-  span = createDOM( "span" );
-  replaceChildNodes( "user_area", span );
-  appendChildNodes( span, "logged in as " + result.user.username );
-  appendChildNodes( span, " | " );
-  appendChildNodes( span, createDOM( "a", { "href": result.http_url + "/", "id": "logout_link" }, "logout" ) );
+  appendChildNodes( user_span, "logged in as " + result.user.username );
+  appendChildNodes( user_span, " | " );
+  appendChildNodes( user_span, createDOM( "a", { "href": result.http_url + "/", "id": "logout_link" }, "logout" ) );
 
   var self = this;
   connect( "logout_link", "onclick", function ( event ) {

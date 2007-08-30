@@ -157,6 +157,10 @@ ol li {
   font-size: 85%;
 }
 
+#user_area a {
+  font-weight: bold;
+}
+
 #notebook_header_area {
   padding: 0.25em;
   -moz-border-radius: 0.5em 0.5em 0.5em 0;

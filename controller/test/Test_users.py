@@ -38,7 +38,7 @@ class Test_users( Test_controller ):
     self.database.next_id( self.scheduler.thread )
     self.anon_notebook = Notebook( ( yield Scheduler.SLEEP ), u"anon notebook" )
     self.database.next_id( self.scheduler.thread )
-    self.startup_note = Note( ( yield Scheduler.SLEEP ), u"contents go here" )
+    self.startup_note = Note( ( yield Scheduler.SLEEP ), u"<h3>login</h3>" )
     self.anon_notebook.add_note( self.startup_note )
     self.anon_notebook.add_startup_note( self.startup_note )
 
@@ -164,6 +164,7 @@ class Test_users( Test_controller ):
     assert result[ u"user" ] == self.user
     assert result[ u"notebooks" ] == [ self.anon_notebook ] + self.notebooks
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
+    assert result[ u"login_url" ] == None
 
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
@@ -183,6 +184,13 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].username == "anonymous"
     assert result[ u"notebooks" ] == [ self.anon_notebook ]
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
+
+    login_note = self.anon_notebook.lookup_note_by_title( u"login" )
+    assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
+      self.settings[ u"global" ][ u"luminotes.https_url" ],
+      self.anon_notebook.object_id,
+      login_note.object_id,
+    )
 
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:

@@ -106,7 +106,7 @@ class Users( object ):
   """
   Controller for dealing with users, corresponding to the "/users" URL.
   """
-  def __init__( self, scheduler, database, http_url ):
+  def __init__( self, scheduler, database, http_url, https_url ):
     """
     Create a new Users object.
 
@@ -116,12 +116,15 @@ class Users( object ):
     @param database: database that users are stored in
     @type http_url: unicode
     @param http_url: base URL to use for non-SSL http requests, or an empty string
+    @type https_url: unicode
+    @param https_url: base URL to use for SSL http requests, or an empty string
     @rtype: Users
     @return: newly constructed Users
     """
     self.__scheduler = scheduler
     self.__database = database
     self.__http_url = http_url
+    self.__https_url = https_url
 
   @expose( view = Json )
   @update_auth
@@ -287,19 +290,29 @@ class Users( object ):
       return
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
+    self.__database.load( u"User anonymous", self.__scheduler.thread )
+    anonymous = ( yield Scheduler.SLEEP )
+    login_url = None
+
     if user_id:
-      self.__database.load( u"User anonymous", self.__scheduler.thread )
-      anonymous = ( yield Scheduler.SLEEP )
       notebooks = anonymous.notebooks
     else:
       notebooks = []
+      if len( anonymous.notebooks ) > 0:
+        anon_notebook = anonymous.notebooks[ 0 ]
+        login_note = anon_notebook.lookup_note_by_title( u"login" )
+        if login_note:
+          login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, anon_notebook.object_id, login_note.object_id )
+
     notebooks += user.notebooks
+
 
     yield dict(
       user = user,
       notebooks = notebooks,
       startup_notes = include_startup_notes and len( notebooks ) > 0 and notebooks[ 0 ].startup_notes or [],
       http_url = self.__http_url,
+      login_url = login_url,
     )
 
   scheduler = property( lambda self: self.__scheduler )
