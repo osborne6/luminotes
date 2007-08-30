@@ -420,8 +420,9 @@ Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) 
     this.open_editors[ new_title ] = editor;
 }
 
-Wiki.prototype.display_link_pulldown = function ( editor ) {
-  var link = editor.find_link_at_cursor();
+Wiki.prototype.display_link_pulldown = function ( editor, link ) {
+  if ( !link )
+    link = editor.find_link_at_cursor();
 
   if ( !link ) {
     this.clear_pulldowns();
@@ -546,6 +547,7 @@ Wiki.prototype.update_toolbar = function() {
 Wiki.prototype.toggle_link_button = function ( event ) {
   this.clear_messages();
   this.clear_pulldowns();
+  var link = null;
 
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
@@ -553,9 +555,9 @@ Wiki.prototype.toggle_link_button = function ( event ) {
     if ( hasElementClass( "createLink", "button_down" ) )
       this.focused_editor.start_link();
     else
-      this.focused_editor.end_link();
+      link = this.focused_editor.end_link();
 
-    this.display_link_pulldown( this.focused_editor );
+    this.display_link_pulldown( this.focused_editor, link );
   }
 
   event.stop();
@@ -856,7 +858,10 @@ Wiki.prototype.clear_pulldowns = function () {
 
   for ( var i in results ) {
     var result = results[ i ];
-    result.pulldown.shutdown();
+
+    // close the pulldown if it's been open at least a quarter second
+    if ( new Date() - result.pulldown.init_time >= 250 )
+      result.pulldown.shutdown();
   }
 }
 
@@ -898,6 +903,7 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to ) {
   this.notebook_id = notebook_id;
   this.div = createDOM( "div", { "id": pulldown_id, "class": "pulldown" } );
   this.div.pulldown = this;
+  this.init_time = new Date();
   this.anchor = anchor;
   this.relative_to = relative_to;
 

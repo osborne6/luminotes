@@ -394,6 +394,7 @@ Editor.prototype.end_link = function () {
   }
 
   signal( this, "resolve_link", link_title( link ), link );
+  return link;
 }
 
 Editor.prototype.find_link_at_cursor = function () {
@@ -513,7 +514,7 @@ Editor.prototype.shutdown = function( event ) {
 
 // convenience function for parsing a link that has an href URL containing a query string
 function parse_query( link ) {
-  if ( !link.href )
+  if ( !link || !link.href )
     return new Array();
 
   return parseQueryString( link.href.split( "?" ).pop() );
