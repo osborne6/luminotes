@@ -118,7 +118,7 @@ Wiki.prototype.populate = function ( result ) {
 
   appendChildNodes( span, createDOM( "h3", "this notebook" ) );
   appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
-    createDOM( "a", { "href": "/notebooks/" + this.notebook.object_id, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" )
+    createDOM( "a", { "href": location.href, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" )
   ) );
   appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
     createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link", "title": "Download a stand-alone copy of the entire wiki notebook." }, "download as html" )
