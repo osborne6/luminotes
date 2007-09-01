@@ -617,7 +617,6 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     if ( this.startup_notes[ editor.id ] )
       delete this.startup_notes[ editor.id ];
 
-    // FIXME: does saving and deleting cause a race in which the "deleted" note is then saved right back where it was in the notebook?
     this.save_editor( editor, true );
 
     if ( this.read_write && editor.read_write ) {
