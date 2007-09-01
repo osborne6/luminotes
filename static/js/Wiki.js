@@ -102,7 +102,13 @@ Wiki.prototype.populate = function ( result ) {
 
   var header_area = getElement( "notebook_header_area" );
   replaceChildNodes( header_area, createDOM( "b", {}, this.notebook.name ) );
+
   if ( this.parent_id ) {
+    appendChildNodes( header_area, createDOM( "span", {}, ": " ) );
+    var empty_trash_link = createDOM( "a", { "href": location.href }, "empty trash" );
+    appendChildNodes( header_area, empty_trash_link );
+    connect( empty_trash_link, "onclick", function ( event ) { try{ self.delete_all_editors( event ); } catch(e){ alert(e); } } );
+
     appendChildNodes( header_area, createDOM( "span", {}, " | " ) );
     appendChildNodes( header_area, createDOM( "a", { "href": "/notebooks/" + this.parent_id }, "return to notebook" ) );
   }
@@ -198,7 +204,7 @@ Wiki.prototype.populate = function ( result ) {
     this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, read_write, false, true );
 
   if ( !this.notebook.trash && result.startup_notes.length == 0 && !result.note )
-    this.display_message( "There are no notes here." )
+    this.display_message( "The trash is empty." )
 }
 
 Wiki.prototype.create_blank_editor = function ( event ) {
@@ -611,6 +617,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     if ( this.startup_notes[ editor.id ] )
       delete this.startup_notes[ editor.id ];
 
+    // FIXME: does saving and deleting cause a race in which the "deleted" note is then saved right back where it was in the notebook?
     this.save_editor( editor, true );
 
     if ( this.read_write && editor.read_write ) {
@@ -878,6 +885,31 @@ Wiki.prototype.clear_pulldowns = function () {
     if ( new Date() - result.pulldown.init_time >= 250 )
       result.pulldown.shutdown();
   }
+}
+
+Wiki.prototype.delete_all_editors = function ( event ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  this.startup_notes = new Array();
+
+  if ( this.read_write ) {
+    this.invoker.invoke( "/notebooks/delete_all_notes", "POST", { 
+      "notebook_id": this.notebook_id
+    } );
+  }
+
+  this.focused_editor = null;
+
+  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
+  for ( var i in iframes ) {
+    var editor = iframes[ i ].editor;
+    editor.shutdown();
+  }
+
+  this.display_message( "The trash is empty." );
+
+  event.stop();
 }
 
 Wiki.prototype.brief_revision = function ( revision ) {

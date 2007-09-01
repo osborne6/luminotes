@@ -474,7 +474,8 @@ class Notebooks( object ):
   def delete_note( self, notebook_id, note_id, user_id ):
     """
     Delete the given note from its notebook and move it to the notebook's trash. The note is added
-    as a startup note within the trash.
+    as a startup note within the trash. If the given notebook is the trash and the given note is
+    already there, then it is deleted from the trash forever.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook the note is in
@@ -571,6 +572,51 @@ class Notebooks( object ):
 
     yield dict()
 
+  @expose( view = Json )
+  @wait_for_update
+  @grab_user_id
+  @async
+  @update_client
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def delete_all_notes( self, notebook_id, user_id ):
+    """
+    Delete all notes from the given notebook and move them to the notebook's trash (if any). The
+    notes are added as startup notes within the trash. If the given notebook is the trash, then
+    all notes in the trash are deleted forever.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    self.check_access( notebook_id, user_id, self.__scheduler.thread )
+    if not ( yield Scheduler.SLEEP ):
+      raise Access_error()
+
+    self.__database.load( notebook_id, self.__scheduler.thread )
+    notebook = ( yield Scheduler.SLEEP )
+
+    if not notebook:
+      raise Access_error()
+
+    for note in notebook.notes:
+      notebook.remove_note( note )
+
+      if notebook.trash:
+        note.deleted_from = notebook.object_id
+        notebook.trash.add_note( note )
+        notebook.trash.add_startup_note( note )
+
+    self.__database.save( notebook )
+
+    yield dict()
   @expose( view = Note_page )
   @validate( id = Valid_string( min = 1, max = 100 ) )
   def blank_note( self, id ):
