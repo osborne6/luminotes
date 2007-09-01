@@ -12,7 +12,6 @@ from model.Notebook import Notebook
 from model.Note import Note
 from view.Main_page import Main_page
 from view.Json import Json
-from view.Note_page import Note_page
 from view.Html_file import Html_file
 
 
@@ -617,19 +616,6 @@ class Notebooks( object ):
     self.__database.save( notebook )
 
     yield dict()
-  @expose( view = Note_page )
-  @validate( id = Valid_string( min = 1, max = 100 ) )
-  def blank_note( self, id ):
-    """
-    Provide the information necessary to display a blank note frame to be filled in by the client.
-
-    @param id: unicode
-    @type id: id of the note
-    @rtype: unicode
-    @return: rendered HTML page
-    @raise Validation_error: the argument is invalid
-    """
-    return dict( id = id )
 
   @expose( view = Json )
   @strongly_expire

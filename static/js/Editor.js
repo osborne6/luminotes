@@ -13,7 +13,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, inser
   var self = this;
   this.document = null;
   this.iframe = createDOM( "iframe", {
-    "src": "/notebooks/blank_note/" + id,
+    "src": "/static/html/blank_note.html",
     "frameBorder": "0",
     "scrolling": "no",
     "id": iframe_id,
@@ -95,25 +95,20 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, inser
     appendChildNodes( "notes", this.note_controls );
     appendChildNodes( "notes", this.iframe );
   }
+
+  connect( this.iframe, "onload", function ( event ) { self.init_document(); } );
 }
 
-// second stage of construction, invoked by the iframe's body onload handler. do not call directly.
-// four-stage construction is only necessary because IE is such a piece of shit
-function editor_loaded( id ) {
-  var iframe = getElement( "note_" + id );
-  setTimeout( function () { iframe.editor.init_document(); }, 1 );
-}
-
-// third stage of construction, invoked by the editor_loaded() function. do not call directly
+// second stage of construction, invoked by editor_loaded(). do not call directly
 Editor.prototype.init_document = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
     this.document = this.iframe.contentDocument;
 
-    if ( this.read_write ) {
+    if ( this.read_write )
       this.document.designMode = "On";    
-    }
+
     setTimeout( function () { self.finish_init(); }, 1 );
   } else { // browsers such as IE
     this.document = this.iframe.contentWindow.document;
@@ -127,7 +122,7 @@ Editor.prototype.init_document = function () {
   }
 }
 
-// fourth and final stage of construction, invoked by init_document(). do not call directly
+// third and final stage of construction, invoked by init_document(). do not call directly
 Editor.prototype.finish_init = function () {
   if ( !this.initial_text )
     this.initial_text = "<h3>";

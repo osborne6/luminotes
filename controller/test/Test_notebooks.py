@@ -1244,10 +1244,6 @@ class Test_notebooks( Test_controller ):
     note2 = result.get( "note" )
     assert note2.object_id == self.note2.object_id
 
-  def test_blank_note( self ):
-    result = self.http_get( "/notebooks/blank_note/5" )
-    assert result[ u"id" ] == u"5"
-
   def test_search_titles_without_titles_only( self ):
     self.login()
 
