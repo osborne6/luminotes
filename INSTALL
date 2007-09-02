@@ -57,6 +57,15 @@ happens to be installed. These rules cause Apache to serve static files
 itself, while passing through requests for dynamic pages to the CherryPy web
 server running locally.
 
+Optionally, you can also enable Apache's mod_expires module and include the
+following configuration along with the above rules:
+
+  ExpiresActive On
+  ExpiresDefault "A600"
+
+This will tell clients not to request static pages more frequently than every
+ten minutes (unless the user forces a reload).
+
 If you want to use SSL, procure and install an SSL cert for use with Apache.
 Add the above mod_rewrite rules to the settings for your SSL-enabled
 VirtualHost, but change the IP in the last rule from 127.0.0.1 to 127.0.0.2.
