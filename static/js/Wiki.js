@@ -230,7 +230,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 }
 
 Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
-  if ( this.notebook.name == "trash" ) {
+  if ( this.notebook.name == "trash" && !revision ) {
     this.display_message( "If you'd like to use this note, try undeleting it first." );
     return;
   }
