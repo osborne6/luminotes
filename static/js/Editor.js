@@ -258,7 +258,8 @@ Editor.prototype.key_released = function ( event ) {
 
 Editor.prototype.mouse_clicked = function ( event ) {
   // update the state no matter what, in case the cursor has moved
-  signal( this, "state_changed", this );
+  if ( this.read_write )
+    signal( this, "state_changed", this );
 
   // we only want to deal with left mouse button clicks
   if ( event.mouse().button.middle || event.mouse().button.right )
@@ -444,12 +445,8 @@ Editor.prototype.state_enabled = function ( state_name ) {
 
   state_name = state_name.toLowerCase();
 
-  try {
-    var format_block = this.document.queryCommandValue( "formatblock" ).toLowerCase();
-    var heading = ( format_block == "h3" || format_block == "heading 3" );
-  } catch ( e ) {
-    var heading = "";
-  }
+  var format_block = this.document.queryCommandValue( "formatblock" ).toLowerCase();
+  var heading = ( format_block == "h3" || format_block == "heading 3" );
 
   if ( state_name == "h3" )
     return heading;
