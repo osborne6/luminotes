@@ -181,5 +181,5 @@ class Notebook( Persistent ):
 
   name = property( lambda self: self.__name, __set_name )
   trash = property( lambda self: self.__trash )
-  startup_notes = property( lambda self: copy( self.__startup_notes ) )
-  notes = property( lambda self: self.__notes.values() )
+  startup_notes = property( lambda self: [ note for note in copy( self.__startup_notes ) if note is not None ] )
+  notes = property( lambda self: [ note for note in self.__notes.values() if note is not None ] )
