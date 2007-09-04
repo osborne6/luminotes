@@ -7,7 +7,7 @@ class Note( Persistent ):
   """
   An single textual wiki note.
   """
-  TITLE_PATTERN = re.compile( u"<h3>(.*)</h3>", flags = re.IGNORECASE )
+  TITLE_PATTERN = re.compile( u"<h3>(.*?)</h3>", flags = re.IGNORECASE )
 
   def __setstate__( self, state ):
     if "_Note__deleted_from" not in state:

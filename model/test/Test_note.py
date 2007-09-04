@@ -29,11 +29,25 @@ class Test_note( object ):
 
   def test_set_contents_with_html_title( self ):
     new_title = u"new title"
-    new_contents = u"<h3>%s<br/></h3>new blah" % new_title
+    new_contents = u"<h3>new<br /> title</h3>new blah"
     previous_revision = self.note.revision
 
     self.note.contents = new_contents
 
+    # html should be stripped out of the title
+    assert self.note.contents == new_contents
+    assert self.note.title == new_title
+    assert self.note.deleted_from == None
+    assert self.note.revision > previous_revision
+
+  def test_set_contents_with_multiple_titles( self ):
+    new_title = u"new title"
+    new_contents = u"<h3>new<br /> title</h3>new blah<h3>other title</h3>hmm"
+    previous_revision = self.note.revision
+
+    self.note.contents = new_contents
+
+    # should only use the first title
     assert self.note.contents == new_contents
     assert self.note.title == new_title
     assert self.note.deleted_from == None
