@@ -687,16 +687,16 @@ class Notebooks( object ):
     notebook_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def recent_notes( self, notebook_id, user_id ):
+  def all_notes( self, notebook_id, user_id ):
     """
-    Return several of the most recently updated notes, sorting by reverse chronological order.
+    Return ids and titles of all notes in this notebook, sorted by reverse chronological order.
 
     @type notebook_id: unicode
-    @param notebook_id: id of notebook to pull recent notes from
+    @param notebook_id: id of notebook to pull notes from
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: { 'notes': [ recent notes ] }
+    @return: { 'notes': [ ( noteid, notetitle ) ] }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -710,12 +710,11 @@ class Notebooks( object ):
     if not notebook:
       raise Access_error()
 
-    RECENT_COUNT = 10
-    notes = [ note for note in notebook.notes if note is not None ]
+    notes = [ note for note in notebook.notes if note is not None and note.title is not None ]
     notes.sort( lambda a, b: cmp( b.revision, a.revision ) )
 
     yield dict(
-      notes = notes[ :RECENT_COUNT ],
+      notes = [ ( note.object_id, note.title ) for note in notes ]
     )
 
   @expose( view = Html_file )

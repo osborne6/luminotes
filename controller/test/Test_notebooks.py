@@ -1422,21 +1422,23 @@ class Test_notebooks( Test_controller ):
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == note3.object_id
 
-  def test_recent_notes( self ):
+  def test_all_notes( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/recent_notes/", dict(
+    result = self.http_post( "/notebooks/all_notes/", dict(
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 
     notes = result.get( "notes" )
 
     assert len( notes ) == 2
-    assert notes[ 0 ].object_id == self.note2.object_id
-    assert notes[ 1 ].object_id == self.note.object_id
+    assert notes[ 0 ][ 0 ] == self.note2.object_id
+    assert notes[ 0 ][ 1 ] == self.note2.title
+    assert notes[ 1 ][ 0 ] == self.note.object_id
+    assert notes[ 1 ][ 1 ] == self.note.title
 
-  def test_recent_notes_without_login( self ):
-    result = self.http_post( "/notebooks/recent_notes/", dict(
+  def test_all_notes_without_login( self ):
+    result = self.http_post( "/notebooks/all_notes/", dict(
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 

@@ -117,9 +117,11 @@ Wiki.prototype.populate = function ( result ) {
   replaceChildNodes( "this_notebook_area", span );
 
   appendChildNodes( span, createDOM( "h3", "this notebook" ) );
-  appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
-    createDOM( "a", { "href": location.href, "id": "recent_notes_link", "title": "View the most recently updated notes." }, "recent notes" )
-  ) );
+  if ( !this.parent_id ) {
+    appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
+      createDOM( "a", { "href": location.href, "id": "all_notes_link", "title": "View a list of all notes in this notebook." }, "all notes" )
+    ) );
+  }
   appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
     createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link", "title": "Download a stand-alone copy of the entire wiki notebook." }, "download as html" )
   ) );
@@ -171,13 +173,12 @@ Wiki.prototype.populate = function ( result ) {
   }
 
   var self = this;
-  connect( "recent_notes_link", "onclick", function ( event ) {
-    self.invoker.invoke(
-      "/notebooks/recent_notes", "GET", { "notebook_id": self.notebook.object_id },
-      function( result ) { self.display_loaded_notes( result ); }
-    );
-    event.stop();
-  } );
+  if ( !this.parent_id ) {
+    connect( "all_notes_link", "onclick", function ( event ) {
+      self.load_editor( "all notes", "all_notes" );
+      event.stop();
+    } );
+  }
 
   connect( "download_html_link", "onclick", function ( event ) {
     self.save_editor( null, true );
@@ -285,8 +286,17 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
     }
   }
 
-  // if there's not a valid destination note id, then load by title instead of by id
+  // if the note_title corresponds to a "magic" note's title, then dynamically create the note
   var self = this;
+  if ( note_title == "all notes" ) {
+    this.invoker.invoke(
+      "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
+      function( result ) { self.display_all_notes_list( result ); }
+    );
+    return;
+  }
+
+  // if there's not a valid destination note id, then load by title instead of by id
   if ( note_id == undefined || note_id == "new" || note_id == "null" ) {
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
@@ -310,6 +320,9 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
 }
 
 Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
+  if ( note_title == "all notes" )
+    return;
+
   // if the title looks like a URL, then make it a link to an external site
   if ( /^\w+:\/\//.test( note_title ) ) {
     link.target = "_new";
@@ -442,6 +455,11 @@ Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) 
 }
 
 Wiki.prototype.display_link_pulldown = function ( editor, link ) {
+  if ( !editor.read_write ) {
+    this.clear_pulldowns();
+    return;
+  }
+
   if ( !link )
     link = editor.find_link_at_cursor();
 
@@ -808,6 +826,30 @@ Wiki.prototype.display_loaded_notes = function ( result ) {
     this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, focus, focus );
     focus = false;
   }
+}
+
+Wiki.prototype.display_all_notes_list = function ( result ) {
+  if ( result.notes.length == 0 ) {
+    this.display_error( "This notebook is empty." );
+    return;
+  }
+
+  var list = createDOM( "ul", {} );
+
+  // build up a list of all notes in this notebook, one link per note
+  for ( var i in result.notes ) {
+    var note_tuple = result.notes[ i ]
+    var note_id = note_tuple[ 0 ];
+    var note_title = note_tuple[ 1 ];
+
+    appendChildNodes( list,
+      createDOM( "li", {},
+        createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id }, note_title )
+      )
+    );
+  }
+
+  this.create_editor( "all_notes", "<h3>all notes</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true );
 }
 
 Wiki.prototype.display_message = function ( text, buttons ) {
