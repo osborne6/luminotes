@@ -443,8 +443,13 @@ Editor.prototype.state_enabled = function ( state_name ) {
   if ( !this.read_write ) return false;
 
   state_name = state_name.toLowerCase();
-  var format_block = this.document.queryCommandValue( "formatblock" ).toLowerCase();
-  var heading = ( format_block == "h3" || format_block == "heading 3" );
+
+  try {
+    var format_block = this.document.queryCommandValue( "formatblock" ).toLowerCase();
+    var heading = ( format_block == "h3" || format_block == "heading 3" );
+  } catch ( e ) {
+    var heading = "";
+  }
 
   if ( state_name == "h3" )
     return heading;
