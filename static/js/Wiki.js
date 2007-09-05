@@ -834,7 +834,7 @@ Wiki.prototype.display_loaded_notes = function ( result ) {
 
 Wiki.prototype.display_all_notes_list = function ( result ) {
   if ( result.notes.length == 0 ) {
-    this.display_error( "This notebook is empty." );
+    this.display_message( "This notebook is empty." );
     return;
   }
 
