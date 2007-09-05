@@ -194,7 +194,8 @@ Wiki.prototype.populate = function ( result ) {
 
     // don't actually create an editor if a particular note was provided in the result
     if ( !result.note ) {
-      this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, false, focus );
+      var editor = this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, false, focus );
+      this.open_editors[ note.title ] = editor;
       focus = false;
     }
   }
@@ -205,8 +206,8 @@ Wiki.prototype.populate = function ( result ) {
   if ( result.note )
     this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, read_write, false, true );
 
-  if ( !this.notebook.trash && result.startup_notes.length == 0 && !result.note )
-    this.display_message( "The trash is empty." )
+  if ( result.startup_notes.length == 0 && !result.note )
+    this.display_empty_message();
 }
 
 Wiki.prototype.create_blank_editor = function ( event ) {
@@ -228,7 +229,8 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  this.blank_editor_id = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
+  var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.read_write, true, true );
+  this.blank_editor_id = editor.id;
 }
 
 Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
@@ -391,7 +393,8 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, revision, li
   else
     var read_write = this.read_write;
 
-  id = this.create_editor( id, note_text, deleted_from, revisions_list, note_title, read_write, true, false );
+  var editor = this.create_editor( id, note_text, deleted_from, revisions_list, note_title, read_write, true, false );
+  id = editor.id;
 
   // if a link that launched this editor was provided, update it with the created note's id
   if ( link && id )
@@ -440,7 +443,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
     self.invoker.invoke( url, "POST", null, null, form );
   } );
 
-  return id;
+  return editor;
 }
 
 Wiki.prototype.editor_state_changed = function ( editor ) {
@@ -495,6 +498,7 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.empty() ) {
       this.focused_editor.shutdown();
+      this.display_empty_message();
     } else {
       // when switching editors, save the one being left
       this.save_editor( null, fire_and_forget );
@@ -618,6 +622,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
       this.save_editor( editor );
 
     editor.shutdown();
+    this.display_empty_message();
   }
 
   event.stop();
@@ -664,6 +669,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     }
 
     editor.shutdown();
+    this.display_empty_message();
   }
 
   event.stop();
@@ -695,6 +701,7 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
       this.focused_editor = null;
 
     editor.shutdown();
+    this.display_empty_message();
   }
 
   event.stop();
@@ -952,9 +959,23 @@ Wiki.prototype.delete_all_editors = function ( event ) {
     editor.shutdown();
   }
 
-  this.display_message( "The trash is empty." );
+  this.display_empty_message();
 
   event.stop();
+}
+
+Wiki.prototype.display_empty_message = function () {
+  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
+
+  // if there are any open editors, bail
+  for ( var i in iframes ) {
+    var iframe = iframes[ i ];
+    if ( iframe.editor.closed == false )
+      return;
+  }  
+
+  if ( this.parent_id )
+    this.display_message( "The trash is empty." )
 }
 
 Wiki.prototype.brief_revision = function ( revision ) {

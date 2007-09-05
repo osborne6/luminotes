@@ -8,6 +8,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, inser
   this.startup = startup || false; // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
   this.init_focus = focus || false;
+  this.closed = false;
   var iframe_id = "note_" + id;
 
   var self = this;
@@ -487,6 +488,7 @@ Editor.prototype.contents = function () {
 
 Editor.prototype.shutdown = function( event ) {
   signal( this, "title_changed", this, this.title, null );
+  this.closed = true;
   var iframe = this.iframe;
   var note_controls = this.note_controls;
   disconnectAll( this );
