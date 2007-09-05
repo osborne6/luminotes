@@ -286,6 +286,12 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
   // if the note_title corresponds to a "magic" note's title, then dynamically create the note
   var self = this;
   if ( note_title == "all notes" ) {
+    var editor = this.open_editors[ note_title ];
+    if ( editor ) {
+      editor.highlight();
+      return;
+    }
+
     this.invoker.invoke(
       "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
       function( result ) { self.display_all_notes_list( result ); }
