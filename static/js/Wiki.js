@@ -655,7 +655,10 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
         "value": "undo",
         "title": "undo deletion"
       } );
-      this.display_message( "The note has been moved to the trash.", [ undo_button ] )
+      var trash_link = createDOM( "a", {
+        "href": "/notebooks/" + this.notebook.trash.object_id + "?parent_id=" + this.notebook.object_id,
+      }, "trash" );
+      this.display_message( 'The note has been moved to the', [ trash_link, ". ", undo_button ] )
       var self = this;
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor ); } );
     }
@@ -853,22 +856,22 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
   this.create_editor( "all_notes", "<h3>all notes</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true );
 }
 
-Wiki.prototype.display_message = function ( text, buttons ) {
+Wiki.prototype.display_message = function ( text, nodes ) {
   this.clear_messages();
   this.clear_pulldowns();
 
   var inner_div = DIV( { "class": "message_inner" }, text + " " );
-  for ( var i in buttons )
-    appendChildNodes( inner_div, buttons[ i ] );
+  for ( var i in nodes )
+    appendChildNodes( inner_div, nodes[ i ] );
 
   var div = DIV( { "class": "message" }, inner_div );
-  div.buttons = buttons;
+  div.nodes = nodes;
 
   appendChildNodes( "notes", div );
   ScrollTo( div );
 }
 
-Wiki.prototype.display_error = function ( text, buttons ) {
+Wiki.prototype.display_error = function ( text, nodes ) {
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -881,11 +884,11 @@ Wiki.prototype.display_error = function ( text, buttons ) {
   }
 
   var inner_div = DIV( { "class": "error_inner" }, text + " " );
-  for ( var i in buttons )
-    appendChildNodes( inner_div, buttons[ i ] );
+  for ( var i in nodes )
+    appendChildNodes( inner_div, nodes[ i ] );
 
   var div = DIV( { "class": "error" }, inner_div );
-  div.buttons = buttons;
+  div.nodes = nodes;
 
   appendChildNodes( "notes", div );
   ScrollTo( div );
@@ -898,8 +901,8 @@ Wiki.prototype.clear_messages = function () {
     var result = results[ i ];
     blindUp( result, options = { "duration": 0.5, afterFinish: function () {
       try {
-        for ( var j in result.buttons )
-          disconnectAll( result.buttons[ j ] );
+        for ( var j in result.nodes )
+          disconnectAll( result.nodes[ j ] );
         removeElement( result );
       } catch ( e ) { }
     } } );
