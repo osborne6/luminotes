@@ -64,7 +64,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
     }
   }
 
-  if ( read_write || !startup ) {
+  if ( !this.deleted_from && ( read_write || !startup ) ) {
     this.hide_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",

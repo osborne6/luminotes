@@ -541,7 +541,8 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
       this.create_blank_editor( event );
     // ctrl-h: hide note
     } else if ( code == 72 ) {
-      this.hide_editor( event );
+      if ( !editor.deleted_from )
+        this.hide_editor( event );
     // ctrl-d: delete note
     } else if ( code == 68 ) {
       this.delete_editor( event );
