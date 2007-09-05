@@ -278,17 +278,6 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
     }
   }
 
-  // if the note corresponding to the link's title is already open, highlight it and bail
-  if ( !revision ) {
-    var editor = this.open_editors[ note_title ];
-    if ( editor ) {
-      editor.highlight();
-      if ( link )
-        link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
-      return;
-    }
-  }
-
   // if the note_title corresponds to a "magic" note's title, then dynamically create the note
   var self = this;
   if ( note_title == "all notes" ) {
@@ -301,6 +290,17 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
 
   // if there's not a valid destination note id, then load by title instead of by id
   if ( note_id == undefined || note_id == "new" || note_id == "null" ) {
+    // but if the note corresponding to the link's title is already open, highlight it and bail
+    if ( !revision ) {
+      var editor = this.open_editors[ note_title ];
+      if ( editor ) {
+        editor.highlight();
+        if ( link )
+          link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+        return;
+      }
+    }
+
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
         "notebook_id": this.notebook_id,
