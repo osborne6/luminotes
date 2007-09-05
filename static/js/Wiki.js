@@ -423,7 +423,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, this.notebook_id, note_text, deleted_from, revisions_list, undefined, read_write, startup, highlight, focus );
+  var editor = new Editor( id, this.notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, focus );
 
   if ( this.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );

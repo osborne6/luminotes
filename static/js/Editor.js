@@ -1,4 +1,4 @@
-function Editor( id, notebook_id, note_text, deleted_from, revisions_list, insert_after_iframe_id, read_write, startup, highlight, focus ) {
+function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, focus ) {
   this.id = id;
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
@@ -87,15 +87,8 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, inser
     this.hide_button ? this.hide_button : null
   );
 
-  // if an iframe has been given to insert this new editor after, then insert the new editor's
-  // iframe. otherwise just append the iframe for the new editor
-  if ( insert_after_iframe_id ) {
-    insertSiblingNodesAfter( insert_after_iframe_id, this.note_controls );
-    insertSiblingNodesAfter( this.note_controls, this.iframe );
-  } else {
-    appendChildNodes( "notes", this.note_controls );
-    appendChildNodes( "notes", this.iframe );
-  }
+  appendChildNodes( "notes", this.note_controls );
+  appendChildNodes( "notes", this.iframe );
 
   connect( this.iframe, "onload", function ( event ) { self.init_document(); } );
 }
