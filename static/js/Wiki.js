@@ -14,6 +14,7 @@ function Wiki() {
   connect( this.invoker, "error_message", this, "display_error" );
   connect( "search_form", "onsubmit", this, "search" );
   connect( "search_button", "onclick", this, "toggle_search_options" );
+  connect( "html", "onclick", this, "clear_pulldowns" );
 
   // get info on the requested notebook (if any)
   var self = this;
