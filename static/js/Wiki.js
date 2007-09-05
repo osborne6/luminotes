@@ -267,20 +267,17 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
     link.removeAttribute( "target" );
   }
 
-  // if the note corresponding to the link's id is already open, highlight it and bail, but only if
-  // we didn't pull a title from an open link pulldown
-  if ( !pulldown_title ) {
-    if ( revision )
-      var iframe = getElement( "note_" + note_id + " " + revision );
-    else
-      var iframe = getElement( "note_" + note_id );
+  // if the note corresponding to the link's id is already open, highlight it and bail
+  if ( revision )
+    var iframe = getElement( "note_" + note_id + " " + revision );
+  else
+    var iframe = getElement( "note_" + note_id );
 
-    if ( iframe ) {
-      iframe.editor.highlight();
-      if ( link )
-        link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note_id;
-      return;
-    }
+  if ( iframe ) {
+    iframe.editor.highlight();
+    if ( link )
+      link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note_id;
+    return;
   }
 
   // if the note_title corresponds to a "magic" note's title, then dynamically create the note
