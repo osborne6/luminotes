@@ -662,7 +662,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
         "title": "undo deletion"
       } );
       var trash_link = createDOM( "a", {
-        "href": "/notebooks/" + this.notebook.trash.object_id + "?parent_id=" + this.notebook.object_id,
+        "href": "/notebooks/" + this.notebook.trash.object_id + "?parent_id=" + this.notebook.object_id
       }, "trash" );
       this.display_message( 'The note has been moved to the', [ trash_link, ". ", undo_button ] )
       var self = this;
