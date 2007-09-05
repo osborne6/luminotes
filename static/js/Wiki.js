@@ -14,7 +14,7 @@ function Wiki() {
   connect( this.invoker, "error_message", this, "display_error" );
   connect( "search_form", "onsubmit", this, "search" );
   connect( "search_button", "onclick", this, "toggle_search_options" );
-  connect( "html", "onclick", this, "clear_pulldowns" );
+  connect( "html", "onclick", this, "background_clicked" );
 
   // get info on the requested notebook (if any)
   var self = this;
@@ -208,6 +208,11 @@ Wiki.prototype.populate = function ( result ) {
 
   if ( result.startup_notes.length == 0 && !result.note )
     this.display_empty_message();
+}
+
+Wiki.prototype.background_clicked = function ( event ) {
+  if ( !hasElementClass( event.target(), "pulldown_checkbox" ) )
+    this.clear_pulldowns();
 }
 
 Wiki.prototype.create_blank_editor = function ( event ) {
