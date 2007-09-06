@@ -24,6 +24,10 @@ function setUp() {
   editor = new Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, editor_focus );
 }
 
+function tearDown() {
+  editor.shutdown();
+}
+
 function test_Editor() {
   assertNotUndefined( editor );
   assertNotNull( editor );

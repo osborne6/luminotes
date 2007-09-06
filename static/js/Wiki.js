@@ -1,4 +1,4 @@
-function Wiki() {
+function Wiki( invoker ) {
   this.next_id = null;
   this.focused_editor = null;
   this.blank_editor_id = null;
@@ -8,7 +8,7 @@ function Wiki() {
   this.read_write = false;
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: note title to editor
-  this.invoker = new Invoker();
+  this.invoker = invoker;
   this.search_titles_only = true;
 
   connect( this.invoker, "error_message", this, "display_error" );
@@ -1020,7 +1020,7 @@ Wiki.prototype.toggle_editor_options = function ( event, editor ) {
   event.stop();
 }
 
-connect( window, "onload", function ( event ) { new Wiki(); } );
+connect( window, "onload", function ( event ) { new Wiki( new Invoker() ); } );
 
 
 function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to ) {

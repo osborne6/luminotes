@@ -7,13 +7,59 @@
 <title>Luminotes Wiki Tests</title>
 <script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script>
 <script language="JavaScript" type="text/javascript" src="../MochiKit.js"></script>
-<script language="JavaScript" type="text/javascript" src="../Invoker.js"></script>
+<script language="JavaScript" type="text/javascript" src="Stub_invoker.js"></script>
 <script language="JavaScript" type="text/javascript" src="../Editor.js"></script>
 <script language="JavaScript" type="text/javascript" src="../Wiki.js"></script>
 <script language="JavaScript" type="text/javascript">
 
 function setUp() {
-  wiki = new Wiki();
+  stub_invoker = new Invoker( function ( url, args ) {
+    var notebook = {
+      "name": "fake notebook",
+      "object_id": "fake_notebook_id",
+      "revision": "fake_notebook_revision",
+      "read_write": "true",
+      "trash": {
+        "name": "trash",
+        "object_id": "fake_trash_id",
+        "revision": "fake_trash_revision",
+        "read_write": "true",
+        "trash": null
+      }
+    }
+
+    if ( url == "/users/current" ) {
+      return {
+        "user": {
+          "username": "case",
+          "object_id": "fake_user_id",
+          "revision": "fake_user_revision"
+        },
+        "notebook": [ notebook ],
+        "startup_notes": [],
+        "http_url": "",
+        "login_url": ""
+      }
+    }
+
+    if ( url == "/notebooks/contents" ) {
+      return {
+        "notebook": notebook,
+        "startup_notes": [],
+        "note": []
+      };
+    }
+    
+    if ( url == "/next_id" ) {
+      return {
+        "next_id": "" + Math.random()
+      }
+    }
+
+    fail( "unknown invoke() url: " + url );
+  } );
+
+  wiki = new Wiki( stub_invoker );
 }
 
 function test_Wiki() {
@@ -34,7 +80,22 @@ function test_Wiki() {
   <input id="search_button" type="button" />
 </form>
 
-<div id="status_area"></div>
+<div id="user_area"></div>
+<div id="notebooks_area"></div>
+<div id="notebook_header_area"></div>
+<div id="this_notebook_area"></div>
+<div id="notes"></div>
+
+<div id="toolbar">
+  <input id="bold" type="button" />
+  <input id="italic" type="button" />
+  <input id="underline" type="button" />
+  <input id="title" type="button" />
+  <input id="insertUnorderedList" type="button" />
+  <input id="insertOrderedList" type="button" />
+  <input id="createLink" type="button" />
+  <input id="newNote" type="button" />
+</div>
 
 <input type="hidden" name="notebook_id" id="notebook_id" value="fake_notebook_id" />
 <input type="hidden" name="note_id" id="note_id" value="" />
