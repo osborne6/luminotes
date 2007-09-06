@@ -19,9 +19,9 @@ function setUp() {
   read_write = true;
   startup = false;
   highlight = false;
-  focus = false;
+  editor_focus = false;
 
-  editor = new Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, focus );
+  editor = new Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, editor_focus );
 }
 
 function test_Editor() {
