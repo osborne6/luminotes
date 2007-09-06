@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html id="html">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Luminotes Editor Tests</title>
+<script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="../MochiKit.js"></script>
+<script language="JavaScript" type="text/javascript" src="../Editor.js"></script>
+<script language="JavaScript" type="text/javascript">
+
+function setUp() {
+  id = "fake_id";
+  notebook_id = "fake_notebook_id";
+  note_text = "blah";
+  deleted_from = undefined;
+  revisions_list = undefined;
+  read_write = true;
+  startup = false;
+  highlight = false;
+  focus = false;
+
+  editor = new Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, focus );
+}
+
+function test_Editor() {
+  assertNotUndefined( editor );
+  assertNotNull( editor );
+}
+
+</script>
+</head>
+
+<body>
+
+<h1>Luminotes Editor Tests</h1>
+
+<p>This page contains tests for the Luminotes Editor class. To see them, take a look at the source.</p>
+
+<div id="notes"></div>
+
+</body>
+</html>

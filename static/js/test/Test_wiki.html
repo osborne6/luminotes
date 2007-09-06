@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html id="html">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Luminotes Wiki Tests</title>
+<script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="../MochiKit.js"></script>
+<script language="JavaScript" type="text/javascript" src="../Invoker.js"></script>
+<script language="JavaScript" type="text/javascript" src="../Editor.js"></script>
+<script language="JavaScript" type="text/javascript" src="../Wiki.js"></script>
+<script language="JavaScript" type="text/javascript">
+
+function setUp() {
+  wiki = new Wiki();
+}
+
+function test_Wiki() {
+  assertNotUndefined( wiki );
+  assertNotNull( wiki );
+}
+
+</script>
+</head>
+
+<body>
+
+<h1>Luminotes Wiki Tests</h1>
+
+<p>This page contains tests for the Luminotes Wiki class. To see them, take a look at the source.</p>
+
+<form id="search_form">
+  <input id="search_button" type="button" />
+</form>
+
+<div id="status_area"></div>
+
+<input type="hidden" name="notebook_id" id="notebook_id" value="fake_notebook_id" />
+<input type="hidden" name="note_id" id="note_id" value="" />
+<input type="hidden" name="parent_id" id="parent_id" value="" />
+<input type="hidden" name="revision" id="revision" value="" />
+
+</body>
+</html>
