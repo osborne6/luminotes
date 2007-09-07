@@ -22,6 +22,9 @@ function setUp() {
   editor_focus = false;
 
   editor = new Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, editor_focus );
+
+  init_complete = false;
+  connect( editor, "init_complete", function () { init_complete = true; } );
 }
 
 function tearDown() {
@@ -29,8 +32,25 @@ function tearDown() {
 }
 
 function test_Editor() {
-  assertNotUndefined( editor );
-  assertNotNull( editor );
+  // busywait for the editor initialization to complete
+  if ( !init_complete ) {
+    setTimeout( "test_Editor()", 10 );
+    return;
+  }
+
+  assertNotUndefined( editor.changes_button );
+  assertNotUndefined( editor.closed );
+  assertNotUndefined( editor.deleted_from );
+  assertNotUndefined( editor.document );
+  assertNotUndefined( editor.document.body );
+  assertNotUndefined( editor.document.body.innerHTML );
+  assertNotUndefined( editor.id );
+  assertNotUndefined( editor.iframe );
+  assertNotUndefined( editor.revisions_list );
+  assertNotUndefined( editor.startup );
+  assertNotUndefined( editor.title );
+  assertNotUndefined( editor.options_button );
+  assertNotUndefined( editor.read_write );
 }
 
 </script>
