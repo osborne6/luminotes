@@ -90,13 +90,32 @@ You should be able to connect to the site at whatever domain you've configured
 Apache to serve.
 
 
-unit tests
-----------
+Python unit tests
+-----------------
 
-If you're interested in running unit tests, install:
+If you're interested in running unit tests of the server, install:
 
  * nose 0.9.0
+
+In Debian GNU/Linux, you can issue the following command to install this
+package:
+
+  apt-get install python-nose
 
 Then you can run unit tests by running:
 
   nosetests
+
+
+JavaScript unit tests
+---------------------
+
+JsUnit is included with Luminotes, so to kick off tests of the client-side
+JavaScript code, simply run:
+
+  python2.5 static/js/test/run_tests.py
+
+The run_tests.py script runs the tests inside browser windows and presumes you
+have both Firefox and Internet Explorer 6 installed. Edit run_tests.py if you
+need to specify different paths to the browser binaries or want to test with
+additional browsers.
