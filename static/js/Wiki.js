@@ -176,7 +176,7 @@ Wiki.prototype.populate = function ( result ) {
   var self = this;
   if ( !this.parent_id ) {
     connect( "all_notes_link", "onclick", function ( event ) {
-      self.load_editor( "all notes", "all_notes" );
+      self.load_editor( "all notes", "null" );
       event.stop();
     } );
   }
