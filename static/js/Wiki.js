@@ -334,17 +334,23 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
 }
 
 Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
-  if ( note_title == "all notes" )
-    return;
-
   // if the title looks like a URL, then make it a link to an external site
   if ( /^\w+:\/\//.test( note_title ) ) {
     link.target = "_new";
     link.href = note_title;
     if ( callback ) callback( "web link" );
-    return
+    return;
   }
   link.removeAttribute( "target" );
+
+  if ( note_title == "all notes" ) {
+    link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
+      [ "title", "note_id" ],
+      [ note_title, "null" ]
+    );
+    if ( callback ) callback( "list of all notes in this notebook" );
+    return;
+  }
 
   var id = parse_query( link ).note_id;
 
@@ -524,7 +530,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   if ( event.modifier().ctrl ) {
     // ctrl-backtick: alert with frame HTML contents (temporary for debugging)
     if ( code == 192 || code == 96 ) {
-      alert( editor.document.body.innerHTML );
+      alert( editor.contents() );
       event.stop();
     // ctrl-b: bold
     } else if ( code == 66 ) {
@@ -1195,16 +1201,23 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
 
   // links with targets are considered links to external sites
   if ( link.target ) {
-    self.title_field.value = link.href;
-    replaceChildNodes( self.note_preview, "web link" );
+    this.title_field.value = link.href;
+    replaceChildNodes( this.note_preview, "web link" );
     return;
   }
 
-  // if the note has no destination note id set, try loading the note from the server by title
   var query = parse_query( link );
   var title = link_title( link, query );
   var id = query.note_id;
+
+  // if the note has no destination note id set, try loading the note from the server by title
   if ( ( id == undefined || id == "new" || id == "null" ) && title.length > 0 ) {
+    if ( title == "all notes" ) {
+      this.title_field.value = title;
+      this.display_preview( title, "list of all notes in this notebook" );
+      return;
+    }
+
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
         "notebook_id": this.notebook_id,

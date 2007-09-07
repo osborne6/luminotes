@@ -167,7 +167,7 @@ Editor.prototype.finish_init = function () {
   if ( this.init_focus )
     this.focus();
 
-  signal( self, "init_complete" );
+  signal( this, "init_complete" );
 }
 
 Editor.prototype.highlight = function ( scroll ) {
