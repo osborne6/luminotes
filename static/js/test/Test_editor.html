@@ -10,10 +10,11 @@
 <script language="JavaScript" type="text/javascript" src="../Editor.js"></script>
 <script language="JavaScript" type="text/javascript">
 
-function setUp() {
+function setUpPage() {
   id = "fake_id";
   notebook_id = "fake_notebook_id";
-  note_text = "blah";
+  title = "the title"
+  note_text = "<h3>" + title + "</h3>blah";
   deleted_from = undefined;
   revisions_list = undefined;
   read_write = true;
@@ -25,6 +26,18 @@ function setUp() {
 
   init_complete = false;
   connect( editor, "init_complete", function () { init_complete = true; } );
+
+  wait_for_init_complete();
+}
+
+function wait_for_init_complete() {
+  // busywait for the editor initialization to complete
+  if ( !init_complete ) {
+    setTimeout( "wait_for_init_complete()", 10 );
+    return;
+  }
+
+  setUpPageStatus = "complete";
 }
 
 function tearDown() {
@@ -32,25 +45,22 @@ function tearDown() {
 }
 
 function test_Editor() {
-  // busywait for the editor initialization to complete
-  if ( !init_complete ) {
-    setTimeout( "test_Editor()", 10 );
-    return;
-  }
-
-  assertNotUndefined( editor.changes_button );
-  assertNotUndefined( editor.closed );
-  assertNotUndefined( editor.deleted_from );
-  assertNotUndefined( editor.document );
-  assertNotUndefined( editor.document.body );
-  assertNotUndefined( editor.document.body.innerHTML );
-  assertNotUndefined( editor.id );
-  assertNotUndefined( editor.iframe );
-  assertNotUndefined( editor.revisions_list );
-  assertNotUndefined( editor.startup );
-  assertNotUndefined( editor.title );
-  assertNotUndefined( editor.options_button );
-  assertNotUndefined( editor.read_write );
+  assertNotUndefined( "editor should have changes_button member", editor.changes_button );
+  assertNotUndefined( "editor should have options_button member", editor.options_button );
+  assertFalse( "editor should not have closed flag set", editor.closed );
+  assertEquals( "editor should have correct deleted_from flag", editor.deleted_from, deleted_from || null );
+  assertNotUndefined( "editor should have document member", editor.document );
+  assertNotUndefined( "document should have body member", editor.document.body );
+  assertEquals(
+    "document.body.innerHTML should start with note_text",
+    editor.document.body.innerHTML.toLowerCase().indexOf( note_text.toLowerCase() ), 0
+  );
+  assertEquals( "editor id should have correct id", editor.id, id );
+  assertNotUndefined( "editor should have iframe member", editor.iframe );
+  assertEquals( "editor should have empty revisions list", editor.revisions_list.length, 0 );
+  assertEquals( "editor should have correct startup flag", editor.startup, startup );
+  assertEquals( "editor should have correct title", editor.title, title );
+  assertEquals( "editor should have correct read_write flag", editor.read_write, read_write );
 }
 
 </script>
