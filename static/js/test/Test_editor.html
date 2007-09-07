@@ -8,41 +8,8 @@
 <script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script>
 <script language="JavaScript" type="text/javascript" src="../MochiKit.js"></script>
 <script language="JavaScript" type="text/javascript" src="../Editor.js"></script>
+<script language="JavaScript" type="text/javascript" src="Editor_setup.js"></script>
 <script language="JavaScript" type="text/javascript">
-
-function setUpPage() {
-  id = "fake_id";
-  notebook_id = "fake_notebook_id";
-  title = "the title"
-  note_text = "<h3>" + title + "</h3>blah";
-  deleted_from = undefined;
-  revisions_list = undefined;
-  read_write = true;
-  startup = false;
-  highlight = false;
-  editor_focus = false;
-
-  editor = new Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, editor_focus );
-
-  init_complete = false;
-  connect( editor, "init_complete", function () { init_complete = true; } );
-
-  wait_for_init_complete();
-}
-
-function wait_for_init_complete() {
-  // busywait for the editor initialization to complete
-  if ( !init_complete ) {
-    setTimeout( "wait_for_init_complete()", 10 );
-    return;
-  }
-
-  setUpPageStatus = "complete";
-}
-
-function tearDown() {
-  editor.shutdown();
-}
 
 function test_Editor() {
   assertNotUndefined( "editor should have changes_button member", editor.changes_button );
@@ -50,17 +17,20 @@ function test_Editor() {
   assertFalse( "editor should not have closed flag set", editor.closed );
   assertEquals( "editor should have correct deleted_from flag", editor.deleted_from, deleted_from || null );
   assertNotUndefined( "editor should have document member", editor.document );
-  assertNotUndefined( "document should have body member", editor.document.body );
-  assertEquals(
-    "document.body.innerHTML should start with note_text",
-    editor.document.body.innerHTML.toLowerCase().indexOf( note_text.toLowerCase() ), 0
-  );
   assertEquals( "editor id should have correct id", editor.id, id );
   assertNotUndefined( "editor should have iframe member", editor.iframe );
   assertEquals( "editor should have empty revisions list", editor.revisions_list.length, 0 );
   assertEquals( "editor should have correct startup flag", editor.startup, startup );
   assertEquals( "editor should have correct title", editor.title, title );
   assertEquals( "editor should have correct read_write flag", editor.read_write, read_write );
+}
+
+function test_contents() {
+  assertEquals(
+    "contents() should start with note_text",
+    editor.contents().toLowerCase().indexOf( note_text.toLowerCase() ),
+    0
+  );
 }
 
 </script>
