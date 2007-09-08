@@ -167,7 +167,7 @@ Editor.prototype.finish_init = function () {
   if ( this.init_focus )
     this.focus();
 
-  signal( this, "init_complete" );
+  signal( self, "init_complete" );
 }
 
 Editor.prototype.highlight = function ( scroll ) {
@@ -244,9 +244,9 @@ Editor.prototype.key_pressed = function ( event ) {
 Editor.prototype.key_released = function ( event ) {
   this.resize();
 
-  // if non-alphabetic (a-z), non-space, non-ctrl keys are released, issue a state changed event
+  // if non-alphabetic (a-z), non-ctrl keys are released, issue a state changed event
   var code = event.key().code;
-  if ( ( code >= 65 && code <= 90 ) || code == 32 || event.modifier().ctrl )
+  if ( ( code >= 65 && code <= 90 ) || event.modifier().ctrl )
     return;
 
   signal( this, "state_changed", this );
