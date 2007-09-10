@@ -133,7 +133,7 @@ class Html_cleaner(HTMLParser):
     return parsed[0] in self.allowed_schemes
 
   def strip(self, rawstring):
-    """Returns the argument stripped of potentially harmful HTML or Javascript code"""
+    """Returns the argument stripped of potentially harmful HTML or JavaScript code"""
     self.reset()
     self.result = []
     self.feed(rawstring)

@@ -28,7 +28,7 @@ class Error_page( Page ):
         P(
           Strong( u"P.S." ),
           u"""
-          If Javascript isn't enabled in your browser, please enable it.
+          If JavaScript isn't enabled in your browser, please enable it.
           """,
         ),
         class_ = u"error_box",

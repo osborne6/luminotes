@@ -729,7 +729,7 @@ class Notebooks( object ):
   )
   def download_html( self, notebook_id, user_id ):
     """
-    Download the entire contents of the given notebook as a stand-alone HTML page (no Javascript).
+    Download the entire contents of the given notebook as a stand-alone HTML page (no JavaScript).
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to download
