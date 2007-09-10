@@ -8,6 +8,7 @@ function Wiki( invoker ) {
   this.read_write = false;
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: note title to editor
+  this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
   this.search_titles_only = true;
 
@@ -286,7 +287,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
   // if there's not a valid destination note id, then load by title instead of by id
   var self = this;
   if ( pulldown_title || note_id == undefined || note_id == "new" || note_id == "null" ) {
-    // if the note_title corresponds to a "magic" note's title, then dynamically create the note
+    // if the note_title corresponds to a "magic" note's title, then dynamically highlight or create the note
     if ( note_title == "all notes" ) {
       var editor = this.open_editors[ note_title ];
       if ( editor ) {
@@ -298,6 +299,16 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
         "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
         function( result ) { self.display_all_notes_list( result ); }
       );
+      return;
+    }
+    if ( note_title == "search results" ) {
+      var editor = this.open_editors[ note_title ];
+      if ( editor ) {
+        editor.highlight();
+        return;
+      }
+
+      this.display_search_results();
       return;
     }
 
@@ -343,12 +354,17 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   }
   link.removeAttribute( "target" );
 
-  if ( note_title == "all notes" ) {
+  if ( note_title == "all notes" || note_title == "search results" ) {
     link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
       [ "title", "note_id" ],
       [ note_title, "null" ]
     );
-    if ( callback ) callback( "list of all notes in this notebook" );
+    if ( callback ) {
+      if ( note_title == "all notes" )
+        callback( "list of all notes in this notebook" );
+      else
+        callback( "current search results" );
+    }
     return;
   }
 
@@ -809,7 +825,7 @@ Wiki.prototype.search = function ( event ) {
       "notebook_id": this.notebook_id,
       "titles_only": this.search_titles_only
     },
-    function( result ) { self.display_loaded_notes( result ); },
+    function( result ) { self.display_search_results( result ); },
     "search_form"
   );
 
@@ -828,33 +844,67 @@ Wiki.prototype.toggle_search_options = function ( event ) {
   event.stop();
 }
 
-Wiki.prototype.display_loaded_notes = function ( result ) {
-  // TODO: somehow highlight the search term within the search results?
-  // before displaying the search results, save the current focused editor
-  this.save_editor();
-
+Wiki.prototype.display_search_results = function ( result ) {
   // if there are no search results, indicate that and bail
-  if ( result.notes.length == 0 ) {
+  if ( !result || result.notes.length == 0 ) {
     this.display_error( "No matching notes." );
     return;
   }
 
-  // create an editor for each note search result, focusing the first one
-  var focus = true;
-  for ( var i in result.notes ) {
-    var note = result.notes[ i ]
+  // TODO: highlight the search term within the search results, idealy showing
+  // a section of the note contents including the search term
 
-    // if the editor is already open, just skip it
+  // if there's only one search result, automatically feel lucky^Wfortunate
+  if ( result.notes.length == 1 ) {
+    var note = result.notes[ 0 ]
+
+    // if the editor is already open, highlight it and bail
     var iframe = getElement( "note_" + note.object_id );
     if ( iframe ) {
-      iframe.editor.highlight( focus );
-      focus = false;
-      continue;
+      iframe.editor.highlight();
+      return;
     }
 
-    this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, focus, focus );
-    focus = false;
+    // otherwise, create an editor for the one note
+    this.create_editor( note.object_id, note.contents, note.deleted_from, note.revisions_list, undefined, this.read_write, true, true );
+    return;
   }
+
+  // otherwise, there are multiple search results, so create a "magic" search results note. but
+  // first close any open search results notes
+  if ( this.search_results_editor )
+    this.search_results_editor.shutdown();
+
+  var list = createDOM( "span", {} );
+  for ( var i in result.notes ) {
+    var note = result.notes[ i ]
+    if ( !note.title ) continue;
+
+    var contents_node = createDOM( "span", {} );
+    contents_node.innerHTML = note.contents;
+    contents = strip( scrapeText( contents_node ) );
+
+    // remove the title from the scraped contents text
+    if ( contents.indexOf( note.title ) == 0 )
+      contents = contents.substr( note.title.length );
+
+    if ( contents.length == 0 ) {
+      var preview = "empty note";
+    } else {
+      var max_preview_length = 160;
+      var preview = contents.substr( 0, max_preview_length ) + ( ( contents.length > max_preview_length ) ? "..." : "" );
+    }
+
+    appendChildNodes( list,
+      createDOM( "p", {},
+        createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id }, note.title ),
+        createDOM( "br" ),
+        createDOM( "span", {}, preview )
+      )
+    );
+  }
+
+  this.search_results_editor = this.create_editor( "search_results", "<h3>search results</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true );
 }
 
 Wiki.prototype.display_all_notes_list = function ( result ) {
@@ -1215,6 +1265,12 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
     if ( title == "all notes" ) {
       this.title_field.value = title;
       this.display_preview( title, "list of all notes in this notebook" );
+      return;
+    }
+
+    if ( title == "search results" ) {
+      this.title_field.value = title;
+      this.display_preview( title, "current search results" );
       return;
     }
 
