@@ -40,7 +40,7 @@ mode doesn't support auto-reload, and logging goes to file (luminotes.log)
 instead of the console, but performance should be better than in development
 mode.
 
-Then you'll need to configure your web server to forward requests for
+First you'll need to configure your web server to forward requests for
 non-static pages to CherryPy. These instructions are for Apache, but in
 theory, Luminotes should work with just about any web server.
 
