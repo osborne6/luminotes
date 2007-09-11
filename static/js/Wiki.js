@@ -8,6 +8,7 @@ function Wiki( invoker ) {
   this.read_write = false;
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: note title to editor
+  this.all_notes_editor = null;      // editor for display of list of all notes
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
   this.search_titles_only = true;
@@ -289,12 +290,6 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
   if ( pulldown_title || note_id == undefined || note_id == "new" || note_id == "null" ) {
     // if the note_title corresponds to a "magic" note's title, then dynamically highlight or create the note
     if ( note_title == "all notes" ) {
-      var editor = this.open_editors[ note_title ];
-      if ( editor ) {
-        editor.highlight();
-        return;
-      }
-
       this.invoker.invoke(
         "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
         function( result ) { self.display_all_notes_list( result ); }
@@ -915,9 +910,11 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
     return;
   }
 
-  var list = createDOM( "ul", {} );
+  if ( this.all_notes_editor )
+    this.all_notes_editor.shutdown();
 
   // build up a list of all notes in this notebook, one link per note
+  var list = createDOM( "ul", {} );
   for ( var i in result.notes ) {
     var note_tuple = result.notes[ i ]
     var note_id = note_tuple[ 0 ];
@@ -930,7 +927,7 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
     );
   }
 
-  this.create_editor( "all_notes", "<h3>all notes</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true );
+  this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true );
 }
 
 Wiki.prototype.display_message = function ( text, nodes ) {
