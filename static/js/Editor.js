@@ -9,6 +9,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
   this.init_highlight = highlight || false;
   this.init_focus = focus || false;
   this.closed = false;
+  this.link_started = null;
   var iframe_id = "note_" + id;
 
   var self = this;
@@ -244,15 +245,17 @@ Editor.prototype.key_pressed = function ( event ) {
 Editor.prototype.key_released = function ( event ) {
   this.resize();
 
-  // if non-alphabetic (a-z), non-ctrl keys are released, issue a state changed event
+  // if ctrl keys are released, bail
   var code = event.key().code;
-  if ( ( code >= 65 && code <= 90 ) || event.modifier().ctrl )
+  if ( event.modifier().ctrl )
     return;
 
   signal( this, "state_changed", this );
 }
 
 Editor.prototype.mouse_clicked = function ( event ) {
+  this.link_started = null;
+
   // update the state no matter what, in case the cursor has moved
   if ( this.read_write )
     signal( this, "state_changed", this );
@@ -334,12 +337,14 @@ Editor.prototype.start_link = function () {
       // hack to prevent Firefox from erasing spaces before links that happen to be at the end of list items
       var sentinel = createDOM( "span" );
       insertSiblingNodesBefore( placeholder.parentNode, sentinel );
+      this.link_started = placeholder.parentNode;
 
       // nuke the link title and collapse the selection, yielding a tasty new link that's completely
       // titleless and unselected
       removeElement( placeholder );
     // otherwise, just create a link with the selected text as the link title
     } else {
+      this.link_started = null;
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
       var link = this.find_link_at_cursor();
       signal( this, "resolve_link", link_title( link ), link );
@@ -354,7 +359,9 @@ Editor.prototype.start_link = function () {
       range.moveStart( "character", -1 );
       range.select();
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
+      this.link_started = this.find_link_at_cursor();
     } else {
+      this.link_started = null;
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
       var link = this.find_link_at_cursor();
       signal( this, "resolve_link", link_title( link ), link );
@@ -363,6 +370,7 @@ Editor.prototype.start_link = function () {
 }
 
 Editor.prototype.end_link = function () {
+  this.link_started = null;
   var link = this.find_link_at_cursor();
 
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
@@ -400,6 +408,8 @@ Editor.prototype.find_link_at_cursor = function () {
         break;
     }
 
+    if ( link != this.link_started )
+      this.link_started = null;
     if ( link ) return link;
 
     // well, that didn't work, so try the selection's focus node instead
@@ -407,10 +417,14 @@ Editor.prototype.find_link_at_cursor = function () {
 
     while ( link.nodeName != "A" ) {
       link = link.parentNode;
-      if ( !link )
+      if ( !link ) {
+        this.link_started = null;
         return null;
+      }
     }
 
+    if ( link != this.link_started )
+      this.link_started = null;
     return link;
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -418,13 +432,18 @@ Editor.prototype.find_link_at_cursor = function () {
 
     while ( link.nodeName != "A" ) {
       link = link.parentNode;
-      if ( !link )
+      if ( !link ) {
+        this.link_started = null;
         return null;
+      }
     }
 
+    if ( link != this.link_started )
+      this.link_started = null;
     return link;
   }
 
+  this.link_started = null;
   return null;
 }
 

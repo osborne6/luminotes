@@ -500,7 +500,9 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
   if ( !link )
     link = editor.find_link_at_cursor();
 
-  if ( !link ) {
+  // if there's no link at the current cursor location, or there is a link but it was just started,
+  // bail
+  if ( !link || link == editor.link_started ) {
     this.clear_pulldowns();
     return;
   }
