@@ -201,3 +201,27 @@ class Test_users( Test_controller ):
 
   def test_current_with_startup_notes_without_login( self ):
     self.test_current_without_login( include_startup_notes = True )
+
+  def test_calculate_user_storage( self ):
+    size = cherrypy.root.users.calculate_storage( self.user )
+    notebooks = self.user.notebooks
+
+    # expected a sum of the sizes of all of this user's notebooks, notes, and revisions
+    expected_size = \
+      self.database.size( notebooks[ 0 ].object_id ) + \
+      self.database.size( notebooks[ 0 ].object_id, notebooks[ 0 ].revision ) + \
+      self.database.size( notebooks[ 1 ].object_id ) + \
+      self.database.size( notebooks[ 1 ].object_id, notebooks[ 1 ].revision )
+
+    assert size == expected_size
+
+  def test_calculate_anon_storage( self ):
+    size = cherrypy.root.users.calculate_storage( self.anonymous )
+
+    expected_size = \
+      self.database.size( self.anon_notebook.object_id ) + \
+      self.database.size( self.anon_notebook.object_id, self.anon_notebook.revision ) + \
+      self.database.size( self.anon_notebook.notes[ 0 ].object_id ) + \
+      self.database.size( self.anon_notebook.notes[ 0 ].object_id, self.anon_notebook.notes[ 0 ].revision )
+
+    assert size == expected_size

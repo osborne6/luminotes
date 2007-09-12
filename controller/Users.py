@@ -306,7 +306,6 @@ class Users( object ):
 
     notebooks += user.notebooks
 
-
     yield dict(
       user = user,
       notebooks = notebooks,
@@ -314,5 +313,34 @@ class Users( object ):
       http_url = self.__http_url,
       login_url = login_url,
     )
+
+  def calculate_storage( self, user ):
+    """
+    Calculate total storage utilization for all notebooks and all notes of the given user,
+    including storage for all past revisions.
+    @type user: User
+    @param user: user for which to calculate storage utilization
+    @rtype: int
+    @return: total bytes used for storage
+    """
+    total_bytes = 0
+
+    def sum_revisions( obj ):
+      return \
+        self.__database.size( obj.object_id ) + \
+        sum( [ self.__database.size( obj.object_id, revision ) or 0 for revision in obj.revisions_list ], 0 )
+
+    def sum_notebook( notebook ):
+      return \
+        sum_revisions( notebook ) + \
+        sum( [ sum_revisions( note ) for note in notebook.notes ], 0 )
+
+    for notebook in user.notebooks:
+      total_bytes += sum_notebook( notebook )
+
+      if notebook.trash:
+        total_bytes += sum_notebook( notebook.trash )
+
+    return total_bytes
 
   scheduler = property( lambda self: self.__scheduler )
