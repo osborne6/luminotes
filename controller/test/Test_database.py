@@ -269,6 +269,32 @@ class Test_database( object ):
     self.scheduler.add( g )
     self.scheduler.wait_for( g )
 
+  def test_size( self ):
+    def gen():
+      basic_obj = Some_object( object_id = "5", value = 1 )
+      original_revision = basic_obj.revision
+
+      self.database.save( basic_obj, self.scheduler.thread )
+      yield Scheduler.SLEEP
+      if self.clear_cache: self.database.clear_cache()
+
+      size = self.database.size( basic_obj.object_id )
+
+      from cPickle import Pickler
+      from StringIO import StringIO
+      buffer = StringIO()
+      pickler = Pickler( buffer, protocol = -1 )
+      pickler.dump( basic_obj )
+      expected_size = len( buffer.getvalue() )
+
+      # as long as the size is close to the expected size, that's fine
+      assert abs( size - expected_size ) < 10
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+
   def test_next_id( self ):
     def gen():
       self.database.next_id( self.scheduler.thread )

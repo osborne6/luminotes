@@ -193,6 +193,28 @@ class Database( object ):
 
     self.__db.sync()
 
+  def size( self, object_id, revision = None ):
+    """
+    Load the object corresponding to the given object id from the database, and return the size of
+    its pickled data in bytes. If a revision is provided, a specific revision of the object will be
+    loaded.
+
+    @type object_id: unicode
+    @param object_id: id of the object whose size should be returned
+    @type revision: int or NoneType
+    @param revision: revision of the object to load (optional)
+    """
+    if revision is not None:
+      object_id = Persistent.make_revision_id( object_id, revision )
+
+    object_id = unicode( object_id ).encode( "utf8" )
+
+    pickled = self.__db.get( object_id )
+    if pickled is None or pickled == "":
+      return None
+
+    return len( pickled )
+
   @staticmethod
   def generate_id():
     int_id = random.getrandbits( Database.ID_BITS )
