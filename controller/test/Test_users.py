@@ -225,3 +225,14 @@ class Test_users( Test_controller ):
       self.database.size( self.anon_notebook.notes[ 0 ].object_id, self.anon_notebook.notes[ 0 ].revision )
 
     assert size == expected_size
+
+  def test_update_storage( self ):
+    previous_revision = self.user.revision
+
+    cherrypy.root.users.update_storage( self.user )
+    self.scheduler.wait_until_idle()
+
+    expected_size = cherrypy.root.users.calculate_storage( self.user )
+
+    assert self.user.storage_bytes == expected_size
+    assert self.user.revision > previous_revision

@@ -16,6 +16,7 @@ class Test_user( object ):
     assert self.user.username == self.username
     assert self.user.email_address == self.email_address
     assert self.user.notebooks == []
+    assert self.user.storage_bytes == 0
 
   def test_check_correct_password( self ):
     assert self.user.check_password( self.password ) == True
@@ -49,6 +50,14 @@ class Test_user( object ):
     
     assert len( self.user.notebooks ) == 1
     assert self.user.notebooks[ 0 ].object_id == notebook_id
+    assert self.user.revision > previous_revision
+
+  def test_set_storage_bytes( self ):
+    previous_revision = self.user.revision
+    storage_bytes = 44
+    self.user.storage_bytes = storage_bytes
+    
+    assert self.user.storage_bytes == storage_bytes
     assert self.user.revision > previous_revision
 
 

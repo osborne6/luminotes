@@ -343,4 +343,14 @@ class Users( object ):
 
     return total_bytes
 
+  @async
+  def update_storage( self, user ):
+    """
+    Calculate and record total storage utilization for the given user.
+    @type user: User
+    @param user: user for which to calculate storage utilization
+    """
+    user.storage_bytes = self.calculate_storage( user )
+    yield None
+
   scheduler = property( lambda self: self.__scheduler )
