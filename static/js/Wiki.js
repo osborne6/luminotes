@@ -119,13 +119,7 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
 
   if ( usage_percent > 90 ) {
     var storage_usage_class = "storage_usage_high";
-    if ( this.notebook.trash && this.storage_usage_high == false ) {
-      var trash_link = createDOM( "a", {
-        "href": "/notebooks/" + this.notebook.trash.object_id + "?parent_id=" + this.notebook.object_id
-      }, "trash" );
-      this.display_message(
-        "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the ", [ trash_link, ", or upgrade your account." ] );
-    }
+    this.display_message( "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the trash, or upgrade your account." );
     this.storage_usage_high = true;
   } else if ( usage_percent > 75 ) {
     var storage_usage_class = "storage_usage_medium";
