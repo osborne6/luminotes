@@ -104,6 +104,9 @@ Wiki.prototype.display_user = function ( result ) {
 }
 
 Wiki.prototype.display_storage_usage = function( storage_bytes ) {
+  if ( !storage_bytes )
+    return;
+
   // display the user's current storage usage
   var MEGABYTE = 1024 * 1024;
   function bytes_to_megabytes( storage_bytes ) {
@@ -702,11 +705,12 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
 
     this.save_editor( editor, true );
 
+    var self = this;
     if ( this.read_write && editor.read_write ) {
       this.invoker.invoke( "/notebooks/delete_note", "POST", { 
         "notebook_id": this.notebook_id,
         "note_id": editor.id
-      } );
+      }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
     }
 
     if ( editor == this.focused_editor )
@@ -750,10 +754,11 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
     this.save_editor( editor, true );
 
     if ( this.read_write && editor.read_write ) {
+      var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": editor.deleted_from,
         "note_id": editor.id
-      } );
+      }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
     }
 
     if ( editor == this.focused_editor )
@@ -772,10 +777,11 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
 
   if ( editor ) {
     if ( this.read_write && editor.read_write ) {
+      var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": this.notebook_id,
         "note_id": editor.id
-      } );
+      }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
     }
 
     this.startup_notes[ editor.id ] = true;
@@ -806,7 +812,10 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
       "contents": editor.contents(),
       "startup": editor.startup,
       "previous_revision": revisions.length ? revisions[ revisions.length - 1 ] : "None"
-    }, function ( result ) { self.update_editor_revisions( result, editor ); }, null, fire_and_forget );
+    }, function ( result ) {
+      self.update_editor_revisions( result, editor );
+      self.display_storage_usage( result.storage_bytes );
+    }, null, fire_and_forget );
   }
 }
 
@@ -1041,9 +1050,10 @@ Wiki.prototype.delete_all_editors = function ( event ) {
   this.startup_notes = new Array();
 
   if ( this.read_write ) {
+    var self = this;
     this.invoker.invoke( "/notebooks/delete_all_notes", "POST", { 
       "notebook_id": this.notebook_id
-    } );
+    }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
   }
 
   this.focused_editor = null;
