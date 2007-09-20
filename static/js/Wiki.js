@@ -117,9 +117,10 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   var quota_bytes = this.rate_plan.storage_quota_bytes || 0;
   var usage_percent = Math.round( storage_bytes / quota_bytes * 100.0 );
 
-  if ( usage_percent > 90 ) {
+  if ( usage_percent > .90 ) {
     var storage_usage_class = "storage_usage_high";
-    this.display_message( "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the trash, or upgrade your account." );
+    if ( this.storage_usage_high == false )
+      this.display_message( "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the trash, or upgrade your account." );
     this.storage_usage_high = true;
   } else if ( usage_percent > 75 ) {
     var storage_usage_class = "storage_usage_medium";
@@ -467,8 +468,6 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, revision, li
 }
 
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions_list, note_title, read_write, highlight, focus ) {
-  this.clear_messages();
-
   var self = this;
   if ( isUndefinedOrNull( id ) ) {
     if ( this.read_write ) {
@@ -553,8 +552,6 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
 }
 
 Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
-  this.clear_messages();
-
   if ( editor )
     addElementClass( editor.iframe, "focused_note_frame" );
 
@@ -981,6 +978,15 @@ Wiki.prototype.display_message = function ( text, nodes ) {
   for ( var i in nodes )
     appendChildNodes( inner_div, nodes[ i ] );
 
+  ok_button = createDOM( "input", {
+    "type": "button",
+    "class": "message_button",
+    "value": "ok",
+    "title": "dismiss this message",
+  } );
+  appendChildNodes( inner_div, ok_button );
+  connect( ok_button, "onclick", this.clear_messages );
+
   var div = DIV( { "class": "message" }, inner_div );
   div.nodes = nodes;
 
@@ -1003,6 +1009,15 @@ Wiki.prototype.display_error = function ( text, nodes ) {
   var inner_div = DIV( { "class": "error_inner" }, text + " " );
   for ( var i in nodes )
     appendChildNodes( inner_div, nodes[ i ] );
+
+  ok_button = createDOM( "input", {
+    "type": "button",
+    "class": "message_button",
+    "value": "ok",
+    "title": "dismiss this message",
+  } );
+  appendChildNodes( inner_div, ok_button );
+  connect( ok_button, "onclick", this.clear_messages );
 
   var div = DIV( { "class": "error" }, inner_div );
   div.nodes = nodes;

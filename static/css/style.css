@@ -301,6 +301,7 @@ ol li {
 }
 
 .message_button {
+  margin-left: 0.5em;
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
