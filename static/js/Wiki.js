@@ -117,7 +117,7 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   var quota_bytes = this.rate_plan.storage_quota_bytes || 0;
   var usage_percent = Math.round( storage_bytes / quota_bytes * 100.0 );
 
-  if ( usage_percent > .90 ) {
+  if ( usage_percent > 90 ) {
     var storage_usage_class = "storage_usage_high";
     if ( this.storage_usage_high == false )
       this.display_message( "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the trash, or upgrade your account." );
