@@ -982,7 +982,7 @@ Wiki.prototype.display_message = function ( text, nodes ) {
     "type": "button",
     "class": "message_button",
     "value": "ok",
-    "title": "dismiss this message",
+    "title": "dismiss this message"
   } );
   appendChildNodes( inner_div, ok_button );
   connect( ok_button, "onclick", this.clear_messages );
@@ -1014,7 +1014,7 @@ Wiki.prototype.display_error = function ( text, nodes ) {
     "type": "button",
     "class": "message_button",
     "value": "ok",
-    "title": "dismiss this message",
+    "title": "dismiss this message"
   } );
   appendChildNodes( inner_div, ok_button );
   connect( ok_button, "onclick", this.clear_messages );
