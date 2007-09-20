@@ -303,6 +303,7 @@ class Notebooks( object ):
     @return: {
       'new_revision': new revision of saved note, or None if nothing was saved,
       'previous_revision': revision immediately before new_revision, or None if the note is new
+      'storage_bytes': current storage usage by user,
     }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
@@ -371,10 +372,13 @@ class Notebooks( object ):
       self.__users.update_storage( user_id, self.__scheduler.thread )
       user = ( yield Scheduler.SLEEP )
       self.__database.save( user )
+    else:
+      user = None
 
     yield dict(
       new_revision = new_revision,
       previous_revision = previous_revision,
+      storage_bytes = user and user.storage_bytes or 0,
     )
 
   @expose( view = Json )
@@ -399,7 +403,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: {}
+    @return: { 'storage_bytes': current storage usage by user }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -424,7 +428,9 @@ class Notebooks( object ):
       user = ( yield Scheduler.SLEEP )
       self.__database.save( user )
 
-    yield dict()
+      yield dict( storage_bytes = user.storage_bytes )
+    else:
+      yield dict( storage_bytes = 0 )
 
   @expose( view = Json )
   @wait_for_update
@@ -448,7 +454,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: {}
+    @return: { 'storage_bytes': current storage usage by user }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -473,7 +479,9 @@ class Notebooks( object ):
       user = ( yield Scheduler.SLEEP )
       self.__database.save( user )
 
-    yield dict()
+      yield dict( storage_bytes = user.storage_bytes )
+    else:
+      yield dict( storage_bytes = 0 )
 
   @expose( view = Json )
   @wait_for_update
@@ -498,7 +506,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: {}
+    @return: { 'storage_bytes': current storage usage by user }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -529,7 +537,9 @@ class Notebooks( object ):
       user = ( yield Scheduler.SLEEP )
       self.__database.save( user )
 
-    yield dict()
+      yield dict( storage_bytes = user.storage_bytes )
+    else:
+      yield dict( storage_bytes = 0 )
 
   @expose( view = Json )
   @wait_for_update
@@ -553,7 +563,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: {}
+    @return: { 'storage_bytes': current storage usage by user }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -573,7 +583,7 @@ class Notebooks( object ):
     if note and notebook.trash:
       # if the note isn't deleted, and it's already in this notebook, just return
       if note.deleted_from is None and notebook.lookup_note( note.object_id ):
-        yield dict()
+        yield dict( storage_bytes = 0 )
         return
 
       # if the note was deleted from a different notebook than the notebook given, raise
@@ -592,7 +602,9 @@ class Notebooks( object ):
       user = ( yield Scheduler.SLEEP )
       self.__database.save( user )
 
-    yield dict()
+      yield dict( storage_bytes = user.storage_bytes )
+    else:
+      yield dict( storage_bytes = 0 )
 
   @expose( view = Json )
   @wait_for_update
@@ -614,7 +626,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: {}
+    @return: { 'storage_bytes': current storage usage by user }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -642,7 +654,9 @@ class Notebooks( object ):
     user = ( yield Scheduler.SLEEP )
     self.__database.save( user )
 
-    yield dict()
+    yield dict(
+      storage_bytes = user.storage_bytes,
+    )
 
   @expose( view = Json )
   @strongly_expire
