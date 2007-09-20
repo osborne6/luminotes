@@ -125,6 +125,9 @@ class Scheduler( object ):
     @type args: tuple
     @param args: arguments to send() to the given thread when it is executed
     """
+    if thread is None:
+      return
+
     self.__idle.release()
 
     if thread in self.__sleeping:

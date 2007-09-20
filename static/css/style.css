@@ -346,6 +346,27 @@ ol li {
   padding: 0.25em 0.25em 0.25em 0.5em;
 }
 
+.storage_usage_area {
+}
+
+.storage_usage_low {
+  color: green;
+  font-weight: bold;
+  margin-top: 1.5em;
+}
+
+.storage_usage_medium {
+  color: orange;
+  font-weight: bold;
+  margin-top: 1.5em;
+}
+
+.storage_usage_high {
+  color: red;
+  font-weight: bold;
+  margin-top: 1.5em;
+}
+
 .current_notebook_name {
   background-color: #b0d0ff;
   -moz-border-radius: 0.5em;

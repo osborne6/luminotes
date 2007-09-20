@@ -1,6 +1,9 @@
 import cherrypy
 
 
+MEGABYTE = 1024 * 1024
+
+
 settings = { 
   "global": {
     "server.socket_port": 8081,
@@ -20,5 +23,19 @@ settings = {
     "luminotes.http_proxy_ip": "127.0.0.1",
     "luminotes.https_proxy_ip": "127.0.0.2",
     "luminotes.support_email": "support@luminotes.com",
+    "luminotes.rate_plans": [
+      {
+        "name": "basic",
+        "storage_quota_bytes": 30 * MEGABYTE,
+      },
+      {
+        "name": "standard",
+        "storage_quota_bytes": 100 * MEGABYTE,
+      },
+      {
+        "name": "professional",
+        "storage_quota_bytes": 300 * MEGABYTE,
+      },
+    ],
   },
 }

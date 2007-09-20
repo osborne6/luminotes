@@ -33,13 +33,14 @@ class Root( object ):
     self.__scheduler = scheduler
     self.__database = database
     self.__settings = settings
-    self.__notebooks = Notebooks( scheduler, database )
     self.__users = Users(
       scheduler,
       database,
       settings[ u"global" ].get( u"luminotes.http_url", u"" ),
       settings[ u"global" ].get( u"luminotes.https_url", u"" ),
+      settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
+    self.__notebooks = Notebooks( scheduler, database, self.__users )
 
   @expose( view = Main_page )
   def index( self ):

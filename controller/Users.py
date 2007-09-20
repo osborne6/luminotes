@@ -106,7 +106,7 @@ class Users( object ):
   """
   Controller for dealing with users, corresponding to the "/users" URL.
   """
-  def __init__( self, scheduler, database, http_url, https_url ):
+  def __init__( self, scheduler, database, http_url, https_url, rate_plans ):
     """
     Create a new Users object.
 
@@ -118,6 +118,8 @@ class Users( object ):
     @param http_url: base URL to use for non-SSL http requests, or an empty string
     @type https_url: unicode
     @param https_url: base URL to use for SSL http requests, or an empty string
+    @type rate_plans: [ { "name": unicode, "storage_quota_bytes": int } ]
+    @param rate_plans: list of configured rate plans
     @rtype: Users
     @return: newly constructed Users
     """
@@ -125,6 +127,7 @@ class Users( object ):
     self.__database = database
     self.__http_url = http_url
     self.__https_url = https_url
+    self.__rate_plans = rate_plans
 
   @expose( view = Json )
   @update_auth
@@ -275,7 +278,14 @@ class Users( object ):
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: { 'user': userdict or None, 'notebooks': notebooksdict, 'http_url': url }
+    @return: {
+      'user': userdict or None,
+      'notebooks': notebooksdict,
+      'startup_notes': noteslist,
+      'http_url': url,
+      'login_url': url,
+      'rate_plan': rateplandict,
+    }
     """
     # if there's no logged-in user, default to the anonymous user
     self.__database.load( user_id or u"User anonymous", self.__scheduler.thread )
@@ -312,6 +322,7 @@ class Users( object ):
       startup_notes = include_startup_notes and len( notebooks ) > 0 and notebooks[ 0 ].startup_notes or [],
       http_url = self.__http_url,
       login_url = login_url,
+      rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},
     )
 
   def calculate_storage( self, user ):
@@ -344,13 +355,20 @@ class Users( object ):
     return total_bytes
 
   @async
-  def update_storage( self, user ):
+  def update_storage( self, user_id, callback = None ):
     """
     Calculate and record total storage utilization for the given user.
-    @type user: User
-    @param user: user for which to calculate storage utilization
+    @type user_id: unicode or NoneType
+    @param user_id: id of user for which to calculate storage utilization
+    @type callback: generator or NoneType
+    @param callback: generator to wakeup when the update is complete (optional)
     """
-    user.storage_bytes = self.calculate_storage( user )
-    yield None
+    self.__database.load( user_id, self.__scheduler.thread )
+    user = ( yield Scheduler.SLEEP )
+
+    if user:
+      user.storage_bytes = self.calculate_storage( user )
+
+    yield callback, user
 
   scheduler = property( lambda self: self.__scheduler )

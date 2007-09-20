@@ -13,7 +13,9 @@ class User( Persistent ):
 
   def __setstate__( self, state ):
     if "_User__storage_bytes" not in state:
-      state[ "_User__storage_bytes" ] = False
+      state[ "_User__storage_bytes" ] = 0
+    if "_User__rate_plan" not in state:
+      state[ "_User__rate_plan" ] = 0
 
     self.__dict__.update( state )
 
@@ -40,6 +42,7 @@ class User( Persistent ):
     self.__email_address = email_address
     self.__notebooks = notebooks or []
     self.__storage_bytes = 0 # total storage bytes for this user's notebooks, notes, and revisions
+    self.__rate_plan = 0     # each rate plan is an integer index into the array in config/Common.py
 
   def __create_salt( self ):
     return "".join( [ random.choice( self.SALT_CHARS ) for i in range( self.SALT_SIZE ) ] )
@@ -82,6 +85,8 @@ class User( Persistent ):
     d = Persistent.to_dict( self )
     d.update( dict(
       username = self.username,
+      storage_bytes = self.__storage_bytes,
+      rate_plan = self.__rate_plan,
     ) )
 
     return d
@@ -99,10 +104,15 @@ class User( Persistent ):
     self.update_revision()
     self.__storage_bytes = storage_bytes
 
+  def __set_rate_plan( self, rate_plan ):
+    self.update_revision()
+    self.__rate_plan = rate_plan
+
   username = property( lambda self: self.secondary_id )
   email_address = property( lambda self: self.__email_address )
   password = property( None, __set_password )
   storage_bytes = property( lambda self: self.__storage_bytes, __set_storage_bytes )
+  rate_plan = property( lambda self: self.__rate_plan, __set_rate_plan )
 
   # the notebooks (read-only and read-write) that this user has access to
   notebooks = property( lambda self: copy( self.__notebooks ), __set_notebooks )

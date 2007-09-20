@@ -12,6 +12,7 @@ function Wiki( invoker ) {
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
   this.search_titles_only = true;
+  this.rate_plan = null;
 
   connect( this.invoker, "error_message", this, "display_error" );
   connect( "search_form", "onsubmit", this, "search" );
@@ -86,6 +87,9 @@ Wiki.prototype.display_user = function ( result ) {
     }, notebook.name ) ) );
   }
 
+  this.rate_plan = result.rate_plan;
+  this.display_storage_usage( result.user.storage_bytes );
+
   // display the name of the logged in user and a logout link
   appendChildNodes( user_span, "logged in as " + result.user.username );
   appendChildNodes( user_span, " | " );
@@ -97,6 +101,30 @@ Wiki.prototype.display_user = function ( result ) {
     self.invoker.invoke( "/users/logout", "POST" );
     event.stop();
   } );
+}
+
+Wiki.prototype.display_storage_usage = function( storage_bytes ) {
+  // display the user's current storage usage
+  var MEGABYTE = 1024 * 1024;
+  function bytes_to_megabytes( storage_bytes ) {
+    return Math.round( storage_bytes / MEGABYTE );
+  }
+
+  var quota_bytes = this.rate_plan.storage_quota_bytes || 0;
+  var usage_percent = Math.round( storage_bytes / quota_bytes * 100.0 );
+
+  if ( usage_percent > 90 )
+    var storage_usage_class = "storage_usage_high";
+  else if ( usage_percent > 75 )
+    var storage_usage_class = "storage_usage_medium";
+  else
+    var storage_usage_class = "storage_usage_low";
+
+  replaceChildNodes(
+    "storage_usage_area",
+    createDOM( "div", { "class": storage_usage_class },
+    bytes_to_megabytes( storage_bytes ) + " MB (" + usage_percent + "%) of " + bytes_to_megabytes( quota_bytes ) + " MB used" )
+  );
 }
 
 Wiki.prototype.populate = function ( result ) {

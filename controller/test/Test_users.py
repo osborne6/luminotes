@@ -98,6 +98,10 @@ class Test_users( Test_controller ):
     else:
       assert startup_notes == []
 
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
   def test_current_with_startup_notes_after_signup( self ):
     self.test_current_after_signup( include_startup_notes = True )
 
@@ -229,10 +233,37 @@ class Test_users( Test_controller ):
   def test_update_storage( self ):
     previous_revision = self.user.revision
 
-    cherrypy.root.users.update_storage( self.user )
+    cherrypy.root.users.update_storage( self.user.object_id )
     self.scheduler.wait_until_idle()
 
     expected_size = cherrypy.root.users.calculate_storage( self.user )
 
     assert self.user.storage_bytes == expected_size
     assert self.user.revision > previous_revision
+
+  def test_update_storage_with_unknown_user_id( self ):
+    original_revision = self.user.revision
+
+    cherrypy.root.users.update_storage( 77 )
+    self.scheduler.wait_until_idle()
+
+    expected_size = cherrypy.root.users.calculate_storage( self.user )
+
+    assert self.user.storage_bytes == 0
+    assert self.user.revision == original_revision
+
+  def test_update_storage_with_callback( self ):
+    def gen():
+      previous_revision = self.user.revision
+
+      cherrypy.root.users.update_storage( self.user.object_id, self.scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+
+      expected_size = cherrypy.root.users.calculate_storage( self.user )
+      assert user == self.user
+      assert self.user.storage_bytes == expected_size
+      assert self.user.revision > previous_revision
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )

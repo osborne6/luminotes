@@ -19,6 +19,16 @@ class Test_controller( object ):
         u"luminotes.https_url" : u"https://luminotes.com",
         u"luminotes.http_proxy_ip" : u"127.0.0.1",
         u"luminotes.https_proxy_ip" : u"127.0.0.2",
+        "luminotes.rate_plans": [
+          {
+            "name": "super",
+            "storage_quota_bytes": 1337,
+          },
+          {
+            "name": "extra super",
+            "storage_quota_bytes": 31337,
+          },
+        ],
       },
     }
 

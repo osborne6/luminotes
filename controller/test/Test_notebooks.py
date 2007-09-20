@@ -66,12 +66,14 @@ class Test_notebooks( Test_controller ):
     result = self.http_get( "/notebooks/%s" % self.notebook.object_id )
     
     assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert self.user.storage_bytes == 0
 
   def test_default_with_note( self ):
     result = self.http_get( "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, self.note.object_id ) )
     
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"note_id" ) == self.note.object_id
+    assert self.user.storage_bytes == 0
 
   def test_default_with_note_and_revision( self ):
     result = self.http_get( "/notebooks/%s?note_id=%s&revision=%s" % (
@@ -83,6 +85,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"note_id" ) == self.note.object_id
     assert result.get( u"revision" ) == unicode( self.note.revision )
+    assert self.user.storage_bytes == 0
 
   def test_default_with_parent( self ):
     parent_id = "foo"
@@ -90,6 +93,7 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"parent_id" ) == parent_id
+    assert self.user.storage_bytes == 0
 
   def test_contents( self ):
     self.login()
@@ -105,6 +109,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == self.notebook.object_id
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ] == self.note
+    assert self.user.storage_bytes == 0
 
   def test_contents_with_note( self ):
     self.login()
@@ -124,6 +129,7 @@ class Test_notebooks( Test_controller ):
     note = result[ "note" ]
 
     assert note.object_id == self.note.object_id
+    assert self.user.storage_bytes == 0
 
   def test_contents_with_note_and_revision( self ):
     self.login()
@@ -147,6 +153,7 @@ class Test_notebooks( Test_controller ):
     note = result[ "note" ]
 
     assert note.object_id == self.note.object_id
+    assert self.user.storage_bytes == 0
 
   def test_contents_without_login( self ):
     result = self.http_get(
@@ -155,6 +162,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_load_note( self ):
     self.login()
@@ -169,6 +177,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == self.note.title
     assert note.contents == self.note.contents
+    assert self.user.storage_bytes == 0
 
   def test_load_note_with_revision( self ):
     self.login()
@@ -198,6 +207,7 @@ class Test_notebooks( Test_controller ):
     assert note.revision == previous_revision
     assert note.title == previous_title
     assert note.contents == previous_contents
+    assert self.user.storage_bytes == 0
 
   def test_load_note_without_login( self ):
     result = self.http_post( "/notebooks/load_note/", dict(
@@ -216,6 +226,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_load_unknown_note( self ):
     self.login()
@@ -227,6 +238,7 @@ class Test_notebooks( Test_controller ):
 
     note = result[ "note" ]
     assert note == None
+    assert self.user.storage_bytes == 0
 
   def test_load_note_by_title( self ):
     self.login()
@@ -241,6 +253,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == self.note.title
     assert note.contents == self.note.contents
+    assert self.user.storage_bytes == 0
 
   def test_load_note_by_title_without_login( self ):
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -249,6 +262,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_load_note_by_title_with_unknown_notebook( self ):
     self.login()
@@ -259,6 +273,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_load_unknown_note_by_title( self ):
     self.login()
@@ -270,6 +285,7 @@ class Test_notebooks( Test_controller ):
 
     note = result[ "note" ]
     assert note == None
+    assert self.user.storage_bytes == 0
 
   def test_lookup_note_id( self ):
     self.login()
@@ -280,6 +296,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "note_id" ) == self.note.object_id
+    assert self.user.storage_bytes == 0
 
   def test_lookup_note_id_without_login( self ):
     result = self.http_post( "/notebooks/lookup_note_id/", dict(
@@ -288,6 +305,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_lookup_note_id_with_unknown_notebook( self ):
     self.login()
@@ -298,6 +316,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_lookup_unknown_note_id( self ):
     self.login()
@@ -308,6 +327,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "note_id" ) == None
+    assert self.user.storage_bytes == 0
 
   def test_save_note( self, startup = False ):
     self.login()
@@ -325,6 +345,7 @@ class Test_notebooks( Test_controller ):
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
     assert result[ "previous_revision" ] == previous_revision
+    assert self.user.storage_bytes > 0
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -367,6 +388,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_save_startup_note_without_login( self ):
     self.test_save_note_without_login( startup = True )
@@ -393,6 +415,7 @@ class Test_notebooks( Test_controller ):
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
     assert result[ "previous_revision" ] == previous_revision
+    assert self.user.storage_bytes > 0
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -446,6 +469,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     # now attempt to save over that note again without changing the contents
+    previous_storage_bytes = self.user.storage_bytes
     previous_revision = self.note.revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -458,6 +482,7 @@ class Test_notebooks( Test_controller ):
     # assert that the note wasn't actually updated the second time
     assert result[ "new_revision" ] == None
     assert result[ "previous_revision" ] == previous_revision
+    assert self.user.storage_bytes == previous_storage_bytes
 
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -491,6 +516,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     # now attempt to save over that note again without changing the contents
+    previous_storage_bytes = self.user.storage_bytes
     previous_revision = self.note.revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -503,6 +529,7 @@ class Test_notebooks( Test_controller ):
     # assert that the note wasn't actually updated the second time
     assert result[ "new_revision" ] == None
     assert result[ "previous_revision" ] == previous_revision
+    assert self.user.storage_bytes == previous_storage_bytes
 
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -553,6 +580,7 @@ class Test_notebooks( Test_controller ):
     # assert that the note wasn't actually updated the second time
     assert result[ "new_revision" ] == None
     assert result[ "previous_revision" ] == previous_revision
+    assert self.user.storage_bytes > 0
 
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -602,6 +630,7 @@ class Test_notebooks( Test_controller ):
     assert result[ "new_revision" ]
     assert result[ "new_revision" ] not in ( first_revision, second_revision )
     assert result[ "previous_revision" ] == second_revision
+    assert self.user.storage_bytes > 0
 
     # make sure the first title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -646,6 +675,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_save_new_note( self, startup = False ):
     self.login()
@@ -663,6 +693,7 @@ class Test_notebooks( Test_controller ):
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
     assert result[ "previous_revision" ] == None
+    assert self.user.storage_bytes > 0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -705,6 +736,7 @@ class Test_notebooks( Test_controller ):
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
     assert result[ "previous_revision" ] == None
+    assert self.user.storage_bytes > 0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -738,6 +770,7 @@ class Test_notebooks( Test_controller ):
 
     assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
     assert result[ "previous_revision" ] == None
+    assert self.user.storage_bytes > 0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -770,6 +803,7 @@ class Test_notebooks( Test_controller ):
     assert len( notebook.startup_notes ) == 2
     assert notebook.startup_notes[ 0 ] == self.note
     assert notebook.startup_notes[ 1 ] == self.note2
+    assert self.user.storage_bytes > 0
 
   def test_add_startup_note_without_login( self ):
     result = self.http_post( "/notebooks/add_startup_note/", dict(
@@ -778,6 +812,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_add_startup_note_with_unknown_notebook( self ):
     self.login()
@@ -797,6 +832,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notebook.startup_notes ) == 1
     assert notebook.startup_notes[ 0 ] == self.note
+    assert self.user.storage_bytes == 0
 
   def test_add_startup_unknown_note( self ):
     self.login()
@@ -816,6 +852,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notebook.startup_notes ) == 1
     assert notebook.startup_notes[ 0 ] == self.note
+    assert self.user.storage_bytes == 0
 
   def test_remove_startup_note( self ):
     self.login()
@@ -834,6 +871,7 @@ class Test_notebooks( Test_controller ):
     notebook = result[ "notebook" ]
 
     assert len( notebook.startup_notes ) == 0
+    assert self.user.storage_bytes > 0
 
   def test_remove_startup_note_without_login( self ):
     result = self.http_post( "/notebooks/remove_startup_note/", dict(
@@ -842,6 +880,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result.get( "error" )
+    assert self.user.storage_bytes == 0
 
   def test_remove_startup_note_with_unknown_notebook( self ):
     self.login()
@@ -861,6 +900,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notebook.startup_notes ) == 1
     assert notebook.startup_notes[ 0 ] == self.note
+    assert self.user.storage_bytes == 0
 
   def test_remove_startup_unknown_note( self ):
     self.login()
@@ -880,6 +920,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notebook.startup_notes ) == 1
     assert notebook.startup_notes[ 0 ] == self.note
+    assert self.user.storage_bytes == 0
 
   def test_is_startup_note( self ):
     self.login()

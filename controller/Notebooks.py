@@ -33,7 +33,7 @@ class Notebooks( object ):
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
   """
-  def __init__( self, scheduler, database ):
+  def __init__( self, scheduler, database, users ):
     """
     Create a new Notebooks object.
 
@@ -41,11 +41,14 @@ class Notebooks( object ):
     @param scheduler: scheduler to use for asynchronous calls
     @type database: controller.Database
     @param database: database that notebooks are stored in
+    @type users: controller.Users
+    @param users: controller for all users, used here for updating storage utilization
     @rtype: Notebooks
     @return: newly constructed Notebooks
     """
     self.__scheduler = scheduler
     self.__database = database
+    self.__users = users
 
   @expose( view = Main_page )
   @validate(
@@ -363,7 +366,11 @@ class Notebooks( object ):
       startup_changed = notebook.remove_startup_note( note )
 
     if new_revision or startup_changed:
-      self.__database.save( notebook )
+      self.__database.save( notebook, self.__scheduler.thread )
+      yield Scheduler.SLEEP
+      self.__users.update_storage( user_id, self.__scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      self.__database.save( user )
 
     yield dict(
       new_revision = new_revision,
@@ -411,7 +418,11 @@ class Notebooks( object ):
 
     if note:
       notebook.add_startup_note( note )
-      self.__database.save( notebook )
+      self.__database.save( notebook, self.__scheduler.thread )
+      yield Scheduler.SLEEP
+      self.__users.update_storage( user_id, self.__scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      self.__database.save( user )
 
     yield dict()
 
@@ -456,7 +467,11 @@ class Notebooks( object ):
 
     if note:
       notebook.remove_startup_note( note )
-      self.__database.save( notebook )
+      self.__database.save( notebook, self.__scheduler.thread )
+      yield Scheduler.SLEEP
+      self.__users.update_storage( user_id, self.__scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      self.__database.save( user )
 
     yield dict()
 
@@ -508,7 +523,11 @@ class Notebooks( object ):
         notebook.trash.add_note( note )
         notebook.trash.add_startup_note( note )
 
-      self.__database.save( notebook )
+      self.__database.save( notebook, self.__scheduler.thread )
+      yield Scheduler.SLEEP
+      self.__users.update_storage( user_id, self.__scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      self.__database.save( user )
 
     yield dict()
 
@@ -567,7 +586,11 @@ class Notebooks( object ):
       notebook.add_note( note )
       notebook.add_startup_note( note )
 
-      self.__database.save( notebook )
+      self.__database.save( notebook, self.__scheduler.thread )
+      yield Scheduler.SLEEP
+      self.__users.update_storage( user_id, self.__scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      self.__database.save( user )
 
     yield dict()
 
@@ -613,7 +636,11 @@ class Notebooks( object ):
         notebook.trash.add_note( note )
         notebook.trash.add_startup_note( note )
 
-    self.__database.save( notebook )
+    self.__database.save( notebook, self.__scheduler.thread )
+    yield Scheduler.SLEEP
+    self.__users.update_storage( user_id, self.__scheduler.thread )
+    user = ( yield Scheduler.SLEEP )
+    self.__database.save( user )
 
     yield dict()
 

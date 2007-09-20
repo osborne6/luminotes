@@ -11,4 +11,7 @@ class Link_area( Div ):
       Div(
         id = u"notebooks_area",
       ),
+      Div(
+        id = u"storage_usage_area",
+      ),
     )

@@ -17,6 +17,7 @@ class Test_user( object ):
     assert self.user.email_address == self.email_address
     assert self.user.notebooks == []
     assert self.user.storage_bytes == 0
+    assert self.user.rate_plan == 0
 
   def test_check_correct_password( self ):
     assert self.user.check_password( self.password ) == True
@@ -58,6 +59,14 @@ class Test_user( object ):
     self.user.storage_bytes = storage_bytes
     
     assert self.user.storage_bytes == storage_bytes
+    assert self.user.revision > previous_revision
+
+  def test_set_rate_plan( self ):
+    previous_revision = self.user.revision
+    rate_plan = 2
+    self.user.rate_plan = rate_plan
+    
+    assert self.user.rate_plan == rate_plan
     assert self.user.revision > previous_revision
 
 
@@ -116,3 +125,10 @@ class Test_user_with_notebooks( object ):
     trash = Notebook( trash_id, u"trash" )
     notebook = Notebook( notebook_id, u"my new notebook", trash )
     assert self.user.has_access( notebook.object_id ) == False
+
+  def test_to_dict( self ):
+    d = self.user.to_dict()
+
+    assert d.get( "username" ) == self.username
+    assert d.get( "storage_bytes" ) == self.user.storage_bytes
+    assert d.get( "rate_plan" ) == self.user.rate_plan
