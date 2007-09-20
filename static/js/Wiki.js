@@ -13,6 +13,7 @@ function Wiki( invoker ) {
   this.invoker = invoker;
   this.search_titles_only = true;
   this.rate_plan = null;
+  this.storage_usage_high = false;
 
   connect( this.invoker, "error_message", this, "display_error" );
   connect( "search_form", "onsubmit", this, "search" );
@@ -116,12 +117,23 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   var quota_bytes = this.rate_plan.storage_quota_bytes || 0;
   var usage_percent = Math.round( storage_bytes / quota_bytes * 100.0 );
 
-  if ( usage_percent > 90 )
+  if ( usage_percent > 90 ) {
     var storage_usage_class = "storage_usage_high";
-  else if ( usage_percent > 75 )
+    if ( this.notebook.trash && this.storage_usage_high == false ) {
+      var trash_link = createDOM( "a", {
+        "href": "/notebooks/" + this.notebook.trash.object_id + "?parent_id=" + this.notebook.object_id
+      }, "trash" );
+      this.display_message(
+        "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the ", [ trash_link, ", or upgrade your account." ] );
+    }
+    this.storage_usage_high = true;
+  } else if ( usage_percent > 75 ) {
     var storage_usage_class = "storage_usage_medium";
-  else
+    this.storage_usage_high = false;
+  } else {
     var storage_usage_class = "storage_usage_low";
+    this.storage_usage_high = false;
+  }
 
   replaceChildNodes(
     "storage_usage_area",
