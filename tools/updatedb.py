@@ -14,7 +14,6 @@ class Initializer( object ):
   NOTE_FILES = [ # the second element of the tuple is whether to show the note on startup
     ( u"about.html", True ),
     ( u"features.html", True ),
-    ( u"take a tour.html", False ),
     ( u"try it out.html", False ),
     ( u"faq.html", False ),
     ( u"meet the team.html", False ),

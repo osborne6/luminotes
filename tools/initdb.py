@@ -16,7 +16,6 @@ class Initializer( object ):
     ( u"navigation.html", True ),
     ( u"about.html", True ),
     ( u"features.html", True ),
-    ( u"take a tour.html", False ),
     ( u"try it out.html", False ),
     ( u"faq.html", False ),
     ( u"meet the team.html", False ),

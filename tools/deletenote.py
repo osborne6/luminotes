@@ -32,7 +32,7 @@ class Deleter( object ):
     startup_notes = []
 
     for note in main_notebook.notes:
-      if note and note.title == "contact us": # FIXME: make the note title to delete not hard-coded
+      if note and note.title == "take a tour": # FIXME: make the note title to delete not hard-coded
         print "deleting note %s: %s" % ( note.object_id, note.title )
         main_notebook.remove_note( note )
 
