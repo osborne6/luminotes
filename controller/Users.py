@@ -343,7 +343,7 @@ class Users( object ):
 
     def sum_notebook( notebook ):
       return \
-        sum_revisions( notebook ) + \
+        self.__database.size( notebook.object_id ) + \
         sum( [ sum_revisions( note ) for note in notebook.notes ], 0 )
 
     for notebook in user.notebooks:

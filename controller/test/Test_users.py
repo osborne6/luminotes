@@ -213,9 +213,7 @@ class Test_users( Test_controller ):
     # expected a sum of the sizes of all of this user's notebooks, notes, and revisions
     expected_size = \
       self.database.size( notebooks[ 0 ].object_id ) + \
-      self.database.size( notebooks[ 0 ].object_id, notebooks[ 0 ].revision ) + \
-      self.database.size( notebooks[ 1 ].object_id ) + \
-      self.database.size( notebooks[ 1 ].object_id, notebooks[ 1 ].revision )
+      self.database.size( notebooks[ 1 ].object_id )
 
     assert size == expected_size
 
@@ -224,7 +222,6 @@ class Test_users( Test_controller ):
 
     expected_size = \
       self.database.size( self.anon_notebook.object_id ) + \
-      self.database.size( self.anon_notebook.object_id, self.anon_notebook.revision ) + \
       self.database.size( self.anon_notebook.notes[ 0 ].object_id ) + \
       self.database.size( self.anon_notebook.notes[ 0 ].object_id, self.anon_notebook.notes[ 0 ].revision )
 
