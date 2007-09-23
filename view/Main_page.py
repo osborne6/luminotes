@@ -19,12 +19,12 @@ class Main_page( Page ):
       Div(
         id = u"status_area",
       ),
+      Toolbar(),
       Div(
         Link_area( notebook_id ),
         id = u"link_area",
       ),
       Div(
-        Toolbar(),
         Div(
           Div(
             Div(
@@ -65,6 +65,6 @@ class Main_page( Page ):
           ),
           id = u"center_area",
         ),
-        id = u"center_and_toolbar_area",
+        id = u"everything_area",
       ),
     )

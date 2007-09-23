@@ -19,12 +19,11 @@
   top: 0em;
 }
 
-#center_and_toolbar_area {
-  width: expression( this.width > 500 ? "500px" : "70%" );
-}
-
 #center_area {
-  width: expression( this.width > 475 ? "475px" : "69%" );
+  width:expression( 
+    document.body.clientWidth > ( 1250 / 12 ) * 
+    parseInt( document.body.currentStyle.fontSize ) ?  "45em": "60%"
+  );
 }
 
 .pulldown {
