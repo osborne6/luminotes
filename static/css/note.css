@@ -64,6 +64,12 @@ ol li {
   background-image: url(/static/images/take_a_tour_hover.png);
 }
 
+#take_a_tour_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/take_a_tour_hover.png);
+}
+
 #try_it_out {
   display: block;
   float: left;
@@ -75,6 +81,12 @@ ol li {
 }
 
 #try_it_out:hover {
+  background-image: url(/static/images/try_it_out_hover.png);
+}
+
+#try_it_out_preload {
+  height: 0;
+  overflow: hidden;
   background-image: url(/static/images/try_it_out_hover.png);
 }
 
