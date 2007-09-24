@@ -97,7 +97,8 @@ def fix_note_contents( contents, notebook_id, note_ids ):
   import re
   from config.Common import settings
 
-  LINK_PATTERN = re.compile( '(<a\s+href=")([^"]+?note_id=)([^"]*)("[^>]*>)([^<]*)(</a>)' )
+  LINK_PATTERN = re.compile( '(<a\s+href=")([^"]+note_id=)([^"]*)("[^>]*>)(.*?)(</a>)' )
+  TITLE_PATTERN = re.compile( ' title="(.*?)"' )
 
   # plug in the notebook id and support email address where appropriate
   contents = contents.replace( "%s", notebook_id )
@@ -107,6 +108,10 @@ def fix_note_contents( contents, notebook_id, note_ids ):
   # also, use the https URL for certain links if one is configured
   def fix_link( match ):
     title = match.group( 5 )
+    title_match = TITLE_PATTERN.search( title )
+    if title_match:
+      title = title_match.group( 1 )
+
     https_url = u""
 
     if title in ( u"try it out", u"login" ):
