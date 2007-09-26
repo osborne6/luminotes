@@ -10,15 +10,21 @@ class Page( Html ):
     if "id" not in attrs:
       attrs[ "id" ] = u"content"
 
+    if "include_js" in attrs:
+      include_js = attrs[ "include_js" ]
+      del attrs[ "include_js" ]
+    else:
+      include_js = True
+
     # move certain types of children from the body to the head
     Html.__init__(
       self,
       Head(
         Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/style.css" ),
-        Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ),
-        Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ),
-        Script( type = u"text/javascript", src = u"/static/js/Editor.js" ),
-        Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ),
+        include_js and Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
+        include_js and Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
+        include_js and Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
+        include_js and Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ) or None,
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
         [ child for child in children if type( child ) in head_types ],
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),

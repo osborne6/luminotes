@@ -38,6 +38,10 @@ class Note( Persistent ):
       self.update_revision()
     self.__contents = contents
 
+    if contents is None:
+      self.__title = None
+      return
+
     # parse title out of the beginning of the contents
     result = Note.TITLE_PATTERN.search( contents )
 

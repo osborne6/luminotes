@@ -155,6 +155,29 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert self.user.storage_bytes == 0
 
+  def test_contents_with_blank_note( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/contents?notebook_id=%s&note_id=blank" % self.notebook.object_id ,
+      session_id = self.session_id,
+    )
+
+    notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
+
+    assert notebook.object_id == self.notebook.object_id
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ] == self.note
+
+    note = result[ "note" ]
+
+    assert note.object_id == u"blank"
+    assert note.contents == None
+    assert note.title == None
+    assert note.deleted_from == None
+    assert self.user.storage_bytes == 0
+
   def test_contents_without_login( self ):
     result = self.http_get(
       "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,

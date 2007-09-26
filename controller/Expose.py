@@ -7,6 +7,12 @@ from Validate import Validation_error
 view_override = None
 
 
+class Expose_error( Exception ):
+  def __init__( self, message ):
+    Exception.__init__( self, message )
+    self.__message = message
+
+
 def expose( view = None, rss = None ):
   """
   expose() can be used to tag a method as available for publishing to the web via CherryPy. In
@@ -68,8 +74,7 @@ def expose( view = None, rss = None ):
           return unicode( view_override( **result ) )
       except:
         if redirect is None:
-          print "error: %s" % result
-          raise
+          raise Expose_error( result.get( u"error" ) or result )
 
       # if that doesn't work, and there's a redirect, then redirect
       del( result[ u"redirect" ] )

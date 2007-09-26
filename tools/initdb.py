@@ -8,6 +8,7 @@ from model.Notebook import Notebook
 from model.Read_only_notebook import Read_only_notebook
 from model.Note import Note
 from model.User import User
+from model.User_list import User_list
 
 
 class Initializer( object ):
@@ -79,6 +80,13 @@ class Initializer( object ):
     notebooks = [ self.read_only_main_notebook ]
     self.anonymous = User( anonymous_user_id, u"anonymous", None, None, notebooks )
     self.database.save( self.anonymous )
+
+    # create a user list
+    self.database.next_id( self.scheduler.thread )
+    user_list_id = ( yield Scheduler.SLEEP )
+    user_list = User_list( user_list_id, u"all" )
+    user_list.add_user( self.anonymous )
+    self.database.save( user_list )
 
 
 def main():

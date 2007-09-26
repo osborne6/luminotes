@@ -6,6 +6,7 @@ from config.Common import settings
 from controller.Database import Database
 from controller.Scheduler import Scheduler
 from model.Note import Note
+from model.User_list import User_list
 from tools.initdb import fix_note_contents
 
 
@@ -30,12 +31,34 @@ class Initializer( object ):
     self.navigation_note_id = navigation_note_id
 
     threads = (
+      self.create_user_list(),
       self.update_main_notebook(),
     )
 
     for thread in threads:
       self.scheduler.add( thread )
       self.scheduler.wait_for( thread )
+
+  def create_user_list( self ):
+    # if there's no user list, create one and populate it with all users in the database
+    self.database.load( u"User_list all", self.scheduler.thread )
+    user_list = ( yield Scheduler.SLEEP )
+    if user_list is not None:
+      return
+
+    self.database.next_id( self.scheduler.thread )
+    user_list_id = ( yield Scheduler.SLEEP )
+    user_list = User_list( user_list_id, u"all" )
+
+    for key in self.database._Database__db.keys():
+      if not key.startswith( "User " ): continue
+
+      self.database.load( key, self.scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      if user:
+        user_list.add_user( user )
+
+    self.database.save( user_list )
 
   def update_main_notebook( self ):
     self.database.load( u"User anonymous", self.scheduler.thread )

@@ -15,6 +15,15 @@ class Test_note( object ):
     assert self.note.title == self.title
     assert self.note.deleted_from == None
 
+  def test_create_blank( self ):
+    object_id = u"22"
+    blank_note = Note( object_id )
+
+    assert blank_note.object_id == object_id
+    assert blank_note.contents == None
+    assert blank_note.title == None
+    assert blank_note.deleted_from == None
+
   def test_set_contents( self ):
     new_title = u"new title"
     new_contents = u"<h3>%s</h3>new blah" % new_title

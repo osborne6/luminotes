@@ -244,7 +244,13 @@ Wiki.prototype.populate = function ( result ) {
   var read_write = this.read_write;
   if ( getElement( "revision" ).value ) read_write = false;
   if ( result.note )
-    this.create_editor( result.note.object_id, result.note.contents, result.note.deleted_from, result.note.revisions_list, undefined, read_write, false, true );
+    this.create_editor(
+      result.note.object_id,
+      result.note.contents || getElement( "note_contents" ).value,
+      result.note.deleted_from,
+      result.note.revisions_list,
+      undefined, read_write, false, true
+    );
 
   if ( result.startup_notes.length == 0 && !result.note )
     this.display_empty_message();

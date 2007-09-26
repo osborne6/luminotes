@@ -80,3 +80,9 @@ class Test_root( Test_controller ):
       login_button = u"login",
     ) )
     self.session_id = result[ u"session_id" ]
+
+  def test_redeem_reset( self ):
+    redeem_reset_id = u"foobarbaz"
+    result = self.http_get( "/%s" % redeem_reset_id )
+
+    assert result[ u"redirect" ] == u"/users/redeem_reset/%s" % redeem_reset_id

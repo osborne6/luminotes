@@ -120,6 +120,8 @@ class Notebooks( object ):
 
     if notebook is None:
       note = None
+    elif note_id == u"blank":
+      note = Note( note_id )
     else:
       note = notebook.lookup_note( note_id )
 

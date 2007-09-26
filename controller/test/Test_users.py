@@ -1,12 +1,20 @@
+import re
 import cherrypy
+import smtplib
+from datetime import datetime, timedelta
+from nose.tools import raises
 from Test_controller import Test_controller
+from Stub_smtp import Stub_smtp
 from controller.Scheduler import Scheduler
 from model.User import User
 from model.Notebook import Notebook
 from model.Note import Note
+from model.User_list import User_list
 
 
 class Test_users( Test_controller ):
+  RESET_LINK_PATTERN = re.compile( "(https?://\S+)?/(\S+)" )
+
   def setUp( self ):
     Test_controller.setUp( self )
 
@@ -16,7 +24,11 @@ class Test_users( Test_controller ):
     self.new_username = u"reynolds"
     self.new_password = u"shiny"
     self.new_email_address = u"capn@example.com"
+    self.username2 = u"scully"
+    self.password2 = u"trustsome1"
+    self.email_address2 = u"outthere@example.com"
     self.user = None
+    self.user2 = None
     self.anonymous = None
     self.notebooks = None
 
@@ -45,10 +57,21 @@ class Test_users( Test_controller ):
     self.database.next_id( self.scheduler.thread )
     self.user = User( ( yield Scheduler.SLEEP ), self.username, self.password, self.email_address, self.notebooks )
     self.database.next_id( self.scheduler.thread )
+    self.user2 = User( ( yield Scheduler.SLEEP ), self.username2, self.password2, self.email_address2 )
+    self.database.next_id( self.scheduler.thread )
     self.anonymous = User( ( yield Scheduler.SLEEP ), u"anonymous", None, None, [ self.anon_notebook ] )
 
+    self.database.next_id( self.scheduler.thread )
+    user_list_id = ( yield Scheduler.SLEEP )
+    user_list = User_list( user_list_id, u"all" )
+    user_list.add_user( self.user )
+    user_list.add_user( self.user2 )
+    user_list.add_user( self.anonymous )
+
     self.database.save( self.user )
+    self.database.save( self.user2 )
     self.database.save( self.anonymous )
+    self.database.save( user_list )
 
   def test_signup( self ):
     result = self.http_post( "/users/signup", dict(
@@ -264,3 +287,427 @@ class Test_users( Test_controller ):
     g = gen()
     self.scheduler.add( g )
     self.scheduler.wait_for( g )
+
+  def test_send_reset( self ):
+    # trick send_reset() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    result = self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+    session_id = result[ u"session_id" ]
+    
+    assert u"has been sent to" in result[ u"error" ]
+    assert smtplib.SMTP.connected == False
+    assert "<%s>" % self.settings[ u"global" ][ u"luminotes.support_email" ] in smtplib.SMTP.from_address
+    assert smtplib.SMTP.to_addresses == [ self.user.email_address ]
+    assert u"password reset" in smtplib.SMTP.message
+    assert self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+
+  def test_send_reset_to_unknown_email_address( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    result = self.http_post( "/users/send_reset", dict(
+      email_address = u"unknown@example.com",
+      send_reset_button = u"email me",
+    ) )
+    
+    assert u"no Luminotes user" in result[ u"error" ]
+    assert smtplib.SMTP.connected == False
+    assert smtplib.SMTP.from_address == None
+    assert smtplib.SMTP.to_addresses == None
+    assert smtplib.SMTP.message == None
+
+  def test_redeem_reset( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
+
+    assert result[ u"notebook_id" ] == self.anonymous.notebooks[ 0 ].object_id
+    assert result[ u"note_id" ]
+    assert u"password reset" in result[ u"note_contents" ]
+    assert self.user.username in result[ u"note_contents" ]
+    assert self.user2.username in result[ u"note_contents" ]
+
+  def test_redeem_reset_unknown( self ):
+    password_reset_id = u"unknownresetid"
+    result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
+
+    assert u"expired" in result[ u"error" ]
+
+  def test_redeem_reset_expired( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    # to trigger expiration, pretend that the password reset was made 25 hours ago
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      password_reset._Persistent__revision = datetime.now() - timedelta( hours = 25 )
+      self.database.save( password_reset )
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
+
+    assert u"expired" in result[ u"error" ]
+
+  def test_redeem_reset_already_redeemed( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      password_reset.redeemed = True
+      self.database.save( password_reset )
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
+
+    assert u"already" in result[ u"error" ]
+
+  def test_redeem_reset_unknown_email( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      password_reset._Password_reset__email_address = u"unknown@example.com"
+      self.database.save( password_reset )
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
+
+    assert u"email address" in result[ u"error" ]
+
+  def test_reset_password( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    new_password = u"newpass"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that the password reset is now marked as redeemed
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      assert password_reset.redeemed
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    # check that the password was actually reset for one of the users, but not the other
+    assert self.user.check_password( new_password )
+    assert self.user2.check_password( self.password2 )
+    assert result[ u"redirect" ]
+
+  def test_reset_password_unknown_reset_id( self ):
+    new_password = u"newpass"
+    password_reset_id = u"unknownresetid"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert u"expired" in result[ "error" ]
+
+  def test_reset_password_invalid_reset_id( self ):
+    new_password = u"newpass"
+    password_reset_id = u"invalid reset id"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert u"valid" in result[ "error" ]
+
+  def test_reset_password_expired( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    # to trigger expiration, pretend that the password reset was made 25 hours ago
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      password_reset._Persistent__revision = datetime.now() - timedelta( hours = 25 )
+      self.database.save( password_reset )
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    new_password = u"newpass"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that the password reset is not marked as redeemed
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      assert password_reset.redeemed == False
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert u"expired" in result[ "error" ]
+
+  def test_reset_password_expired( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      password_reset.redeemed = True
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    new_password = u"newpass"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert u"already" in result[ "error" ]
+
+  def test_reset_password_unknown_user_id( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    new_password = u"newpass"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( u"unknown", u"foo" ),
+      ( u"unknown", u"foo" ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert result[ "error" ]
+
+  def test_reset_password_non_matching( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    new_password = u"newpass"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, u"nonmatchingpass" ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert result[ "error" ]
+
+  def test_reset_password_blank( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, u"" ),
+      ( self.user.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+      ( self.user2.object_id, u"" ),
+    ) )
+
+    # check that neither user's password has changed
+    assert self.user.check_password( self.password )
+    assert self.user2.check_password( self.password2 )
+    assert result[ "error" ]
+
+  def test_reset_password_multiple_users( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.http_post( "/users/send_reset", dict(
+      email_address = self.user.email_address,
+      send_reset_button = u"email me",
+    ) )
+
+    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
+    password_reset_id = matches.group( 2 )
+    assert password_reset_id
+
+    new_password = u"newpass"
+    new_password2 = u"newpass2"
+    result = self.http_post( "/users/reset_password", (
+      ( u"password_reset_id", password_reset_id ),
+      ( u"reset_button", u"reset passwords" ),
+      ( self.user.object_id, new_password ),
+      ( self.user.object_id, new_password ),
+      ( self.user2.object_id, new_password2 ),
+      ( self.user2.object_id, new_password2 ),
+    ) )
+
+    # check that the password reset is now marked as redeemed
+    def gen():
+      self.database.load( password_reset_id, self.scheduler.thread )
+      password_reset = ( yield Scheduler.SLEEP )
+      assert password_reset.redeemed
+
+    g = gen()
+    self.scheduler.add( g )
+    self.scheduler.wait_for( g )
+
+    # check that the password was actually reset for both users
+    assert self.user.check_password( new_password )
+    assert self.user2.check_password( new_password2 )
+    assert result[ u"redirect" ]

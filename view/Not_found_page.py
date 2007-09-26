@@ -20,4 +20,5 @@ class Not_found_page( Page ):
         ),
         class_ = u"error_box",
       ),
+      include_js = False,
     )

@@ -3,9 +3,18 @@ from Tags import Div, H2, P, A, Ul, Li, Strong
 
 
 class Error_page( Page ):
-  def __init__( self, support_email ):
-    title = u"uh oh"
+  def __init__( self, support_email, message = None ):
+    if message:
+      title = u"whoops"
+      Page.__init__(
+        self,
+        H2( title ),
+        P( message ),
+        include_js = False,
+      )
+      return
 
+    title = u"uh oh"
     Page.__init__(
       self,
       title,
@@ -33,4 +42,5 @@ class Error_page( Page ):
         ),
         class_ = u"error_box",
       ),
+      include_js = False,
     )

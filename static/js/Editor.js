@@ -153,6 +153,22 @@ Editor.prototype.finish_init = function () {
     } );
   }
 
+  var send_reset_button = withDocument( this.document, function () { return getElement( "send_reset_button" ); } );
+  if ( send_reset_button ) {
+    var send_reset_form = withDocument( this.document, function () { return getElement( "send_reset_form" ); } );
+    connect( send_reset_button, "onclick", function ( event ) {
+      signal( self, "submit_form", "/users/send_reset", send_reset_form ); event.stop();
+    } );
+  }
+
+  var reset_button = withDocument( this.document, function () { return getElement( "reset_button" ); } );
+  if ( reset_button ) {
+    var reset_form = withDocument( this.document, function () { return getElement( "reset_form" ); } );
+    connect( reset_button, "onclick", function ( event ) {
+      signal( self, "submit_form", "/users/reset_password", reset_form ); event.stop();
+    } );
+  }
+
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
     if ( this.read_write ) this.exec_command( "styleWithCSS", false );
     this.resize();

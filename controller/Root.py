@@ -7,6 +7,7 @@ from Async import async
 from Notebooks import Notebooks
 from Users import Users
 from Updater import update_client, wait_for_update
+from Database import Valid_id
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Error_page import Error_page
@@ -38,9 +39,23 @@ class Root( object ):
       database,
       settings[ u"global" ].get( u"luminotes.http_url", u"" ),
       settings[ u"global" ].get( u"luminotes.https_url", u"" ),
+      settings[ u"global" ].get( u"luminotes.support_email", u"" ),
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
     self.__notebooks = Notebooks( scheduler, database, self.__users )
+
+  @expose()
+  def default( self, password_reset_id ):
+    # if the value looks like an id, assume it's a password reset id, and redirect
+    try:
+      validator = Valid_id()
+      password_reset_id = validator( password_reset_id )
+    except ValueError:
+      raise cherrypy.NotFound
+
+    return dict(
+      redirect = u"/users/redeem_reset/%s" % password_reset_id,
+    )
 
   @expose( view = Main_page )
   def index( self ):
@@ -86,10 +101,20 @@ class Root( object ):
       cherrypy.response.body = [ unicode( Not_found_page( self.__settings[ u"global" ].get( u"luminotes.support_email" ) ) ) ]
       return
 
+    import sys
     import traceback
     traceback.print_exc()
 
-    cherrypy.response.body = [ unicode( Error_page( self.__settings[ u"global" ].get( u"luminotes.support_email" ) ) ) ]
+    exc_info = sys.exc_info()
+    if exc_info:
+      message = exc_info[ 1 ].message
+    else:
+      message = None
+
+    cherrypy.response.body = [ unicode( Error_page(
+      self.__settings[ u"global" ].get( u"luminotes.support_email" ),
+      message,
+    ) ) ]
 
   scheduler = property( lambda self: self.__scheduler )
   database = property( lambda self: self.__database )
