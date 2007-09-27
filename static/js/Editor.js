@@ -21,7 +21,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
     "id": iframe_id,
     "name": iframe_id,
     "class": "note_frame",
-    "onresize": function () { self.resize(); }
+    "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
   } );
   this.iframe.editor = this;
   this.title = null;
