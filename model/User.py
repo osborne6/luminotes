@@ -91,6 +91,10 @@ class User( Persistent ):
 
     return d
 
+  def __set_email_address( self, email_address ):
+    self.update_revision()
+    self.__email_address = email_address
+
   def __set_password( self, password ):
     self.update_revision()
     self.__salt = self.__create_salt()
@@ -109,7 +113,7 @@ class User( Persistent ):
     self.__rate_plan = rate_plan
 
   username = property( lambda self: self.secondary_id )
-  email_address = property( lambda self: self.__email_address )
+  email_address = property( lambda self: self.__email_address, __set_email_address )
   password = property( None, __set_password )
   storage_bytes = property( lambda self: self.__storage_bytes, __set_storage_bytes )
   rate_plan = property( lambda self: self.__rate_plan, __set_rate_plan )

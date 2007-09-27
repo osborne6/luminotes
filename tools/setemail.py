@@ -9,37 +9,37 @@ from controller.Scheduler import Scheduler
 
 
 class Setter( object ):
-  def __init__( self, scheduler, database, username, rate_plan ):
+  def __init__( self, scheduler, database, username, email_address ):
     self.scheduler = scheduler
     self.database = database
     self.username = username
-    self.rate_plan = rate_plan
+    self.email_address = email_address
     self.password = None
 
     threads = (
-      self.set_rate_plan(),
+      self.set_email_address(),
     )
 
     for thread in threads:
       self.scheduler.add( thread )
       self.scheduler.wait_for( thread )
 
-  def set_rate_plan( self ):
+  def set_email_address( self ):
     self.database.load( u"User %s" % self.username, self.scheduler.thread )
     user = ( yield Scheduler.SLEEP )
     if user is None:
       raise Exception( "user %s is unknown" % self.username )
 
-    user.rate_plan = int( self.rate_plan )
+    user.email_address = self.email_address
     self.database.save( user )
-    print "rate plan set"
+    print "email set"
 
 
 def main( program_name, args ):
   print "IMPORTANT: Stop the Luminotes server before running this program."
 
   if len( args ) < 2:
-    print "usage: %s username rateplan" % program_name
+    print "usage: %s username emailaddress" % program_name
     sys.exit( 1 )
 
   scheduler = Scheduler()
