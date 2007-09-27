@@ -2,6 +2,7 @@ html, body {
   margin: 0em;
   background-color: #fafafa;
   text-align: center;
+  font-family: sans-serif;
 }
 
 a {
@@ -57,7 +58,6 @@ ol li {
   background-color: #d0e0f0;
   height: 2em;
   width: 2em;
-  font-family: times, serif;
   font-size: 125%;
   outline: none;
   -moz-border-radius: 0.5em;
@@ -101,12 +101,10 @@ ol li {
   margin-left: 1.5em;
   margin-top: 1em;
   margin-right: 2em;
-  font-size: 85%;
   line-height: 100%;
 }
 
-#link_area h3 {
-  font-size: 100%;
+#link_area h4 {
   margin-top: 1.5em;
   margin-bottom: 0.25em;
 }
@@ -155,7 +153,6 @@ ol li {
 #user_area {
   text-align: right;
   margin-bottom: 1em;
-  font-size: 85%;
 }
 
 #user_area a {
@@ -195,7 +192,7 @@ ol li {
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
-  font-size: 85%;
+  font-size: 100%;
   outline: none;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
@@ -247,7 +244,6 @@ ol li {
   max-height: 20em;
   overflow: auto;
   padding: 0.5em;
-  font-size: 85%;
   border: 1px solid #000000;
   background: #ffff99;
   -moz-border-radius: 0.25em;
@@ -306,7 +302,7 @@ ol li {
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
-  font-size: 85%;
+  font-size: 100%;
   outline: none;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;

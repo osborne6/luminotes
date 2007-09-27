@@ -68,7 +68,7 @@ Wiki.prototype.display_user = function ( result ) {
   var notebooks_span = createDOM( "span" );
   replaceChildNodes( "notebooks_area", notebooks_span );
 
-  appendChildNodes( notebooks_span, createDOM( "h3", "notebooks" ) );
+  appendChildNodes( notebooks_span, createDOM( "h4", "notebooks" ) );
 
   for ( var i in result.notebooks ) {
     var notebook = result.notebooks[ i ];
@@ -157,7 +157,7 @@ Wiki.prototype.populate = function ( result ) {
   var span = createDOM( "span" );
   replaceChildNodes( "this_notebook_area", span );
 
-  appendChildNodes( span, createDOM( "h3", "this notebook" ) );
+  appendChildNodes( span, createDOM( "h4", "this notebook" ) );
   if ( !this.parent_id ) {
     appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
       createDOM( "a", { "href": location.href, "id": "all_notes_link", "title": "View a list of all notes in this notebook." }, "all notes" )
@@ -489,7 +489,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from, revisions
   // for read-only notes within read-write notebooks, tack the revision timestamp onto the start of the note text
   if ( !read_write && this.read_write && revisions_list && revisions_list.length ) {
     var short_revision = this.brief_revision( revisions_list[ revisions_list.length - 1 ] );
-    note_text = "<p class=\"small_text\">Previous revision from " + short_revision + "</p>" + note_text;
+    note_text = "<p>Previous revision from " + short_revision + "</p>" + note_text;
   }
 
   var startup = this.startup_notes[ id ];

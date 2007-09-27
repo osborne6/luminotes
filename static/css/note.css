@@ -1,7 +1,7 @@
 body {
   padding: 1em;
-  font-size: 100%;
   line-height: 140%;
+  font-family: sans-serif;
 }
 
 a:hover {
@@ -16,6 +16,7 @@ h3 {
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
+  font-size: 100%;
   outline: none;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
@@ -31,11 +32,6 @@ h3 {
   border: #999999 1px solid;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
-}
-
-.small_text {
-  font-size: 85%;
-  line-height: 1em;
 }
 
 ul {
