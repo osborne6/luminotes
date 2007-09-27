@@ -20,7 +20,8 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
     "scrolling": "no",
     "id": iframe_id,
     "name": iframe_id,
-    "class": "note_frame"
+    "class": "note_frame",
+    "onresize": function () { self.resize(); }
   } );
   this.iframe.editor = this;
   this.title = null;
@@ -171,14 +172,10 @@ Editor.prototype.finish_init = function () {
 
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
     if ( this.read_write ) this.exec_command( "styleWithCSS", false );
-    this.resize();
-    if ( this.init_highlight ) self.highlight();
-  } else { // browsers such as IE, which won't resize correctly if done too soon
-    setTimeout( function () {
-      self.resize();
-      if ( self.init_highlight ) self.highlight();
-    }, 50 );
   }
+
+  this.resize();
+  if ( this.init_highlight ) self.highlight();
 
   this.scrape_title();
   if ( this.init_focus )
@@ -244,10 +241,12 @@ Editor.prototype.insert_html = function ( html ) {
 Editor.prototype.resize = function () {
   var dimensions;
   // TODO: find a better way to determine which dimensions to use than just checking for contentDocument
-  if ( this.iframe.contentDocument ) // Firefox
+  if ( this.iframe.contentDocument ) { // Firefox
     dimensions = { "h": elementDimensions( this.document.documentElement ).h };
-  else // IE
+  } else { // IE
+    if ( !this.document ) return;
     dimensions = { "h": this.document.body.scrollHeight };
+  }
 
   setElementDimensions( this.iframe, dimensions );
 }
