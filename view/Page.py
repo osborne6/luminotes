@@ -28,7 +28,8 @@ class Page( Html ):
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
         [ child for child in children if type( child ) in head_types ],
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),
-        """<!--[if IE]><link href="/static/css/ie.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
+        """<!--[if IE 6]><link href="/static/css/ie6.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
+        """<!--[if IE 7]><link href="/static/css/ie7.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
       ),
       Body(
         Div(
