@@ -1,4 +1,4 @@
-from Tags import Span, H3, P, Form, Table, Tr, Th, Td, Input, P, Strong
+from Tags import Span, H3, P, Form, P, Div, Strong, Br, Input
 
 
 class Redeem_reset_note( Span ):
@@ -17,18 +17,16 @@ class Redeem_reset_note( Span ):
         """
       ),
       Form(
-        Table(
-          Tr(
-            Th( u"username" ),
-            Th( u"new password" ),
-            Th( u"new password (again)" ),
+        [ Span(
+          P(
+            Div( Strong( u"%s: new password" % user.username ) ),
+            Input( type = u"password", name = user.object_id, size = 30, maxlength = 30, class_ = u"text_field" ),
           ),
-          [ Tr(
-            Td( user.username ),
-            Td( Input( type = u"password", name = user.object_id, size = 30, maxlength = 30, class_ = u"text_field" ) ),
-            Td( Input( type = u"password", name = user.object_id, size = 30, maxlength = 30, class_ = u"text_field" ) ),
-          ) for user in users ],
-        ),
+          P(
+            Div( Strong( u"%s: new password (again)" % user.username ) ),
+            Input( type = u"password", name = user.object_id, size = 30, maxlength = 30, class_ = u"text_field" ),
+          ),
+        ) for user in users ],
         P(
           Input( type = u"hidden", id = u"password_reset_id", name = u"password_reset_id", value = password_reset_id ),
           Input(
