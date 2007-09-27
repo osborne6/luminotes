@@ -1,3 +1,9 @@
 #toolbar {
   margin-left: -6em;
 }
+
+#content {
+  position: absolute;
+  left: 0em;
+  top: 0em;
+}
