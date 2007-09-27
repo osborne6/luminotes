@@ -459,10 +459,8 @@ class Users( object ):
     server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
     server.quit()
 
-    # FIXME: this should really be "message =" instead of "error =" since it's not an error, but at
-    # least this gets it displayed on the client
     yield dict(
-      error = u"Please check your inbox. A password reset email has been sent to %s" % email_address,
+      message = u"Please check your inbox. A password reset email has been sent to %s" % email_address,
     )
 
   @expose( view = Main_page )

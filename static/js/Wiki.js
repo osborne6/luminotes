@@ -16,6 +16,7 @@ function Wiki( invoker ) {
   this.storage_usage_high = false;
 
   connect( this.invoker, "error_message", this, "display_error" );
+  connect( this.invoker, "message", this, "display_message" );
   connect( "search_form", "onsubmit", this, "search" );
   connect( "search_button", "onclick", this, "toggle_search_options" );
   connect( "html", "onclick", this, "background_clicked" );

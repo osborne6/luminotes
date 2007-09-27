@@ -70,6 +70,9 @@ Invoker.prototype.handle_response = function ( request, callback ) {
   if ( result.error )
     signal( this, "error_message", result.error );
 
+  if ( result.message )
+    signal( this, "message", result.message );
+
   if ( callback )
     callback( result );
 
