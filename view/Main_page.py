@@ -1,6 +1,6 @@
 from cgi import escape
 from Page import Page
-from Tags import Input, Div, Noscript, H2, H4, A
+from Tags import Input, Div, Noscript, H2, H4, A, Br
 from Search_form import Search_form
 from Link_area import Link_area
 from Toolbar import Toolbar
@@ -22,12 +22,16 @@ class Main_page( Page ):
       Div(
         id = u"status_area",
       ),
-      Toolbar(),
       Div(
-        Link_area( notebook_id ),
-        id = u"link_area",
-      ),
-      Div(
+        Div(
+          Br(),
+          Toolbar(),
+          id = u"toolbar_area",
+        ),
+        Div(
+          Link_area( notebook_id ),
+          id = u"link_area",
+        ),
         Div(
           Div(
             Div(

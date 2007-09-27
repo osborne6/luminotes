@@ -4,8 +4,13 @@
 
 #toolbar {
   position: absolute;
+  float: none;
+  width: auto;
   top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 20 : document.body.scrollTop + 20 );
-  margin-left: -6em;
+  margin-left:expression( 
+    document.body.clientWidth < ( 900 / 12 ) * 
+    parseInt( document.body.currentStyle.fontSize ) ?  "-4em": "0em"
+  );
 }
 
 #status_area {
@@ -19,11 +24,34 @@
   top: 0em;
 }
 
-#center_area {
+#everything_area {
   width:expression( 
-    document.body.clientWidth > ( 1250 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "45em": "60%"
+    document.body.clientWidth < ( 1300 / 12 ) * 
+    parseInt( document.body.currentStyle.fontSize ) ?  "100%": "78em"
   );
+}
+
+#toolbar_area {
+  width:expression( 
+    document.body.clientWidth < ( 1300 / 12 ) * 
+    parseInt( document.body.currentStyle.fontSize ) ?  "18%": "15em"
+  );
+}
+
+#center_area {
+  float: right;
+  width:expression( 
+    document.body.clientWidth < ( 1300 / 12 ) * 
+    parseInt( document.body.currentStyle.fontSize ) ?  "60%": "45em"
+  );
+}
+
+#link_area {
+  width:expression( 
+    document.body.clientWidth < ( 1300 / 12 ) * 
+    parseInt( document.body.currentStyle.fontSize ) ?  "17%": "15em"
+  );
+  margin-left: 1.5em;
 }
 
 .pulldown {

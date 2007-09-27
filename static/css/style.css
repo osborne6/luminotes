@@ -32,13 +32,23 @@ ol li {
 #everything_area {
   margin: 0 auto;
   text-align: center;
+  width: 78em;
+  max-width: 100%;
+}
+
+#toolbar_area {
+  float: left;
+  width: 15em;
+  max-width: 18%;
 }
 
 #toolbar {
+  float: left;
+  width: 15em;
+  max-width: 18%;
   position: fixed;
+  text-align: right;
   margin-top: 5em;
-  left: 20%;
-  margin-left: -4em;
   z-index: 1;
 }
 
@@ -95,13 +105,13 @@ ol li {
 }
 
 #link_area {
-  position: absolute;
+  float: right;
   text-align: left;
-  left: 80%;
-  margin-left: 1.5em;
   margin-top: 1em;
-  margin-right: 2em;
+  margin-right: 1em;
   line-height: 100%;
+  width: 15em;
+  max-width: 17%;
 }
 
 #link_area h4 {
@@ -112,8 +122,8 @@ ol li {
 #center_area {
   margin: 0 auto;
   text-align: center;
-  width: 60%;
-  max-width: 45em;
+  width: 45em;
+  max-width: 60%;
 }
 
 #status_area {

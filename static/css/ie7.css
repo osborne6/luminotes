@@ -1,9 +1,17 @@
-#toolbar {
-  margin-left: -6em;
-}
-
 #content {
   position: absolute;
   left: 0em;
   top: 0em;
+}
+
+#center_area {
+  float: right;
+}
+
+#toolbar {
+  margin-left: -1em;
+}
+
+#link_area {
+  margin-left: 1.5em;
 }
