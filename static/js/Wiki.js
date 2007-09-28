@@ -132,7 +132,7 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   replaceChildNodes(
     "storage_usage_area",
     createDOM( "div", { "class": storage_usage_class },
-    bytes_to_megabytes( storage_bytes ) + " MB (" + usage_percent + "%) of " + bytes_to_megabytes( quota_bytes ) + " MB used" )
+    bytes_to_megabytes( storage_bytes ) + " MB (" + usage_percent + "%) of " + bytes_to_megabytes( quota_bytes ) + " MB" )
   );
 }
 
