@@ -206,7 +206,8 @@ Wiki.prototype.populate = function ( result ) {
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
     connect( "createLink", "onclick", this, "toggle_link_button" );
-    connect( "newNote", "onclick", this, "create_blank_editor" );
+    connect( "newNote", "onmousedown", function ( event ) { addElementClass( "newNote", "button_down" ); } );
+    connect( "newNote", "onmouseup", this, "create_blank_editor" );
 
     // grab the next available object id
     this.invoker.invoke( "/next_id", "POST", null,
@@ -264,6 +265,8 @@ Wiki.prototype.background_clicked = function ( event ) {
 
 Wiki.prototype.create_blank_editor = function ( event ) {
   if ( event ) event.stop();
+
+  removeElementClass( "newNote", "button_down" );
 
   // if we're within the trash, don't allow new note creation
   if ( this.notebook.name == "trash" ) {
