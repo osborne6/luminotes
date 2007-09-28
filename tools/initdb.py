@@ -17,7 +17,7 @@ class Initializer( object ):
     ( u"navigation.html", True ),
     ( u"about.html", True ),
     ( u"features.html", True ),
-    ( u"try it out.html", False ),
+    ( u"sign up.html", False ),
     ( u"faq.html", False ),
     ( u"meet the team.html", False ),
     ( u"contact info.html", False ),
@@ -122,7 +122,7 @@ def fix_note_contents( contents, notebook_id, note_ids ):
 
     https_url = u""
 
-    if title in ( u"try it out", u"login" ):
+    if title in ( u"sign up", u"login" ):
       https_url = settings[ u"global" ].get( u"luminotes.https_url", u"" )
 
     return u"".join( [

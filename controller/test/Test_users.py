@@ -83,7 +83,6 @@ class Test_users( Test_controller ):
     ) )
 
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
-    assert result[ u"authenticated" ]
 
   def test_current_after_signup( self, include_startup_notes = False ):
     result = self.http_post( "/users/signup", dict(
@@ -139,6 +138,83 @@ class Test_users( Test_controller ):
 
     assert result[ u"error" ]
 
+  def test_demo( self ):
+    result = self.http_post( "/users/demo", dict() )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+  def test_current_after_demo( self, include_startup_notes = False ):
+    result = self.http_post( "/users/demo", dict() )
+    session_id = result[ u"session_id" ]
+
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+
+    result = self.http_get(
+      "/users/current?include_startup_notes=%s" % include_startup_notes,
+      session_id = session_id,
+    )
+
+    assert result[ u"user" ].username == None
+    notebooks = result[ u"notebooks" ]
+    assert len( notebooks ) == 2
+    assert notebooks[ 0 ] == self.anon_notebook
+    assert notebooks[ 0 ].trash == None
+
+    notebook = notebooks[ 1 ]
+    assert notebook.object_id == new_notebook_id
+    assert notebook.trash
+    assert len( notebook.notes ) == 2
+    assert len( notebook.startup_notes ) == 2
+
+    startup_notes = result[ "startup_notes" ]
+    if include_startup_notes:
+      assert len( startup_notes ) == 1
+      assert startup_notes[ 0 ] == self.startup_note
+    else:
+      assert startup_notes == []
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+  def test_current_with_startup_notes_after_demo( self ):
+    self.test_current_after_demo( include_startup_notes = True )
+
+  def test_current_after_demo_twice( self, include_startup_notes = False ):
+    result = self.http_post( "/users/demo", dict() )
+    session_id = result[ u"session_id" ]
+
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+
+    result = self.http_get(
+      "/users/current?include_startup_notes=%s" % include_startup_notes,
+      session_id = session_id,
+    )
+
+    user_id = result[ u"user" ].object_id
+
+    # request a demo for a second time
+    result = self.http_post( "/users/demo", dict(), session_id = session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+    notebook_id_again = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+
+    assert notebook_id_again == new_notebook_id
+
+    result = self.http_get(
+      "/users/current?include_startup_notes=%s" % include_startup_notes,
+      session_id = session_id,
+    )
+
+    user_id_again = result[ u"user" ].object_id
+
+    # since we're already logged in as a guest user with a demo notebook, requesting a demo again
+    # should just use the same guest user with the same notebook
+    assert user_id_again == user_id
+
+  def test_current_with_startup_notes_after_demo_twice( self ):
+    self.test_current_after_demo_twice( include_startup_notes = True )
+
   def test_login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
@@ -147,7 +223,6 @@ class Test_users( Test_controller ):
     ) )
 
     assert result[ u"redirect" ] == u"/notebooks/%s" % self.notebooks[ 0 ].object_id
-    assert result[ u"authenticated" ]
 
   def test_login_with_unknown_user( self ):
     result = self.http_post( "/users/login", dict(
@@ -157,7 +232,6 @@ class Test_users( Test_controller ):
     ) )
 
     assert result[ u"error" ]
-    assert not result.get( u"authenticated" )
 
   def test_login_with_invalid_password( self ):
     result = self.http_post( "/users/login", dict(
@@ -167,13 +241,11 @@ class Test_users( Test_controller ):
     ) )
 
     assert result[ u"error" ]
-    assert not result.get( u"authenticated" )
 
   def test_logout( self ):
     result = self.http_post( "/users/logout", dict() )
 
     assert result[ u"redirect" ] == self.settings[ u"global" ].get( u"luminotes.http_url" ) + u"/"
-    assert result[ u"deauthenticated" ]
 
   def test_current_after_login( self, include_startup_notes = False ):
     result = self.http_post( "/users/login", dict(

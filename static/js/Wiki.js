@@ -91,7 +91,7 @@ Wiki.prototype.display_user = function ( result ) {
   this.display_storage_usage( result.user.storage_bytes );
 
   // display the name of the logged in user and a logout link
-  appendChildNodes( user_span, "logged in as " + result.user.username );
+  appendChildNodes( user_span, "logged in as " + ( result.user.username || "a guest" ) );
   appendChildNodes( user_span, " | " );
   appendChildNodes( user_span, createDOM( "a", { "href": result.http_url + "/", "id": "logout_link" }, "logout" ) );
 

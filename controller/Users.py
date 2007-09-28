@@ -105,10 +105,12 @@ def update_auth( function ):
     # peek in the function's return value to see if we should tweak authentication status
     user = result.get( "authenticated" )
     if user:
+      result.pop( "authenticated", None )
       cherrypy.session[ u"user_id" ] = user.object_id
       cherrypy.session[ u"username" ] = user.username
 
     if result.get( "deauthenticated" ):
+      result.pop( "deauthenticated", None )
       cherrypy.session.pop( u"user_id", None )
       cherrypy.session.pop( u"username", None )
 
@@ -217,6 +219,72 @@ class Users( object ):
     if user_list:
       user_list.add_user( user )
       self.__database.save( user_list )
+
+    redirect = u"/notebooks/%s" % notebook.object_id
+
+    yield dict(
+      redirect = redirect,
+      authenticated = user,
+    )
+
+  @expose()
+  @grab_user_id
+  @update_auth
+  @wait_for_update
+  @async
+  @update_client
+  def demo( self, user_id = None ):
+    """
+    Create a new guest User for purposes of the demo. Start that user with their own Notebook and
+    "welcome to your wiki" and "this is a demo" notes. For convenience, login the newly created
+    user as well.
+
+    If the user is already logged in as a guest user when calling this function, then skip
+    creating a new user and notebook, and just redirect to the guest user's existing notebook.
+
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'redirect': url, 'authenticated': userdict }
+    """
+    # if the user is already logged in as a guest, then just redirect to their existing demo
+    # notebook
+    if user_id:
+      self.__database.load( user_id, self.__scheduler.thread )
+      user = ( yield Scheduler.SLEEP )
+      if user.username is None and len( user.notebooks ) > 0:
+        redirect = u"/notebooks/%s" % user.notebooks[ 0 ].object_id
+        yield dict( redirect = redirect )
+        return
+
+    # create a demo notebook for this user, along with a trash for that notebook
+    self.__database.next_id( self.__scheduler.thread )
+    trash_id = ( yield Scheduler.SLEEP )
+    trash = Notebook( trash_id, u"trash" )
+
+    self.__database.next_id( self.__scheduler.thread )
+    notebook_id = ( yield Scheduler.SLEEP )
+    notebook = Notebook( notebook_id, u"my notebook", trash )
+
+    # create startup notes for this user's notebook
+    self.__database.next_id( self.__scheduler.thread )
+    note_id = ( yield Scheduler.SLEEP )
+    note = Note( note_id, file( u"static/html/this is a demo.html" ).read() )
+    notebook.add_note( note )
+    notebook.add_startup_note( note )
+
+    self.__database.next_id( self.__scheduler.thread )
+    note_id = ( yield Scheduler.SLEEP )
+    note = Note( note_id, file( u"static/html/welcome to your wiki.html" ).read() )
+    notebook.add_note( note )
+    notebook.add_startup_note( note )
+
+    # actually create the new user. because this is just a demo user, we're not adding it to the User_list
+    self.__database.next_id( self.__scheduler.thread )
+    user_id = ( yield Scheduler.SLEEP )
+
+    user = User( user_id, username = None, password = None, email_address = None, notebooks = [ notebook ] )
+    self.__database.save( user )
 
     redirect = u"/notebooks/%s" % notebook.object_id
 
