@@ -11,14 +11,12 @@ function Wiki( invoker ) {
   this.all_notes_editor = null;      // editor for display of list of all notes
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
-  this.search_titles_only = true;
   this.rate_plan = null;
   this.storage_usage_high = false;
 
   connect( this.invoker, "error_message", this, "display_error" );
   connect( this.invoker, "message", this, "display_message" );
   connect( "search_form", "onsubmit", this, "search" );
-  connect( "search_button", "onclick", this, "toggle_search_options" );
   connect( "html", "onclick", this, "background_clicked" );
 
   // get info on the requested notebook (if any)
@@ -869,25 +867,12 @@ Wiki.prototype.search = function ( event ) {
 
   var self = this;
   this.invoker.invoke( "/notebooks/search", "GET", {
-      "notebook_id": this.notebook_id,
-      "titles_only": this.search_titles_only
+      "notebook_id": this.notebook_id
     },
     function( result ) { self.display_search_results( result ); },
     "search_form"
   );
 
-  event.stop();
-}
-
-Wiki.prototype.toggle_search_options = function ( event ) {
-  // if the pulldown is already open, then just close it
-  var existing_div = getElement( "search_pulldown" );
-  if ( existing_div ) {
-    existing_div.pulldown.shutdown();
-    return;
-  }
-
-  new Search_pulldown( this, this.notebook_id, this.search_titles_only );
   event.stop();
 }
 
@@ -1462,63 +1447,4 @@ Link_pulldown.prototype.shutdown = function () {
   disconnectAll( this.title_field );
   if ( this.link )
     this.link.pulldown = null;
-}
-
-
-function Search_pulldown( wiki, notebook_id, titles_only ) {
-  Pulldown.call( this, wiki, notebook_id, "search_pulldown", getElement( "search_button" ) );
-
-  this.titles_radio = createDOM( "input", { "type": "radio", "class": "pulldown_radio" } );
-  this.titles_toggle = createDOM( "a", { "href": "", "class": "pulldown_link", "title": "Search only note titles." },
-    "titles only"
-  );
-  this.everything_radio = createDOM( "input", { "type": "radio", "class": "pulldown_radio" } );
-  this.everything_toggle = createDOM( "a", { "href": "", "class": "pulldown_link", "title": "Search everything, including note titles and contents." },
-    "everything"
-  );
-
-  appendChildNodes( this.div, this.titles_radio );
-  appendChildNodes( this.div, this.titles_toggle );
-  appendChildNodes( this.div, createDOM( "br" ) );
-  appendChildNodes( this.div, this.everything_radio );
-  appendChildNodes( this.div, this.everything_toggle );
-
-  if ( titles_only )
-    this.titles_radio.checked = true;
-  else
-    this.everything_radio.checked = true;
-
-  var self = this;
-  connect( this.titles_radio, "onclick", function ( event ) { self.titles_clicked( event ); } );
-  connect( this.titles_toggle, "onclick", function ( event ) { self.titles_clicked( event ); } );
-  connect( this.everything_radio, "onclick", function ( event ) { self.everything_clicked( event ); } );
-  connect( this.everything_toggle, "onclick", function ( event ) { self.everything_clicked( event ); } );
-}
-
-Search_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
-Search_pulldown.prototype.constructor = Search_pulldown;
-
-Search_pulldown.prototype.titles_clicked = function ( event ) {
-  if ( event.target() != this.titles_radio )
-    this.titles_radio.checked = true;
-  this.everything_radio.checked = false;
-  this.wiki.search_titles_only = true;
-  event.stop();
-}
-
-Search_pulldown.prototype.everything_clicked = function ( event ) {
-  if ( event.target() != this.everything_radio )
-    this.everything_radio.checked = true;
-  this.titles_radio.checked = false;
-  this.wiki.search_titles_only = false;
-  event.stop();
-}
-
-Search_pulldown.prototype.shutdown = function () {
-  Pulldown.prototype.shutdown.call( this );
-
-  disconnectAll( this.titles_radio );
-  disconnectAll( this.titles_toggle );
-  disconnectAll( this.everything_radio );
-  disconnectAll( this.everything_toggle );
 }

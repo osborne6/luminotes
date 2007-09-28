@@ -7,7 +7,7 @@ class Search_form( Form ):
 
     Form.__init__(
       self,
-      Input( type = u"button", class_ = u"note_button", id = u"search_button", value = u"search &#8595;", title = "search options" ),
+      Strong( u"search: " ),
       Input( type = u"text", name = u"search_text", id = u"search_text", size = 30, maxlength = 100 ),
       id = u"search_form",
     )
