@@ -15,3 +15,15 @@
 #link_area {
   margin-left: 1.5em;
 }
+
+.toolbar_text {
+  position: relative;
+  top: 0.375em;
+  height: 2em;
+}
+
+.toolbar_list_text {
+  position: relative;
+  top: -0.625em;
+  line-height: 50%;
+}

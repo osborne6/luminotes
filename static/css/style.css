@@ -43,7 +43,6 @@ ol li {
 }
 
 #toolbar {
-  float: left;
   width: 15em;
   max-width: 18%;
   position: fixed;
@@ -52,14 +51,8 @@ ol li {
   z-index: 1;
 }
 
-#toolbar ul li {
-  list-style: none;
-  text-indent: -2.5em;
-  margin-top: 0em;
-  margin-left: 0em;
-  margin-bottom: 0.25em;
-  padding-top: 0em;
-  padding-left: 0em;
+#toolbar .button_wrapper {
+  float: right;
 }
 
 #toolbar .button {
@@ -69,9 +62,16 @@ ol li {
   height: 2em;
   width: 2em;
   font-size: 125%;
+  text-align: center;
+  vertical-align: middle;
+  display: table-cell;
   outline: none;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
+}
+
+#toolbar div {
+  margin-bottom: 0.25em;
 }
 
 #toolbar .button:hover {
@@ -86,6 +86,21 @@ ol li {
 
 #toolbar .button_down:hover {
   background-color: #ffbb55;
+}
+
+.toolbar_link_button {
+  font-size: 60%;
+}
+
+.toolbar_list_text {
+  font-size: 50%;
+  line-height: 90%;
+}
+
+#createLink {
+  color: blue;
+  font-weight: bold;
+  text-decoration: underline;
 }
 
 #bold {

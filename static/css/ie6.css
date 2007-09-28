@@ -9,7 +9,7 @@
   top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 20 : document.body.scrollTop + 20 );
   margin-left:expression( 
     document.body.clientWidth < ( 900 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "-4em": "0em"
+    parseInt( document.body.currentStyle.fontSize ) ?  "-2em": "2em"
   );
 }
 
@@ -57,4 +57,19 @@
 .pulldown {
   height: expression( this.scrollHeight > 200 ? "200px" : "auto" );
   width: expression( this.scrollHeight > 200 ? "12em" : "auto" );
+}
+
+#toolbar .button_wrapper {
+  position: absolute;
+}
+
+.toolbar_text {
+  position: relative;
+  top: 0.375em;
+}
+
+.toolbar_list_text {
+  position: relative;
+  top: -0.625em;
+  line-height: 50%;
 }
