@@ -56,8 +56,9 @@ ol li {
 }
 
 #toolbar .button {
-  border-style: outset;
-  border-width: 0px;
+  border-color: #d0e0f0;
+  border-style: solid;
+  border-width: 2px;
   background-color: #d0e0f0;
   height: 2em;
   width: 2em;
@@ -75,20 +76,23 @@ ol li {
 }
 
 #toolbar .button:hover {
+  border-color: #ffcc66;
   background-color: #ffcc66;
 }
 
 #toolbar .button_down {
+  border-color: #c0d0e0;
   border-style: inset;
   border-width: 2px;
   background-color: #c0d0e0;
 }
 
 #toolbar .button_down:hover {
+  border-color: #ffbb55;
   background-color: #ffbb55;
 }
 
-.toolbar_link_button {
+.toolbar_link_text {
   font-size: 60%;
 }
 

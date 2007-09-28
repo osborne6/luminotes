@@ -11,7 +11,7 @@ class Toolbar( Div ):
           Div( Div(
             Span(
               u"link",
-              class_ = u"toolbar_text toolbar_link_button",
+              class_ = u"toolbar_text toolbar_link_text",
             ),
             id = u"createLink", title = u"link [ctrl-L]", class_ = u"button"
           ) ),
