@@ -299,7 +299,7 @@ class Test_users( Test_controller ):
     ) )
     session_id = result[ u"session_id" ]
     
-    assert u"has been sent to" in result[ u"error" ]
+    assert u"has been sent to" in result[ u"message" ]
     assert smtplib.SMTP.connected == False
     assert "<%s>" % self.settings[ u"global" ][ u"luminotes.support_email" ] in smtplib.SMTP.from_address
     assert smtplib.SMTP.to_addresses == [ self.user.email_address ]
