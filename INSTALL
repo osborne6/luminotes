@@ -6,12 +6,17 @@ First, install the prerequisites:
 
  * Python 2.5
  * CherryPy 2.2
+ * PostgreSQL 8.1
+ * psycopg 2.0
  * simplejson 1.3
 
 In Debian GNU/Linux, you can issue the following command to install these
 packages:
 
-  apt-get install python2.5 python-cherrypy python-simplejson
+  apt-get install python2.5 python-cherrypy postgresql-8.1 python-psycopg2 python-simplejson
+
+If you're using Debian Etch, see the note below about "psycopg in Debian
+Etch".
 
 
 development mode
@@ -21,6 +26,24 @@ Running the Luminotes server in development mode is convenient for testing out
 changes, because it uses CherryPy's built-in web server with auto-reload
 enabled, so the server will automatically reload any modified source files as
 soon as they're modified.
+
+Configure PostgreSQL's pg_hba.conf to require passwords for local connections:
+
+  local all all md5
+
+Restart postgresql so these changes take effect:
+
+  /etc/init.d/postgresql restart
+
+As the PostgreSQL superuser (usually "postgres"), create a new database user
+and set the password to "dev".
+
+  createuser -S -d -R -P -E luminotes
+
+Initialize the database with the starting schema and basic data:
+
+  psql -U luminotes postgres -f model/schema.sql
+  psql -U luminotes postgres -f model/data.sql
 
 To start the server in development mode, run:
 
@@ -82,6 +105,24 @@ domain you're using. For instance:
   "luminotes.http_url": "http://luminotes.com",
   "luminotes.https_url": "https://luminotes.com",
 
+Configure PostgreSQL's pg_hba.conf to require passwords for local connections:
+
+  local all all md5
+
+Restart postgresql so these changes take effect:
+
+  /etc/init.d/postgresql restart
+
+As the PostgreSQL superuser (usually "postgres"), create a new database user
+and set the password to "dev".
+
+  createuser -S -d -R -P -E luminotes
+
+Initialize the database with the starting schema and basic data:
+
+  psql -U luminotes postgres -f model/schema.sql
+  psql -U luminotes postgres -f model/data.sql
+
 Then to actually start the production mode server, run:
 
   python2.5 luminotes.py
@@ -119,3 +160,21 @@ The run_tests.py script runs the tests inside browser windows and presumes you
 have both Firefox and Internet Explorer 6 installed. Edit run_tests.py if you
 need to specify different paths to the browser binaries or want to test with
 additional browsers.
+
+
+psycopg in Debian Etch
+----------------------
+
+As of this writing, Debian Etch does not contain a version of psycopg with
+support for Python 2.5. However, the version of psycopg in Debian testing does
+support Python 2.5. So you can grab the source for python-psycopg2 from Debian
+testing, install the build dependencies (including python2.5-dev), and build
+the package yourself on an Etch machine.
+
+Then, edit /usr/share/python/debian_defaults and move "python2.5" from
+"unsupported-versions" to "supported-versions". Finally, install the
+python-psycopg2 package you've just built, and it should fully support Python
+2.5.
+
+See Debian bug #404355 for more information. Note that it was fixed in
+unstable, but not in Etch.

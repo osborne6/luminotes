@@ -20,6 +20,11 @@ class Scheduler( object ):
     self.add( self.__idle_thread() )
     self.__idle.acquire() # don't count the idle thread
 
+    # TODO: Running the scheduler from anything other than the main Python thread somehow prevents
+    # tracebacks from within a generator from indicating the offending line and line number. So it
+    # would be really useful for debugging purposes to start the scheduler from the main thread.
+    # The reason that it's not done here is because CherryPy's blocking server must be started
+    # from the main Python thread.
     self.__scheduler_thread = Thread( target = self.run )
     self.__scheduler_thread.setDaemon( True )
     self.__scheduler_thread.start()

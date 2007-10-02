@@ -53,7 +53,7 @@ class Converter( object ):
           "insert into notebook " +
           "( id, revision, name, trash_id ) " +
           "values ( %s, %s, %s, %s );" %
-          ( quote( value.object_id ), quote( value.revision ), quote( value.name ), quote( value.trash and value.trash.object_id or "null" ) )
+          ( quote( value.object_id ), quote( value.revision ), quote( value.name ), value.trash and quote( value.trash.object_id ) or "null" )
         )
 
         for note in value.notes:
@@ -69,7 +69,7 @@ class Converter( object ):
           "insert into note " +
           "( id, revision, title, contents, notebook_id, startup, deleted_from_id, rank ) " +
           "values ( %s, %s, %s, %s, %s, %s, %s, %s );" %
-          ( quote( value.object_id ), quote( value.revision ), quote( value.title ), quote( value.contents ), quote( None ), quote( "f" ), quote( value.deleted_from or None ), quote( None ) )
+          ( quote( value.object_id ), quote( value.revision ), quote( value.title or None ), quote( value.contents or None ), quote( None ), quote( "f" ), quote( value.deleted_from or None ), quote( None ) )
         )
       elif class_name == "User":
         if value.username is None: continue # note: this will skip all demo users
