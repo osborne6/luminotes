@@ -12,7 +12,7 @@ def quote( value ):
     return "null"
 
   value = unicode( value )
-  return "'%s'" % value.replace( "'", "''" ).replace( "\\", r"\\\\" )
+  return "'%s'" % value.replace( "'", "''" ).replace( "\\", "\\\\" )
 
 
 class Dumper( object ):
@@ -68,7 +68,7 @@ class Dumper( object ):
           ( quote( value.object_id ), quote( value.revision ), quote( value.title ), quote( value.contents ), quote( None ), quote( "f" ), quote( value.deleted_from or None ), quote( None ) )
         )
       elif class_name == "User":
-        if value.username == None: continue
+        if value.username is None: continue # note: this will skip all demo users
 
         if ( value.object_id, value.revision ) in inserts: continue
         inserts.add( ( value.object_id, value.revision ) )
