@@ -15,7 +15,11 @@ def quote( value ):
   return "'%s'" % value.replace( "'", "''" ).replace( "\\", "\\\\" )
 
 
-class Dumper( object ):
+class Converter( object ):
+  """
+  Converts a Luminotes database from bsddb to PostgreSQL, using the old bsddb controller.Database.
+  This assumes that the PostgreSQL schema from model/schema.sql is already in the database.
+  """
   def __init__( self, scheduler, database ):
     self.scheduler = scheduler
     self.database = database
@@ -23,11 +27,11 @@ class Dumper( object ):
     self.conn = psycopg.connect( "dbname=luminotes user=luminotes password=dev" )
     self.cursor = self.conn.cursor()
 
-    thread = self.dump_database()
+    thread = self.convert_database()
     self.scheduler.add( thread )
     self.scheduler.wait_for( thread )
 
-  def dump_database( self ):
+  def convert_database( self ):
     inserts = set()
     notes = {} # map of note object id to its notebook
     startup_notes = {} # map of startup note object id to its notebook
@@ -137,7 +141,7 @@ class Dumper( object ):
 def main():
   scheduler = Scheduler()
   database = Database( scheduler, "data.db" )
-  initializer = Dumper( scheduler, database )
+  initializer = Converter( scheduler, database )
   scheduler.wait_until_idle()
 
 
