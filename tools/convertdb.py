@@ -29,6 +29,8 @@ class Dumper( object ):
 
   def dump_database( self ):
     inserts = set()
+    notes = {} # map of note object id to its notebook
+    startup_notes = {} # map of startup note object id to its notebook
 
     for key in self.database._Database__db.keys():
       if not self.database._Database__db.get( key ):
@@ -49,19 +51,22 @@ class Dumper( object ):
           "values ( %s, %s, %s, %s );" %
           ( quote( value.object_id ), quote( value.revision ), quote( value.name ), quote( value.trash and value.trash.object_id or "null" ) )
         )
+
+        for note in value.notes:
+          notes[ note.object_id ] = value
+        for startup_note in value.startup_notes:
+          startup_notes[ startup_note.object_id ] = value
       elif class_name == "Note":
         if ( value.object_id, value.revision ) in inserts: continue
         inserts.add( ( value.object_id, value.revision ) )
 
+        # notebook_id, startup, and rank are all set below since they're pulled out of Notebook objects
         self.cursor.execute(
           "insert into note " +
           "( id, revision, title, contents, notebook_id, startup, deleted_from_id, rank ) " +
           "values ( %s, %s, %s, %s, %s, %s, %s, %s );" %
-          ( quote( value.object_id ), quote( value.revision ), quote( value.title ), quote( value.contents ), quote( None ), quote( None ), quote( value.deleted_from ), quote( None ) )
+          ( quote( value.object_id ), quote( value.revision ), quote( value.title ), quote( value.contents ), quote( None ), quote( "f" ), quote( value.deleted_from or None ), quote( None ) )
         )
-        # TODO: need to set notebook_id field
-        # TODO: need to set startup field
-        # TODO: need to set rank field based on startup_notes ordering
       elif class_name == "User":
         if value.username == None: continue
 
@@ -111,6 +116,19 @@ class Dumper( object ):
         pass
       else:
         raise Exception( "Unconverted value of type %s" % class_name )
+
+    for ( note_id, notebook ) in notes.items():
+      self.cursor.execute(
+        "update note set notebook_id = %s where id = %s" % ( quote( notebook.object_id ), quote( note_id ) )
+      )
+
+    for ( startup_note_id, notebook ) in startup_notes.items():
+      startup_ids = [ note.object_id for note in notebook.startup_notes ]
+      rank = startup_ids.index( startup_note_id )
+
+      self.cursor.execute(
+        "update note set startup = 't', rank = %s where id = %s" % ( rank, quote( startup_note_id ) )
+      )
 
     self.conn.commit()
     yield None
