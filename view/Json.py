@@ -1,3 +1,5 @@
+import warnings
+warnings.filterwarnings( "ignore", message = "The sre module is deprecated, please import re." )
 from simplejson import JSONEncoder
 from datetime import datetime, date
 
