@@ -7,21 +7,6 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: luminotes; Type: DATABASE; Schema: -; Owner: luminotes
---
-
-CREATE DATABASE luminotes WITH TEMPLATE = template0 ENCODING = 'UTF8';
-
-
-ALTER DATABASE luminotes OWNER TO luminotes;
-
-\connect luminotes
-
-SET client_encoding = 'UTF8';
-SET check_function_bodies = false;
-SET client_min_messages = warning;
-
---
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
 --
 
@@ -119,9 +104,9 @@ ALTER TABLE public.notebook_current OWNER TO luminotes;
 --
 
 CREATE TABLE password_reset (
+    id text NOT NULL,
     email_address text NOT NULL,
-    redeemed boolean,
-    id text NOT NULL
+    redeemed boolean
 );
 
 
@@ -178,6 +163,20 @@ ALTER TABLE ONLY password_reset
 
 ALTER TABLE ONLY user_notebook
     ADD CONSTRAINT user_notebook_pkey PRIMARY KEY (user_id, notebook_id);
+
+
+--
+-- Name: luminotes_user_email_address_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX luminotes_user_email_address_index ON luminotes_user USING btree (email_address);
+
+
+--
+-- Name: luminotes_user_username_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX luminotes_user_username_index ON luminotes_user USING btree (username);
 
 
 --
