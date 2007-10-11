@@ -1140,8 +1140,9 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
 
   event.stop();
 
-  // if there's already a cached revision list, display the changes pulldown with it
-  if ( editor.revisions_list && editor.revisions_list.length > 0 ) {
+  // if there's already a cached revision list, or the editor doesn't have a revision yet, then
+  // display the changes pulldown and bail
+  if ( ( editor.revisions_list && editor.revisions_list.length > 0 ) || !editor.revision ) {
     new Changes_pulldown( this, this.notebook_id, this.invoker, editor );
     return;
   }
