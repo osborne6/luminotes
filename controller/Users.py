@@ -487,7 +487,7 @@ class Users( object ):
 
     # record the sending of this reset email
     password_reset_id = self.__database.next_id( Password_reset, commit = False )
-    password_reset = Password_reset( password_reset_id, email_address )
+    password_reset = Password_reset.create( password_reset_id, email_address )
     self.__database.save( password_reset )
 
     # create an email message with a unique link

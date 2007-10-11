@@ -7,7 +7,7 @@ class Test_password_reset( object ):
     self.object_id = u"17"
     self.email_address = u"bob@example.com"
 
-    self.password_reset = Password_reset( self.object_id, self.email_address )
+    self.password_reset = Password_reset.create( self.object_id, self.email_address )
 
   def test_create( self ):
     assert self.password_reset.object_id == self.object_id

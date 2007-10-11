@@ -98,6 +98,7 @@ ALTER TABLE public.notebook_current OWNER TO luminotes;
 
 CREATE TABLE password_reset (
     id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
     email_address text,
     redeemed boolean
 );
