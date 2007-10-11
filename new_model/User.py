@@ -127,7 +127,7 @@ class User( Persistent ):
 
   @staticmethod
   def sql_load_by_email_address( email_address ):
-    return "select * from luminotes_user_current where username = %s;" % quote( email_address )
+    return "select * from luminotes_user_current where email_address = %s;" % quote( email_address )
 
   def sql_load_notebooks( self, parents_only = False ):
     """
