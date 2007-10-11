@@ -98,7 +98,6 @@ class Database( object ):
     cursor.execute( sql_command )
 
     row = self.__row_to_unicode( cursor.fetchone() )
-    print row
     if not row:
       return None
 
