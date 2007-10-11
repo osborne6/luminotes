@@ -1,323 +1,188 @@
+from pytz import utc
+from pysqlite2 import dbapi2 as sqlite
+from datetime import datetime
+from Stub_object import Stub_object
 from controller.Database import Database
-from controller.Scheduler import Scheduler
-from model.Persistent import Persistent
-
-
-class Some_object( Persistent ):
-  def __init__( self, object_id, value, value2 = None, secondary_id = None ):
-    Persistent.__init__( self, object_id, secondary_id )
-    self.__value = value
-    self.__value2 = value2
-
-  def __set_value( self, value ):
-    self.update_revision()
-    self.__value = value
-
-  def __set_value2( self, value2 ):
-    self.update_revision()
-    self.__value2 = value2
-
-  value = property( lambda self: self.__value, __set_value )
-  value2 = property( lambda self: self.__value2, __set_value2 )
 
 
 class Test_database( object ):
-  def __init__( self, clear_cache = True ):
-    self.clear_cache = clear_cache
-
   def setUp( self ):
-    self.scheduler = Scheduler()
-    self.database = Database( self.scheduler )
-    next_id = None
+    # make an in-memory sqlite database to use in place of PostgreSQL during testing
+    self.connection = sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES | sqlite.PARSE_COLNAMES )
+    cursor = self.connection.cursor()
+    cursor.execute( Stub_object.sql_create_table() )
+
+    self.database = Database( self.connection )
 
   def tearDown( self ):
     self.database.close()
-    self.scheduler.shutdown()
 
   def test_save_and_load( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1 )
-      original_revision = basic_obj.revision
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
 
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-      self.database.load( basic_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
+    self.database.save( basic_obj )
+    obj = self.database.load( Stub_object, basic_obj.object_id )
 
-      assert obj.object_id == basic_obj.object_id
-      assert obj.revision == original_revision
-      assert obj.revisions_list == [ original_revision ]
-      assert obj.value == basic_obj.value
+    assert obj.object_id == basic_obj.object_id
+    assert obj.revision.replace( tzinfo = utc ) == original_revision
+    assert obj.value == basic_obj.value
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+  def test_save_and_load_without_commit( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
 
-  def test_complex_save_and_load( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "7", value = 2 )
-      basic_original_revision = basic_obj.revision
-      complex_obj = Some_object( object_id = "6", value = basic_obj )
-      complex_original_revision = complex_obj.revision
+    self.database.save( basic_obj, commit = False )
+    self.connection.rollback() # if commit wasn't called, this should back out the save
+    obj = self.database.load( Stub_object, basic_obj.object_id )
 
-      self.database.save( complex_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-      self.database.load( complex_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
-      if self.clear_cache: self.database.clear_cache()
+    assert obj == None
 
-      assert obj.object_id == complex_obj.object_id
-      assert obj.revision == complex_original_revision
-      assert obj.revisions_list == [ complex_original_revision ]
-      assert obj.value.object_id == basic_obj.object_id
-      assert obj.value.value == basic_obj.value
-      assert obj.value.revision == basic_original_revision
-      assert obj.value.revisions_list == [ basic_original_revision ]
+  def test_save_and_load_with_explicit_commit( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
 
-      self.database.load( basic_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
+    self.database.save( basic_obj, commit = False )
+    self.database.commit()
+    self.connection.rollback() # should have no effect because of the call to commit
+    obj = self.database.load( Stub_object, basic_obj.object_id )
 
-      assert obj.object_id == basic_obj.object_id
-      assert obj.value == basic_obj.value
-      assert obj.revision == basic_original_revision
-      assert obj.revisions_list == [ basic_original_revision ]
+    assert obj.object_id == basic_obj.object_id
+    assert obj.revision.replace( tzinfo = utc ) == original_revision
+    assert obj.value == basic_obj.value
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+  def test_select_one( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
 
-  def test_save_and_load_by_secondary( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1, secondary_id = u"foo" )
-      original_revision = basic_obj.revision
+    self.database.save( basic_obj )
+    obj = self.database.select_one( Stub_object, Stub_object.sql_load( basic_obj.object_id ) )
 
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-      self.database.load( u"Some_object foo", self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
+    assert obj.object_id == basic_obj.object_id
+    assert obj.revision.replace( tzinfo = utc ) == original_revision
+    assert obj.value == basic_obj.value
 
-      assert obj.object_id == basic_obj.object_id
-      assert obj.value == basic_obj.value
-      assert obj.revision == original_revision
-      assert obj.revisions_list == [ original_revision ]
+  def test_select_one_tuple( self ):
+    obj = self.database.select_one( tuple, Stub_object.sql_tuple() )
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    assert len( obj ) == 2
+    assert obj[ 0 ] == 1
+    assert obj[ 1 ] == 2
 
-  def test_duplicate_save_and_load( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "9", value = 3 )
-      basic_original_revision = basic_obj.revision
-      complex_obj = Some_object( object_id = "8", value = basic_obj, value2 = basic_obj )
-      complex_original_revision = complex_obj.revision
+  def test_select_many( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
+    basic_obj2 = Stub_object( object_id = "6", value = 2 )
+    original_revision2 = basic_obj2.revision
 
-      self.database.save( complex_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-      self.database.load( complex_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
-      if self.clear_cache: self.database.clear_cache()
+    self.database.save( basic_obj )
+    self.database.save( basic_obj2 )
+    objs = self.database.select_many( Stub_object, Stub_object.sql_load_em_all() )
 
-      assert obj.object_id == complex_obj.object_id
-      assert obj.revision == complex_original_revision
-      assert obj.revisions_list == [ complex_original_revision ]
+    assert len( objs ) == 2
+    assert objs[ 0 ].object_id == basic_obj.object_id
+    assert objs[ 0 ].revision.replace( tzinfo = utc ) == original_revision
+    assert objs[ 0 ].value == basic_obj.value
+    assert objs[ 1 ].object_id == basic_obj2.object_id
+    assert objs[ 1 ].revision.replace( tzinfo = utc ) == original_revision2
+    assert objs[ 1 ].value == basic_obj2.value
 
-      assert obj.value.object_id == basic_obj.object_id
-      assert obj.value.value == basic_obj.value
-      assert obj.value.revision == basic_original_revision
-      assert obj.value.revisions_list == [ basic_original_revision ]
+  def test_select_many_tuples( self ):
+    objs = self.database.select_many( tuple, Stub_object.sql_tuple() )
 
-      assert obj.value2.object_id == basic_obj.object_id
-      assert obj.value2.value == basic_obj.value
-      assert obj.value2.revision == basic_original_revision
-      assert obj.value2.revisions_list == [ basic_original_revision ]
+    assert len( objs ) == 1
+    assert len( objs[ 0 ] ) == 2
+    assert objs[ 0 ][ 0 ] == 1
+    assert objs[ 0 ][ 1 ] == 2
 
-      assert obj.value == obj.value2
+  def test_select_many_with_no_matches( self ):
+    objs = self.database.select_many( Stub_object, Stub_object.sql_load_em_all() )
 
-      self.database.load( basic_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
-
-      assert obj.object_id == basic_obj.object_id
-      assert obj.value == basic_obj.value
-      assert obj.revision == basic_original_revision
-      assert obj.revisions_list == [ basic_original_revision ]
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    assert len( objs ) == 0
 
   def test_save_and_load_revision( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1 )
-      original_revision = basic_obj.revision
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
 
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
+    self.database.save( basic_obj )
+    basic_obj.value = 2
 
-      basic_obj.value = 2
+    self.database.save( basic_obj )
+    obj = self.database.load( Stub_object, basic_obj.object_id )
 
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-      self.database.load( basic_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
-      if self.clear_cache: self.database.clear_cache()
+    assert obj.object_id == basic_obj.object_id
+    assert obj.revision.replace( tzinfo = utc ) == basic_obj.revision
+    assert obj.value == basic_obj.value
 
-      assert obj.object_id == basic_obj.object_id
-      assert obj.revision == basic_obj.revision
-      assert obj.revisions_list == [ original_revision, basic_obj.revision ]
-      assert obj.value == basic_obj.value
+    revised = self.database.load( Stub_object, basic_obj.object_id, revision = original_revision )
 
-      self.database.load( basic_obj.object_id, self.scheduler.thread, revision = original_revision )
-      revised = ( yield Scheduler.SLEEP )
+    assert revised.object_id == basic_obj.object_id
+    assert revised.value == 1
+    assert revised.revision.replace( tzinfo = utc ) == original_revision
 
-      assert revised.object_id == basic_obj.object_id
-      assert revised.value == 1
-      assert revised.revision == original_revision
-      assert id( obj.revisions_list ) != id( revised.revisions_list )
-      assert revised.revisions_list == [ original_revision ]
+  def test_execute( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    self.database.execute( basic_obj.sql_create() )
+    obj = self.database.load( Stub_object, basic_obj.object_id )
+
+    assert obj.object_id == basic_obj.object_id
+    assert obj.revision.replace( tzinfo = utc ) == original_revision
+    assert obj.value == basic_obj.value
+
+  def test_execute_without_commit( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
+
+    self.database.execute( basic_obj.sql_create(), commit = False )
+    self.connection.rollback()
+    obj = self.database.load( Stub_object, basic_obj.object_id )
+
+    assert obj == None
+
+  def test_execute_with_explicit_commit( self ):
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    original_revision = basic_obj.revision
+
+    self.database.execute( basic_obj.sql_create(), commit = False )
+    self.database.commit()
+    obj = self.database.load( Stub_object, basic_obj.object_id )
+
+    assert obj.object_id == basic_obj.object_id
+    assert obj.revision.replace( tzinfo = utc ) == original_revision
+    assert obj.value == basic_obj.value
 
   def test_load_unknown( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1 )
-      self.database.load( basic_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
+    basic_obj = Stub_object( object_id = "5", value = 1 )
+    obj = self.database.load( Stub_object, basic_obj.object_id )
 
-      assert obj == None
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
-
-  def test_reload( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1 )
-      original_revision = basic_obj.revision
-
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-
-      def setstate( self, state ):
-        state[ "_Some_object__value" ] = 55
-        self.__dict__.update( state )
-
-      Some_object.__setstate__ = setstate
-
-      self.database.reload( basic_obj.object_id, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      delattr( Some_object, "__setstate__" )
-      if self.clear_cache: self.database.clear_cache()
-
-      self.database.load( basic_obj.object_id, self.scheduler.thread )
-      obj = ( yield Scheduler.SLEEP )
-
-      assert obj.object_id == basic_obj.object_id
-      assert obj.value == 55
-      assert obj.revision == original_revision
-      assert obj.revisions_list == [ original_revision ]
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
-
-  def test_reload_revision( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1 )
-      original_revision = basic_obj.revision
-      original_revision_id = basic_obj.revision_id()
-
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-
-      basic_obj.value = 2
-
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-
-      def setstate( self, state ):
-        state[ "_Some_object__value" ] = 55
-        self.__dict__.update( state )
-
-      Some_object.__setstate__ = setstate
-
-      self.database.reload( original_revision_id, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      delattr( Some_object, "__setstate__" )
-      if self.clear_cache: self.database.clear_cache()
-
-      self.database.load( basic_obj.object_id, self.scheduler.thread, revision = original_revision )
-      obj = ( yield Scheduler.SLEEP )
-
-      assert obj.object_id == basic_obj.object_id
-      assert obj.revision == original_revision
-      assert obj.revisions_list == [ original_revision ]
-      assert obj.value == 55
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
-
-  def test_size( self ):
-    def gen():
-      basic_obj = Some_object( object_id = "5", value = 1 )
-      original_revision = basic_obj.revision
-
-      self.database.save( basic_obj, self.scheduler.thread )
-      yield Scheduler.SLEEP
-      if self.clear_cache: self.database.clear_cache()
-
-      size = self.database.size( basic_obj.object_id )
-
-      from cPickle import Pickler
-      from StringIO import StringIO
-      buffer = StringIO()
-      pickler = Pickler( buffer, protocol = -1 )
-      pickler.dump( basic_obj )
-      expected_size = len( buffer.getvalue() )
-
-      # as long as the size is close to the expected size, that's fine
-      assert abs( size - expected_size ) < 10
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
-
+    assert obj == None
 
   def test_next_id( self ):
-    def gen():
-      self.database.next_id( self.scheduler.thread )
-      next_id = ( yield Scheduler.SLEEP )
-      assert next_id
-      prev_ids = [ next_id ]
+    next_id = self.database.next_id( Stub_object )
+    assert next_id
+    assert self.database.load( Stub_object, next_id )
+    prev_ids = [ next_id ]
 
-      self.database.next_id( self.scheduler.thread )
-      next_id = ( yield Scheduler.SLEEP )
-      assert next_id
-      assert next_id not in prev_ids
-      prev_ids.append( next_id )
+    next_id = self.database.next_id( Stub_object )
+    assert next_id
+    assert next_id not in prev_ids
+    assert self.database.load( Stub_object, next_id )
+    prev_ids.append( next_id )
 
-      self.database.next_id( self.scheduler.thread )
-      next_id = ( yield Scheduler.SLEEP )
-      assert next_id
-      assert next_id not in prev_ids
+    next_id = self.database.next_id( Stub_object )
+    assert next_id
+    assert next_id not in prev_ids
+    assert self.database.load( Stub_object, next_id )
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+  def test_next_id_without_commit( self ):
+    next_id = self.database.next_id( Stub_object, commit = False )
+    self.connection.rollback()
+    assert self.database.load( Stub_object, next_id ) == None
 
-
-class Test_database_without_clearing_cache( Test_database ):
-  def __init__( self ):
-    Test_database.__init__( self, clear_cache = False )
+  def test_next_id_with_explit_commit( self ):
+    next_id = self.database.next_id( Stub_object, commit = False )
+    self.database.commit()
+    assert next_id
+    assert self.database.load( Stub_object, next_id )

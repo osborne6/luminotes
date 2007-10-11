@@ -1,15 +1,15 @@
 import re
 import cherrypy
 import smtplib
+from pytz import utc
 from datetime import datetime, timedelta
 from nose.tools import raises
 from Test_controller import Test_controller
 from Stub_smtp import Stub_smtp
-from controller.Scheduler import Scheduler
-from model.User import User
-from model.Notebook import Notebook
-from model.Note import Note
-from model.User_list import User_list
+from new_model.User import User
+from new_model.Notebook import Notebook
+from new_model.Note import Note
+from new_model.Password_reset import Password_reset
 
 
 class Test_users( Test_controller ):
@@ -32,46 +32,42 @@ class Test_users( Test_controller ):
     self.anonymous = None
     self.notebooks = None
 
-    thread = self.make_users()
-    self.scheduler.add( thread )
-    self.scheduler.wait_for( thread )
+    self.make_users()
 
   def make_users( self ):
-    self.database.next_id( self.scheduler.thread )
-    notebook_id1 = ( yield Scheduler.SLEEP )
-    self.database.next_id( self.scheduler.thread )
-    notebook_id2 = ( yield Scheduler.SLEEP )
+    notebook_id1 = self.database.next_id( Notebook )
+    notebook_id2 = self.database.next_id( Notebook )
+    trash_id1 = self.database.next_id( Notebook )
+    trash_id2 = self.database.next_id( Notebook )
 
     self.notebooks = [
-      Notebook( notebook_id1, u"my notebook" ),
-      Notebook( notebook_id2, u"my other notebook" ),
+      Notebook.create( notebook_id1, u"my notebook", trash_id = trash_id1 ),
+      Notebook.create( notebook_id2, u"my other notebook", trash_id = trash_id2 ),
     ]
+    self.database.save( self.notebooks[ 0 ] )
+    self.database.save( self.notebooks[ 1 ] )
 
-    self.database.next_id( self.scheduler.thread )
-    self.anon_notebook = Notebook( ( yield Scheduler.SLEEP ), u"anon notebook" )
-    self.database.next_id( self.scheduler.thread )
-    self.startup_note = Note( ( yield Scheduler.SLEEP ), u"<h3>login</h3>" )
-    self.anon_notebook.add_note( self.startup_note )
-    self.anon_notebook.add_startup_note( self.startup_note )
+    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"anon notebook" )
+    self.database.save( self.anon_notebook )
+    self.startup_note = Note.create(
+      self.database.next_id( Note ), u"<h3>login</h3>",
+      notebook_id = self.anon_notebook.object_id, startup = True,
+    )
+    self.database.save( self.startup_note )
 
-    self.database.next_id( self.scheduler.thread )
-    self.user = User( ( yield Scheduler.SLEEP ), self.username, self.password, self.email_address, self.notebooks )
-    self.database.next_id( self.scheduler.thread )
-    self.user2 = User( ( yield Scheduler.SLEEP ), self.username2, self.password2, self.email_address2 )
-    self.database.next_id( self.scheduler.thread )
-    self.anonymous = User( ( yield Scheduler.SLEEP ), u"anonymous", None, None, [ self.anon_notebook ] )
+    self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
+    self.database.save( self.user, commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True ), commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True ), commit = False )
 
-    self.database.next_id( self.scheduler.thread )
-    user_list_id = ( yield Scheduler.SLEEP )
-    user_list = User_list( user_list_id, u"all" )
-    user_list.add_user( self.user )
-    user_list.add_user( self.user2 )
-    user_list.add_user( self.anonymous )
+    self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2 )
+    self.database.save( self.user2, commit = False )
 
-    self.database.save( self.user )
-    self.database.save( self.user2 )
-    self.database.save( self.anonymous )
-    self.database.save( user_list )
+    self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
+    self.database.save( self.anonymous, commit = False )
+    self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ), commit = False )
+
+    self.database.commit()
 
   def test_signup( self ):
     result = self.http_post( "/users/signup", dict(
@@ -103,20 +99,33 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.new_username
     notebooks = result[ u"notebooks" ]
-    assert len( notebooks ) == 2
-    assert notebooks[ 0 ] == self.anon_notebook
-    assert notebooks[ 0 ].trash == None
+    notebook = notebooks[ 0 ]
+    assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.revision == self.anon_notebook.revision
+    assert notebook.name == self.anon_notebook.name
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
 
     notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
-    assert notebook.trash
-    assert len( notebook.notes ) == 1
-    assert len( notebook.startup_notes ) == 1
+    assert notebook.revision
+    assert notebook.name == u"my notebook"
+    assert notebook.trash_id
+    assert notebook.read_write == True
+
+    notebook = notebooks[ 2 ]
+    assert notebook.object_id == notebooks[ 1 ].trash_id
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == True
 
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
       assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ] == self.startup_note
+      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
+      assert startup_notes[ 0 ].title == self.startup_note.title
+      assert startup_notes[ 0 ].contents == self.startup_note.contents
     else:
       assert startup_notes == []
 
@@ -156,20 +165,34 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == None
     notebooks = result[ u"notebooks" ]
-    assert len( notebooks ) == 2
-    assert notebooks[ 0 ] == self.anon_notebook
-    assert notebooks[ 0 ].trash == None
+    assert len( notebooks ) == 3
+    notebook = notebooks[ 0 ]
+    assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.revision == self.anon_notebook.revision
+    assert notebook.name == self.anon_notebook.name
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
 
     notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
-    assert notebook.trash
-    assert len( notebook.notes ) == 2
-    assert len( notebook.startup_notes ) == 2
+    assert notebook.revision
+    assert notebook.name == u"my notebook"
+    assert notebook.trash_id
+    assert notebook.read_write == True
+
+    notebook = notebooks[ 2 ]
+    assert notebook.object_id == notebooks[ 1 ].trash_id
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == True
 
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
       assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ] == self.startup_note
+      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
+      assert startup_notes[ 0 ].title == self.startup_note.title
+      assert startup_notes[ 0 ].contents == self.startup_note.contents
     else:
       assert startup_notes == []
 
@@ -260,15 +283,25 @@ class Test_users( Test_controller ):
       session_id = session_id,
     )
 
-    assert result[ u"user" ] == self.user
-    assert result[ u"notebooks" ] == [ self.anon_notebook ] + self.notebooks
+    assert result[ u"user" ]
+    assert result[ u"user" ].object_id == self.user.object_id
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 3
+    assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 1 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 1 ].read_write == True
+    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 1 ].object_id
+    assert result[ u"notebooks" ][ 2 ].read_write == True
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
     assert result[ u"login_url" ] == None
 
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
       assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ] == self.startup_note
+      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
+      assert startup_notes[ 0 ].title == self.startup_note.title
+      assert startup_notes[ 0 ].contents == self.startup_note.contents
     else:
       assert startup_notes == []
 
@@ -281,10 +314,13 @@ class Test_users( Test_controller ):
     )
 
     assert result[ u"user" ].username == "anonymous"
-    assert result[ u"notebooks" ] == [ self.anon_notebook ]
+    assert len( result[ u"notebooks" ] ) == 1
+    assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
+    assert result[ u"notebooks" ][ 0 ].read_write == False
     assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
 
-    login_note = self.anon_notebook.lookup_note_by_title( u"login" )
+    login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
     assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
       self.settings[ u"global" ][ u"luminotes.https_url" ],
       self.anon_notebook.object_id,
@@ -294,71 +330,36 @@ class Test_users( Test_controller ):
     startup_notes = result[ "startup_notes" ]
     if include_startup_notes:
       assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ] == self.startup_note
+      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
+      assert startup_notes[ 0 ].title == self.startup_note.title
+      assert startup_notes[ 0 ].contents == self.startup_note.contents
     else:
       assert startup_notes == []
 
   def test_current_with_startup_notes_without_login( self ):
     self.test_current_without_login( include_startup_notes = True )
 
-  def test_calculate_user_storage( self ):
-    size = cherrypy.root.users.calculate_storage( self.user )
-    notebooks = self.user.notebooks
-
-    # expected a sum of the sizes of all of this user's notebooks, notes, and revisions
-    expected_size = \
-      self.database.size( notebooks[ 0 ].object_id ) + \
-      self.database.size( notebooks[ 1 ].object_id )
-
-    assert size == expected_size
-
-  def test_calculate_anon_storage( self ):
-    size = cherrypy.root.users.calculate_storage( self.anonymous )
-
-    expected_size = \
-      self.database.size( self.anon_notebook.object_id ) + \
-      self.database.size( self.anon_notebook.notes[ 0 ].object_id ) + \
-      self.database.size( self.anon_notebook.notes[ 0 ].object_id, self.anon_notebook.notes[ 0 ].revision )
-
-    assert size == expected_size
-
   def test_update_storage( self ):
     previous_revision = self.user.revision
 
     cherrypy.root.users.update_storage( self.user.object_id )
-    self.scheduler.wait_until_idle()
 
     expected_size = cherrypy.root.users.calculate_storage( self.user )
 
-    assert self.user.storage_bytes == expected_size
-    assert self.user.revision > previous_revision
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == expected_size
+    assert user.revision > previous_revision
 
   def test_update_storage_with_unknown_user_id( self ):
     original_revision = self.user.revision
 
     cherrypy.root.users.update_storage( 77 )
-    self.scheduler.wait_until_idle()
 
     expected_size = cherrypy.root.users.calculate_storage( self.user )
 
+    user = self.database.load( User, self.user.object_id )
     assert self.user.storage_bytes == 0
     assert self.user.revision == original_revision
-
-  def test_update_storage_with_callback( self ):
-    def gen():
-      previous_revision = self.user.revision
-
-      cherrypy.root.users.update_storage( self.user.object_id, self.scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-
-      expected_size = cherrypy.root.users.calculate_storage( self.user )
-      assert user == self.user
-      assert self.user.storage_bytes == expected_size
-      assert self.user.revision > previous_revision
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
 
   def test_send_reset( self ):
     # trick send_reset() into using a fake SMTP server
@@ -408,7 +409,7 @@ class Test_users( Test_controller ):
 
     result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
 
-    assert result[ u"notebook_id" ] == self.anonymous.notebooks[ 0 ].object_id
+    assert result[ u"notebook_id" ] == self.anon_notebook.object_id
     assert result[ u"note_id" ]
     assert u"password reset" in result[ u"note_contents" ]
     assert self.user.username in result[ u"note_contents" ]
@@ -434,15 +435,9 @@ class Test_users( Test_controller ):
     assert password_reset_id
 
     # to trigger expiration, pretend that the password reset was made 25 hours ago
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      password_reset._Persistent__revision = datetime.now() - timedelta( hours = 25 )
-      self.database.save( password_reset )
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    password_reset._Persistent__revision = datetime.now( tz = utc ) - timedelta( hours = 25 )
+    self.database.save( password_reset )
 
     result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
 
@@ -461,15 +456,9 @@ class Test_users( Test_controller ):
     password_reset_id = matches.group( 2 )
     assert password_reset_id
 
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      password_reset.redeemed = True
-      self.database.save( password_reset )
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    password_reset.redeemed = True
+    self.database.save( password_reset )
 
     result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
 
@@ -488,15 +477,9 @@ class Test_users( Test_controller ):
     password_reset_id = matches.group( 2 )
     assert password_reset_id
 
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      password_reset._Password_reset__email_address = u"unknown@example.com"
-      self.database.save( password_reset )
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    password_reset._Password_reset__email_address = u"unknown@example.com"
+    self.database.save( password_reset )
 
     result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
 
@@ -525,20 +508,17 @@ class Test_users( Test_controller ):
       ( self.user2.object_id, u"" ),
     ) )
 
-    # check that the password reset is now marked as redeemed
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      assert password_reset.redeemed
+    assert result[ u"redirect" ]
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    # check that the password reset is now marked as redeemed
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    assert password_reset.redeemed
 
     # check that the password was actually reset for one of the users, but not the other
-    assert self.user.check_password( new_password )
-    assert self.user2.check_password( self.password2 )
-    assert result[ u"redirect" ]
+    user = self.database.load( User, self.user.object_id )
+    assert user.check_password( new_password )
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.check_password( self.password2 )
 
   def test_reset_password_unknown_reset_id( self ):
     new_password = u"newpass"
@@ -552,10 +532,13 @@ class Test_users( Test_controller ):
       ( self.user2.object_id, u"" ),
     ) )
 
-    # check that neither user's password has changed
-    assert self.user.check_password( self.password )
-    assert self.user2.check_password( self.password2 )
     assert u"expired" in result[ "error" ]
+
+    # check that neither user's password has changed
+    user = self.database.load( User, self.user.object_id )
+    assert user.check_password( self.password )
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.check_password( self.password2 )
 
   def test_reset_password_invalid_reset_id( self ):
     new_password = u"newpass"
@@ -569,10 +552,13 @@ class Test_users( Test_controller ):
       ( self.user2.object_id, u"" ),
     ) )
 
-    # check that neither user's password has changed
-    assert self.user.check_password( self.password )
-    assert self.user2.check_password( self.password2 )
     assert u"valid" in result[ "error" ]
+
+    # check that neither user's password has changed
+    user = self.database.load( User, self.user.object_id )
+    assert user.check_password( self.password )
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.check_password( self.password2 )
 
   def test_reset_password_expired( self ):
     Stub_smtp.reset()
@@ -588,15 +574,9 @@ class Test_users( Test_controller ):
     assert password_reset_id
 
     # to trigger expiration, pretend that the password reset was made 25 hours ago
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      password_reset._Persistent__revision = datetime.now() - timedelta( hours = 25 )
-      self.database.save( password_reset )
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    password_reset._Persistent__revision = datetime.now( tz = utc ) - timedelta( hours = 25 )
+    self.database.save( password_reset )
 
     new_password = u"newpass"
     result = self.http_post( "/users/reset_password", (
@@ -609,86 +589,16 @@ class Test_users( Test_controller ):
     ) )
 
     # check that the password reset is not marked as redeemed
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      assert password_reset.redeemed == False
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    assert password_reset.redeemed == False
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
-
-    # check that neither user's password has changed
-    assert self.user.check_password( self.password )
-    assert self.user2.check_password( self.password2 )
     assert u"expired" in result[ "error" ]
 
-  def test_reset_password_expired( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
-    self.http_post( "/users/send_reset", dict(
-      email_address = self.user.email_address,
-      send_reset_button = u"email me",
-    ) )
-
-    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
-    password_reset_id = matches.group( 2 )
-    assert password_reset_id
-
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      password_reset.redeemed = True
-
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
-
-    new_password = u"newpass"
-    result = self.http_post( "/users/reset_password", (
-      ( u"password_reset_id", password_reset_id ),
-      ( u"reset_button", u"reset passwords" ),
-      ( self.user.object_id, new_password ),
-      ( self.user.object_id, new_password ),
-      ( self.user2.object_id, u"" ),
-      ( self.user2.object_id, u"" ),
-    ) )
-
     # check that neither user's password has changed
-    assert self.user.check_password( self.password )
-    assert self.user2.check_password( self.password2 )
-    assert u"already" in result[ "error" ]
-
-  def test_reset_password_unknown_user_id( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
-    self.http_post( "/users/send_reset", dict(
-      email_address = self.user.email_address,
-      send_reset_button = u"email me",
-    ) )
-
-    matches = self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
-    password_reset_id = matches.group( 2 )
-    assert password_reset_id
-
-    new_password = u"newpass"
-    result = self.http_post( "/users/reset_password", (
-      ( u"password_reset_id", password_reset_id ),
-      ( u"reset_button", u"reset passwords" ),
-      ( self.user.object_id, new_password ),
-      ( self.user.object_id, new_password ),
-      ( u"unknown", u"foo" ),
-      ( u"unknown", u"foo" ),
-      ( self.user2.object_id, u"" ),
-      ( self.user2.object_id, u"" ),
-    ) )
-
-    # check that neither user's password has changed
-    assert self.user.check_password( self.password )
-    assert self.user2.check_password( self.password2 )
-    assert result[ "error" ]
+    user = self.database.load( User, self.user.object_id )
+    assert user.check_password( self.password )
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.check_password( self.password2 )
 
   def test_reset_password_non_matching( self ):
     Stub_smtp.reset()
@@ -713,10 +623,13 @@ class Test_users( Test_controller ):
       ( self.user2.object_id, u"" ),
     ) )
 
+    assert u"password" in result[ "error" ]
+
     # check that neither user's password has changed
-    assert self.user.check_password( self.password )
-    assert self.user2.check_password( self.password2 )
-    assert result[ "error" ]
+    user = self.database.load( User, self.user.object_id )
+    assert user.check_password( self.password )
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.check_password( self.password2 )
 
   def test_reset_password_blank( self ):
     Stub_smtp.reset()
@@ -740,10 +653,11 @@ class Test_users( Test_controller ):
       ( self.user2.object_id, u"" ),
     ) )
 
+    assert result[ "error" ]
+
     # check that neither user's password has changed
     assert self.user.check_password( self.password )
     assert self.user2.check_password( self.password2 )
-    assert result[ "error" ]
 
   def test_reset_password_multiple_users( self ):
     Stub_smtp.reset()
@@ -769,17 +683,14 @@ class Test_users( Test_controller ):
       ( self.user2.object_id, new_password2 ),
     ) )
 
-    # check that the password reset is now marked as redeemed
-    def gen():
-      self.database.load( password_reset_id, self.scheduler.thread )
-      password_reset = ( yield Scheduler.SLEEP )
-      assert password_reset.redeemed
+    assert result[ u"redirect" ]
 
-    g = gen()
-    self.scheduler.add( g )
-    self.scheduler.wait_for( g )
+    # check that the password reset is now marked as redeemed
+    password_reset = self.database.load( Password_reset, password_reset_id )
+    assert password_reset.redeemed
 
     # check that the password was actually reset for both users
-    assert self.user.check_password( new_password )
-    assert self.user2.check_password( new_password2 )
-    assert result[ u"redirect" ]
+    user = self.database.load( User, self.user.object_id )
+    assert user.check_password( new_password )
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.check_password( new_password2 )

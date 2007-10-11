@@ -1,9 +1,10 @@
-function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, focus ) {
+function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus ) {
   this.id = id;
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
-  this.deleted_from = deleted_from || null;
-  this.revisions_list = revisions_list || new Array();
+  this.deleted_from_id = deleted_from_id || null;
+  this.revision = revision;
+  this.revisions_list = new Array(); // cache for this note's list of revisions, loaded from the server on-demand
   this.read_write = read_write;
   this.startup = startup || false; // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
@@ -31,7 +32,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
       "type": "button",
       "class": "note_button",
       "id": "delete_" + iframe_id,
-      "value": "delete" + ( this.deleted_from ? " forever" : "" ),
+      "value": "delete" + ( this.deleted_from_id ? " forever" : "" ),
       "title": "delete note [ctrl-d]"
     } );
     connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
@@ -45,7 +46,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
     } );
     connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
 
-    if ( this.deleted_from ) {
+    if ( this.deleted_from_id ) {
       this.undelete_button = createDOM( "input", {
         "type": "button",
         "class": "note_button",
@@ -66,7 +67,7 @@ function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_
     }
   }
 
-  if ( !this.deleted_from && ( read_write || !startup ) ) {
+  if ( !this.deleted_from_id && ( read_write || !startup ) ) {
     this.hide_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",

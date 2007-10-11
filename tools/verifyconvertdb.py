@@ -3,7 +3,7 @@
 import os
 import os.path
 import psycopg2 as psycopg
-from controller.Database import Database
+from controller.Old_database import Old_database
 from controller.Scheduler import Scheduler
 
 
@@ -34,8 +34,8 @@ class Verifier( object ):
   def verify_database( self ):
     inserts = set()
 
-    for key in self.database._Database__db.keys():
-      if not self.database._Database__db.get( key ):
+    for key in self.database._Old_database__db.keys():
+      if not self.database._Old_database__db.get( key ):
         continue
 
       self.database.load( key, self.scheduler.thread )
@@ -92,6 +92,16 @@ class Verifier( object ):
             assert row[ 1 ] == notebook.object_id
             assert row[ 2 ] == read_write
 
+          if notebook.trash:
+            self.cursor.execute(
+              "select * from user_notebook where user_id = %s and notebook_id = %s;" % ( quote( value.object_id ), quote( notebook.trash.object_id ) )
+            )
+
+            for row in self.cursor.fetchmany():
+              assert row[ 0 ] == value.object_id
+              assert row[ 1 ] == notebook.trash.object_id
+              assert row[ 2 ] == read_write
+
           self.verify_notebook( notebook )
 
       elif class_name == "Read_only_notebook":
@@ -105,9 +115,9 @@ class Verifier( object ):
         )
 
         for row in self.cursor.fetchmany():
-          assert row[ 0 ] == value.email_address
-          assert row[ 1 ] == False
-          assert row[ 2 ] == value.object_id
+          assert row[ 0 ] == value.object_id
+          assert row[ 1 ] == value.email_address
+          assert row[ 2 ] == False
       elif class_name == "User_list":
         pass
       else:
@@ -167,7 +177,7 @@ class Verifier( object ):
 
 def main():
   scheduler = Scheduler()
-  database = Database( scheduler, "data.db" )
+  database = Old_database( scheduler, "data.db" )
   initializer = Verifier( scheduler, database )
   scheduler.wait_until_idle()
 

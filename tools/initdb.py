@@ -1,14 +1,12 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python2.4
 
 import os
 import os.path
+import sys
 from controller.Database import Database
-from controller.Scheduler import Scheduler
-from model.Notebook import Notebook
-from model.Read_only_notebook import Read_only_notebook
-from model.Note import Note
-from model.User import User
-from model.User_list import User_list
+from new_model.Notebook import Notebook
+from new_model.Note import Note
+from new_model.User import User
 
 
 class Initializer( object ):
@@ -27,78 +25,68 @@ class Initializer( object ):
     ( u"advanced browser features.html", False ),
   ]
 
-  def __init__( self, scheduler, database ):
-    self.scheduler = scheduler
+  def __init__( self, database, nuke = False ):
     self.database = database
     self.main_notebook = None
-    self.read_only_main_notebook = None
     self.anonymous = None
 
-    threads = (
-      self.create_main_notebook(),
-      self.create_anonymous_user(),
-    )
+    if nuke is True:
+      self.database.execute( file( "new_model/drop.sql" ).read(), commit = False )
 
-    for thread in threads:
-      self.scheduler.add( thread )
-      self.scheduler.wait_for( thread )
+    self.database.execute( file( "new_model/schema.sql" ).read(), commit = False )
+
+    self.create_main_notebook()
+    self.create_anonymous_user()
+    self.database.commit()
 
   def create_main_notebook( self ):
-    # create the main notebook and all of its notes
-    self.database.next_id( self.scheduler.thread )
-    main_notebook_id = ( yield Scheduler.SLEEP )
-    self.main_notebook = Notebook( main_notebook_id, u"Luminotes" )
-
-    # create the read-only view of the main notebook
-    self.database.next_id( self.scheduler.thread )
-    read_only_main_notebook_id = ( yield Scheduler.SLEEP )
-    self.read_only_main_notebook = Read_only_notebook( read_only_main_notebook_id, self.main_notebook )
+    # create the main notebook
+    main_notebook_id = self.database.next_id( Notebook )
+    self.main_notebook = Notebook.create( main_notebook_id, u"Luminotes" )
+    self.database.save( self.main_notebook, commit = False )
 
     # create an id for each note
     note_ids = {}
     for ( filename, startup ) in self.NOTE_FILES:
-      self.database.next_id( self.scheduler.thread )
-      note_ids[ filename ] = ( yield Scheduler.SLEEP )
+      note_ids[ filename ] = self.database.next_id( Note )
 
+    rank = 0
     for ( filename, startup ) in self.NOTE_FILES:
       full_filename = os.path.join( self.HTML_PATH, filename )
-      contents = fix_note_contents( file( full_filename ).read(), read_only_main_notebook_id, note_ids )
-
-      note = Note( note_ids[ filename ], contents )
-      self.main_notebook.add_note( note )
+      contents = fix_note_contents( file( full_filename ).read(), main_notebook_id, note_ids )
 
       if startup:
-        self.main_notebook.add_startup_note( note )
+        rank += 1
 
-    self.database.save( self.main_notebook )
-    self.database.save( self.read_only_main_notebook )
+      note = Note.create( note_ids[ filename ], contents, notebook_id = self.main_notebook.object_id, startup = startup, rank = startup and rank or None )
+      self.database.save( note, commit = False )
 
   def create_anonymous_user( self ):
     # create the anonymous user
-    self.database.next_id( self.scheduler.thread )
-    anonymous_user_id = ( yield Scheduler.SLEEP )
-    notebooks = [ self.read_only_main_notebook ]
-    self.anonymous = User( anonymous_user_id, u"anonymous", None, None, notebooks )
-    self.database.save( self.anonymous )
+    anonymous_user_id = self.database.next_id( User )
+    self.anonymous = User.create( anonymous_user_id, u"anonymous", None, None )
+    self.database.save( self.anonymous, commit = False )
 
-    # create a user list
-    self.database.next_id( self.scheduler.thread )
-    user_list_id = ( yield Scheduler.SLEEP )
-    user_list = User_list( user_list_id, u"all" )
-    user_list.add_user( self.anonymous )
-    self.database.save( user_list )
+    # give the anonymous user read-only access to the main notebook
+    self.database.execute( self.anonymous.sql_save_notebook( self.main_notebook.object_id, read_write = False ), commit = False )
 
 
-def main():
-  print "IMPORTANT: Stop the Luminotes server before running this program."
+def main( args = None ):
+  nuke = False
 
-  if os.path.exists( "data.db" ):
-    os.remove( "data.db" )
+  if args and ( "-n" in args or "--nuke" in args ):
+    nuke = True
+    print "This will nuke the contents of the database before initializing it with default data. Continue (y/n)? ",
+    confirmation = sys.stdin.readline().strip()
+    print
 
-  scheduler = Scheduler()
-  database = Database( scheduler, "data.db" )
-  initializer = Initializer( scheduler, database )
-  scheduler.wait_until_idle()
+    if confirmation.lower()[ 0 ] != 'y':
+      print "Exiting without touching the database."
+      return
+
+  print "Initializing the database with default data."
+  database = Database()
+  initializer = Initializer( database, nuke )
 
 
 def fix_note_contents( contents, notebook_id, note_ids ):
@@ -134,4 +122,5 @@ def fix_note_contents( contents, notebook_id, note_ids ):
 
 
 if __name__ == "__main__":
-  main()
+  import sys
+  main( sys.argv[ 1: ] )

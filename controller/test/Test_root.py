@@ -1,5 +1,5 @@
 import cherrypy
-from model.User import User
+from new_model.User import User
 from controller.Scheduler import Scheduler
 from Test_controller import Test_controller
 
@@ -14,13 +14,7 @@ class Test_root( Test_controller ):
     self.user = None
     self.session_id = None
 
-    thread = self.make_user()
-    self.scheduler.add( thread )
-    self.scheduler.wait_for( thread )
-
-  def make_user( self ):
-    self.database.next_id( self.scheduler.thread )
-    self.user = User( ( yield Scheduler.SLEEP ), self.username, self.password, self.email_address, [] )
+    self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user )
 
   def test_index( self ):

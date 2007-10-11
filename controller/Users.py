@@ -1,17 +1,15 @@
 import re
 import cherrypy
+from pytz import utc
 from datetime import datetime, timedelta
-from model.User import User
-from model.Notebook import Notebook
-from model.Note import Note
-from model.Password_reset import Password_reset
-from Scheduler import Scheduler
+from new_model.User import User
+from new_model.Notebook import Notebook
+from new_model.Note import Note
+from new_model.Password_reset import Password_reset
 from Expose import expose
 from Validate import validate, Valid_string, Valid_bool, Validation_error
 from Database import Valid_id
-from Updater import update_client, wait_for_update
 from Expire import strongly_expire
-from Async import async
 from view.Json import Json
 from view.Main_page import Main_page
 from view.Redeem_reset_note import Redeem_reset_note
@@ -123,12 +121,10 @@ class Users( object ):
   """
   Controller for dealing with users, corresponding to the "/users" URL.
   """
-  def __init__( self, scheduler, database, http_url, https_url, support_email, rate_plans ):
+  def __init__( self, database, http_url, https_url, support_email, rate_plans ):
     """
     Create a new Users object.
 
-    @type scheduler: controller.Scheduler
-    @param scheduler: scheduler to use for asynchronous calls
     @type database: controller.Database
     @param database: database that users are stored in
     @type http_url: unicode
@@ -142,7 +138,6 @@ class Users( object ):
     @rtype: Users
     @return: newly constructed Users
     """
-    self.__scheduler = scheduler
     self.__database = database
     self.__http_url = http_url
     self.__https_url = https_url
@@ -151,9 +146,6 @@ class Users( object ):
 
   @expose( view = Json )
   @update_auth
-  @wait_for_update
-  @async
-  @update_client
   @validate(
     username = ( Valid_string( min = 1, max = 30 ), valid_username ),
     password = Valid_string( min = 1, max = 30 ),
@@ -184,45 +176,39 @@ class Users( object ):
     if password != password_repeat:
       raise Signup_error( u"The passwords you entered do not match. Please try again." )
 
-    self.__database.load( "User %s" % username, self.__scheduler.thread )
-    user = ( yield Scheduler.SLEEP )
+    user = self.__database.select_one( User, User.sql_load_by_username( username ) )
 
     if user is not None:
       raise Signup_error( u"Sorry, that username is not available. Please try something else." )
 
     # create a notebook for this user, along with a trash for that notebook
-    self.__database.next_id( self.__scheduler.thread )
-    trash_id = ( yield Scheduler.SLEEP )
-    trash = Notebook( trash_id, u"trash" )
+    trash_id = self.__database.next_id( Notebook, commit = False )
+    trash = Notebook.create( trash_id, u"trash" )
+    self.__database.save( trash, commit = False )
 
-    self.__database.next_id( self.__scheduler.thread )
-    notebook_id = ( yield Scheduler.SLEEP )
-    notebook = Notebook( notebook_id, u"my notebook", trash )
+    notebook_id = self.__database.next_id( Notebook, commit = False )
+    notebook = Notebook.create( notebook_id, u"my notebook", trash_id )
+    self.__database.save( notebook, commit = False )
 
     # create a startup note for this user's notebook
-    self.__database.next_id( self.__scheduler.thread )
-    note_id = ( yield Scheduler.SLEEP )
-    note = Note( note_id, file( u"static/html/welcome to your wiki.html" ).read() )
-    notebook.add_note( note )
-    notebook.add_startup_note( note )
+    note_id = self.__database.next_id( Note, commit = False )
+    note_contents = file( u"static/html/welcome to your wiki.html" ).read()
+    note = Note.create( note_id, note_contents, notebook_id, startup = True, rank = 0 )
+    self.__database.save( note, commit = False )
 
     # actually create the new user
-    self.__database.next_id( self.__scheduler.thread )
-    user_id = ( yield Scheduler.SLEEP )
+    user_id = self.__database.next_id( User, commit = False )
+    user = User.create( user_id, username, password, email_address )
+    self.__database.save( user, commit = False )
 
-    user = User( user_id, username, password, email_address, notebooks = [ notebook ] )
-    self.__database.save( user )
-
-    # add the new user to the user list
-    self.__database.load( u"User_list all", self.scheduler.thread )
-    user_list = ( yield Scheduler.SLEEP )
-    if user_list:
-      user_list.add_user( user )
-      self.__database.save( user_list )
+    # record the fact that the new user has access to their new notebook
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
+    self.__database.commit()
 
     redirect = u"/notebooks/%s" % notebook.object_id
 
-    yield dict(
+    return dict(
       redirect = redirect,
       authenticated = user,
     )
@@ -230,9 +216,6 @@ class Users( object ):
   @expose()
   @grab_user_id
   @update_auth
-  @wait_for_update
-  @async
-  @update_client
   def demo( self, user_id = None ):
     """
     Create a new guest User for purposes of the demo. Start that user with their own Notebook and
@@ -250,54 +233,51 @@ class Users( object ):
     # if the user is already logged in as a guest, then just redirect to their existing demo
     # notebook
     if user_id:
-      self.__database.load( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-      if user.username is None and len( user.notebooks ) > 0:
-        redirect = u"/notebooks/%s" % user.notebooks[ 0 ].object_id
-        yield dict( redirect = redirect )
-        return
+      user = self.__database.load( User, user_id )
+      first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True ) )
+      if user.username is None and first_notebook:
+        redirect = u"/notebooks/%s" % first_notebook.object_id
+        return dict( redirect = redirect )
 
     # create a demo notebook for this user, along with a trash for that notebook
-    self.__database.next_id( self.__scheduler.thread )
-    trash_id = ( yield Scheduler.SLEEP )
-    trash = Notebook( trash_id, u"trash" )
+    trash_id = self.__database.next_id( Notebook, commit = False )
+    trash = Notebook.create( trash_id, u"trash" )
+    self.__database.save( trash, commit = False )
 
-    self.__database.next_id( self.__scheduler.thread )
-    notebook_id = ( yield Scheduler.SLEEP )
-    notebook = Notebook( notebook_id, u"my notebook", trash )
+    notebook_id = self.__database.next_id( Notebook, commit = False )
+    notebook = Notebook.create( notebook_id, u"my notebook", trash_id )
+    self.__database.save( notebook, commit = False )
 
     # create startup notes for this user's notebook
-    self.__database.next_id( self.__scheduler.thread )
-    note_id = ( yield Scheduler.SLEEP )
-    note = Note( note_id, file( u"static/html/this is a demo.html" ).read() )
-    notebook.add_note( note )
-    notebook.add_startup_note( note )
+    note_id = self.__database.next_id( Note, commit = False )
+    note_contents = file( u"static/html/this is a demo.html" ).read()
+    note = Note.create( note_id, note_contents, notebook_id, startup = True, rank = 0 )
+    self.__database.save( note, commit = False )
 
-    self.__database.next_id( self.__scheduler.thread )
-    note_id = ( yield Scheduler.SLEEP )
-    note = Note( note_id, file( u"static/html/welcome to your wiki.html" ).read() )
-    notebook.add_note( note )
-    notebook.add_startup_note( note )
+    note_id = self.__database.next_id( Note, commit = False )
+    note_contents = file( u"static/html/welcome to your wiki.html" ).read()
+    note = Note.create( note_id, note_contents, notebook_id, startup = True, rank = 1 )
+    self.__database.save( note, commit = False )
 
-    # actually create the new user. because this is just a demo user, we're not adding it to the User_list
-    self.__database.next_id( self.__scheduler.thread )
-    user_id = ( yield Scheduler.SLEEP )
+    # actually create the new user
+    user_id = self.__database.next_id( User, commit = False )
+    user = User.create( user_id, username = None, password = None, email_address = None )
+    self.__database.save( user, commit = False )
 
-    user = User( user_id, username = None, password = None, email_address = None, notebooks = [ notebook ] )
-    self.__database.save( user )
+    # record the fact that the new user has access to their new notebook
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
+    self.__database.commit()
 
     redirect = u"/notebooks/%s" % notebook.object_id
 
-    yield dict(
+    return dict(
       redirect = redirect,
       authenticated = user,
     )
 
   @expose( view = Json )
   @update_auth
-  @wait_for_update
-  @async
-  @update_client
   @validate(
     username = ( Valid_string( min = 1, max = 30 ), valid_username ),
     password = Valid_string( min = 1, max = 30 ),
@@ -317,28 +297,26 @@ class Users( object ):
     @raise Authentication_error: invalid username or password
     @raise Validation_error: one of the arguments is invalid
     """
-    self.__database.load( "User %s" % username, self.__scheduler.thread )
-    user = ( yield Scheduler.SLEEP )
+    user = self.__database.select_one( User, User.sql_load_by_username( username ) )
 
     if user is None or user.check_password( password ) is False:
       raise Authentication_error( u"Invalid username or password." )
 
+    first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True ) )
+
     # redirect to the user's first notebook (if any)
-    if len( user.notebooks ) > 0:
-      redirect = u"/notebooks/%s" % user.notebooks[ 0 ].object_id
+    if first_notebook:
+      redirect = u"/notebooks/%s" % first_notebook.object_id
     else:
       redirect = u"/"
 
-    yield dict(
+    return dict(
       redirect = redirect,
       authenticated = user,
     )
 
   @expose( view = Json )
   @update_auth
-  @wait_for_update
-  @async
-  @update_client
   def logout( self ):
     """
     Deauthenticate the user and log them out of their current session.
@@ -346,7 +324,7 @@ class Users( object ):
     @rtype: json dict
     @return: { 'redirect': url, 'deauthenticated': True }
     """
-    yield dict(
+    return dict(
       redirect = self.__http_url + u"/",
       deauthenticated = True,
     )
@@ -354,9 +332,6 @@ class Users( object ):
   @expose( view = Json )
   @strongly_expire
   @grab_user_id
-  @wait_for_update
-  @async
-  @update_client
   @validate(
     include_startup_notes = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
@@ -382,38 +357,42 @@ class Users( object ):
     @raise Validation_error: one of the arguments is invalid
     """
     # if there's no logged-in user, default to the anonymous user
-    self.__database.load( user_id or u"User anonymous", self.__scheduler.thread )
-    user = ( yield Scheduler.SLEEP )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    if user_id:
+      user = self.__database.load( User, user_id )
+    else:
+      user = anonymous
 
-    if not user:
-      yield dict(
+    if not user or not anonymous:
+      return dict(
         user = None,
         notebooks = None,
         http_url = u"",
       )
-      return
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
-    self.__database.load( u"User anonymous", self.__scheduler.thread )
-    anonymous = ( yield Scheduler.SLEEP )
     login_url = None
+    notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks() )
 
     if user_id:
-      notebooks = anonymous.notebooks
+      notebooks += self.__database.select_many( Notebook, user.sql_load_notebooks() )
+    # if the user is not logged in, return a login URL
     else:
-      notebooks = []
-      if len( anonymous.notebooks ) > 0:
-        anon_notebook = anonymous.notebooks[ 0 ]
-        login_note = anon_notebook.lookup_note_by_title( u"login" )
+      if len( notebooks ) > 0:
+        main_notebook = notebooks[ 0 ]
+        login_note = self.__database.select_one( Note, main_notebook.sql_load_note_by_title( u"login" ) )
         if login_note:
-          login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, anon_notebook.object_id, login_note.object_id )
+          login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, main_notebook.object_id, login_note.object_id )
 
-    notebooks += user.notebooks
+    if include_startup_notes and len( notebooks ) > 0:
+      startup_notes = self.__database.select_many( Note, notebooks[ 0 ].sql_load_startup_notes() )
+    else:
+      startup_notes = []
 
-    yield dict(
+    return dict(
       user = user,
       notebooks = notebooks,
-      startup_notes = include_startup_notes and len( notebooks ) > 0 and notebooks[ 0 ].startup_notes or [],
+      startup_notes = startup_notes,
       http_url = self.__http_url,
       login_url = login_url,
       rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},
@@ -421,54 +400,64 @@ class Users( object ):
 
   def calculate_storage( self, user ):
     """
-    Calculate total storage utilization for all notebooks and all notes of the given user,
-    including storage for all past revisions.
+    Calculate total storage utilization for all notes of the given user, including storage for all
+    past revisions.
+
     @type user: User
     @param user: user for which to calculate storage utilization
     @rtype: int
     @return: total bytes used for storage
     """
-    total_bytes = 0
+    return sum( self.__database.select_one( tuple, user.sql_calculate_storage() ), 0 )
 
-    def sum_revisions( obj ):
-      return \
-        self.__database.size( obj.object_id ) + \
-        sum( [ self.__database.size( obj.object_id, revision ) or 0 for revision in obj.revisions_list ], 0 )
-
-    def sum_notebook( notebook ):
-      return \
-        self.__database.size( notebook.object_id ) + \
-        sum( [ sum_revisions( note ) for note in notebook.notes ], 0 )
-
-    for notebook in user.notebooks:
-      total_bytes += sum_notebook( notebook )
-
-      if notebook.trash:
-        total_bytes += sum_notebook( notebook.trash )
-
-    return total_bytes
-
-  @async
-  def update_storage( self, user_id, callback = None ):
+  def update_storage( self, user_id, commit = True ):
     """
     Calculate and record total storage utilization for the given user.
-    @type user_id: unicode or NoneType
+
+    @type user_id: unicode
     @param user_id: id of user for which to calculate storage utilization
-    @type callback: generator or NoneType
-    @param callback: generator to wakeup when the update is complete (optional)
+    @type commit: bool
+    @param commit: True to automatically commit after the update
+    @rtype: model.User
+    @return: object of the user corresponding to user_id
     """
-    self.__database.load( user_id, self.__scheduler.thread )
-    user = ( yield Scheduler.SLEEP )
+    user = self.__database.load( User, user_id )
 
     if user:
       user.storage_bytes = self.calculate_storage( user )
+      self.__database.save( user, commit )
 
-    yield callback, user
+    return user
+
+  def check_access( self, user_id, notebook_id, read_write = False ):
+    """
+    Determine whether the given user has access to the given notebook.
+
+    @type user_id: unicode
+    @param user_id: id of user whose access to check
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to check access for
+    @type read_write: bool
+    @param read_write: True if read-write access is being checked, False if read-only access (defaults to False)
+    @rtype: bool
+    @return: True if the user has access
+    """
+    # check if the anonymous user has access to this notebook
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+
+    if self.__database.select_one( bool, anonymous.sql_has_access( notebook_id, read_write ) ):
+      return True
+
+    if user_id:
+      # check if the given user has access to this notebook
+      user = self.__database.load( User, user_id )
+
+      if user and self.__database.select_one( bool, user.sql_has_access( notebook_id ) ):
+        return True
+
+    return False
 
   @expose( view = Json )
-  @wait_for_update
-  @async
-  @update_client
   @validate(
     email_address = ( Valid_string( min = 1, max = 60 ), valid_email_address ),
     send_reset_button = unicode,
@@ -491,19 +480,13 @@ class Users( object ):
     from email import Message
 
     # check whether there are actually any users with the given email address
-    self.__database.load( u"User_list all", self.scheduler.thread )
-    user_list = ( yield Scheduler.SLEEP )
+    users = self.__database.select_many( User, User.sql_load_by_email_address( email_address ) )
 
-    if not user_list:
-      raise Password_reset_error( "There was an error when sending your password reset email. Please contact %s." % self.__support_email )
-
-    users = [ user for user in user_list.users if user.email_address == email_address ]
     if len( users ) == 0:
       raise Password_reset_error( u"There are no Luminotes users with the email address %s" % email_address )
 
     # record the sending of this reset email
-    self.__database.next_id( self.__scheduler.thread )
-    password_reset_id = ( yield Scheduler.SLEEP )
+    password_reset_id = self.__database.next_id( Password_reset, commit = False )
     password_reset = Password_reset( password_reset_id, email_address )
     self.__database.save( password_reset )
 
@@ -527,15 +510,12 @@ class Users( object ):
     server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
     server.quit()
 
-    yield dict(
+    return dict(
       message = u"Please check your inbox. A password reset email has been sent to %s" % email_address,
     )
 
   @expose( view = Main_page )
   @strongly_expire
-  @wait_for_update
-  @async
-  @update_client
   @validate(
     password_reset_id = Valid_id(),
   )
@@ -550,43 +530,34 @@ class Users( object ):
     @raise Password_reset_error: an error occured when redeeming the password reset, such as an expired link
     @raise Validation_error: one of the arguments is invalid
     """
-    self.__database.load( u"User anonymous", self.__scheduler.thread )
-    anonymous = ( yield Scheduler.SLEEP )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    if anonymous:
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks() )
 
-    if not anonymous or len( anonymous.notebooks ) == 0:
+    if not anonymous or not main_notebook:
       raise Password_reset_error( "There was an error when completing your password reset. Please contact %s." % self.__support_email )
 
-    self.__database.load( password_reset_id, self.__scheduler.thread )
-    password_reset = ( yield Scheduler.SLEEP )
+    password_reset = self.__database.load( Password_reset, password_reset_id )
 
-    if not password_reset or datetime.now() - password_reset.revision > timedelta( hours = 25 ):
+    if not password_reset or datetime.now( tz = utc ) - password_reset.revision > timedelta( hours = 25 ):
       raise Password_reset_error( "Your password reset link has expired. Please request a new password reset email." )
 
     if password_reset.redeemed:
       raise Password_reset_error( "Your password has already been reset. Please request a new password reset email." )
 
-    self.__database.load( u"User_list all", self.__scheduler.thread )
-    user_list = ( yield Scheduler.SLEEP )
-
-    if not user_list:
-      raise Password_reset_error( u"There are no Luminotes users with the email address %s" % password_reset.email_address )
-
     # find the user(s) with the email address from the password reset request
-    matching_users = [ user for user in user_list.users if user.email_address == password_reset.email_address ]
+    matching_users = self.__database.select_many( User, User.sql_load_by_email_address( password_reset.email_address ) )
 
     if len( matching_users ) == 0:
       raise Password_reset_error( u"There are no Luminotes users with the email address %s" % password_reset.email_address )
 
-    yield dict(
-      notebook_id = anonymous.notebooks[ 0 ].object_id,
+    return dict(
+      notebook_id = main_notebook.object_id,
       note_id = u"blank",
       note_contents = unicode( Redeem_reset_note( password_reset_id, matching_users ) ),
     )
 
   @expose( view = Json )
-  @wait_for_update
-  @async
-  @update_client
   def reset_password( self, password_reset_id, reset_button, **new_passwords ):
     """
     Reset all the users with the provided passwords.
@@ -606,27 +577,19 @@ class Users( object ):
     except ValueError:
       raise Validation_error( "password_reset_id", password_reset_id, id_validator, "is not a valid id" )
 
-    self.__database.load( password_reset_id, self.__scheduler.thread )
-    password_reset = ( yield Scheduler.SLEEP )
+    password_reset = self.__database.load( Password_reset, password_reset_id )
 
-    if not password_reset or datetime.now() - password_reset.revision > timedelta( hours = 25 ):
+    if not password_reset or datetime.now( tz = utc ) - password_reset.revision > timedelta( hours = 25 ):
       raise Password_reset_error( "Your password reset link has expired. Please request a new password reset email." )
 
     if password_reset.redeemed:
       raise Password_reset_error( "Your password has already been reset. Please request a new password reset email." )
 
-    self.__database.load( u"User_list all", self.__scheduler.thread )
-    user_list = ( yield Scheduler.SLEEP )
-
-    if not user_list:
-        raise Password_reset_error( "There was an error when resetting your password. Please contact %s." % self.__support_email )
-
-    # find the user(s) with the email address from the password reset request
-    matching_users = [ user for user in user_list.users if user.email_address == password_reset.email_address ]
+    matching_users = self.__database.select_many( User, User.sql_load_by_email_address( password_reset.email_address ) )
     allowed_user_ids = [ user.object_id for user in matching_users ]
 
     # reset any passwords that are non-blank
-    users_to_reset = []
+    at_least_one_reset = False
     for ( user_id, ( new_password, new_password_repeat ) ) in new_passwords.items():
       if user_id not in allowed_user_ids:
         raise Password_reset_error( "There was an error when resetting your password. Please contact %s." % self.__support_email )
@@ -635,8 +598,7 @@ class Users( object ):
       if new_password == u"" and new_password_repeat == u"":
         continue
 
-      self.__database.load( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
+      user = self.__database.load( User, user_id )
 
       if not user:
         raise Password_reset_error( "There was an error when resetting your password. Please contact %s." % self.__support_email )
@@ -649,19 +611,16 @@ class Users( object ):
       if len( new_password ) > 30:
         raise Password_reset_error( u"Your password can be no longer than 30 characters." )
 
-      users_to_reset.append( ( user, new_password ) )
-
-    for ( user, new_password ) in users_to_reset:
+      at_least_one_reset = True
       user.password = new_password
-      self.__database.save( user )
+      self.__database.save( user, commit = False )
 
     # if all the new passwords provided are blank, bail
-    if not users_to_reset:
+    if not at_least_one_reset:
       raise Password_reset_error( u"Please enter a new password. Or, if you already know your password, just click the login link above." )
 
     password_reset.redeemed = True
-    self.__database.save( password_reset )
+    self.__database.save( password_reset, commit = False )
+    self.__database.commit()
 
-    yield dict( redirect = u"/" )
-
-  scheduler = property( lambda self: self.__scheduler )
+    return dict( redirect = u"/" )

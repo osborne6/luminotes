@@ -3,21 +3,31 @@
 import os
 import os.path
 import psycopg2 as psycopg
-from controller.Database import Database
+from pytz import timezone, utc
+from datetime import datetime
+from controller.Old_database import Old_database
 from controller.Scheduler import Scheduler
+
+
+pacific = timezone( "US/Pacific" )
 
 
 def quote( value ):
   if value is None:
     return "null"
 
+  # if this is a datetime, assume it's in the Pacific timezone, and then convert it to UTC
+  if isinstance( value, datetime ):
+    value = value.replace( tzinfo = pacific ).astimezone( utc )
+
   value = unicode( value )
+
   return "'%s'" % value.replace( "'", "''" ).replace( "\\", "\\\\" )
 
 
 class Converter( object ):
   """
-  Converts a Luminotes database from bsddb to PostgreSQL, using the old bsddb controller.Database.
+  Converts a Luminotes database from bsddb to PostgreSQL, using the old bsddb controller.Old_database.
   This assumes that the PostgreSQL schema from model/schema.sql is already in the database.
   """
   def __init__( self, scheduler, database ):
@@ -36,8 +46,8 @@ class Converter( object ):
     notes = {} # map of note object id to its notebook
     startup_notes = {} # map of startup note object id to its notebook
 
-    for key in self.database._Database__db.keys():
-      if not self.database._Database__db.get( key ):
+    for key in self.database._Old_database__db.keys():
+      if not self.database._Old_database__db.get( key ):
         continue
 
       self.database.load( key, self.scheduler.thread )
@@ -102,6 +112,14 @@ class Converter( object ):
             ( quote( value.object_id ), quote( notebook_id ),
               quote( read_only and "f" or "t" ) )
           )
+          if notebook.trash:
+            self.cursor.execute(
+              "insert into user_notebook " +
+              "( user_id, notebook_id, read_write ) " +
+              "values ( %s, %s, %s );" %
+              ( quote( value.object_id ), quote( notebook.trash.object_id ),
+                quote( read_only and "f" or "t" ) )
+            )
       elif class_name == "Read_only_notebook":
         pass
       elif class_name == "Password_reset":
@@ -140,7 +158,7 @@ class Converter( object ):
 
 def main():
   scheduler = Scheduler()
-  database = Database( scheduler, "data.db" )
+  database = Old_database( scheduler, "data.db" )
   initializer = Converter( scheduler, database )
   scheduler.wait_until_idle()
 

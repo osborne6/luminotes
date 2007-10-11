@@ -1,13 +1,11 @@
 import cherrypy
 from controller.Database import Database
 from controller.Root import Root
-from controller.Scheduler import Scheduler
 from config import Common
 
 
 def main( args ):
-  scheduler = Scheduler()
-  database = Database( scheduler, "data.db" )
+  database = Database()
 
   cherrypy.config.update( Common.settings )
 
@@ -21,11 +19,8 @@ def main( args ):
   cherrypy.config.update( settings )
 
   cherrypy.lowercase_api = True
-  root = Root( scheduler, database, cherrypy.config.configMap )
+  root = Root( database, cherrypy.config.configMap )
   cherrypy.root = root
-
-  if scheduler.shutdown not in cherrypy.server.on_stop_server_list:
-    cherrypy.server.on_stop_server_list.append( scheduler.shutdown )
 
   cherrypy.server.start()
 

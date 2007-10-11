@@ -32,7 +32,7 @@ class Validation_error( Exception ):
 
   def to_dict( self ):
     return dict(
-      error = u"The %s %s." % ( self.__name, self.__message ),
+      error = u"The %s %s." % ( self.__name.replace( u"_", " " ), self.__message ),
       name = self.__name,
       value = self.__value,
     )

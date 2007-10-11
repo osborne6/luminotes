@@ -1,8 +1,8 @@
-function Editor( id, notebook_id, note_text, deleted_from, revisions_list, read_write, startup, highlight, focus ) {
+function Editor( id, notebook_id, note_text, deleted_from_id, revisions_list, read_write, startup, highlight, focus ) {
   this.id = id;
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
-  this.deleted_from = deleted_from || null;
+  this.deleted_from_id = deleted_from_id || null;
   this.revisions_list = revisions_list || new Array();
   this.read_write = read_write;
   this.startup = startup || false; // whether this Editor is for a startup note

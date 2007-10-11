@@ -1,16 +1,8 @@
 import cherrypy
 
-from Validate import Validation_error
-
 # module-level variable that, when set to a view, overrides the view for all exposed methods. used
 # by unit tests
 view_override = None
-
-
-class Expose_error( Exception ):
-  def __init__( self, message ):
-    Exception.__init__( self, message )
-    self.__message = message
 
 
 def expose( view = None, rss = None ):
@@ -57,8 +49,16 @@ def expose( view = None, rss = None ):
       # try executing the exposed function
       try:
         result = function( *args, **kwargs )
-      except Validation_error, error:
-        result = dict( name = error.name, value = error.value, error = error.message )
+      except cherrypy.NotFound:
+        raise
+      except Exception, error:
+        if hasattr( error, "to_dict" ):
+          result = error.to_dict()
+        else:
+          # TODO: it'd be nice to send an email to myself with the traceback
+          import traceback
+          traceback.print_exc()
+          result = dict( error = u"An error occurred when processing your request. Please try again or contact support." )
 
       redirect = result.get( u"redirect", None )
 
@@ -74,7 +74,7 @@ def expose( view = None, rss = None ):
           return unicode( view_override( **result ) )
       except:
         if redirect is None:
-          raise Expose_error( result.get( u"error" ) or result )
+          raise
 
       # if that doesn't work, and there's a redirect, then redirect
       del( result[ u"redirect" ] )

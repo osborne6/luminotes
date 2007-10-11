@@ -1,13 +1,11 @@
 import cherrypy
 
-from Scheduler import Scheduler
 from Expose import expose
 from Validate import validate
-from Async import async
 from Notebooks import Notebooks
 from Users import Users
-from Updater import update_client, wait_for_update
 from Database import Valid_id
+from new_model.Note import Note
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Error_page import Error_page
@@ -18,12 +16,10 @@ class Root( object ):
   """
   The root of the controller hierarchy, corresponding to the "/" URL.
   """
-  def __init__( self, scheduler, database, settings ):
+  def __init__( self, database, settings ):
     """
     Create a new Root object with the given settings.
 
-    @type scheduler: controller.Scheduler
-    @param scheduler: scheduler to use for asynchronous calls
     @type database: controller.Database
     @param database: database to use for all controllers
     @type settings: dict
@@ -31,18 +27,16 @@ class Root( object ):
     @rtype: Root
     @return: newly constructed Root
     """
-    self.__scheduler = scheduler
     self.__database = database
     self.__settings = settings
     self.__users = Users(
-      scheduler,
       database,
       settings[ u"global" ].get( u"luminotes.http_url", u"" ),
       settings[ u"global" ].get( u"luminotes.https_url", u"" ),
       settings[ u"global" ].get( u"luminotes.support_email", u"" ),
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
-    self.__notebooks = Notebooks( scheduler, database, self.__users )
+    self.__notebooks = Notebooks( database, self.__users )
 
   @expose()
   def default( self, password_reset_id ):
@@ -72,22 +66,19 @@ class Root( object ):
 
     return dict()
 
+  # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )
-  @wait_for_update
-  @async
-  @update_client
   def next_id( self ):
     """
-    Return the next available database object id. This id is guaranteed to be unique to the
-    database.
+    Return the next available database object id for a new note. This id is guaranteed to be unique
+    among all existing notes.
 
     @rtype: json dict
     @return: { 'next_id': nextid }
     """
-    self.__database.next_id( self.__scheduler.thread )
-    next_id = ( yield Scheduler.SLEEP )
+    next_id = self.__database.next_id( Note )
 
-    yield dict(
+    return dict(
       next_id = next_id,
     )
 
@@ -95,28 +86,20 @@ class Root( object ):
     """
     CherryPy HTTP error handler, used to display page not found and generic error pages.
     """
+    support_email = self.__settings[ u"global" ].get( u"luminotes.support_email" )
+
     if status == 404:
       cherrypy.response.headerMap[ u"Status" ] = u"404 Not Found"
       cherrypy.response.status = status
-      cherrypy.response.body = [ unicode( Not_found_page( self.__settings[ u"global" ].get( u"luminotes.support_email" ) ) ) ]
+      cherrypy.response.body = [ unicode( Not_found_page( support_email ) ) ]
       return
 
-    import sys
+    # TODO: it'd be nice to send an email to myself with the traceback
     import traceback
     traceback.print_exc()
 
-    exc_info = sys.exc_info()
-    if exc_info:
-      message = exc_info[ 1 ].message
-    else:
-      message = None
+    cherrypy.response.body = [ unicode( Error_page( support_email ) ) ]
 
-    cherrypy.response.body = [ unicode( Error_page(
-      self.__settings[ u"global" ].get( u"luminotes.support_email" ),
-      message,
-    ) ) ]
-
-  scheduler = property( lambda self: self.__scheduler )
   database = property( lambda self: self.__database )
   notebooks = property( lambda self: self.__notebooks )
   users = property( lambda self: self.__users )

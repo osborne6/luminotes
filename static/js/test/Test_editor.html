@@ -15,11 +15,10 @@ function test_Editor() {
   assertNotUndefined( "editor should have changes_button member", editor.changes_button );
   assertNotUndefined( "editor should have options_button member", editor.options_button );
   assertFalse( "editor should not have closed flag set", editor.closed );
-  assertEquals( "editor should have correct deleted_from flag", editor.deleted_from, deleted_from || null );
+  assertEquals( "editor should have correct deleted_from_id flag", editor.deleted_from_id, deleted_from_id || null );
   assertNotUndefined( "editor should have document member", editor.document );
   assertEquals( "editor id should have correct id", editor.id, id );
   assertNotUndefined( "editor should have iframe member", editor.iframe );
-  assertEquals( "editor should have empty revisions list", editor.revisions_list.length, 0 );
   assertEquals( "editor should have correct startup flag", editor.startup, startup );
   assertEquals( "editor should have correct title", editor.title, title );
   assertEquals( "editor should have correct read_write flag", editor.read_write, read_write );

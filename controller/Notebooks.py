@@ -1,15 +1,13 @@
 import cherrypy
-from Scheduler import Scheduler
+from datetime import datetime
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool
 from Database import Valid_id, Valid_revision
 from Users import grab_user_id
-from Updater import wait_for_update, update_client
 from Expire import strongly_expire
 from Html_nuker import Html_nuker
-from Async import async
-from model.Notebook import Notebook
-from model.Note import Note
+from new_model.Notebook import Notebook
+from new_model.Note import Note
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
@@ -18,7 +16,7 @@ from view.Html_file import Html_file
 class Access_error( Exception ):
   def __init__( self, message = None ):
     if message is None:
-      message = u"You don't have access to this notebook."
+      message = u"Sorry, you don't have access to do that."
 
     Exception.__init__( self, message )
     self.__message = message
@@ -33,12 +31,10 @@ class Notebooks( object ):
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
   """
-  def __init__( self, scheduler, database, users ):
+  def __init__( self, database, users ):
     """
     Create a new Notebooks object.
 
-    @type scheduler: controller.Scheduler
-    @param scheduler: scheduler to use for asynchronous calls
     @type database: controller.Database
     @param database: database that notebooks are stored in
     @type users: controller.Users
@@ -46,7 +42,6 @@ class Notebooks( object ):
     @rtype: Notebooks
     @return: newly constructed Notebooks
     """
-    self.__scheduler = scheduler
     self.__database = database
     self.__users = users
 
@@ -83,14 +78,11 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id( none_okay = True ),
-    revision = Valid_string( min = 0, max = 30 ),
+    revision = Valid_revision( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
   def contents( self, notebook_id, note_id = None, revision = None, user_id = None ):
@@ -108,39 +100,37 @@ class Notebooks( object ):
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
     @return: { 'notebook': notebookdict, 'note': notedict or None }
-    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      notebook.read_write = False
 
     if notebook is None:
       note = None
     elif note_id == u"blank":
-      note = Note( note_id )
+      note = Note.create( note_id )
     else:
-      note = notebook.lookup_note( note_id )
+      note = self.__database.load( Note, note_id, revision )
+      if note and note.notebook_id != notebook_id:
+        raise Access_error()
 
-    if revision:
-      self.__database.load( note_id, self.__scheduler.thread, revision )
-      note = ( yield Scheduler.SLEEP )
+    startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
 
-    yield dict(
+    return dict(
       notebook = notebook,
-      startup_notes = notebook.startup_notes,
+      startup_notes = startup_notes,
       note = note,
     )
 
   @expose( view = Json )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
@@ -161,35 +151,24 @@ class Notebooks( object ):
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
     @return: { 'note': notedict or None }
-    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    note = self.__database.load( Note, note_id, revision )
 
-    if notebook is None:
-      note = None
-    else:
-      note = notebook.lookup_note( note_id )
+    if note and note.notebook_id != notebook_id:
+      raise Access_error()
 
-    if revision:
-      self.__database.load( note_id, self.__scheduler.thread, revision )
-      note = ( yield Scheduler.SLEEP )
-
-    yield dict(
+    return dict(
       note = note,
     )
 
   @expose( view = Json )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     note_title = Valid_string( min = 1, max = 500 ),
@@ -210,28 +189,23 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if notebook is None:
       note = None
     else:
-      note = notebook.lookup_note_by_title( note_title )
+      note = self.__database.select_one( Notebook, notebook.sql_load_note_by_title( note_title ) )
 
-    yield dict(
+    return dict(
       note = note,
     )
 
   @expose( view = Json )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     note_title = Valid_string( min = 1, max = 500 ),
@@ -252,27 +226,61 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if notebook is None:
       note = None
     else:
-      note = notebook.lookup_note_by_title( note_title )
+      note = self.__database.select_one( Notebook, notebook.sql_load_note_by_title( note_title ) )
 
-    yield dict(
+    return dict(
       note_id = note and note.object_id or None,
     )
 
   @expose( view = Json )
-  @wait_for_update
+  @strongly_expire
   @grab_user_id
-  @async
-  @update_client
+  @validate(
+    notebook_id = Valid_id(),
+    note_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def load_note_revisions( self, notebook_id, note_id, user_id = None ):
+    """
+    Return the full list of revision timestamps for this note in chronological order.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note in question
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'revisions': revisionslist or None }
+    @raise Access_error: the current user doesn't have access to the given notebook or note
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
+    note = self.__database.load( Note, note_id )
+
+    if note:
+      if note.notebook_id != notebook_id:
+        raise Access_error()
+      revisions = self.__database.select_many( unicode, note.sql_load_revisions() )
+    else:
+      revisions = None
+
+    return dict(
+      revisions = revisions,
+    )
+
+  @expose( view = Json )
+  @grab_user_id
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
@@ -310,186 +318,78 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
-    self.__database.load( note_id, self.__scheduler.thread )
-    note = ( yield Scheduler.SLEEP )
+    note = self.__database.load( Note, note_id )
 
     # check whether the provided note contents have been changed since the previous revision
-    def update_note( current_notebook, old_note ):
+    def update_note( current_notebook, old_note, startup ):
       # the note hasn't been changed, so bail without updating it
-      if contents == old_note.contents:
+      if contents == old_note.contents and startup == old_note.startup:
         new_revision = None
       # the note has changed, so update it
       else:
-        notebook.update_note( note, contents )
+        note.contents = contents
+        note.startup = startup
+        if startup:
+          if note.rank is None:
+            note.rank = self.__database.select_one( float, notebook.sql_highest_rank() ) + 1
+        else:
+          note.rank = None
+
         new_revision = note.revision
 
       return new_revision
 
     # if the note is already in the given notebook, load it and update it
-    if note and note in notebook.notes:
-      self.__database.load( note_id, self.__scheduler.thread, previous_revision )
-      old_note = ( yield Scheduler.SLEEP )
+    if note and note.notebook_id == notebook.object_id:
+      old_note = self.__database.load( Note, note_id, previous_revision )
 
       previous_revision = note.revision
-      new_revision = update_note( notebook, old_note )
+      new_revision = update_note( notebook, old_note, startup )
 
     # the note is not already in the given notebook, so look for it in the trash
-    elif note and notebook.trash and note in notebook.trash.notes:
-      self.__database.load( note_id, self.__scheduler.thread, previous_revision )
-      old_note = ( yield Scheduler.SLEEP )
+    elif note and notebook.trash_id and note.notebook_id == notebook.trash_id:
+      old_note = self.__database.load( Note, note_id, previous_revision )
 
       # undelete the note, putting it back in the given notebook
       previous_revision = note.revision
-      notebook.trash.remove_note( note )
-      note.deleted_from = None
-      notebook.add_note( note )
+      note.notebook_id = notebook.object_id
+      note.deleted_from_id = None
 
-      new_revision = update_note( notebook, old_note )
-
+      new_revision = update_note( notebook, old_note, startup )
     # otherwise, create a new note
     else:
+      if startup:
+        rank = self.__database.select_one( float, notebook.sql_highest_rank() ) + 1
+      else:
+        rank = None
+  
       previous_revision = None
-      note = Note( note_id, contents )
-      notebook.add_note( note )
+      note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = startup, rank = rank )
       new_revision = note.revision
 
-    if startup:
-      startup_changed = notebook.add_startup_note( note )
-    else:
-      startup_changed = notebook.remove_startup_note( note )
-
-    if new_revision or startup_changed:
-      self.__database.save( notebook, self.__scheduler.thread )
-      yield Scheduler.SLEEP
-      self.__users.update_storage( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-      self.__database.save( user )
+    if new_revision:
+      self.__database.save( note, commit = False )
+      user = self.__users.update_storage( user_id, commit = False )
+      self.__database.commit()
     else:
       user = None
 
-    yield dict(
+    return dict(
       new_revision = new_revision,
       previous_revision = previous_revision,
       storage_bytes = user and user.storage_bytes or 0,
     )
 
   @expose( view = Json )
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
-  @validate(
-    notebook_id = Valid_id(),
-    note_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def add_startup_note( self, notebook_id, note_id, user_id ):
-    """
-    Designate a particular note to be shown upon startup, e.g. whenever its notebook is displayed.
-    The given note must already be within this notebook.
-
-    @type notebook_id: unicode
-    @param notebook_id: id of notebook the note is in
-    @type note_id: unicode
-    @param note_id: id of note to show on startup
-    @type user_id: unicode or NoneType
-    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype: json dict
-    @return: { 'storage_bytes': current storage usage by user }
-    @raise Access_error: the current user doesn't have access to the given notebook
-    @raise Validation_error: one of the arguments is invalid
-    """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
-      raise Access_error()
-
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
-
-    if not notebook:
-      raise Access_error()
-
-    self.__database.load( note_id, self.__scheduler.thread )
-    note = ( yield Scheduler.SLEEP )
-
-    if note:
-      notebook.add_startup_note( note )
-      self.__database.save( notebook, self.__scheduler.thread )
-      yield Scheduler.SLEEP
-      self.__users.update_storage( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-      self.__database.save( user )
-
-      yield dict( storage_bytes = user.storage_bytes )
-    else:
-      yield dict( storage_bytes = 0 )
-
-  @expose( view = Json )
-  @wait_for_update
-  @grab_user_id
-  @async
-  @update_client
-  @validate(
-    notebook_id = Valid_id(),
-    note_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def remove_startup_note( self, notebook_id, note_id, user_id ):
-    """
-    Prevent a particular note from being shown on startup, e.g. whenever its notebook is displayed.
-    The given note must already be within this notebook.
-
-    @type notebook_id: unicode
-    @param notebook_id: id of notebook the note is in
-    @type note_id: unicode
-    @param note_id: id of note to no longer show on startup
-    @type user_id: unicode or NoneType
-    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype: json dict
-    @return: { 'storage_bytes': current storage usage by user }
-    @raise Access_error: the current user doesn't have access to the given notebook
-    @raise Validation_error: one of the arguments is invalid
-    """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
-      raise Access_error()
-
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
-
-    if not notebook:
-      raise Access_error()
-
-    self.__database.load( note_id, self.__scheduler.thread )
-    note = ( yield Scheduler.SLEEP )
-
-    if note:
-      notebook.remove_startup_note( note )
-      self.__database.save( notebook, self.__scheduler.thread )
-      yield Scheduler.SLEEP
-      self.__users.update_storage( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-      self.__database.save( user )
-
-      yield dict( storage_bytes = user.storage_bytes )
-    else:
-      yield dict( storage_bytes = 0 )
-
-  @expose( view = Json )
-  @wait_for_update
-  @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
@@ -512,42 +412,34 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
-    self.__database.load( note_id, self.__scheduler.thread )
-    note = ( yield Scheduler.SLEEP )
+    note = self.__database.load( Note, note_id )
 
-    if note:
-      notebook.remove_note( note )
+    if note and note.notebook_id == notebook_id:
+      if notebook.trash_id:
+        note.deleted_from_id = notebook_id
+        note.notebook_id = notebook.trash_id
+        note.startup = True
+      else:
+        note.notebook_id = None
 
-      if notebook.trash:
-        note.deleted_from = notebook.object_id
-        notebook.trash.add_note( note )
-        notebook.trash.add_startup_note( note )
+      self.__database.save( note, commit = False )
+      user = self.__users.update_storage( user_id, commit = False )
+      self.__database.commit()
 
-      self.__database.save( notebook, self.__scheduler.thread )
-      yield Scheduler.SLEEP
-      self.__users.update_storage( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-      self.__database.save( user )
-
-      yield dict( storage_bytes = user.storage_bytes )
+      return dict( storage_bytes = user.storage_bytes )
     else:
-      yield dict( storage_bytes = 0 )
+      return dict( storage_bytes = 0 )
 
   @expose( view = Json )
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
@@ -569,50 +461,39 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
-    self.__database.load( note_id, self.__scheduler.thread )
-    note = ( yield Scheduler.SLEEP )
+    note = self.__database.load( Note, note_id )
 
-    if note and notebook.trash:
+    if note and notebook.trash_id:
       # if the note isn't deleted, and it's already in this notebook, just return
-      if note.deleted_from is None and notebook.lookup_note( note.object_id ):
-        yield dict( storage_bytes = 0 )
-        return
+      if note.deleted_from_id is None and note.notebook_id == notebook_id:
+        return dict( storage_bytes = 0 )
 
       # if the note was deleted from a different notebook than the notebook given, raise
-      if note.deleted_from != notebook_id:
+      if note.deleted_from_id != notebook_id:
         raise Access_error()
 
-      notebook.trash.remove_note( note )
+      note.notebook_id = note.deleted_from_id
+      note.deleted_from_id = None
+      note.startup = True
 
-      note.deleted_from = None
-      notebook.add_note( note )
-      notebook.add_startup_note( note )
+      self.__database.save( note, commit = False )
+      user = self.__users.update_storage( user_id, commit = False )
+      self.__database.commit()
 
-      self.__database.save( notebook, self.__scheduler.thread )
-      yield Scheduler.SLEEP
-      self.__users.update_storage( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-      self.__database.save( user )
-
-      yield dict( storage_bytes = user.storage_bytes )
+      return dict( storage_bytes = user.storage_bytes )
     else:
-      yield dict( storage_bytes = 0 )
+      return dict( storage_bytes = 0 )
 
   @expose( view = Json )
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
@@ -632,40 +513,35 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
-    for note in notebook.notes:
-      notebook.remove_note( note )
+    notes = self.__database.select_many( Note, notebook.sql_load_notes() )
 
-      if notebook.trash:
-        note.deleted_from = notebook.object_id
-        notebook.trash.add_note( note )
-        notebook.trash.add_startup_note( note )
+    for note in notes:
+      if notebook.trash_id:
+        note.deleted_from_id = notebook_id
+        note.notebook_id = notebook.trash_id
+        note.startup = True
+      else:
+        note.notebook_id = None
+      self.__database.save( note, commit = False )
 
-    self.__database.save( notebook, self.__scheduler.thread )
-    yield Scheduler.SLEEP
-    self.__users.update_storage( user_id, self.__scheduler.thread )
-    user = ( yield Scheduler.SLEEP )
-    self.__database.save( user )
+    user = self.__users.update_storage( user_id, commit = False )
+    self.__database.commit()
 
-    yield dict(
+    return dict(
       storage_bytes = user.storage_bytes,
     )
 
   @expose( view = Json )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     search_text = Valid_string( min = 0, max = 100 ),
@@ -688,41 +564,39 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
     search_text = search_text.lower()
+    if len( search_text ) == 0:
+      return dict( notes = [] )
+
     title_matches = []
     content_matches = []
     nuker = Html_nuker()
 
-    if len( search_text ) > 0:
-      for note in notebook.notes:
-      	if note is None: continue
-        if search_text in nuker.nuke( note.title ).lower():
-          title_matches.append( note )
-        elif search_text in nuker.nuke( note.contents ).lower():
-          content_matches.append( note )
+    notes = self.__database.select_many( Note, notebook.sql_search_notes( search_text ) )
 
-    notes = title_matches + content_matches
+    # further narrow the search results by making sure notes still match after all HTML tags are
+    # stripped out
+    for note in notes:
+      if search_text in nuker.nuke( note.title ).lower():
+        title_matches.append( note )
+      elif search_text in nuker.nuke( note.contents ).lower():
+        content_matches.append( note )
 
-    yield dict(
-      notes = notes,
+    return dict(
+      notes = title_matches + content_matches,
     )
 
   @expose( view = Json )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
@@ -740,29 +614,23 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
-    notes = [ note for note in notebook.notes if note is not None and note.title is not None ]
-    notes.sort( lambda a, b: cmp( b.revision, a.revision ) )
+    notes = self.__database.select_many( Note, notebook.sql_load_notes() )
 
-    yield dict(
+    return dict(
       notes = [ ( note.object_id, note.title ) for note in notes ]
     )
 
   @expose( view = Html_file )
   @strongly_expire
-  @wait_for_update
   @grab_user_id
-  @async
-  @update_client
   @validate(
     notebook_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
@@ -780,42 +648,18 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    self.check_access( notebook_id, user_id, self.__scheduler.thread )
-    if not ( yield Scheduler.SLEEP ):
+    if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    self.__database.load( notebook_id, self.__scheduler.thread )
-    notebook = ( yield Scheduler.SLEEP )
+    notebook = self.__database.load( Notebook, notebook_id )
 
     if not notebook:
       raise Access_error()
 
-    normal_notes = list( set( notebook.notes ) - set( notebook.startup_notes ) )
-    normal_notes.sort( lambda a, b: -cmp( a.revision, b.revision ) )
-    
-    yield dict(
+    startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
+    other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
+
+    return dict(
       notebook_name = notebook.name,
-      notes = [ note for note in notebook.startup_notes + normal_notes if note is not None ],
+      notes = startup_notes + other_notes,
     )
-
-  @async
-  def check_access( self, notebook_id, user_id, callback ):
-    # check if the anonymous user has access to this notebook
-    self.__database.load( u"User anonymous", self.__scheduler.thread )
-    anonymous = ( yield Scheduler.SLEEP )
-
-    access = False
-    if anonymous.has_access( notebook_id ):
-      access = True
-
-    if user_id:
-      # check if the currently logged in user has access to this notebook
-      self.__database.load( user_id, self.__scheduler.thread )
-      user = ( yield Scheduler.SLEEP )
-
-      if user and user.has_access( notebook_id ):
-        access = True
-
-    yield callback, access
-
-  scheduler = property( lambda self: self.__scheduler )

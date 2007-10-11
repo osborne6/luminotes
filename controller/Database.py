@@ -1,219 +1,158 @@
 import re
-import bsddb
+import os
+import psycopg2 as psycopg
+from psycopg2.pool import PersistentConnectionPool
 import random
-import cPickle
-from cStringIO import StringIO
-from copy import copy
-from model.Persistent import Persistent
-from Async import async
 
 
 class Database( object ):
   ID_BITS = 128 # number of bits within an id
   ID_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
-  def __init__( self, scheduler, database_path = None ):
+  def __init__( self, connection = None ):
     """
     Create a new database and return it.
 
-    @type scheduler: Scheduler
-    @param scheduler: scheduler to use
-    @type database_path: unicode
-    @param database_path: path to the database file
+    @type connection: existing connection object with cursor()/close()/commit() methods, or NoneType
+    @param connection: database connection to use (optional, defaults to making a connection pool)
     @rtype: Database
-    @return: database at the given path
+    @return: newly constructed Database
     """
-    self.__scheduler = scheduler
-    self.__env = bsddb.db.DBEnv()
-    self.__env.open( None, bsddb.db.DB_CREATE | bsddb.db.DB_PRIVATE | bsddb.db.DB_INIT_MPOOL )
-    self.__db = bsddb.db.DB( self.__env )
-    self.__db.open( database_path, "database", bsddb.db.DB_HASH, bsddb.db.DB_CREATE )
-    self.__cache = {}
+    # This tells PostgreSQL to give us timestamps in UTC. I'd use "set timezone" instead, but that
+    # makes SQLite angry.
+    os.putenv( "PGTZ", "UTC" )
 
-  def __persistent_id( self, obj, skip = None ):
-    # save the object and return its persistent id
-    if obj != skip and isinstance( obj, Persistent ):
-      self.__save( obj )
-      return obj.object_id
+    if connection:
+      self.__connection = connection
+      self.__pool = None
+    else:
+      self.__connection = None
+      self.__pool = PersistentConnectionPool(
+        1,  # minimum connections
+        50, # maximum connections
+        "dbname=luminotes user=luminotes password=%s" % os.getenv( "PGPASSWORD", "dev" ),
+      )
 
-    # returning None indicates that the object should be pickled normally without using a persistent id
-    return None
+  def __get_connection( self ):
+    if self.__connection:
+      return self.__connection
+    else:
+      return self.__pool.getconn()
 
-  @async
-  def save( self, obj, callback = None ):
+  def save( self, obj, commit = True ):
     """
-    Save the given object to the database, including any objects that it references.
+    Save the given object to the database.
 
     @type obj: Persistent
     @param obj: object to save
-    @type callback: generator or NoneType
-    @param callback: generator to wakeup when the save is complete (optional)
+    @type commit: bool
+    @param commit: True to automatically commit after the save
     """
-    self.__save( obj )
-    yield callback
+    connection = self.__get_connection()
+    cursor = connection.cursor()
 
-  def __save( self, obj ):
-    # if this object's current revision is already saved, bail
-    revision_id = obj.revision_id()
-    if revision_id in self.__cache:
-      return
+    cursor.execute( obj.sql_exists() )
+    if cursor.fetchone():
+      cursor.execute( obj.sql_update() )
+    else:
+      cursor.execute( obj.sql_create() )
 
-    object_id = unicode( obj.object_id ).encode( "utf8" )
-    revision_id = unicode( obj.revision_id() ).encode( "utf8" )
-    secondary_id = obj.secondary_id and unicode( obj.full_secondary_id() ).encode( "utf8" ) or None
+    if commit:
+      connection.commit()
 
-    # update the cache with this saved object
-    self.__cache[ object_id ] = obj
-    self.__cache[ revision_id ] = copy( obj )
-    if secondary_id:
-      self.__cache[ secondary_id ] = obj
+  def commit( self ):
+    self.__get_connection().commit()
 
-    # set the pickler up to save persistent ids for every object except for the obj passed in, which
-    # will be pickled normally
-    buffer = StringIO()
-    pickler = cPickle.Pickler( buffer, protocol = -1 )
-    pickler.persistent_id = lambda o: self.__persistent_id( o, skip = obj )
-
-    # pickle the object and write it to the database under both its id key and its revision id key
-    pickler.dump( obj )
-    pickled = buffer.getvalue()
-    self.__db.put( object_id, pickled )
-    self.__db.put( revision_id, pickled )
-
-    # write the pickled object id (only) to the database under its secondary id
-    if secondary_id:
-      buffer = StringIO()
-      pickler = cPickle.Pickler( buffer, protocol = -1 )
-      pickler.persistent_id = lambda o: self.__persistent_id( o )
-      pickler.dump( obj )
-      self.__db.put( secondary_id, buffer.getvalue() )
-
-    self.__db.sync()
-
-  @async
-  def load( self, object_id, callback, revision = None ):
+  def load( self, Object_type, object_id, revision = None ):
     """
-    Load the object corresponding to the given object id from the database, and yield the provided
-    callback generator with the loaded object as its argument, or None if the object_id is unknown.
-    If a revision is provided, a specific revision of the object will be loaded.
-
-    @type object_id: unicode
-    @param object_id: id of the object to load
-    @type callback: generator
-    @param callback: generator to send the loaded object to
-    @type revision: int or NoneType
-    @param revision: revision of the object to load (optional)
-    """
-    obj = self.__load( object_id, revision )
-    yield callback, obj
-
-  def __load( self, object_id, revision = None ):
-    if revision is not None:
-      object_id = Persistent.make_revision_id( object_id, revision )
-
-    object_id = unicode( object_id ).encode( "utf8" )
-
-    # if the object corresponding to the given id has already been loaded, simply return it without
-    # loading it again
-    obj = self.__cache.get( object_id )
-    if obj is not None:
-      return obj
-
-    # grab the object for the given id from the database
-    buffer = StringIO()
-    unpickler = cPickle.Unpickler( buffer )
-    unpickler.persistent_load = self.__load
-
-    pickled = self.__db.get( object_id )
-    if pickled is None or pickled == "":
-      return None
-
-    buffer.write( pickled )
-    buffer.flush()
-    buffer.seek( 0 )
-
-    # unpickle the object and update the cache with this saved object
-    obj = unpickler.load()
-    if obj is None:
-      print "error unpickling %s: %s" % ( object_id, pickled )
-      return None
-    self.__cache[ unicode( obj.object_id ).encode( "utf8" ) ] = obj
-    self.__cache[ unicode( obj.revision_id() ).encode( "utf8" ) ] = copy( obj )
-
-    return obj
-
-  @async
-  def reload( self, object_id, callback = None ):
-    """
-    Load and immediately save the object corresponding to the given object id or database key. This
-    is useful when the object has a __setstate__() method that performs some sort of schema
-    evolution operation.
-
-    @type object_id: unicode
-    @param object_id: id or key of the object to reload
-    @type callback: generator or NoneType
-    @param callback: generator to wakeup when the save is complete (optional)
-    """
-    self.__reload( object_id )
-    yield callback
-
-  def __reload( self, object_id, revision = None ):
-    object_id = unicode( object_id ).encode( "utf8" )
-
-    # grab the object for the given id from the database
-    buffer = StringIO()
-    unpickler = cPickle.Unpickler( buffer )
-    unpickler.persistent_load = self.__load
-
-    pickled = self.__db.get( object_id )
-    if pickled is None or pickled == "":
-      return
-
-    buffer.write( pickled )
-    buffer.flush()
-    buffer.seek( 0 )
-
-    # unpickle the object. this should trigger __setstate__() if the object has such a method
-    obj = unpickler.load()
-    if obj is None:
-      print "error unpickling %s: %s" % ( object_id, pickled )
-      return
-    self.__cache[ object_id ] = obj
-
-    # set the pickler up to save persistent ids for every object except for the obj passed in, which
-    # will be pickled normally
-    buffer = StringIO()
-    pickler = cPickle.Pickler( buffer, protocol = -1 )
-    pickler.persistent_id = lambda o: self.__persistent_id( o, skip = obj )
-
-    # pickle the object and write it to the database under its id key
-    pickler.dump( obj )
-    pickled = buffer.getvalue()
-    self.__db.put( object_id, pickled )
-
-    self.__db.sync()
-
-  def size( self, object_id, revision = None ):
-    """
-    Load the object corresponding to the given object id from the database, and return the size of
-    its pickled data in bytes. If a revision is provided, a specific revision of the object will be
+    Load the object corresponding to the given object id from the database and return it, or None if
+    the object_id is unknown. If a revision is provided, a specific revision of the object will be
     loaded.
 
+    @type Object_type: type
+    @param Object_type: class of the object to load 
     @type object_id: unicode
-    @param object_id: id of the object whose size should be returned
+    @param object_id: id of the object to load
     @type revision: int or NoneType
     @param revision: revision of the object to load (optional)
+    @rtype: Object_type or NoneType
+    @return: loaded object, or None if no match
     """
-    if revision is not None:
-      object_id = Persistent.make_revision_id( object_id, revision )
+    return self.select_one( Object_type, Object_type.sql_load( object_id, revision ) )
 
-    object_id = unicode( object_id ).encode( "utf8" )
+  def select_one( self, Object_type, sql_command ):
+    """
+    Execute the given sql_command and return its results in the form of an object of Object_type,
+    or None if there was no match.
 
-    pickled = self.__db.get( object_id )
-    if pickled is None or pickled == "":
+    @type Object_type: type
+    @param Object_type: class of the object to load 
+    @type sql_command: unicode
+    @param sql_command: SQL command to execute
+    @rtype: Object_type or NoneType
+    @return: loaded object, or None if no match
+    """
+    connection = self.__get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute( sql_command )
+
+    row = cursor.fetchone()
+    if not row:
       return None
 
-    return len( pickled )
+    if Object_type in ( tuple, list ):
+      return Object_type( row )
+    else:
+      return Object_type( *row )
+
+  def select_many( self, Object_type, sql_command ):
+    """
+    Execute the given sql_command and return its results in the form of a list of objects of
+    Object_type.
+
+    @type Object_type: type
+    @param Object_type: class of the object to load 
+    @type sql_command: unicode
+    @param sql_command: SQL command to execute
+    @rtype: list of Object_type
+    @return: loaded objects
+    """
+    connection = self.__get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute( sql_command )
+
+    objects = []
+    row = cursor.fetchone()
+
+    while row:
+      if Object_type in ( tuple, list ):
+        obj = Object_type( row )
+      else:
+        obj = Object_type( *row )
+
+      objects.append( obj )
+      row = cursor.fetchone()
+
+    return objects
+
+  def execute( self, sql_command, commit = True ):
+    """
+    Execute the given sql_command.
+
+    @type sql_command: unicode
+    @param sql_command: SQL command to execute
+    @type commit: bool
+    @param commit: True to automatically commit after the command
+    """
+    connection = self.__get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute( sql_command )
+
+    if commit:
+      connection.commit()
 
   @staticmethod
   def generate_id():
@@ -231,44 +170,45 @@ class Database( object ):
 
     return "".join( digits )
 
-  @async
-  def next_id( self, callback ):
+  def next_id( self, Object_type, commit = True ):
     """
-    Generate the next available object id, and yield the provided callback generator with the
-    object id as its argument.
+    Generate the next available object id and return it.
 
-    @type callback: generator
-    @param callback: generator to send the next available object id to
+    @type Object_type: type
+    @param Object_type: class of the object that the id is for
+    @type commit: bool
+    @param commit: True to automatically commit after storing the next id
     """
+    connection = self.__get_connection()
+    cursor = connection.cursor()
+
     # generate a random id, but on the off-chance that it collides with something else already in
     # the database, try again
     next_id = Database.generate_id()
-    while self.__db.get( next_id, default = None ) is not None:
+    cursor.execute( Object_type.sql_id_exists( next_id ) )
+
+    while cursor.fetchone() is not None:
       next_id = Database.generate_id()
+      cursor.execute( Object_type.sql_id_exists( next_id ) )
 
-    # save the next_id as a key in the database so that it's not handed out again to another client
-    self.__db[ next_id ] = ""
+    # save a new object with the next_id to the database
+    obj = Object_type( next_id )
+    cursor.execute( obj.sql_create() )
 
-    yield callback, next_id
+    if commit:
+      connection.commit()
 
-  @async
+    return next_id
+
   def close( self ):
     """
     Shutdown the database.
     """
-    self.__db.close()
-    self.__env.close()
-    yield None
+    if self.__connection:
+      self.__connection.close()
 
-  @async
-  def clear_cache( self ):
-    """
-    Clear the memory object cache.
-    """
-    self.__cache.clear()
-    yield None
-
-  scheduler = property( lambda self: self.__scheduler )
+    if self.__pool:
+      self.__pool.closeall()
 
 
 class Valid_id( object ):
@@ -289,9 +229,9 @@ class Valid_id( object ):
 
 class Valid_revision( object ):
   """
-  Validator for an object id.
+  Validator for an object revision timestamp.
   """
-  REVISION_PATTERN = re.compile( "^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d+$" )
+  REVISION_PATTERN = re.compile( "^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d+[+-]\d\d(:)?\d\d$" )
 
   def __init__( self, none_okay = False ):
     self.__none_okay = none_okay
