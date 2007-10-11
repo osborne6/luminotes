@@ -2,10 +2,10 @@ import re
 import cherrypy
 from pytz import utc
 from datetime import datetime, timedelta
-from new_model.User import User
-from new_model.Notebook import Notebook
-from new_model.Note import Note
-from new_model.Password_reset import Password_reset
+from model.User import User
+from model.Notebook import Notebook
+from model.Note import Note
+from model.Password_reset import Password_reset
 from Expose import expose
 from Validate import validate, Valid_string, Valid_bool, Validation_error
 from Database import Valid_id

@@ -1,5 +1,5 @@
 from datetime import datetime
-from new_model.Persistent import Persistent, quote
+from model.Persistent import Persistent, quote
 
 
 def notz_quote( value ):

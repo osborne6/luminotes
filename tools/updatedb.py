@@ -4,9 +4,9 @@ import os
 import os.path
 from config.Common import settings
 from controller.Database import Database
-from new_model.Notebook import Notebook
-from new_model.Note import Note
-from new_model.User import User
+from model.Notebook import Notebook
+from model.Note import Note
+from model.User import User
 from tools.initdb import fix_note_contents
 
 

@@ -6,8 +6,8 @@ from Database import Valid_id, Valid_revision
 from Users import grab_user_id
 from Expire import strongly_expire
 from Html_nuker import Html_nuker
-from new_model.Notebook import Notebook
-from new_model.Note import Note
+from model.Notebook import Notebook
+from model.Note import Note
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file

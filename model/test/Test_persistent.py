@@ -1,6 +1,6 @@
 from pytz import utc
 from datetime import datetime, timedelta
-from new_model.Persistent import Persistent, quote
+from model.Persistent import Persistent, quote
 
 
 class Test_persistent( object ):

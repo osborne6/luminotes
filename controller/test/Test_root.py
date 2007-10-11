@@ -1,5 +1,5 @@
 import cherrypy
-from new_model.User import User
+from model.User import User
 from controller.Scheduler import Scheduler
 from Test_controller import Test_controller
 

@@ -8,9 +8,9 @@ from StringIO import StringIO
 
 class Test_controller( object ):
   def __init__( self ):
-    from new_model.User import User
-    from new_model.Notebook import Notebook
-    from new_model.Note import Note
+    from model.User import User
+    from model.Notebook import Notebook
+    from model.Note import Note
 
     # Since Stub_database isn't a real database and doesn't know SQL, replace some of the
     # SQL-returning methods in User, Note, and Notebook to return functions that manipulate data in

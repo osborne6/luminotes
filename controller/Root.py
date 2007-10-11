@@ -5,7 +5,7 @@ from Validate import validate
 from Notebooks import Notebooks
 from Users import Users
 from Database import Valid_id
-from new_model.Note import Note
+from model.Note import Note
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Error_page import Error_page

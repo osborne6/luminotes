@@ -1,5 +1,5 @@
-from new_model.User import User
-from new_model.Password_reset import Password_reset
+from model.User import User
+from model.Password_reset import Password_reset
 
 
 class Test_password_reset( object ):

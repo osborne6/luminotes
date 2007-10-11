@@ -1,6 +1,6 @@
 from pytz import utc
 from datetime import datetime, timedelta
-from new_model.Note import Note
+from model.Note import Note
 
 
 class Test_note( object ):

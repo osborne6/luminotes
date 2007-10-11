@@ -1,6 +1,6 @@
 from pytz import utc
 from datetime import datetime, timedelta
-from new_model.User import User
+from model.User import User
 
 
 class Test_user( object ):

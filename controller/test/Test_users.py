@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 from nose.tools import raises
 from Test_controller import Test_controller
 from Stub_smtp import Stub_smtp
-from new_model.User import User
-from new_model.Notebook import Notebook
-from new_model.Note import Note
-from new_model.Password_reset import Password_reset
+from model.User import User
+from model.Notebook import Notebook
+from model.Note import Note
+from model.Password_reset import Password_reset
 
 
 class Test_users( Test_controller ):

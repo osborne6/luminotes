@@ -2,9 +2,9 @@ import cherrypy
 import cgi
 from urllib import quote
 from Test_controller import Test_controller
-from new_model.Notebook import Notebook
-from new_model.Note import Note
-from new_model.User import User
+from model.Notebook import Notebook
+from model.Note import Note
+from model.User import User
 
 
 class Test_notebooks( Test_controller ):

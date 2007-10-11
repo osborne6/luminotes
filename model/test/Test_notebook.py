@@ -1,7 +1,7 @@
 from pytz import utc
 from datetime import datetime, timedelta
-from new_model.Notebook import Notebook
-from new_model.Note import Note
+from model.Notebook import Notebook
+from model.Note import Note
 
 
 class Test_notebook( object ):

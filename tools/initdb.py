@@ -4,9 +4,9 @@ import os
 import os.path
 import sys
 from controller.Database import Database
-from new_model.Notebook import Notebook
-from new_model.Note import Note
-from new_model.User import User
+from model.Notebook import Notebook
+from model.Note import Note
+from model.User import User
 
 
 class Initializer( object ):
@@ -31,9 +31,9 @@ class Initializer( object ):
     self.anonymous = None
 
     if nuke is True:
-      self.database.execute( file( "new_model/drop.sql" ).read(), commit = False )
+      self.database.execute( file( "model/drop.sql" ).read(), commit = False )
 
-    self.database.execute( file( "new_model/schema.sql" ).read(), commit = False )
+    self.database.execute( file( "model/schema.sql" ).read(), commit = False )
 
     self.create_main_notebook()
     self.create_anonymous_user()
