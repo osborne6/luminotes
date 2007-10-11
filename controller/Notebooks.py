@@ -197,7 +197,7 @@ class Notebooks( object ):
     if notebook is None:
       note = None
     else:
-      note = self.__database.select_one( Notebook, notebook.sql_load_note_by_title( note_title ) )
+      note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
 
     return dict(
       note = note,
@@ -234,7 +234,7 @@ class Notebooks( object ):
     if notebook is None:
       note = None
     else:
-      note = self.__database.select_one( Notebook, notebook.sql_load_note_by_title( note_title ) )
+      note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
 
     return dict(
       note_id = note and note.object_id or None,
