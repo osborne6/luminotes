@@ -40,7 +40,7 @@ and set the password to "dev".
 
 Initialize the database with the starting schema and default data:
 
-  createdb -W -U luminotes luminotes
+  createdb -W -E UTF8 -U luminotes luminotes
   export PYTHONPATH=.
   python2.4 tools/initdb.py
 
@@ -119,7 +119,7 @@ and set a new password, for instance, "mypassword".
 
 Initialize the database with the starting schema and default data:
 
-  createdb -W -U luminotes luminotes
+  createdb -W -E UTF8 -U luminotes luminotes
   export PYTHONPATH=.
   export PGPASSWORD=mypassword
   python2.4 tools/initdb.py
