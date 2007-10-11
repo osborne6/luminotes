@@ -49,7 +49,6 @@ class Updater( object ):
     if self.navigation_note_id:
       note = self.database.load( Note, self.navigation_note_id )
       self.update_note( "navigation.html", True, main_notebook, note_ids, note )
-      self.database.save( note, commit = False )
 
     # update all of the notes in the main notebook
     for ( filename, startup ) in self.NOTE_FILES:
