@@ -97,7 +97,8 @@ class Database( object ):
 
     cursor.execute( sql_command )
 
-    row = cursor.fetchone()
+    row = self.__row_to_unicode( cursor.fetchone() )
+    print row
     if not row:
       return None
 
@@ -124,7 +125,7 @@ class Database( object ):
     cursor.execute( sql_command )
 
     objects = []
-    row = cursor.fetchone()
+    row = self.__row_to_unicode( cursor.fetchone() )
 
     while row:
       if Object_type in ( tuple, list ):
@@ -133,9 +134,15 @@ class Database( object ):
         obj = Object_type( *row )
 
       objects.append( obj )
-      row = cursor.fetchone()
+      row = self.__row_to_unicode( cursor.fetchone() )
 
     return objects
+
+  def __row_to_unicode( self, row ):
+    if row is None:
+      return None
+
+    return [ isinstance( item, str ) and unicode( item, encoding = "utf8" ) or item for item in row ]
 
   def execute( self, sql_command, commit = True ):
     """
