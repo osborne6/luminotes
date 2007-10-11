@@ -1,4 +1,4 @@
-from model.User import User
+from new_model.User import User
 from new_model.Password_reset import Password_reset
 
 
