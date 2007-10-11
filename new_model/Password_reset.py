@@ -5,7 +5,7 @@ class Password_reset( Persistent ):
   """
   A request for a password reset.
   """
-  def __init__( self, object_id, email_address, redeemed = False ):
+  def __init__( self, object_id, email_address = None, redeemed = False ):
     """
     Create a password reset request with the given id.
 

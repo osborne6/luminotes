@@ -98,7 +98,7 @@ ALTER TABLE public.notebook_current OWNER TO luminotes;
 
 CREATE TABLE password_reset (
     id text NOT NULL,
-    email_address text NOT NULL,
+    email_address text,
     redeemed boolean
 );
 
