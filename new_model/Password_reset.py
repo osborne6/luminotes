@@ -45,8 +45,8 @@ class Password_reset( Persistent ):
     ( quote( self.object_id ), quote( self.__email_address ), quote( self.__redeemed and "t" or "f" ) )
 
   def sql_update( self ):
-    return "update password_reset set redeemed = %s where id = %s;" % \
-    ( quote( self.__redeemed and "t" or "f" ), quote( self.object_id ) )
+    return "update password_reset set email_address = %s, redeemed = %s where id = %s;" % \
+    ( quote( self.__email_address ), quote( self.__redeemed and "t" or "f" ), quote( self.object_id ) )
 
   def __set_redeemed( self, redeemed ):
     if redeemed != self.__redeemed:
