@@ -5,11 +5,21 @@ from datetime import datetime, date
 
 
 class Json( JSONEncoder ):
-  def __init__( self, **kwargs ):
+  def __init__( self, *args, **kwargs ):
     JSONEncoder.__init__( self )
+
+    if args and kwargs:
+      raise ValueError( "Please provide either args or kwargs, not both." )
+
+    self.__args = args
     self.__kwargs = kwargs
 
   def __str__( self ):
+    if self.__args:
+      if len( self.__args ) == 1:
+        return self.encode( self.__args[ 0 ] )
+      return self.encode( self.__args )
+
     return self.encode( self.__kwargs )
 
   def default( self, obj ):

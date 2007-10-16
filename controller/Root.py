@@ -1,9 +1,10 @@
 import cherrypy
 
 from Expose import expose
+from Expire import strongly_expire
 from Validate import validate
 from Notebooks import Notebooks
-from Users import Users
+from Users import Users, grab_user_id
 from Database import Valid_id
 from model.Note import Note
 from view.Main_page import Main_page
@@ -52,7 +53,12 @@ class Root( object ):
     )
 
   @expose( view = Main_page )
-  def index( self ):
+  @strongly_expire
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def index( self, user_id ):
     """
     Provide the information necessary to display the web site's front page, potentially performing
     a redirect to the https version of the page.
@@ -64,7 +70,11 @@ class Root( object ):
     if cherrypy.session.get( "user_id" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
       return dict( redirect = https_url )
 
-    return dict()
+    result = self.__users.current( user_id )
+    first_notebook_id = result[ u"notebooks" ][ 0 ].object_id
+    result.update( self.__notebooks.contents( first_notebook_id, user_id = user_id ) )
+
+    return result
 
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )

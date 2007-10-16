@@ -1,5 +1,5 @@
 from Page import Page
-from Tags import Div, H2, P, A, Ul, Li, Strong
+from Tags import Div, H2, P, A, Ul, Li, Strong, Noscript
 
 
 class Error_page( Page ):
@@ -20,6 +20,16 @@ class Error_page( Page ):
       title,
       Div(
         H2( title ),
+        Noscript(
+          P(
+            Strong(
+              u"""
+              Please enable JavaScript in your web browser. JavaScript is necessary for many Luminotes
+              features to work properly.
+              """,
+            ),
+          ),
+        ),
         P(
           u"Something went wrong! If you care, please",
           A( "let me know about it.", href = "mailto:%s" % support_email ),
@@ -33,12 +43,6 @@ class Error_page( Page ):
         ),
         P(
           u"Thanks!",
-        ),
-        P(
-          Strong( u"P.S." ),
-          u"""
-          If JavaScript isn't enabled in your browser, please enable it.
-          """,
         ),
         class_ = u"error_box",
       ),

@@ -2,6 +2,7 @@ import re
 import cherrypy
 import smtplib
 from pytz import utc
+from nose.tools import raises
 from datetime import datetime, timedelta
 from nose.tools import raises
 from Test_controller import Test_controller
@@ -10,6 +11,7 @@ from model.User import User
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
+from controller.Users import Access_error
 
 
 class Test_users( Test_controller ):
@@ -80,7 +82,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
-  def test_current_after_signup( self, include_startup_notes = False ):
+  def test_current_after_signup( self ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,
       password = self.new_password,
@@ -92,12 +94,14 @@ class Test_users( Test_controller ):
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    result = self.http_get(
-      "/users/current?include_startup_notes=%s" % include_startup_notes,
-      session_id = session_id,
-    )
+    user = self.database.last_saved_obj
+    assert isinstance( user, User )
+    result = cherrypy.root.users.current( user.object_id )
 
+    assert result[ u"user" ].object_id == user.object_id
     assert result[ u"user" ].username == self.new_username
+    assert result[ u"user" ].email_address == self.new_email_address
+
     notebooks = result[ u"notebooks" ]
     notebook = notebooks[ 0 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -120,21 +124,12 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == True
 
-    startup_notes = result[ "startup_notes" ]
-    if include_startup_notes:
-      assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
-      assert startup_notes[ 0 ].title == self.startup_note.title
-      assert startup_notes[ 0 ].contents == self.startup_note.contents
-    else:
-      assert startup_notes == []
+    assert result.get( u"login_url" ) is None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337
-
-  def test_current_with_startup_notes_after_signup( self ):
-    self.test_current_after_signup( include_startup_notes = True )
 
   def test_signup_with_different_passwords( self ):
     result = self.http_post( "/users/signup", dict(
@@ -152,18 +147,20 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
-  def test_current_after_demo( self, include_startup_notes = False ):
+  def test_current_after_demo( self ):
     result = self.http_post( "/users/demo", dict() )
     session_id = result[ u"session_id" ]
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    result = self.http_get(
-      "/users/current?include_startup_notes=%s" % include_startup_notes,
-      session_id = session_id,
-    )
+    user = self.database.last_saved_obj
+    assert isinstance( user, User )
+    result = cherrypy.root.users.current( user.object_id )
 
-    assert result[ u"user" ].username == None
+    assert result[ u"user" ].object_id == user.object_id
+    assert result[ u"user" ].username is None
+    assert result[ u"user" ].email_address is None
+
     notebooks = result[ u"notebooks" ]
     assert len( notebooks ) == 3
     notebook = notebooks[ 0 ]
@@ -187,34 +184,25 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == True
 
-    startup_notes = result[ "startup_notes" ]
-    if include_startup_notes:
-      assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
-      assert startup_notes[ 0 ].title == self.startup_note.title
-      assert startup_notes[ 0 ].contents == self.startup_note.contents
-    else:
-      assert startup_notes == []
+    assert result.get( u"login_url" ) is None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337
 
-  def test_current_with_startup_notes_after_demo( self ):
-    self.test_current_after_demo( include_startup_notes = True )
-
-  def test_current_after_demo_twice( self, include_startup_notes = False ):
+  def test_current_after_demo_twice( self ):
     result = self.http_post( "/users/demo", dict() )
     session_id = result[ u"session_id" ]
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    result = self.http_get(
-      "/users/current?include_startup_notes=%s" % include_startup_notes,
-      session_id = session_id,
-    )
+    user = self.database.last_saved_obj
+    assert isinstance( user, User )
+    result = cherrypy.root.users.current( user.object_id )
 
     user_id = result[ u"user" ].object_id
+    assert user_id == user.object_id
 
     # request a demo for a second time
     result = self.http_post( "/users/demo", dict(), session_id = session_id )
@@ -224,19 +212,13 @@ class Test_users( Test_controller ):
 
     assert notebook_id_again == new_notebook_id
 
-    result = self.http_get(
-      "/users/current?include_startup_notes=%s" % include_startup_notes,
-      session_id = session_id,
-    )
+    result = cherrypy.root.users.current( user_id )
 
     user_id_again = result[ u"user" ].object_id
 
     # since we're already logged in as a guest user with a demo notebook, requesting a demo again
     # should just use the same guest user with the same notebook
     assert user_id_again == user_id
-
-  def test_current_with_startup_notes_after_demo_twice( self ):
-    self.test_current_after_demo_twice( include_startup_notes = True )
 
   def test_login( self ):
     result = self.http_post( "/users/login", dict(
@@ -270,18 +252,8 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ] == self.settings[ u"global" ].get( u"luminotes.http_url" ) + u"/"
 
-  def test_current_after_login( self, include_startup_notes = False ):
-    result = self.http_post( "/users/login", dict(
-      username = self.username,
-      password = self.password,
-      login_button = u"login",
-    ) )
-    session_id = result[ u"session_id" ]
-
-    result = self.http_get(
-      "/users/current?include_startup_notes=%s" % include_startup_notes,
-      session_id = session_id,
-    )
+  def test_current( self ):
+    result = cherrypy.root.users.current( self.user.object_id )
 
     assert result[ u"user" ]
     assert result[ u"user" ].object_id == self.user.object_id
@@ -293,32 +265,22 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 1 ].read_write == True
     assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 1 ].object_id
     assert result[ u"notebooks" ][ 2 ].read_write == True
-    assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
-    assert result[ u"login_url" ] == None
+    assert result[ u"login_url" ] is None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
 
-    startup_notes = result[ "startup_notes" ]
-    if include_startup_notes:
-      assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
-      assert startup_notes[ 0 ].title == self.startup_note.title
-      assert startup_notes[ 0 ].contents == self.startup_note.contents
-    else:
-      assert startup_notes == []
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
 
-  def test_current_with_startup_notes_after_login( self ):
-    self.test_current_after_login( include_startup_notes = True )
-
-  def test_current_without_login( self, include_startup_notes = False ):
-    result = self.http_get(
-      "/users/current?include_startup_notes=%s" % include_startup_notes,
-    )
+  def test_current_anonymous( self ):
+    result = cherrypy.root.users.current( self.anonymous.object_id )
 
     assert result[ u"user" ].username == "anonymous"
     assert len( result[ u"notebooks" ] ) == 1
     assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 0 ].read_write == False
-    assert result[ u"http_url" ] == self.settings[ u"global" ].get( u"luminotes.http_url" )
 
     login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
     assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
@@ -326,18 +288,12 @@ class Test_users( Test_controller ):
       self.anon_notebook.object_id,
       login_note.object_id,
     )
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
 
-    startup_notes = result[ "startup_notes" ]
-    if include_startup_notes:
-      assert len( startup_notes ) == 1
-      assert startup_notes[ 0 ].object_id == self.startup_note.object_id
-      assert startup_notes[ 0 ].title == self.startup_note.title
-      assert startup_notes[ 0 ].contents == self.startup_note.contents
-    else:
-      assert startup_notes == []
-
-  def test_current_with_startup_notes_without_login( self ):
-    self.test_current_without_login( include_startup_notes = True )
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
 
   def test_update_storage( self ):
     previous_revision = self.user.revision
@@ -409,11 +365,36 @@ class Test_users( Test_controller ):
 
     result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
 
-    assert result[ u"notebook_id" ] == self.anon_notebook.object_id
-    assert result[ u"note_id" ]
-    assert u"password reset" in result[ u"note_contents" ]
-    assert self.user.username in result[ u"note_contents" ]
-    assert self.user2.username in result[ u"note_contents" ]
+    assert result[ u"user" ].username == "anonymous"
+    assert len( result[ u"notebooks" ] ) == 1
+    assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
+    assert result[ u"notebooks" ][ 0 ].read_write == False
+
+    login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
+    assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
+      self.settings[ u"global" ][ u"luminotes.https_url" ],
+      self.anon_notebook.object_id,
+      login_note.object_id,
+    )
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+    assert result[ u"note" ].title == u"complete your password reset"
+    assert result[ u"note" ].notebook_id == self.anon_notebook.object_id
+    assert u"password reset" in result[ u"note" ].contents
+    assert self.user.username in result[ u"note" ].contents
+    assert self.user2.username in result[ u"note" ].contents
 
   def test_redeem_reset_unknown( self ):
     password_reset_id = u"unknownresetid"

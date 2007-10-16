@@ -1,3 +1,4 @@
+
 function Wiki( invoker ) {
   this.next_id = null;
   this.focused_editor = null;
@@ -5,102 +6,50 @@ function Wiki( invoker ) {
   this.notebook = null;
   this.notebook_id = getElement( "notebook_id" ).value;
   this.parent_id = getElement( "parent_id" ).value; // id of the notebook containing this one
-  this.read_write = false;
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: note title to editor
   this.all_notes_editor = null;      // editor for display of list of all notes
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
-  this.rate_plan = null;
+  this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
   this.storage_usage_high = false;
+
+  // grab the current notebook from the list of available notebooks
+  var notebooks = evalJSON( getElement( "notebooks" ).value );
+  for ( var i in notebooks ) {
+    if ( notebooks[ i ].object_id == this.notebook_id ) {
+      this.notebook = notebooks[ i ]
+      break;
+    }
+  }
+
+  // populate the wiki with startup notes
+  this.populate(
+    evalJSON( getElement( "startup_notes" ).value || "null" ),
+    evalJSON( getElement( "note" ).value || "null" ),
+    evalJSON( getElement( "note_read_write" ).value || "true" )
+  );
+
+  this.display_storage_usage( evalJSON( getElement( "storage_bytes" ).value || "0" ) );
 
   connect( this.invoker, "error_message", this, "display_error" );
   connect( this.invoker, "message", this, "display_message" );
   connect( "search_form", "onsubmit", this, "search" );
   connect( "html", "onclick", this, "background_clicked" );
 
-  // get info on the requested notebook (if any)
   var self = this;
-  if ( this.notebook_id ) {
-    this.invoker.invoke(
-      "/notebooks/contents", "GET", {
-        "notebook_id": this.notebook_id,
-        "note_id": getElement( "note_id" ).value,
-        "revision": getElement( "revision" ).value
-      },
-      function( result ) { self.populate( result ); }
-    );
-    var include_startup_notes = false;
-  } else {
-    var include_startup_notes = true;
+  var logout_link = getElement( "logout_link" );
+  if ( logout_link ) {
+    connect( "logout_link", "onclick", function ( event ) {
+      self.save_editor( null, true );
+      self.invoker.invoke( "/users/logout", "POST" );
+      event.stop();
+    } );
   }
-
-  // get info on the current user (logged-in or anonymous)
-  this.invoker.invoke( "/users/current", "GET", {
-      "include_startup_notes": include_startup_notes
-    },
-    function( result ) { self.display_user( result ); }
-  );
 }
 
 Wiki.prototype.update_next_id = function ( result ) {
   this.next_id = result.next_id;
-}
-
-Wiki.prototype.display_user = function ( result ) {
-  // if no notebook id was requested, then just display the user's default notebook
-  if ( !this.notebook_id ) {
-    this.notebook_id = result.notebooks[ 0 ].object_id;
-    this.populate( { "notebook" : result.notebooks[ 0 ], "startup_notes": result.startup_notes } );
-  }
-
-  var user_span = createDOM( "span" );
-  replaceChildNodes( "user_area", user_span );
-
-  // if not logged in, display a login link
-  if ( result.user.username == "anonymous" && result.login_url ) {
-    appendChildNodes( user_span, createDOM( "a", { "href": result.login_url, "id": "login_link" }, "login" ) );
-    return;
-  }
-
-  // display links for current notebook and a list of all notebooks that the user has access to
-  var notebooks_span = createDOM( "span" );
-  replaceChildNodes( "notebooks_area", notebooks_span );
-
-  appendChildNodes( notebooks_span, createDOM( "h4", "notebooks" ) );
-
-  for ( var i in result.notebooks ) {
-    var notebook = result.notebooks[ i ];
-
-    if ( notebook.name == "Luminotes" || notebook.name == "trash" )
-      continue;
-
-    var div_class = "link_area_item";
-    if ( notebook.object_id == this.notebook_id )
-      div_class += " current_notebook_name";
-
-    appendChildNodes( notebooks_span, createDOM( "div", {
-      "class": div_class
-    }, createDOM( "a", {
-      "href": "/notebooks/" + notebook.object_id,
-      "id": "notebook_" + notebook.object_id
-    }, notebook.name ) ) );
-  }
-
-  this.rate_plan = result.rate_plan;
-  this.display_storage_usage( result.user.storage_bytes );
-
-  // display the name of the logged in user and a logout link
-  appendChildNodes( user_span, "logged in as " + ( result.user.username || "a guest" ) );
-  appendChildNodes( user_span, " | " );
-  appendChildNodes( user_span, createDOM( "a", { "href": result.http_url + "/", "id": "logout_link" }, "logout" ) );
-
-  var self = this;
-  connect( "logout_link", "onclick", function ( event ) {
-    self.save_editor( null, true );
-    self.invoker.invoke( "/users/logout", "POST" );
-    event.stop();
-  } );
 }
 
 Wiki.prototype.display_storage_usage = function( storage_bytes ) {
@@ -113,7 +62,10 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
     return Math.round( storage_bytes / MEGABYTE );
   }
 
-  var quota_bytes = this.rate_plan.storage_quota_bytes || 0;
+  var quota_bytes = this.rate_plan.storage_quota_bytes;
+  if ( !quota_bytes )
+    return;
+
   var usage_percent = Math.round( storage_bytes / quota_bytes * 100.0 );
 
   if ( usage_percent > 90 ) {
@@ -136,68 +88,49 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   );
 }
 
-Wiki.prototype.populate = function ( result ) {
-  this.notebook = result.notebook;
+Wiki.prototype.populate = function ( startup_notes, note, note_read_write ) {
+  // create an editor for each startup note in the received notebook, focusing the first one
+  var focus = true;
+  for ( var i in startup_notes ) {
+    var startup_note = startup_notes[ i ];
+    this.startup_notes[ startup_note.object_id ] = true;
+
+    // don't actually create an editor if a particular note was provided in the result
+    if ( !note ) {
+      var editor = this.create_editor(
+        startup_note.object_id,
+        // grab this note's contents from the static <noscript> area
+        getElement( "static_note_" + startup_note.object_id ).innerHTML,
+        startup_note.deleted_from_id,
+        startup_note.revision,
+        this.notebook.read_write, false, focus
+      );
+
+      this.open_editors[ startup_note.title ] = editor;
+      focus = false;
+    }
+  }
+
+  // if one particular note was provided, then just display an editor for that note
+  if ( note )
+    this.create_editor(
+      note.object_id,
+      getElement( "static_note_" + note.object_id ).innerHTML,
+      note.deleted_from_id,
+      note.revision,
+      this.notebook.read_write && note_read_write, false, true
+    );
+
+  if ( startup_notes.length == 0 && !note )
+    this.display_empty_message();
+
   var self = this;
 
-  var header_area = getElement( "notebook_header_area" );
-  replaceChildNodes( header_area, createDOM( "b", {}, this.notebook.name ) );
-
-  if ( this.parent_id ) {
-    appendChildNodes( header_area, createDOM( "span", {}, ": " ) );
-    var empty_trash_link = createDOM( "a", { "href": location.href }, "empty trash" );
-    appendChildNodes( header_area, empty_trash_link );
-    connect( empty_trash_link, "onclick", function ( event ) { try{ self.delete_all_editors( event ); } catch(e){ alert(e); } } );
-
-    appendChildNodes( header_area, createDOM( "span", {}, " | " ) );
-    appendChildNodes( header_area, createDOM( "a", { "href": "/notebooks/" + this.parent_id }, "return to notebook" ) );
-  }
-
-  var span = createDOM( "span" );
-  replaceChildNodes( "this_notebook_area", span );
-
-  appendChildNodes( span, createDOM( "h4", "this notebook" ) );
-  if ( !this.parent_id ) {
-    appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
-      createDOM( "a", { "href": location.href, "id": "all_notes_link", "title": "View a list of all notes in this notebook." }, "all notes" )
-    ) );
-  }
-  if ( this.notebook.name != "Luminotes" ) {
-    appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
-      createDOM( "a", { "href": "/notebooks/download_html/" + this.notebook.object_id, "id": "download_html_link", "title": "Download a stand-alone copy of the entire wiki notebook." }, "download as html" )
-    ) );
-  }
+  var empty_trash_link = getElement( "empty_trash_link" );
+  if ( empty_trash_link )
+    connect( empty_trash_link, "onclick", function ( event ) { self.delete_all_editors( event ); } );
 
   if ( this.notebook.read_write ) {
-    this.read_write = true;
-    removeElementClass( "toolbar", "undisplayed" );
-
-    if ( this.notebook.trash_id ) {
-      appendChildNodes( span, createDOM( "div", { "class": "link_area_item" },
-        createDOM( "a", {
-          "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id,
-          "id": "trash_link",
-          "title": "Look here for notes you've deleted."
-        }, "trash" )
-      ) );
-    } else if ( this.notebook.name == "trash" ) {
-      appendChildNodes( span, createDOM( "div", { "class": "link_area_item current_trash_notebook_name" },
-        createDOM( "a", {
-          "href": location.href,
-          "id": "trash_link",
-          "title": "Look here for notes you've deleted."
-        }, "trash" )
-      ) );
-
-      var header_area = getElement( "notebook_header_area" )
-      removeElementClass( header_area, "current_notebook_name" );
-      addElementClass( header_area, "current_trash_notebook_name" );
-
-      var border = getElement( "notebook_border" )
-      removeElementClass( border, "current_notebook_name" );
-      addElementClass( border, "current_trash_notebook_name" );
-    }
-
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
@@ -215,51 +148,20 @@ Wiki.prototype.populate = function ( result ) {
     );
   }
 
-  var self = this;
-  if ( !this.parent_id ) {
-    connect( "all_notes_link", "onclick", function ( event ) {
+  var all_notes_link = getElement( "all_notes_link" );
+  if ( all_notes_link ) {
+    connect( all_notes_link, "onclick", function ( event ) {
       self.load_editor( "all notes", "null" );
       event.stop();
     } );
   }
 
-  if ( this.notebook.name != "Luminotes" ) {
-    connect( "download_html_link", "onclick", function ( event ) {
+  var download_html_link = getElement( "download_html_link" );
+  if ( download_html_link ) {
+    connect( download_html_link, "onclick", function ( event ) {
       self.save_editor( null, true );
     } );
   }
-
-  // create an editor for each startup note in the received notebook, focusing the first one
-  var focus = true;
-  for ( var i in result.startup_notes ) {
-    var note = result.startup_notes[ i ];
-    if ( !note ) continue;
-    this.startup_notes[ note.object_id ] = true;
-
-    // don't actually create an editor if a particular note was provided in the result
-    if ( !result.note ) {
-      var editor = this.create_editor( note.object_id, note.contents, note.deleted_from_id, note.revision, this.read_write, false, focus );
-      this.open_editors[ note.title ] = editor;
-      focus = false;
-    }
-  }
-
-  // if one particular note was provided, then just display an editor for that note
-  var read_write = this.read_write;
-  var revision_element = getElement( "revision" );
-  if ( revision_element && revision_element.value ) read_write = false;
-
-  if ( result.note )
-    this.create_editor(
-      result.note.object_id,
-      result.note.contents || getElement( "note_contents" ).value,
-      result.note.deleted_from_id,
-      result.note.revision,
-      read_write, false, true
-    );
-
-  if ( result.startup_notes.length == 0 && !result.note )
-    this.display_empty_message();
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -288,7 +190,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  var editor = this.create_editor( undefined, undefined, undefined, undefined, this.read_write, true, true );
+  var editor = this.create_editor( undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
   this.blank_editor_id = editor.id;
 }
 
@@ -472,7 +374,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
   if ( requested_revision )
     var read_write = false; // show previous revisions as read-only
   else
-    var read_write = this.read_write;
+    var read_write = this.notebook.read_write;
 
   var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, read_write, true, false );
   id = editor.id;
@@ -485,7 +387,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, read_write, highlight, focus ) {
   var self = this;
   if ( isUndefinedOrNull( id ) ) {
-    if ( this.read_write ) {
+    if ( this.notebook.read_write ) {
       id = this.next_id;
       this.invoker.invoke( "/next_id", "POST", null,
         function( result ) { self.update_next_id( result ); }
@@ -496,7 +398,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   // for read-only notes within read-write notebooks, tack the revision timestamp onto the start of the note text
-  if ( !read_write && this.read_write && revision ) {
+  if ( !read_write && this.notebook.read_write && revision ) {
     var short_revision = this.brief_revision( revision );
     note_text = "<p>Previous revision from " + short_revision + "</p>" + note_text;
   }
@@ -504,7 +406,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   var startup = this.startup_notes[ id ];
   var editor = new Editor( id, this.notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus );
 
-  if ( this.read_write ) {
+  if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
     connect( editor, "title_changed", this, "editor_title_changed" );
     connect( editor, "key_pressed", this, "editor_key_pressed" );
@@ -698,7 +600,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
 
   if ( editor ) {
     // before hiding an editor, save it
-    if ( this.read_write )
+    if ( this.notebook.read_write )
       this.save_editor( editor );
 
     editor.shutdown();
@@ -724,7 +626,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     this.save_editor( editor, true );
 
     var self = this;
-    if ( this.read_write && editor.read_write ) {
+    if ( this.notebook.read_write && editor.read_write ) {
       this.invoker.invoke( "/notebooks/delete_note", "POST", { 
         "notebook_id": this.notebook_id,
         "note_id": editor.id
@@ -771,7 +673,7 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
 
     this.save_editor( editor, true );
 
-    if ( this.read_write && editor.read_write ) {
+    if ( this.notebook.read_write && editor.read_write ) {
       var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": editor.deleted_from_id,
@@ -794,7 +696,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
   this.clear_pulldowns();
 
   if ( editor ) {
-    if ( this.read_write && editor.read_write ) {
+    if ( this.notebook.read_write && editor.read_write ) {
       var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": this.notebook_id,
@@ -908,7 +810,7 @@ Wiki.prototype.display_search_results = function ( result ) {
     }
 
     // otherwise, create an editor for the one note
-    this.create_editor( note.object_id, note.contents, note.deleted_from_id, note.revision, this.read_write, true, true );
+    this.create_editor( note.object_id, note.contents, note.deleted_from_id, note.revision, this.notebook.read_write, true, true );
     return;
   }
 
@@ -1077,7 +979,7 @@ Wiki.prototype.delete_all_editors = function ( event ) {
 
   this.startup_notes = new Array();
 
-  if ( this.read_write ) {
+  if ( this.notebook.read_write ) {
     var self = this;
     this.invoker.invoke( "/notebooks/delete_all_notes", "POST", { 
       "notebook_id": this.notebook_id
@@ -1291,7 +1193,7 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
   revisions_list.reverse();
 
   var self = this;
-  for ( var i = 0; i < revisions_list.length; ++i ) {
+  for ( var i = 0; i < revisions_list.length - 1; ++i ) { // -1 to skip the oldest revision
     var revision = revisions_list[ i ];
     var short_revision = this.wiki.brief_revision( revision );
     var href = "/notebooks/" + this.notebook_id + "?" + queryString(

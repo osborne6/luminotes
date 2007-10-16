@@ -2,7 +2,7 @@ from Tags import P, Div, A, Input, Span, Br
 
 
 class Toolbar( Div ):
-  def __init__( self ):
+  def __init__( self, hide_toolbar = False ):
     Div.__init__(
       self,
       Div(
@@ -47,5 +47,5 @@ class Toolbar( Div ):
         class_ = u"button_wrapper",
       ),
       id = u"toolbar",
-      class_ = u"undisplayed", # start out as hidden, and then shown in the browser if the current notebook is read-write
+      class_ = hide_toolbar and u"undisplayed" or None,
     )

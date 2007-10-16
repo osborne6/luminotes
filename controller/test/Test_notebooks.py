@@ -1,10 +1,12 @@
 import cherrypy
 import cgi
+from nose.tools import raises
 from urllib import quote
 from Test_controller import Test_controller
 from model.Notebook import Notebook
 from model.Note import Note
 from model.User import User
+from controller.Notebooks import Access_error
 
 
 class Test_notebooks( Test_controller ):
@@ -53,53 +55,118 @@ class Test_notebooks( Test_controller ):
     self.database.save( self.anonymous, commit = False )
     self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False ) )
 
-  def test_default( self ):
-    result = self.http_get( "/notebooks/%s" % self.notebook.object_id )
+  def test_default_without_login( self ):
+    result = self.http_get(
+      "/notebooks/%s" % self.notebook.object_id,
+    )
     
-    assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert u"access" in result[ u"error" ]
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_default( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result.get( u"note" ) is None
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
   def test_default_with_note( self ):
-    result = self.http_get( "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, self.note.object_id ) )
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+      session_id = self.session_id,
+    )
     
-    assert result.get( u"notebook_id" ) == self.notebook.object_id
-    assert result.get( u"note_id" ) == self.note.object_id
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result.get( u"note" ).object_id == self.note.object_id
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
   def test_default_with_note_and_revision( self ):
-    result = self.http_get( "/notebooks/%s?note_id=%s&revision=%s" % (
-      self.notebook.object_id,
-      self.note.object_id,
-      quote( unicode( self.note.revision ) ),
-    ) )
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?note_id=%s&revision=%s" % (
+        self.notebook.object_id,
+        self.note.object_id,
+        quote( unicode( self.note.revision ) ),
+      ),
+      session_id = self.session_id,
+    )
     
-    assert result.get( u"notebook_id" ) == self.notebook.object_id
-    assert result.get( u"note_id" ) == self.note.object_id
-    assert result.get( u"revision" ) == unicode( self.note.revision )
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result.get( u"note" ).object_id == self.note.object_id
+    assert result.get( u"note" ).revision == self.note.revision
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) == False
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
   def test_default_with_parent( self ):
-    parent_id = "foo"
-    result = self.http_get( "/notebooks/%s?parent_id=%s" % ( self.notebook.object_id, parent_id ) )
+    self.login()
+
+    parent_id = u"foo"
+    result = self.http_get(
+      "/notebooks/%s?parent_id=%s" % ( self.notebook.object_id, parent_id ),
+      session_id = self.session_id,
+    )
     
-    assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result.get( u"note" ) is None
     assert result.get( u"parent_id" ) == parent_id
+    assert result.get( u"note_read_write" ) in ( None, True )
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
   def test_contents( self ):
-    self.login()
-
-    result = self.http_get(
-      "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
-      session_id = self.session_id,
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
     )
 
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
+    assert result[ "note" ] == None
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -109,11 +176,10 @@ class Test_notebooks( Test_controller ):
     assert user.storage_bytes == 0
 
   def test_contents_with_note( self ):
-    self.login()
-
-    result = self.http_get(
-      "/notebooks/contents?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
-      session_id = self.session_id,
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      user_id = self.user.object_id,
     )
 
     notebook = result[ "notebook" ]
@@ -131,16 +197,13 @@ class Test_notebooks( Test_controller ):
     assert user.storage_bytes == 0
 
   def test_contents_with_note_and_revision( self ):
-    self.login()
-
-    result = self.http_get(
-      "/notebooks/contents?notebook_id=%s&note_id=%s&revision=%s" % (
-        self.notebook.object_id,
-        self.note.object_id,
-        quote( unicode( self.note.revision ) ),
-      ),
-      session_id = self.session_id,
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = unicode( self.note.revision ),
+      user_id = self.user.object_id,
     )
+    self.login()
 
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
@@ -153,54 +216,39 @@ class Test_notebooks( Test_controller ):
     note = result[ "note" ]
 
     assert note.object_id == self.note.object_id
+    assert note.revision == self.note.revision
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
-  def test_contents_with_blank_note( self ):
-    self.login()
-
-    result = self.http_get(
-      "/notebooks/contents?notebook_id=%s&note_id=blank" % self.notebook.object_id ,
-      session_id = self.session_id,
+  @raises( Access_error )
+  def test_contents_without_user_id( self ):
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
     )
 
-    notebook = result[ "notebook" ]
-    startup_notes = result[ "startup_notes" ]
-
-    assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
-    assert len( startup_notes ) == 1
-    assert startup_notes[ 0 ].object_id == self.note.object_id
-
-    note = result[ "note" ]
-
-    assert note.object_id == u"blank"
-    assert note.contents == None
-    assert note.title == None
-    assert note.deleted_from_id == None
-    user = self.database.load( User, self.user.object_id )
-    assert user.storage_bytes == 0
-
-  def test_contents_without_login( self ):
-    result = self.http_get(
-      "/notebooks/contents?notebook_id=%s" % self.notebook.object_id,
-      session_id = self.session_id,
+  @raises( Access_error )
+  def test_contents_with_incorrect_user_id( self ):
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.anonymous.object_id,
     )
 
-    assert result.get( "error" )
-    user = self.database.load( User, self.user.object_id )
-    assert user.storage_bytes == 0
+  @raises( Access_error )
+  def test_contents_with_unknown_notebook_id( self ):
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.unknown_notebook_id,
+      user_id = self.user.object_id,
+    )
 
   def test_contents_with_read_only_notebook( self ):
-    self.login()
-
-    result = self.http_get(
-      "/notebooks/contents?notebook_id=%s" % self.anon_notebook.object_id,
-      session_id = self.session_id,
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.anon_notebook.object_id,
+      user_id = self.user.object_id,
     )
 
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
+    assert result[ "note" ] == None
 
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.read_write == False

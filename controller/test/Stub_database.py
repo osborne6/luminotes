@@ -6,9 +6,11 @@ class Stub_database( object ):
     # map of object id to list of saved objects (presumably in increasing order of revisions)
     self.objects = {}
     self.user_notebook = {} # map of user_id to ( notebook_id, read_write )
+    self.last_saved_obj = None
     self.__next_id = 0
 
   def save( self, obj, commit = False ):
+    self.last_saved_obj = obj
     if obj.object_id in self.objects:
       self.objects[ obj.object_id ].append( copy( obj ) )
     else:

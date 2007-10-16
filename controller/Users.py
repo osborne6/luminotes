@@ -68,6 +68,17 @@ class Password_reset_error( Exception ):
     )
 
 
+class Access_error( Exception ):
+  def __init__( self, message ):
+    Exception.__init__( self, message )
+    self.__message = message
+
+  def to_dict( self ):
+    return dict(
+      error = self.__message
+    )
+
+
 def grab_user_id( function ):
   """
   A decorator to grab the current logged in user id from the cherrypy session and pass it as a
@@ -329,29 +340,19 @@ class Users( object ):
       deauthenticated = True,
     )
 
-  @expose( view = Json )
-  @strongly_expire
-  @grab_user_id
-  @validate(
-    include_startup_notes = Valid_bool(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def current( self, include_startup_notes, user_id ):
+  def current( self, user_id ):
     """
     Return information on the currently logged-in user. If not logged in, default to the anonymous
     user.
 
-    @type include_startup_notes: bool
-    @param include_startup_notes: True to return startup notes for the first notebook
     @type user_id: unicode
-    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @param user_id: id of current logged-in user (if any)
     @rtype: json dict
     @return: {
-      'user': userdict or None,
-      'notebooks': notebooksdict,
-      'startup_notes': noteslist,
-      'http_url': url,
+      'user': user or None,
+      'notebooks': notebookslist,
       'login_url': url,
+      'logout_url': url,
       'rate_plan': rateplandict,
     }
     @raise Validation_error: one of the arguments is invalid
@@ -364,37 +365,27 @@ class Users( object ):
       user = anonymous
 
     if not user or not anonymous:
-      return dict(
-        user = None,
-        notebooks = None,
-        http_url = u"",
-      )
+      raise Access_error( u"Sorry, you don't have access to do that." )
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None
     notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks() )
 
-    if user_id:
+    if user_id and user_id != anonymous.object_id:
       notebooks += self.__database.select_many( Notebook, user.sql_load_notebooks() )
     # if the user is not logged in, return a login URL
     else:
-      if len( notebooks ) > 0:
+      if len( notebooks ) > 0 and notebooks[ 0 ]:
         main_notebook = notebooks[ 0 ]
         login_note = self.__database.select_one( Note, main_notebook.sql_load_note_by_title( u"login" ) )
         if login_note:
           login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, main_notebook.object_id, login_note.object_id )
 
-    if include_startup_notes and len( notebooks ) > 0:
-      startup_notes = self.__database.select_many( Note, notebooks[ 0 ].sql_load_startup_notes() )
-    else:
-      startup_notes = []
-
     return dict(
       user = user,
       notebooks = notebooks,
-      startup_notes = startup_notes,
-      http_url = self.__http_url,
       login_url = login_url,
+      logout_url = self.__https_url + u"/",
       rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},
     )
 
@@ -452,7 +443,7 @@ class Users( object ):
       # check if the given user has access to this notebook
       user = self.__database.load( User, user_id )
 
-      if user and self.__database.select_one( bool, user.sql_has_access( notebook_id ) ):
+      if user and self.__database.select_one( bool, user.sql_has_access( notebook_id, read_write ) ):
         return True
 
     return False
@@ -551,11 +542,17 @@ class Users( object ):
     if len( matching_users ) == 0:
       raise Password_reset_error( u"There are no Luminotes users with the email address %s" % password_reset.email_address )
 
-    return dict(
+    result = self.current( anonymous.object_id )
+    result[ "notebook" ] = main_notebook
+    result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
+    result[ "note_read_write" ] = False
+    result[ "note" ] = Note.create(
+      object_id = u"password_reset",
+      contents = unicode( Redeem_reset_note( password_reset_id, matching_users ) ),
       notebook_id = main_notebook.object_id,
-      note_id = u"blank",
-      note_contents = unicode( Redeem_reset_note( password_reset_id, matching_users ) ),
     )
+
+    return result
 
   @expose( view = Json )
   def reset_password( self, password_reset_id, reset_button, **new_passwords ):

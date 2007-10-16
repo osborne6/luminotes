@@ -29,7 +29,7 @@ class Test_controller( object ):
       notebooks = []
       notebook_tuples = database.user_notebook.get( self.object_id )
 
-      if not notebook_tuples: return None
+      if not notebook_tuples: return []
 
       for notebook_tuple in notebook_tuples:
         ( notebook_id, read_write ) = notebook_tuple

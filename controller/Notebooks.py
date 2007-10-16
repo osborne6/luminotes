@@ -46,13 +46,15 @@ class Notebooks( object ):
     self.__users = users
 
   @expose( view = Main_page )
+  @grab_user_id
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
     parent_id = Valid_id(),
     revision = Valid_revision(),
+    user_id = Valid_id( none_okay = True ),
   )
-  def default( self, notebook_id, note_id = None, parent_id = None, revision = None ):
+  def default( self, notebook_id, note_id = None, parent_id = None, revision = None, user_id = None ):
     """
     Provide the information necessary to display the page for a particular notebook. If a
     particular note id is given without a revision, then the most recent version of that note is
@@ -69,26 +71,18 @@ class Notebooks( object ):
     @rtype: unicode
     @return: rendered HTML page
     """
-    return dict(
-      notebook_id = notebook_id,
-      note_id = note_id,
-      parent_id = parent_id,
-      revision = revision,
-    )
+    result = self.__users.current( user_id )
+    result.update( self.contents( notebook_id, note_id, revision, user_id ) )
+    result[ "parent_id" ] = parent_id
+    if revision:
+      result[ "note_read_write" ] = False
 
-  @expose( view = Json )
-  @strongly_expire
-  @grab_user_id
-  @validate(
-    notebook_id = Valid_id(),
-    note_id = Valid_id( none_okay = True ),
-    revision = Valid_revision( none_okay = True ),
-    user_id = Valid_id( none_okay = True ),
-  )
+    return result
+
   def contents( self, notebook_id, note_id = None, revision = None, user_id = None ):
     """
-    Return the information on particular notebook, including the contents of its startup notes.
-    Optionally include the contents of a single requested note as well.
+    Return the startup notes for the given notebook. Optionally include a single requested note as
+    well.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to return
@@ -97,9 +91,13 @@ class Notebooks( object ):
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
     @type user_id: unicode or NoneType
-    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype: json dict
-    @return: { 'notebook': notebookdict, 'note': notedict or None }
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: {
+      'notebook': notebook,
+      'startup_notes': notelist,
+      'note': note or None,
+    }
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
@@ -108,17 +106,18 @@ class Notebooks( object ):
 
     notebook = self.__database.load( Notebook, notebook_id )
 
+    if notebook is None:
+      raise Access_error()
+
     if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       notebook.read_write = False
 
-    if notebook is None:
-      note = None
-    elif note_id == u"blank":
-      note = Note.create( note_id )
-    else:
+    if note_id:
       note = self.__database.load( Note, note_id, revision )
       if note and note.notebook_id != notebook_id:
         raise Access_error()
+    else:
+      note = None
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
 
