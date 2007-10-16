@@ -6,6 +6,13 @@ SET client_encoding = 'UTF8';
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON SCHEMA public IS 'Standard public schema';
+
+
 SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
@@ -35,7 +42,7 @@ ALTER TABLE public.luminotes_user OWNER TO luminotes;
 --
 
 CREATE VIEW luminotes_user_current AS
-    SELECT DISTINCT ON (luminotes_user.id) luminotes_user.id, luminotes_user.revision, luminotes_user.username, luminotes_user.salt, luminotes_user.password_hash, luminotes_user.email_address, luminotes_user.storage_bytes, luminotes_user.rate_plan FROM luminotes_user ORDER BY luminotes_user.id, luminotes_user.revision DESC;
+    SELECT luminotes_user.id, luminotes_user.revision, luminotes_user.username, luminotes_user.salt, luminotes_user.password_hash, luminotes_user.email_address, luminotes_user.storage_bytes, luminotes_user.rate_plan FROM luminotes_user WHERE (luminotes_user.revision IN (SELECT max(sub_user.revision) AS max FROM luminotes_user sub_user WHERE (sub_user.id = luminotes_user.id)));
 
 
 ALTER TABLE public.luminotes_user_current OWNER TO luminotes;
@@ -63,7 +70,7 @@ ALTER TABLE public.note OWNER TO luminotes;
 --
 
 CREATE VIEW note_current AS
-    SELECT DISTINCT ON (note.id) note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank FROM note ORDER BY note.id, note.revision DESC;
+    SELECT note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
 
 
 ALTER TABLE public.note_current OWNER TO luminotes;
@@ -87,7 +94,7 @@ ALTER TABLE public.notebook OWNER TO luminotes;
 --
 
 CREATE VIEW notebook_current AS
-    SELECT DISTINCT ON (notebook.id) notebook.id, notebook.revision, notebook.name, notebook.trash_id FROM notebook ORDER BY notebook.id, notebook.revision DESC;
+    SELECT notebook.id, notebook.revision, notebook.name, notebook.trash_id FROM notebook WHERE (notebook.revision IN (SELECT max(sub_notebook.revision) AS max FROM notebook sub_notebook WHERE (sub_notebook.id = notebook.id)));
 
 
 ALTER TABLE public.notebook_current OWNER TO luminotes;
