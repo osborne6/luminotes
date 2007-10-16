@@ -53,8 +53,8 @@ class Link_area( Div ):
       ),
 
       Div(
+        ( len( notebooks ) > 1 ) and H4( u"notebooks" ) or None,
         [ Span(
-          ( index == 0 ) and H4( u"notebooks" ) or None,
           Div(
           A(
             nb.name,
@@ -62,8 +62,8 @@ class Link_area( Div ):
             id = u"notebook_%s" % nb.object_id,
           ),
           class_ = ( nb.object_id == notebook.object_id ) and u"link_area_item current_notebook_name" or u"link_area_item",
-        ) ) for ( index, nb ) in enumerate( notebooks ) if nb.name not in ( u"Luminotes", u"trash" ) ],
-        id = u"notebooks_area",
+        ) ) for nb in notebooks if nb.name not in ( u"Luminotes", u"trash" ) ],
+        id = u"notebooks_area"
       ),
 
       Div(
