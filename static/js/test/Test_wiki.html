@@ -28,28 +28,6 @@ function setUp() {
       }
     }
 
-    if ( url == "/users/current" ) {
-      return {
-        "user": {
-          "username": "case",
-          "object_id": "fake_user_id",
-          "revision": "fake_user_revision"
-        },
-        "notebook": [ notebook ],
-        "startup_notes": [],
-        "http_url": "",
-        "login_url": ""
-      }
-    }
-
-    if ( url == "/notebooks/contents" ) {
-      return {
-        "notebook": notebook,
-        "startup_notes": [],
-        "note": []
-      };
-    }
-    
     if ( url == "/next_id" ) {
       return {
         "next_id": "" + Math.random()
@@ -97,11 +75,17 @@ function test_Wiki() {
   <input id="newNote" type="button" />
 </div>
 
+<input type="hidden" name="storage_bytes" id="storage_bytes" value="555" />
+<input type="hidden" name="rate_plan" id="rate_plan" value="{ 'name': 'super', 'storage_bytes': '1337' }" />
+<input type="hidden" name="notebooks" id="notebooks" value="[ { 'title': 'my notebook', 'object_id': 'fake_notebook_id' } ]" />
 <input type="hidden" name="notebook_id" id="notebook_id" value="fake_notebook_id" />
-<input type="hidden" name="note_id" id="note_id" value="" />
 <input type="hidden" name="parent_id" id="parent_id" value="" />
-<input type="hidden" name="revision" id="revision" value="" />
-<input type="hidden" name="note_contents" id="note_contents" value="" />
+<input type="hidden" name="startup_notes" id="startup_notes" value="[]" />
+<input type="hidden" name="note" id="note" value="" />
+<input type="hidden" name="note_read_write" id="note_read_write" value="" />
+
+<div id="static_notes">
+</div>
 
 </body>
 </html>
