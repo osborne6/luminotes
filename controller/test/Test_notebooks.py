@@ -336,6 +336,22 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_load_note_without_notebook( self ):
+    self.login()
+
+    self.note.notebook_id = None
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_load_note_by_title( self ):
     self.login()
 
@@ -1010,7 +1026,7 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    assert "access" in result.get( "error" )
+    assert result[ "note" ] is None
 
   def test_delete_note_from_trash( self ):
     self.login()
@@ -1041,7 +1057,7 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    assert "access" in result.get( "error" )
+    assert result.get( "note" ) is None
 
   def test_delete_note_without_login( self ):
     result = self.http_post( "/notebooks/delete_note/", dict(
@@ -1260,14 +1276,14 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    assert "access" in result.get( "error" )
+    assert result[ "note" ] is None
 
     result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note2.object_id,
     ), session_id = self.session_id )
 
-    assert "access" in result.get( "error" )
+    assert result[ "note" ] is None
 
   def test_delete_all_notes_from_trash( self ):
     self.login()
@@ -1292,7 +1308,7 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    assert "access" in result.get( "error" )
+    assert result.get( "note" ) is None
 
   def test_delete_all_notes_without_login( self ):
     result = self.http_post( "/notebooks/delete_all_notes/", dict(

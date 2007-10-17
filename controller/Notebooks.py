@@ -115,7 +115,10 @@ class Notebooks( object ):
     if note_id:
       note = self.__database.load( Note, note_id, revision )
       if note and note.notebook_id != notebook_id:
-        raise Access_error()
+        if note.notebook_id == notebook.trash_id:
+          note = None
+        else:
+          raise Access_error()
     else:
       note = None
 
@@ -158,7 +161,19 @@ class Notebooks( object ):
 
     note = self.__database.load( Note, note_id, revision )
 
+    # if the note has no notebook, it has been deleted "forever"
+    if note and note.notebook_id is None:
+      return dict(
+        note = None,
+      )
+
     if note and note.notebook_id != notebook_id:
+      notebook = self.__database.load( Notebook, notebook_id )
+      if notebook and note.notebook_id == notebook.trash_id:
+        return dict(
+          note = None,
+        )
+
       raise Access_error()
 
     return dict(
@@ -268,8 +283,20 @@ class Notebooks( object ):
     note = self.__database.load( Note, note_id )
 
     if note:
+      if note and note.notebook_id is None:
+        return dict(
+          revisions = None,
+        )
+
       if note.notebook_id != notebook_id:
+        notebook = self.__database.load( Notebook, notebook_id )
+        if notebook and note.notebook_id == notebook.trash_id:
+          return dict(
+            revisions = None,
+          )
+
         raise Access_error()
+
       revisions = self.__database.select_many( unicode, note.sql_load_revisions() )
     else:
       revisions = None
