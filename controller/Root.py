@@ -7,6 +7,8 @@ from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Database import Valid_id
 from model.Note import Note
+from model.Notebook import Notebook
+from model.User import User
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Error_page import Error_page
@@ -39,9 +41,42 @@ class Root( object ):
     )
     self.__notebooks = Notebooks( database, self.__users )
 
+  @expose( Main_page )
+  @validate(
+    note_title = unicode,
+  )
+  def default( self, note_title ):
+    """
+    Convenience method for accessing a note in the main notebook by name rather than by note id.
+    """
+    # if the user is logged in and not using https, and they request the sign up or login note, then
+    # redirect to the https version of the page (if available)
+    https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
+    https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
+    
+    if note_title in ( u"sign_up", u"login" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
+      return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
+
+    result = self.__users.current( user_id = None )
+    first_notebook = result[ u"notebooks" ][ 0 ]
+    user_id = result[ u"user" ].object_id
+
+    note_title = note_title.replace( u"_", " " )
+    note = self.__database.select_one( Note, first_notebook.sql_load_note_by_title( note_title ) )
+    if not note:
+      raise cherrypy.NotFound
+
+    result.update( self.__notebooks.contents( first_notebook.object_id, user_id = user_id, note_id = note.object_id ) )
+
+    return result
+
   @expose()
-  def default( self, password_reset_id ):
-    # if the value looks like an id, assume it's a password reset id, and redirect
+  def r( self, password_reset_id ):
+    """
+    Redirect to the password reset URL, based on the given password_reset id. The sole purpose of
+    this method is to shorten password reset URLs sent by email so email clients don't wrap them.
+    """
+    # if the value looks like an id, it's a password reset id, so redirect
     try:
       validator = Valid_id()
       password_reset_id = validator( password_reset_id )

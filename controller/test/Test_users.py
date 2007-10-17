@@ -15,7 +15,7 @@ from controller.Users import Access_error
 
 
 class Test_users( Test_controller ):
-  RESET_LINK_PATTERN = re.compile( "(https?://\S+)?/(\S+)" )
+  RESET_LINK_PATTERN = re.compile( "(https?://\S+)?/r/(\S+)" )
 
   def setUp( self ):
     Test_controller.setUp( self )

@@ -356,6 +356,7 @@ class Users( object ):
       'rate_plan': rateplandict,
     }
     @raise Validation_error: one of the arguments is invalid
+    @raise Access_error: user_id or anonymous user unknown
     """
     # if there's no logged-in user, default to the anonymous user
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
@@ -490,7 +491,7 @@ class Users( object ):
       u"Someone has requested a password reset for a Luminotes user with your email\n" +
       u"address. If this someone is you, please visit the following link for a\n" +
       u"username reminder or a password reset:\n\n" +
-      u"%s/%s\n\n" % ( self.__https_url or self.__http_url, password_reset.object_id ) +
+      u"%s/r/%s\n\n" % ( self.__https_url or self.__http_url, password_reset.object_id ) +
       u"This link will expire in 24 hours.\n\n" +
       u"Thanks!"
     )
