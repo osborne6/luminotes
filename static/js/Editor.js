@@ -550,8 +550,11 @@ function parse_query( link ) {
 }
 
 // convenience function for getting a link's title (stripped of whitespace), either from a query
-// argument in the href or from the actual link title
+// argument in the href, from the actual link title, or from the link's href
 function link_title( link, query ) {
+  if ( link.target )
+    return link.href;
+
   if ( !query )
     query = parse_query( link );
 
