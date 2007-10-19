@@ -132,6 +132,18 @@ You should be able to connect to the site at whatever domain you've configured
 Apache to serve.
 
 
+sending email
+-------------
+
+If you would like Luminotes to be able to send password reset emails, then
+you'll need a mail server running on the same machine that is capabable of
+receiving local SMTP connections and sending email. Either way, please change
+the luminotes.support_email address in config/Common.py to the email address
+you'd like in the From field of all outgoing emails. This email address also
+shows up in various error messages and other places for a support contact
+address.
+
+
 Python unit tests
 -----------------
 
