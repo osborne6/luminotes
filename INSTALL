@@ -71,6 +71,7 @@ the following rewrite rules to the settings for your VirtualHost:
 
   RewriteEngine on
   RewriteRule ^/favicon.ico /path/to/luminotes/static/images/favicon.ico [L]
+  RewriteRule ^/robots.txt /path/to/luminotes/static/html/robots.txt [L]
   RewriteRule ^/static/(.*) /path/to/luminotes/static/$1 [L]
   RewriteRule ^(.*) http://127.0.0.1:8081$1 [P]
 
