@@ -171,9 +171,9 @@ Editor.prototype.finish_init = function () {
     } );
   }
 
-  if ( this.iframe.contentDocument ) { // browsers such as Firefox
-    if ( this.read_write ) this.exec_command( "styleWithCSS", false );
-  }
+  // browsers such as Firefox, but not Opera
+  if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.read_write )
+    this.exec_command( "styleWithCSS", false );
 
   this.resize();
   if ( this.init_highlight ) self.highlight();
@@ -189,7 +189,7 @@ Editor.prototype.highlight = function ( scroll ) {
   if ( scroll == undefined )
     scroll = true;
 
-  if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight is broken in Opera
+  if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight for iframes is broken in Opera
     if ( scroll ) ScrollTo( this.note_controls );
     pulsate( this.iframe, options = { "pulses": 1, "duration": 0.5 } );
   } else if ( this.iframe.contentDocument ) { // browsers such as Firefox
