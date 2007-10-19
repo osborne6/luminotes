@@ -23,6 +23,17 @@ function Wiki( invoker ) {
     }
   }
 
+  if ( this.notebook && this.notebook.read_write ) {
+    unsupported_agent = null;
+    if ( /Safari/.test( navigator.userAgent ) )
+      unsupported_agent = "Safari";
+    if ( /Opera/.test( navigator.userAgent ) )
+      unsupported_agent = "Opera";
+
+    if ( unsupported_agent )
+      alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
+  }
+
   // populate the wiki with startup notes
   this.populate(
     evalJSON( getElement( "startup_notes" ).value || "null" ),
