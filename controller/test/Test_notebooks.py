@@ -79,6 +79,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
     assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
     assert result.get( u"note" ) is None
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
@@ -101,6 +102,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
     assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
     assert result.get( u"note" ).object_id == self.note.object_id
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
@@ -127,6 +129,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
     assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
     assert result.get( u"note" ).object_id == self.note.object_id
     assert result.get( u"note" ).revision == self.note.revision
     assert result.get( u"parent_id" ) == None
@@ -151,6 +154,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
     assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
     assert result.get( u"note" ) is None
     assert result.get( u"parent_id" ) == parent_id
     assert result.get( u"note_read_write" ) in ( None, True )
@@ -166,6 +170,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
     assert result[ "note" ] == None
 
     assert notebook.object_id == self.notebook.object_id
@@ -184,6 +189,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -207,6 +213,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -249,6 +256,7 @@ class Test_notebooks( Test_controller ):
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
     assert result[ "note" ] == None
+    assert result[ "total_notes_count" ] == 0
 
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.read_write == False

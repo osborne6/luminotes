@@ -2,7 +2,7 @@ from Tags import Div, Span, H4, A
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, parent_id ):
+  def __init__( self, notebooks, notebook, total_notes_count, parent_id ):
     Div.__init__(
       self,
       Div(
@@ -13,6 +13,10 @@ class Link_area( Div ):
             href = u"/notebooks/%s" % notebook.object_id,
             id = u"all_notes_link",
             title = u"View a list of all notes in this notebook.",
+          ),
+          Span(
+            Span( total_notes_count, id = u"total_notes_count" ), u"total",
+            class_ = u"small_text",
           ),
           class_ = u"link_area_item",
         ) or None,

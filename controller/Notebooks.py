@@ -96,6 +96,7 @@ class Notebooks( object ):
     @return: {
       'notebook': notebook,
       'startup_notes': notelist,
+      'total_notes_count': notecount,
       'note': note or None,
     }
     @raise Access_error: the current user doesn't have access to the given notebook or note
@@ -123,10 +124,12 @@ class Notebooks( object ):
       note = None
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
+    total_notes_count = self.__database.select_one( int, notebook.sql_count_notes() )
 
     return dict(
       notebook = notebook,
       startup_notes = startup_notes,
+      total_notes_count = total_notes_count,
       note = note,
     )
 

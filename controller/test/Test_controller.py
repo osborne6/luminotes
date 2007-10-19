@@ -169,6 +169,19 @@ class Test_controller( object ):
     Notebook.sql_highest_rank = lambda self: \
       lambda database: sql_highest_rank( self, database )
 
+    def sql_count_notes( self, database ):
+      count = 0
+
+      for ( object_id, obj_list ) in database.objects.items():
+        obj = obj_list[ -1 ]
+        if isinstance( obj, Note ) and obj.notebook_id == self.object_id:
+          count += 1
+
+      return count
+
+    Notebook.sql_count_notes = lambda self: \
+      lambda database: sql_count_notes( self, database )
+
   def setUp( self ):
     from controller.Root import Root
     cherrypy.lowercase_api = True

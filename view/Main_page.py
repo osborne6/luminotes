@@ -19,6 +19,7 @@ class Main_page( Page ):
     login_url = None,
     logout_url = None,
     startup_notes = None,
+    total_notes_count = None,
     note = None,
     note_read_write = True,
   ):
@@ -76,7 +77,7 @@ class Main_page( Page ):
           Toolbar( hide_toolbar = not notebook.read_write ),
           id = u"toolbar_area",
         ),
-        Link_area( notebooks, notebook, parent_id ),
+        Link_area( notebooks, notebook, total_notes_count, parent_id ),
         Div(
           Div(
             Div(

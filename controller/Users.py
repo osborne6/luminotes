@@ -546,6 +546,7 @@ class Users( object ):
     result = self.current( anonymous.object_id )
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
     result[ "note_read_write" ] = False
     result[ "note" ] = Note.create(
       object_id = u"password_reset",

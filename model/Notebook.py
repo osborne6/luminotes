@@ -123,7 +123,18 @@ class Notebook( Persistent ):
       ( quote( self.object_id ), quote( "%" + search_text + "%" ) )
 
   def sql_highest_rank( self ):
+    """
+    Return a SQL string to determine the highest numbered rank of all notes in this notebook."
+    """
     return "select coalesce( max( rank ), -1 ) from note_current where notebook_id = %s;" % quote( self.object_id )
+
+  def sql_count_notes( self ):
+    """
+    Return a SQL string to count the total number of notes in this notebook.
+    """
+    return \
+      "select count( id ) from note_current where notebook_id = %s;" % \
+      ( quote( self.object_id ) )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )

@@ -191,6 +191,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   }
 
   var editor = this.create_editor( undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
+  this.increment_total_notes_count();
   this.blank_editor_id = editor.id;
 }
 
@@ -369,6 +370,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var note_text = "<h3>" + note_title;
     var deleted_from_id = null;
     var actual_revision = null;
+    this.increment_total_notes_count();
   }
 
   if ( requested_revision )
@@ -479,6 +481,7 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.empty() ) {
       this.focused_editor.shutdown();
+      this.decrement_total_notes_count();
       this.display_empty_message();
     } else {
       // when switching editors, save the one being left
@@ -593,17 +596,27 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
   this.clear_messages();
   this.clear_pulldowns();
 
+  if ( editor == this.focused_editor )
+    this.focused_editor = null;
+
   if ( !editor ) {
     editor = this.focused_editor;
     this.focused_editor = null;
   }
 
   if ( editor ) {
-    // before hiding an editor, save it
-    if ( this.notebook.read_write )
-      this.save_editor( editor );
+    // if the editor to hide is completely empty, then simply remove it
+    if ( editor.empty() ) {
+      editor.shutdown();
+      this.decrement_total_notes_count();
+    } else {
+      // before hiding an editor, save it
+      if ( this.notebook.read_write )
+        this.save_editor( editor );
 
-    editor.shutdown();
+      editor.shutdown();
+    }
+
     this.display_empty_message();
   }
 
@@ -652,6 +665,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     }
 
     editor.shutdown();
+    this.decrement_total_notes_count();
     this.display_empty_message();
   }
 
@@ -685,6 +699,7 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
       this.focused_editor = null;
 
     editor.shutdown();
+    this.decrement_total_notes_count();
     this.display_empty_message();
   }
 
@@ -705,6 +720,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
     }
 
     this.startup_notes[ editor.id ] = true;
+    this.increment_total_notes_count();
     this.load_editor( "Note not found.", editor.id, null );
   }
 
@@ -994,6 +1010,7 @@ Wiki.prototype.delete_all_editors = function ( event ) {
     editor.shutdown();
   }
 
+  this.zero_total_notes_count();
   this.display_empty_message();
 
   event.stop();
@@ -1027,8 +1044,24 @@ Wiki.prototype.brief_revision = function ( revision ) {
     matches[ 6 ],        // second
     matches[ 7 ] * 0.001 // milliseconds
   ) ).toLocaleString();
+}
 
-//  return revision.split( /\.\d/ )[ 0 ]; // strip off seconds from the timestamp
+Wiki.prototype.increment_total_notes_count = function () {
+  var total_notes_count = getElement( "total_notes_count" );
+  if ( !total_notes_count ) return;
+  replaceChildNodes( total_notes_count, parseInt( scrapeText( total_notes_count ) ) + 1 );
+}
+
+Wiki.prototype.decrement_total_notes_count = function () {
+  var total_notes_count = getElement( "total_notes_count" );
+  if ( !total_notes_count ) return;
+  replaceChildNodes( total_notes_count, parseInt( scrapeText( total_notes_count ) ) - 1 );
+}
+
+Wiki.prototype.zero_total_notes_count = function () {
+  var total_notes_count = getElement( "total_notes_count" );
+  if ( !total_notes_count ) return;
+  replaceChildNodes( total_notes_count, 0 );
 }
 
 Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
