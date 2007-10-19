@@ -615,6 +615,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
         this.save_editor( editor );
 
       editor.shutdown();
+      Highlight( "all_notes_link" );
     }
 
     this.display_empty_message();
