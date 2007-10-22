@@ -1081,6 +1081,7 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ "note" ] is None
+    assert result[ "note_id_in_trash" ] == self.note.object_id
 
   def test_delete_note_from_trash( self ):
     self.login()

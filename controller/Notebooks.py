@@ -175,6 +175,7 @@ class Notebooks( object ):
       if notebook and note.notebook_id == notebook.trash_id:
         return dict(
           note = None,
+          note_id_in_trash = note.object_id,
         )
 
       raise Access_error()

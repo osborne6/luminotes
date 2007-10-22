@@ -233,7 +233,8 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
       window.open( link.href );
       return
     }
-    link.removeAttribute( "target" );
+    if ( link.target )
+      link.removeAttribute( "target" );
   }
 
   // if the note corresponding to the link's id is already open, highlight it and bail, but only if
@@ -314,7 +315,8 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
     if ( callback ) callback( "web link" );
     return;
   }
-  link.removeAttribute( "target" );
+  if ( link && link.target )
+    link.removeAttribute( "target" );
 
   if ( note_title == "all notes" || note_title == "search results" ) {
     link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
@@ -342,7 +344,8 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   // if the note corresponding to the link's title is already open, resolve the link and bail
   var editor = this.open_editors[ note_title ];
   if ( editor ) {
-    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+    if ( link )
+      link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
     if ( callback )
       callback( editor.contents() );
     return;
@@ -370,6 +373,22 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
 }
 
 Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_revision, link ) {
+  if ( result.note_id_in_trash ) {
+    var undelete_button = createDOM( "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "undelete",
+      "title": "undelete note"
+    } );
+    var trash_link = createDOM( "a", {
+      "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
+    }, "trash" );
+    this.display_message( "That note is in the", [ trash_link, ". ", undelete_button ] )
+    var self = this;
+    connect( undelete_button, "onclick", function ( event ) { self.undelete_editor_via_undelete( event, result.note_id_in_trash ); } );
+    return;
+  }
+
   if ( result.note ) {
     var id = result.note.object_id;
     if ( requested_revision )
@@ -676,7 +695,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
       var trash_link = createDOM( "a", {
         "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
       }, "trash" );
-      this.display_message( 'The note has been moved to the', [ trash_link, ". ", undo_button ] )
+      this.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ] )
       var self = this;
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor ); } );
     }
@@ -747,6 +766,26 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor ) {
 
   event.stop();
 }
+
+Wiki.prototype.undelete_editor_via_undelete = function( event, note_id ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  if ( this.notebook.read_write ) {
+    var self = this;
+    this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
+      "notebook_id": this.notebook_id,
+      "note_id": note_id
+    }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
+  }
+
+  this.startup_notes[ note_id ] = true;
+  this.increment_total_notes_count();
+  this.load_editor( "Note not found.", note_id, null );
+
+  event.stop();
+}
+
 
 Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
