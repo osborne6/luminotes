@@ -1105,7 +1105,7 @@ Wiki.prototype.remove_all_notes_link = function ( note_id ) {
 
 Wiki.prototype.add_all_notes_link = function ( note_id, note_title ) {
   if ( !this.all_notes_editor ) return;
-  if ( note_title == "all notes" ) return;
+  if ( note_title == "all notes" || note_title == "search results" ) return;
 
   if ( !note_title || note_title.length == 0 )
     note_title = "untitled note";
