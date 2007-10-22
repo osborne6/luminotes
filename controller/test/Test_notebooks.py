@@ -768,6 +768,52 @@ class Test_notebooks( Test_controller ):
     else:
       assert note.rank is None
 
+  def test_save_unchanged_note_with_extra_newline( self, startup = False ):
+    self.login()
+
+    # save over an existing note, supplying new contents and a new title
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    # now attempt to save over that note again without changing the contents,
+    # except for adding a newline
+    user = self.database.load( User, self.user.object_id )
+    previous_storage_bytes = user.storage_bytes
+    previous_revision = result[ "new_revision" ]
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents + u"\n",
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    # assert that the note wasn't actually updated the second time
+    assert result[ "new_revision" ] == None
+    assert result[ "previous_revision" ] == previous_revision
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == previous_storage_bytes
+    assert result[ "storage_bytes" ] == 0
+
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents
+    assert note.revision == previous_revision
+
   def test_save_note_from_an_older_revision( self ):
     self.login()
 

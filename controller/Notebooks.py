@@ -360,7 +360,7 @@ class Notebooks( object ):
     # check whether the provided note contents have been changed since the previous revision
     def update_note( current_notebook, old_note, startup ):
       # the note hasn't been changed, so bail without updating it
-      if contents == old_note.contents and startup == old_note.startup:
+      if contents.replace( u"\n", u"" ) == old_note.contents.replace( u"\n", "" ) and startup == old_note.startup:
         new_revision = None
       # the note has changed, so update it
       else:
