@@ -175,10 +175,9 @@ class User( Persistent ):
       select
         coalesce( sum( pg_column_size( note.* ) ), 0 )
       from
-        luminotes_user_current, user_notebook, note
+        user_notebook, note
       where
-        luminotes_user_current.id = %s and
-        user_notebook.user_id = luminotes_user_current.id and
+        user_notebook.user_id = %s and
         note.notebook_id = user_notebook.notebook_id;
       """ % quote( self.object_id )
 
