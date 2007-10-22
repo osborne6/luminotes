@@ -1110,8 +1110,6 @@ Wiki.prototype.add_all_notes_link = function ( note_id, note_title ) {
   if ( !note_title || note_title.length == 0 )
     note_title = "untitled note";
 
-  // TODO: this needs to work even when there are no note links in "all notes"
-
   var self = this;
   withDocument( this.all_notes_editor.document, function () {
     // if the note link already exists, update its title and bail
@@ -1391,6 +1389,9 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
         "note_title": title
       },
       function ( result ) {
+        // if the user has already started typing something, don't overwrite it
+        if ( self.title_field.value.length != 0 )
+          return;
         if ( result.note ) {
           self.title_field.value = result.note.title;
           self.display_preview( result.note.title, result.note.contents );
@@ -1420,6 +1421,9 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
       "note_id": id
     },
     function ( result ) {
+      // if the user has already started typing something, don't overwrite it
+      if ( self.title_field.value.length != 0 )
+        return;
       if ( result.note ) {
         self.title_field.value = result.note.title;
         self.display_preview( result.note.title, result.note.contents );
