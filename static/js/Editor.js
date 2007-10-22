@@ -25,7 +25,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
   } );
   this.iframe.editor = this;
-  this.title = null;
+  this.title = "";
 
   if ( read_write ) {
     this.delete_button = createDOM( "input", {
@@ -313,8 +313,10 @@ Editor.prototype.mouse_clicked = function ( event ) {
 Editor.prototype.scrape_title = function () {
   // scrape the note title out of the editor
   var heading = getFirstElementByTagAndClassName( "h3", null, this.document );
-  if ( !heading ) return;
-  var title = scrapeText( heading );
+  if ( heading )
+    var title = scrapeText( heading );
+  else
+    var title = "";
 
   // issue a signal that the title has changed and save off the new title
   signal( this, "title_changed", this, this.title, title );

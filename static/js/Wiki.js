@@ -1,4 +1,3 @@
-
 function Wiki( invoker ) {
   this.next_id = null;
   this.focused_editor = null;
@@ -204,6 +203,8 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   var editor = this.create_editor( undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
   this.increment_total_notes_count();
   this.blank_editor_id = editor.id;
+
+  this.add_all_notes_link( editor.id, "" );
 }
 
 Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
@@ -448,8 +449,10 @@ Wiki.prototype.editor_state_changed = function ( editor ) {
 Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) {
   delete this.open_editors[ old_title ];
 
-  if ( new_title != null )
+  if ( new_title != null && !editor.empty() ) {
     this.open_editors[ new_title ] = editor;
+    this.add_all_notes_link( editor.id, new_title );
+  }
 }
 
 Wiki.prototype.display_link_pulldown = function ( editor, link ) {
@@ -491,6 +494,7 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.empty() ) {
+      this.remove_all_notes_link( this.focused_editor.id );
       this.focused_editor.shutdown();
       this.decrement_total_notes_count();
       this.display_empty_message();
@@ -618,6 +622,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
   if ( editor ) {
     // if the editor to hide is completely empty, then simply remove it
     if ( editor.empty() ) {
+      this.remove_all_notes_link( editor.id );
       editor.shutdown();
       this.decrement_total_notes_count();
     } else {
@@ -676,6 +681,8 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor ); } );
     }
 
+    this.remove_all_notes_link( editor.id );
+
     editor.shutdown();
     this.decrement_total_notes_count();
     this.display_empty_message();
@@ -709,6 +716,8 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
 
     if ( editor == this.focused_editor )
       this.focused_editor = null;
+
+    this.remove_all_notes_link( editor.id );
 
     editor.shutdown();
     this.decrement_total_notes_count();
@@ -880,7 +889,10 @@ Wiki.prototype.display_search_results = function ( result ) {
 }
 
 Wiki.prototype.display_all_notes_list = function ( result ) {
-  if ( result.notes.length == 0 ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  if ( result.notes.length == 0 && !this.focused_editor ) {
     this.display_message( "This notebook is empty." );
     return;
   }
@@ -889,22 +901,25 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
     this.all_notes_editor.shutdown();
 
   // build up a list of all notes in this notebook, one link per note
-  var list = createDOM( "ul", {} );
+  var list = createDOM( "ul", { "id": "notes_list" } );
+  if ( this.focused_editor )
+    appendChildNodes( list, this.create_all_notes_link( this.focused_editor.id, this.focused_editor.title || "untitled note" ) );
+
   for ( var i in result.notes ) {
     var note_tuple = result.notes[ i ]
     var note_id = note_tuple[ 0 ];
     var note_title = note_tuple[ 1 ];
+    if ( this.focused_editor && note_id == this.focused_editor.id )
+      continue;
     if ( !note_title )
       note_title = "untitled note";
 
-    appendChildNodes( list,
-      createDOM( "li", {},
-        createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id }, note_title )
-      )
-    );
+    appendChildNodes( list, this.create_all_notes_link( note_id, note_title ) );
   }
+  var list_holder = createDOM( "div", {}, list );
 
-  this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list.innerHTML, undefined, undefined, false, true, true );
+  this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list_holder.innerHTML, undefined, undefined, false, true, true );
+
 }
 
 Wiki.prototype.display_message = function ( text, nodes ) {
@@ -1074,6 +1089,57 @@ Wiki.prototype.zero_total_notes_count = function () {
   var total_notes_count = getElement( "total_notes_count" );
   if ( !total_notes_count ) return;
   replaceChildNodes( total_notes_count, 0 );
+}
+
+Wiki.prototype.remove_all_notes_link = function ( note_id ) {
+  if ( !this.all_notes_editor ) return;
+
+  withDocument( this.all_notes_editor.document, function () {
+    var note_link = getElement( "note_link_" + note_id );
+    if ( note_link )
+      removeElement( note_link );
+  } );
+
+  this.all_notes_editor.resize();
+}
+
+Wiki.prototype.add_all_notes_link = function ( note_id, note_title ) {
+  if ( !this.all_notes_editor ) return;
+  if ( note_title == "all notes" ) return;
+
+  if ( !note_title || note_title.length == 0 )
+    note_title = "untitled note";
+
+  // TODO: this needs to work even when there are no note links in "all notes"
+
+  var self = this;
+  withDocument( this.all_notes_editor.document, function () {
+    // if the note link already exists, update its title and bail
+    var note_link = getElement( "note_link_" + note_id );
+    if ( note_link ) {
+      replaceChildNodes( note_link.firstChild, note_title );
+      self.all_notes_editor.resize();
+      return;
+    }
+
+    var notes_list = getElement( "notes_list" );
+    if ( !notes_list ) return;
+    var first_note_link = notes_list.firstChild;
+    var new_note_link = self.create_all_notes_link( note_id, note_title );
+
+    if ( first_note_link )
+      insertSiblingNodesBefore( first_note_link, new_note_link );
+    else
+      appendChildNodes( notes_list, new_note_link );
+  } );
+
+  this.all_notes_editor.resize();
+}
+
+Wiki.prototype.create_all_notes_link = function ( note_id, note_title ) {
+  return createDOM( "li", { "id": "note_link_" + note_id },
+    createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id }, note_title )
+  );
 }
 
 Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
