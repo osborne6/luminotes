@@ -1,10 +1,13 @@
-All buttons are 48x48.
+Buttons dimensions are 40x40 pixels.
 
-Button fonts are Bitstream Vera Sans (regular, bold, and oblique).
+Button fonts are Bitstream Vera Sans (regular, bold, and mono oblique). Most
+buttons are at 22 pt. The link button is at 12 pt. The list buttons are at 10
+pt with a -4 pixel line spacing.
 
-To make the white glowing effect, start with black text on a transparent
-background in the Gimp. Duplicate the layer, and move that duplicate
-underneath the original layer. Switch to the duplicate. Enable the "select
-contiguous regions" tool. Click on the duplicate layer's background. Invert
-selection. Grow selection by two pixels. Fill the entire selection with white.
-Select none. Gaussian blur the layer with a 5x5 pixel radius.
+To make the white glowing effect (which isn't present on any buttons
+currently), start with black text on a transparent background in the Gimp.
+Duplicate the layer, and move that duplicate underneath the original layer.
+Switch to the duplicate. Enable the "select contiguous regions" tool. Click on
+the duplicate layer's background. Invert selection. Grow selection by two
+pixels. Fill the entire selection with white (or whatever glow color you
+want). Select none. Gaussian blur the layer with a 5x5 pixel radius.
