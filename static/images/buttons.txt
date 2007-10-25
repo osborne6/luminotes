@@ -1,0 +1,10 @@
+All buttons are 48x48.
+
+Button fonts are Bitstream Vera Sans (regular, bold, and oblique).
+
+To make the white glowing effect, start with black text on a transparent
+background in the Gimp. Duplicate the layer, and move that duplicate
+underneath the original layer. Switch to the duplicate. Enable the "select
+contiguous regions" tool. Click on the duplicate layer's background. Invert
+selection. Grow selection by two pixels. Fill the entire selection with white.
+Select none. Gaussian blur the layer with a 5x5 pixel radius.
