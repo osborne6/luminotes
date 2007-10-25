@@ -47,72 +47,156 @@ ol li {
   float: right;
 }
 
-#toolbar .button {
-  border-color: #d0e0f0;
-  border-style: solid;
-  border-width: 2px;
-  background-color: #d0e0f0;
-  height: 2em;
-  width: 2em;
-  font-size: 125%;
-  text-align: center;
-  vertical-align: middle;
-  display: table-cell;
+#toolbar .image_button {
   outline: none;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 #toolbar div {
   margin-bottom: 0.25em;
 }
 
-#toolbar .button:hover {
-  border-color: #ffcc66;
-  background-color: #ffcc66;
+#new_note_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/new_note_button_hover.png);
 }
 
-#toolbar .button_down {
-  border-color: #c0d0e0;
-  border-style: inset;
-  border-width: 2px;
-  background-color: #c0d0e0;
+#link_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/link_button_hover.png);
 }
 
-#toolbar .button_down:hover {
-  border-color: #ffbb55;
-  background-color: #ffbb55;
+#bold_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/bold_button_hover.png);
 }
 
-.toolbar_link_text {
-  font-size: 60%;
+#italic_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/italic_button_hover.png);
 }
 
-.toolbar_list_text {
-  font-size: 50%;
-  line-height: 90%;
+#underline_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/underline_button_hover.png);
 }
 
-#createLink {
-  color: blue;
-  font-weight: bold;
-  text-decoration: underline;
+#title_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/title_button_hover.png);
 }
 
-#bold {
-  font-weight: bold;
+#bullet_list_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/bullet_list_button_hover.png);
 }
 
-#italic {
-  font-style: italic;
+#numbered_list_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/numbered_list_button_hover.png);
 }
 
-#underline {
-  text-decoration: underline;
+#new_note_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/new_note_button_down_hover.png);
 }
 
-#title {
-  font-weight: bold;
+#link_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/link_button_down_hover.png);
+}
+
+#bold_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/bold_button_down_hover.png);
+}
+
+#italic_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/italic_button_down_hover.png);
+}
+
+#underline_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/underline_button_down_hover.png);
+}
+
+#title_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/title_button_down_hover.png);
+}
+
+#bullet_list_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/bullet_list_button_down_hover.png);
+}
+
+#numbered_list_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/numbered_list_button_down_hover.png);
+}
+
+#new_note_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/new_note_button_down.png);
+}
+
+#link_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/link_button_down.png);
+}
+
+#bold_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/bold_button_down.png);
+}
+
+#italic_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/italic_button_down.png);
+}
+
+#underline_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/underline_button_down.png);
+}
+
+#title_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/title_button_down.png);
+}
+
+#bullet_list_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/bullet_list_button_down.png);
+}
+
+#numbered_list_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/numbered_list_button_down.png);
 }
 
 #link_area {

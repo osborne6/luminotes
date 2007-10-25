@@ -142,15 +142,23 @@ Wiki.prototype.populate = function ( startup_notes, note, note_read_write ) {
 
   if ( this.notebook.read_write ) {
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
+    connect( "newNote", "onclick", this, "create_blank_editor" );
+    connect( "createLink", "onclick", this, "toggle_link_button" );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
     connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title", "h3" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
-    connect( "createLink", "onclick", this, "toggle_link_button" );
-    connect( "newNote", "onmousedown", function ( event ) { addElementClass( "newNote", "button_down" ); } );
-    connect( "newNote", "onmouseup", this, "create_blank_editor" );
+
+    this.make_image_button( "newNote", "new_note", true );
+    this.make_image_button( "createLink", "link" );
+    this.make_image_button( "bold" );
+    this.make_image_button( "italic" );
+    this.make_image_button( "underline" );
+    this.make_image_button( "title" );
+    this.make_image_button( "insertUnorderedList", "bullet_list" );
+    this.make_image_button( "insertOrderedList", "numbered_list" );
 
     // grab the next available object id
     this.invoker.invoke( "/next_id", "POST", null,
@@ -181,8 +189,6 @@ Wiki.prototype.background_clicked = function ( event ) {
 
 Wiki.prototype.create_blank_editor = function ( event ) {
   if ( event ) event.stop();
-
-  removeElementClass( "newNote", "button_down" );
 
   // if we're within the trash, don't allow new note creation
   if ( this.notebook.name == "trash" ) {
@@ -574,6 +580,82 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   }
 }
 
+IMAGE_DIR = "/static/images/";
+
+Wiki.prototype.make_image_button = function ( name, filename_prefix, handle_mouse_up_and_down ) {
+  var button = getElement( name );
+
+  if ( !filename_prefix )
+    filename_prefix = name;
+
+  button.filename_prefix = filename_prefix;
+
+  connect( button, "onmouseover", function ( event ) {
+    if ( /_down/.test( button.src ) )
+      button.src = IMAGE_DIR + filename_prefix + "_button_down_hover.png";
+    else
+      button.src = IMAGE_DIR + filename_prefix + "_button_hover.png";
+  } );
+
+  connect( button, "onmouseout", function ( event ) {
+    if ( /_down/.test( button.src ) )
+      button.src = IMAGE_DIR + filename_prefix + "_button_down.png";
+    else
+      button.src = IMAGE_DIR + filename_prefix + "_button.png";
+  } );
+
+  if ( handle_mouse_up_and_down ) {
+    connect( button, "onmousedown", function ( event ) {
+      if ( /_hover/.test( button.src ) )
+        button.src = IMAGE_DIR + filename_prefix + "_button_down_hover.png";
+      else
+        button.src = IMAGE_DIR + filename_prefix + "_button_down.png";
+    } );
+    connect( button, "onmouseup", function ( event ) {
+      if ( /_hover/.test( button.src ) )
+        button.src = IMAGE_DIR + filename_prefix + "_button_hover.png";
+      else
+        button.src = IMAGE_DIR + filename_prefix + "_button.png";
+    } );
+  }
+}
+
+Wiki.prototype.down_image_button = function ( name ) {
+  var button = getElement( name );
+
+  if ( /_hover/.test( button.src ) )
+    button.src = IMAGE_DIR + button.filename_prefix + "_button_down_hover.png";
+  else
+    button.src = IMAGE_DIR + button.filename_prefix + "_button_down.png";
+}
+
+Wiki.prototype.up_image_button = function ( name ) {
+  var button = getElement( name );
+
+  if ( /_hover/.test( button.src ) )
+    button.src = IMAGE_DIR + button.filename_prefix + "_button_hover.png";
+  else
+    button.src = IMAGE_DIR + button.filename_prefix + "_button.png";
+}
+
+Wiki.prototype.toggle_image_button = function ( name ) {
+  var button = getElement( name );
+
+  if ( /_down/.test( button.src ) ) {
+    if ( /_hover/.test( button.src ) )
+      button.src = IMAGE_DIR + button.filename_prefix + "_button_hover.png";
+    else
+      button.src = IMAGE_DIR + button.filename_prefix + "_button.png";
+    return false;
+  } else {
+    if ( /_hover/.test( button.src ) )
+      button.src = IMAGE_DIR + button.filename_prefix + "_button_down_hover.png";
+    else
+      button.src = IMAGE_DIR + button.filename_prefix + "_button_down.png";
+    return true;
+  }
+}
+
 Wiki.prototype.toggle_button = function ( event, button_id, state_name ) {
   this.clear_messages();
   this.clear_pulldowns();
@@ -590,9 +672,9 @@ Wiki.prototype.toggle_button = function ( event, button_id, state_name ) {
 
 Wiki.prototype.update_button = function ( button_id, state_name ) {
   if ( this.focused_editor.state_enabled( state_name || button_id ) )
-    addElementClass( button_id, "button_down" );
+    this.down_image_button( button_id );
   else
-    removeElementClass( button_id, "button_down" );
+    this.up_image_button( button_id );
 }
 
 Wiki.prototype.update_toolbar = function() {
@@ -614,8 +696,7 @@ Wiki.prototype.toggle_link_button = function ( event ) {
 
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
-    toggleElementClass( "button_down", "createLink" );
-    if ( hasElementClass( "createLink", "button_down" ) )
+    if ( this.toggle_image_button( "createLink" ) )
       this.focused_editor.start_link();
     else
       link = this.focused_editor.end_link();
