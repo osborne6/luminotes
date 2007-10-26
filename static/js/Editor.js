@@ -319,7 +319,8 @@ Editor.prototype.scrape_title = function () {
     var title = "";
 
   // issue a signal that the title has changed and save off the new title
-  signal( this, "title_changed", this, this.title, title );
+  if ( this.read_write )
+    signal( this, "title_changed", this, this.title, title );
   this.title = title;
 }
 
