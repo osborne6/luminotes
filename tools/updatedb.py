@@ -65,6 +65,8 @@ class Updater( object ):
     contents = fix_note_contents( file( full_filename ).read(), main_notebook.object_id, note_ids )
 
     if note:
+      if note.contents == contents:
+        return
       note.contents = contents
     # if for some reason the note isn't present, create it
     else:
