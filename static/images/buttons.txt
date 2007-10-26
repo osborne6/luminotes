@@ -1,4 +1,4 @@
-Buttons dimensions are 40x40 pixels.
+Button dimensions are 40x40 pixels.
 
 Button fonts are Bitstream Vera Sans (regular, bold, and mono oblique). Most
 buttons are at 22 pt. The link button is at 12 pt. The list buttons are at 10
