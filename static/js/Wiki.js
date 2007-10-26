@@ -518,7 +518,7 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
     removeElementClass( this.focused_editor.iframe, "focused_note_frame" );
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
-    if ( this.focused_editor.empty() ) {
+    if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
       this.remove_all_notes_link( this.focused_editor.id );
       this.focused_editor.shutdown();
       this.decrement_total_notes_count();
@@ -721,10 +721,11 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
 
   if ( editor ) {
     // if the editor to hide is completely empty, then simply remove it
-    if ( editor.empty() ) {
+    if ( editor.id == this.blank_editor_id && editor.empty() ) {
       this.remove_all_notes_link( editor.id );
       editor.shutdown();
       this.decrement_total_notes_count();
+      this.display_empty_message();
     } else {
       // before hiding an editor, save it
       if ( this.notebook.read_write )
@@ -766,7 +767,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     if ( editor == this.focused_editor )
       this.focused_editor = null;
 
-    if ( this.notebook.trash_id && !editor.empty() ) {
+    if ( this.notebook.trash_id && !( editor.id == this.blank_editor_id && editor.empty() ) ) {
       var undo_button = createDOM( "input", {
         "type": "button",
         "class": "message_button",
@@ -881,7 +882,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !editor.empty() ) {
+  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) ) {
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook_id,
       "note_id": editor.id,
