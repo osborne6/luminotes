@@ -344,7 +344,7 @@ Editor.prototype.start_link = function () {
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
 
-    // if no text is selected, then insert a link with a placeholder nbsp as the link title, and
+    // if no text is selected, then insert a link with a placeholder span as the link title, and
     // then immediately remove the link title once the link is created
     if ( selection.toString().length == 0 ) {
       this.insert_html( '<span id="placeholder_title"> </span>' );
@@ -352,15 +352,17 @@ Editor.prototype.start_link = function () {
       selection.selectAllChildren( placeholder );
 
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
+      selection.collapseToEnd();
 
       // hack to prevent Firefox from erasing spaces before links that happen to be at the end of list items
       var sentinel = createDOM( "span" );
-      insertSiblingNodesBefore( placeholder.parentNode, sentinel );
+      var link = placeholder.parentNode;
+      insertSiblingNodesBefore( link, sentinel );
       this.link_started = placeholder.parentNode;
 
-      // nuke the link title and collapse the selection, yielding a tasty new link that's completely
-      // titleless and unselected
-      removeElement( placeholder );
+      // nuke the link title and collapse the selection, yielding a tasty new link that's titleless
+      // (except for this span) and unselected
+      link.innerHTML = "<span></span>";
     // otherwise, just create a link with the selected text as the link title
     } else {
       this.link_started = null;
