@@ -295,6 +295,26 @@ ol li {
 #notes {
   text-align: left;
   margin-top: 1em;
+}
+
+#blank_note_stub {
+  text-align: left;
+  padding: 0.5em;
+  background-color: #fafafa;
+  -moz-border-radius: 0.5em;
+  -webkit-border-radius: 0.5em;
+}
+
+.blank_note_stub_hidden_border {
+  border: 1px solid #fafafa;
+}
+
+.blank_note_stub_border {
+  border: 1px solid #999999;
+}
+
+#notebook_background {
+  padding-bottom: 0.25em;
   margin-bottom: 1em;
 }
 

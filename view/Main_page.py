@@ -111,6 +111,10 @@ class Main_page( Page ):
               Div(
                 id = u"notes",
               ),
+              notebook.read_write and Div(
+                id = u"blank_note_stub",
+                class_ = u"blank_note_stub_hidden_border",
+              ) or None,
               static_notes,
               # Sort of simulate the <noscript> tag by hiding the static version of the notes.
               # This code won't be executed if JavaScript is disabled. I'm not actually using

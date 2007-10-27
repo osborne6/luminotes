@@ -47,6 +47,19 @@ function Wiki( invoker ) {
   connect( "search_form", "onsubmit", this, "search" );
   connect( "html", "onclick", this, "background_clicked" );
 
+  var blank_note_stub = getElement( "blank_note_stub" );
+  if ( blank_note_stub ) {
+    connect( blank_note_stub, "onmouseover", function ( event ) {
+      addElementClass( blank_note_stub, "blank_note_stub_border" );
+      removeElementClass( blank_note_stub, "blank_note_stub_hidden_border" );
+    } );
+    connect( blank_note_stub, "onmouseout", function ( event ) {
+      addElementClass( blank_note_stub, "blank_note_stub_hidden_border" );
+      removeElementClass( blank_note_stub, "blank_note_stub_border" );
+    } );
+    connect( blank_note_stub, "onclick", this, "create_blank_editor" );
+  }
+
   var self = this;
   var logout_link = getElement( "logout_link" );
   if ( logout_link ) {
@@ -189,6 +202,9 @@ Wiki.prototype.background_clicked = function ( event ) {
 
 Wiki.prototype.create_blank_editor = function ( event ) {
   if ( event ) event.stop();
+
+  this.clear_messages();
+  this.clear_pulldowns();
 
   // if we're within the trash, don't allow new note creation
   if ( this.notebook.name == "trash" ) {
