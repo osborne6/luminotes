@@ -66,6 +66,7 @@ h3 {
   background-color: #d0e0f0;
   font-size: 100%;
   outline: none;
+  cursor: pointer;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
 }

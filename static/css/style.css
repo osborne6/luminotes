@@ -329,6 +329,7 @@ ol li {
   background-color: #d0e0f0;
   font-size: 100%;
   outline: none;
+  cursor: pointer;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
 }
@@ -439,6 +440,7 @@ ol li {
   background-color: #d0e0f0;
   font-size: 100%;
   outline: none;
+  cursor: pointer;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
 }
@@ -518,6 +520,7 @@ ol li {
   background-color: #d0e0f0;
   font-size: 100%;
   outline: none;
+  cursor: pointer;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
 }
