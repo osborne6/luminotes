@@ -370,21 +370,22 @@ class Users( object ):
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None
-    notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks() )
+    anon_notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks() )
 
     if user_id and user_id != anonymous.object_id:
-      notebooks += self.__database.select_many( Notebook, user.sql_load_notebooks() )
+      notebooks = self.__database.select_many( Notebook, user.sql_load_notebooks() )
     # if the user is not logged in, return a login URL
     else:
-      if len( notebooks ) > 0 and notebooks[ 0 ]:
-        main_notebook = notebooks[ 0 ]
+      notebooks = []
+      if len( anon_notebooks ) > 0 and anon_notebooks[ 0 ]:
+        main_notebook = anon_notebooks[ 0 ]
         login_note = self.__database.select_one( Note, main_notebook.sql_load_note_by_title( u"login" ) )
         if login_note:
           login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, main_notebook.object_id, login_note.object_id )
 
     return dict(
       user = user,
-      notebooks = notebooks,
+      notebooks = notebooks + anon_notebooks,
       login_url = login_url,
       logout_url = self.__https_url + u"/",
       rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},
@@ -548,11 +549,11 @@ class Users( object ):
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
     result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
     result[ "note_read_write" ] = False
-    result[ "note" ] = Note.create(
+    result[ "notes" ] = [ Note.create(
       object_id = u"password_reset",
       contents = unicode( Redeem_reset_note( password_reset_id, matching_users ) ),
       notebook_id = main_notebook.object_id,
-    )
+    ) ]
 
     return result
 

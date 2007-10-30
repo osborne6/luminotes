@@ -134,6 +134,26 @@ class Valid_bool( object ):
     raise ValueError()
 
 
+class Valid_int( object ):
+  """
+  Validator for an integer value.
+  """
+  def __init__( self, min = None, max = None ):
+    self.min = min
+    self.max = max
+    self.message = None
+
+  def __call__( self, value ):
+    value = int( value )
+
+    if self.min is not None and value < min:
+      self.message = "is too small"
+    if self.max is not None and value > max:
+      self.message = "is too large"
+
+    return value
+
+
 def validate( **expected ):
   """
   validate() can be used to require that the arguments of the decorated method successfully pass

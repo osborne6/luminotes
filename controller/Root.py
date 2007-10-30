@@ -2,7 +2,7 @@ import cherrypy
 
 from Expose import expose
 from Expire import strongly_expire
-from Validate import validate
+from Validate import validate, Valid_int
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Database import Valid_id
@@ -106,10 +106,35 @@ class Root( object ):
       return dict( redirect = https_url )
 
     result = self.__users.current( user_id )
-    first_notebook_id = result[ u"notebooks" ][ 0 ].object_id
-    result.update( self.__notebooks.contents( first_notebook_id, user_id = user_id ) )
+    main_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes" ]
+    result.update( self.__notebooks.contents( main_notebooks[ 0 ].object_id, user_id = user_id ) )
 
     return result
+
+  @expose( view = Main_page )
+  @grab_user_id
+  @validate(
+    start = Valid_int( min = 0 ),
+    count = Valid_int( min = 1, max = 50 ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def blog( self, start = 0, count = 10, user_id = None ):
+    """
+    Provide the information necessary to display the blog notebook with notes in reverse
+    chronological order.
+
+    @type start: unicode or NoneType
+    @param start: index of recent note to start with (defaults to 0, the most recent note)
+    @type count: int or NoneType
+    @param count: number of recent notes to display (defaults to 10 notes)
+    @rtype: unicode
+    @return: rendered HTML page
+    @raise Validation_error: one of the arguments is invalid
+    """
+    result = self.__users.current( user_id = None )
+    blog_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes blog" ]
+
+    return self.__notebooks.load_recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id )
 
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )

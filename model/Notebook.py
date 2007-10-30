@@ -92,6 +92,27 @@ class Notebook( Persistent ):
     """
     return "select * from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
 
+  def sql_load_recent_notes( self, start = 0, count = 10 ):
+    """
+    Return a SQL string to load a list of the most recently created notes within this notebook.
+
+    @type start: int or NoneType
+    @param start: index of recent note to start with (defaults to 0, the most recent note)
+    @type count: int or NoneType
+    @param count: number of recent notes to return (defaults to 10 notes)
+    """
+    return \
+      """
+      select
+        note_current.*, note_creation.revision as creation
+      from
+        note_current,
+        ( select id, min( revision ) as revision from note where notebook_id = %s group by id ) as note_creation
+      where
+        notebook_id = %s and note_current.id = note_creation.id
+      offset %d limit %d;
+      """ % ( quote( self.object_id ), quote( self.object_id ), start, count )
+
   def sql_load_note_by_id( self, note_id ):
     """
     Return a SQL string to load a particular note within this notebook by the note's id.

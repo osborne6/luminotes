@@ -104,25 +104,25 @@ class Test_users( Test_controller ):
 
     notebooks = result[ u"notebooks" ]
     notebook = notebooks[ 0 ]
-    assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.revision == self.anon_notebook.revision
-    assert notebook.name == self.anon_notebook.name
-    assert notebook.trash_id == None
-    assert notebook.read_write == False
-
-    notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
     assert notebook.read_write == True
 
-    notebook = notebooks[ 2 ]
-    assert notebook.object_id == notebooks[ 1 ].trash_id
+    notebook = notebooks[ 1 ]
+    assert notebook.object_id == notebooks[ 0 ].trash_id
     assert notebook.revision
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
     assert notebook.read_write == True
+
+    notebook = notebooks[ 2 ]
+    assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.revision == self.anon_notebook.revision
+    assert notebook.name == self.anon_notebook.name
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
@@ -164,25 +164,25 @@ class Test_users( Test_controller ):
     notebooks = result[ u"notebooks" ]
     assert len( notebooks ) == 3
     notebook = notebooks[ 0 ]
-    assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.revision == self.anon_notebook.revision
-    assert notebook.name == self.anon_notebook.name
-    assert notebook.trash_id == None
-    assert notebook.read_write == False
-
-    notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
     assert notebook.read_write == True
 
-    notebook = notebooks[ 2 ]
-    assert notebook.object_id == notebooks[ 1 ].trash_id
+    notebook = notebooks[ 1 ]
+    assert notebook.object_id == notebooks[ 0 ].trash_id
     assert notebook.revision
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
     assert notebook.read_write == True
+
+    notebook = notebooks[ 2 ]
+    assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.revision == self.anon_notebook.revision
+    assert notebook.name == self.anon_notebook.name
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
@@ -259,12 +259,12 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].object_id == self.user.object_id
     assert result[ u"user" ].username == self.user.username
     assert len( result[ u"notebooks" ] ) == 3
-    assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
-    assert result[ u"notebooks" ][ 0 ].read_write == False
-    assert result[ u"notebooks" ][ 1 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 1 ].object_id == self.notebooks[ 1 ].object_id
     assert result[ u"notebooks" ][ 1 ].read_write == True
-    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 1 ].object_id
-    assert result[ u"notebooks" ][ 2 ].read_write == True
+    assert result[ u"notebooks" ][ 2 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 2 ].read_write == False
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
 
@@ -390,11 +390,14 @@ class Test_users( Test_controller ):
     assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
     assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
     assert result[ u"note_read_write" ] is False
-    assert result[ u"note" ].title == u"complete your password reset"
-    assert result[ u"note" ].notebook_id == self.anon_notebook.object_id
-    assert u"password reset" in result[ u"note" ].contents
-    assert self.user.username in result[ u"note" ].contents
-    assert self.user2.username in result[ u"note" ].contents
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"complete your password reset"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"password reset" in result[ u"notes" ][ 0 ].contents
+    assert self.user.username in result[ u"notes" ][ 0 ].contents
+    assert self.user2.username in result[ u"notes" ][ 0 ].contents
 
   def test_redeem_reset_unknown( self ):
     password_reset_id = u"unknownresetid"

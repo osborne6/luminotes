@@ -4,6 +4,7 @@ from Stub_view import Stub_view
 from config import Common
 from datetime import datetime
 from StringIO import StringIO
+from copy import copy
 
 
 class Test_controller( object ):
@@ -127,6 +128,23 @@ class Test_controller( object ):
 
     Notebook.sql_load_startup_notes = lambda self: \
       lambda database: sql_load_startup_notes( self, database )
+
+    def sql_load_recent_notes( self, database, start, count ):
+      notes = []
+
+      for ( object_id, obj_list ) in database.objects.items():
+        obj = obj_list[ -1 ]
+        if isinstance( obj, Note ) and obj.notebook_id == self.object_id:
+          obj = copy( obj )
+          obj._Note__creation = database.objects[ object_id ][ 0 ].revision
+          notes.append( obj )
+
+      notes.sort( lambda a, b: -cmp( a.creation, b.creation ) )
+      notes = notes[ start : start + count ]
+      return notes
+
+    Notebook.sql_load_recent_notes = lambda self, start = 0, count = 10: \
+      lambda database: sql_load_recent_notes( self, database, start, count )
 
     def sql_load_note_by_title( self, title, database ):
       notes = []

@@ -13,13 +13,21 @@ class Test_root( Test_controller ):
     self.notebook = Notebook.create( self.database.next_id( Notebook ), u"my notebook" )
     self.database.save( self.notebook )
 
-    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"anon notebook" )
+    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes" )
     self.database.save( self.anon_notebook )
     self.anon_note = Note.create(
       self.database.next_id( Note ), u"<h3>my note</h3>",
       notebook_id = self.anon_notebook.object_id,
     )
     self.database.save( self.anon_note )
+
+    self.blog_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes blog" )
+    self.database.save( self.blog_notebook )
+    self.blog_note = Note.create(
+      self.database.next_id( Note ), u"<h3>my blog entry</h3>",
+      notebook_id = self.blog_notebook.object_id,
+    )
+    self.database.save( self.blog_note )
 
     self.username = u"mulder"
     self.password = u"trustno1"
@@ -34,6 +42,7 @@ class Test_root( Test_controller ):
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous )
     self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.blog_notebook.object_id ) )
 
   def test_index( self ):
     result = self.http_get( "/" )
@@ -68,8 +77,9 @@ class Test_root( Test_controller ):
     )
 
     assert result
-    assert result[ u"note" ]
-    assert result[ u"note" ].object_id == self.anon_note.object_id
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].object_id == self.anon_note.object_id
 
   def test_default_with_unknown_note( self ):
     result = self.http_get(
@@ -98,6 +108,13 @@ class Test_root( Test_controller ):
     assert result
     assert result.get( "redirect" )
     assert result.get( "redirect" ).startswith( "https://" )
+
+  def test_blog( self ):
+    result = self.http_get(
+      "/blog",
+    )
+
+    assert result
 
   def test_next_id( self ):
     result = self.http_get( "/next_id" )

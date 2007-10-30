@@ -11,9 +11,10 @@ class Test_note( object ):
     self.notebook_id = u"18"
     self.startup = False
     self.rank = 17.5
+    self.creation = datetime.now()
     self.delta = timedelta( seconds = 1 )
 
-    self.note = Note.create( self.object_id, self.contents, self.notebook_id, self.startup, self.rank )
+    self.note = Note.create( self.object_id, self.contents, self.notebook_id, self.startup, self.rank, self.creation )
 
   def test_create( self ):
     assert self.note.object_id == self.object_id
@@ -24,6 +25,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.creation == self.creation
 
   def test_set_contents( self ):
     new_title = u"new title"
@@ -39,6 +41,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.creation == self.creation
 
   def test_set_contents_with_html_title( self ):
     new_title = u"new title"
@@ -55,6 +58,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.creation == self.creation
 
   def test_set_contents_with_multiple_titles( self ):
     new_title = u"new title"
@@ -71,6 +75,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.creation == self.creation
 
   def test_set_notebook_id( self ):
     previous_revision = self.note.revision
@@ -108,6 +113,7 @@ class Test_note( object ):
     assert d.get( "contents" ) == self.contents
     assert d.get( "title" ) == self.title
     assert d.get( "deleted_from_id" ) == None
+    assert d.get( "creation" ) == self.note.creation
 
 
 class Test_note_blank( Test_note ):
@@ -118,6 +124,7 @@ class Test_note_blank( Test_note ):
     self.notebook_id = None
     self.startup = False
     self.rank = None
+    self.creation = None
     self.delta = timedelta( seconds = 1 )
 
     self.note = Note.create( self.object_id )
@@ -131,3 +138,4 @@ class Test_note_blank( Test_note ):
     assert self.note.startup == False
     assert self.note.deleted_from_id == None
     assert self.note.rank == None
+    assert self.note.creation == None

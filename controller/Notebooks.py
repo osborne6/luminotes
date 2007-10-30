@@ -68,6 +68,8 @@ class Notebooks( object ):
     @param parent_id: id of parent notebook to this notebook (optional)
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
     @rtype: unicode
     @return: rendered HTML page
     """
@@ -97,7 +99,7 @@ class Notebooks( object ):
       'notebook': notebook,
       'startup_notes': notelist,
       'total_notes_count': notecount,
-      'note': note or None,
+      'notes': notelist,
     }
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
@@ -130,7 +132,7 @@ class Notebooks( object ):
       notebook = notebook,
       startup_notes = startup_notes,
       total_notes_count = total_notes_count,
-      note = note,
+      notes = note and [ note ] or [],
     )
 
   @expose( view = Json )
@@ -693,3 +695,36 @@ class Notebooks( object ):
       notebook_name = notebook.name,
       notes = startup_notes + other_notes,
     )
+
+  def load_recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
+    """
+    Provide the information necessary to display the page for a particular notebook's most recent
+    notes.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook to display
+    @type start: unicode or NoneType
+    @param start: index of recent note to start with (defaults to 0, the most recent note)
+    @type count: int or NoneType
+    @param count: number of recent notes to display (defaults to 10 notes)
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: data for Main_page() constructor
+    @raise Access_error: the current user doesn't have access to the given notebook or note
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+    
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if notebook is None:
+      raise Access_error()
+
+    recent_notes = self.__database.select_many( Note, notebook.sql_load_recent_notes( start, count ) )
+
+    result = self.__users.current( user_id )
+    result.update( self.contents( notebook_id, user_id = user_id ) )
+    result[ u"notes" ] = recent_notes
+
+    return result

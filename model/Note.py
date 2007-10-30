@@ -10,7 +10,7 @@ class Note( Persistent ):
   TITLE_PATTERN = re.compile( u"<h3>(.*?)</h3>", flags = re.IGNORECASE )
 
   def __init__( self, object_id, revision = None, title = None, contents = None, notebook_id = None,
-                startup = None, deleted_from_id = None, rank = None ):
+                startup = None, deleted_from_id = None, rank = None, creation = None ):
     """
     Create a new note with the given id and contents.
 
@@ -30,6 +30,8 @@ class Note( Persistent ):
     @param deleted_from_id: id of the notebook that this note was deleted from (optional)
     @type rank: float or NoneType
     @param rank: indicates numeric ordering of this note in relation to other startup notes
+    @type creation: datetime or NoneType
+    @param creation: creation timestamp of the object (optional, defaults to None)
     @rtype: Note
     @return: newly constructed note
     """
@@ -40,9 +42,10 @@ class Note( Persistent ):
     self.__startup = startup or False
     self.__deleted_from_id = deleted_from_id
     self.__rank = rank
+    self.__creation = creation
 
   @staticmethod
-  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None ):
+  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None, creation = None ):
     """
     Convenience constructor for creating a new note.
 
@@ -56,10 +59,12 @@ class Note( Persistent ):
     @param startup: whether this note should be displayed upon startup (optional, defaults to False)
     @type rank: float or NoneType
     @param rank: indicates numeric ordering of this note in relation to other startup notes
+    @type creation: datetime or NoneType
+    @param creation: creation timestamp of the object (optional, defaults to None)
     @rtype: Note
     @return: newly constructed note
     """
-    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank )
+    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank, creation = creation )
     note.contents = contents
 
     return note
@@ -138,6 +143,7 @@ class Note( Persistent ):
       contents = self.__contents,
       title = self.__title,
       deleted_from_id = self.__deleted_from_id,
+      creation = self.__creation,
     ) )
 
     return d
@@ -148,3 +154,4 @@ class Note( Persistent ):
   startup = property( lambda self: self.__startup, __set_startup )
   deleted_from_id = property( lambda self: self.__deleted_from_id, __set_deleted_from_id )
   rank = property( lambda self: self.__rank, __set_rank )
+  creation = property( lambda self: self.__creation )

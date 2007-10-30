@@ -74,6 +74,7 @@ def expose( view = None, rss = None ):
           return unicode( view_override( **result ) )
       except:
         if redirect is None:
+          print result
           raise
 
       # if that doesn't work, and there's a redirect, then redirect

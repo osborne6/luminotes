@@ -20,16 +20,16 @@ class Main_page( Page ):
     logout_url = None,
     startup_notes = None,
     total_notes_count = None,
-    note = None,
+    notes = None,
     note_read_write = True,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
     static_notes = Div(
-      note and Div(
+      notes and [ Div(
         note.contents,
         id = "static_note_%s" % note.object_id,
-      ) or
+      ) for note in notes ] or
       [ Div(
         startup_note.contents,
         id = "static_note_%s" % startup_note.object_id
@@ -46,12 +46,12 @@ class Main_page( Page ):
       u"deleted_from_id" : startup_note.deleted_from_id,
     } for startup_note in startup_notes ]
 
-    if note:
-      note_dict = {
-        u"object_id" : note.object_id,
-        u"revision" : note.revision,
-        u"deleted_from_id" : note.deleted_from_id,
-      }
+    note_dicts = [ {
+      u"object_id" : note.object_id,
+      u"revision" : note.revision,
+      u"deleted_from_id" : note.deleted_from_id,
+      u"creation" : note.creation,
+    } for note in notes ]
 
     def json( string ):
       return escape( unicode( Json( string ) ), quote = True )
@@ -66,7 +66,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"notebook_id", id = u"notebook_id", value = notebook.object_id ),
       Input( type = u"hidden", name = u"parent_id", id = u"parent_id", value = parent_id or "" ),
       Input( type = u"hidden", name = u"startup_notes", id = u"startup_notes", value = json( startup_note_dicts ) ),
-      Input( type = u"hidden", name = u"note", id = u"note", value = note and json( note_dict ) or "" ),
+      Input( type = u"hidden", name = u"current_notes", id = u"current_notes", value = json( note_dicts ) ),
       Input( type = u"hidden", name = u"note_read_write", id = u"note_read_write", value = json( note_read_write ) ),
       Div(
         id = u"status_area",

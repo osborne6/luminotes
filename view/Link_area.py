@@ -3,6 +3,8 @@ from Tags import Div, Span, H4, A
 
 class Link_area( Div ):
   def __init__( self, notebooks, notebook, total_notes_count, parent_id ):
+    linked_notebooks = [ nb for nb in notebooks if nb.read_write and nb.name not in ( u"trash" ) ]
+
     Div.__init__(
       self,
       Div(
@@ -57,7 +59,7 @@ class Link_area( Div ):
       ),
 
       Div(
-        ( len( notebooks ) > 1 ) and H4( u"notebooks" ) or None,
+        ( len( linked_notebooks ) > 0 ) and H4( u"notebooks" ) or None,
         [ Span(
           Div(
           A(
@@ -66,7 +68,7 @@ class Link_area( Div ):
             id = u"notebook_%s" % nb.object_id,
           ),
           class_ = ( nb.object_id == notebook.object_id ) and u"link_area_item current_notebook_name" or u"link_area_item",
-        ) ) for nb in notebooks if nb.name not in ( u"Luminotes", u"trash" ) ],
+        ) ) for nb in linked_notebooks ],
         id = u"notebooks_area"
       ),
 

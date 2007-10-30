@@ -36,7 +36,7 @@ function Wiki( invoker ) {
   // populate the wiki with startup notes
   this.populate(
     evalJSON( getElement( "startup_notes" ).value || "null" ),
-    evalJSON( getElement( "note" ).value || "null" ),
+    evalJSON( getElement( "current_notes" ).value || "null" ),
     evalJSON( getElement( "note_read_write" ).value || "true" )
   );
 
@@ -111,21 +111,22 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   );
 }
 
-Wiki.prototype.populate = function ( startup_notes, note, note_read_write ) {
+Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_write ) {
   // create an editor for each startup note in the received notebook, focusing the first one
   var focus = true;
   for ( var i in startup_notes ) {
     var startup_note = startup_notes[ i ];
     this.startup_notes[ startup_note.object_id ] = true;
 
-    // don't actually create an editor if a particular note was provided in the result
-    if ( !note ) {
+    // don't actually create an editor if a particular list of notes was provided in the result
+    if ( current_notes.length == 0 ) {
       var editor = this.create_editor(
         startup_note.object_id,
-        // grab this note's contents from the static <noscript> area
+        // grab this note's contents from the static notes area
         getElement( "static_note_" + startup_note.object_id ).innerHTML,
         startup_note.deleted_from_id,
         startup_note.revision,
+        startup_note.creation,
         this.notebook.read_write, false, focus
       );
 
@@ -134,17 +135,23 @@ Wiki.prototype.populate = function ( startup_notes, note, note_read_write ) {
     }
   }
 
-  // if one particular note was provided, then just display an editor for that note
-  if ( note )
+  // if particular notes were provided, then display editors for them
+  var focus = true;
+  for ( var i in current_notes ) {
+    var note = current_notes[ i ];
+
     this.create_editor(
       note.object_id,
       getElement( "static_note_" + note.object_id ).innerHTML,
       note.deleted_from_id,
       note.revision,
-      this.notebook.read_write && note_read_write, false, true
+      note.creation,
+      this.notebook.read_write && note_read_write, false, focus
     );
+    focus = false;
+  }
 
-  if ( startup_notes.length == 0 && !note )
+  if ( startup_notes.length == 0 && current_notes.length == 0 )
     this.display_empty_message();
 
   var self = this;
@@ -222,7 +229,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  var editor = this.create_editor( undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
+  var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
   this.increment_total_notes_count();
   this.blank_editor_id = editor.id;
 
@@ -416,6 +423,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     if ( requested_revision )
       id += " " + requested_revision;
     var actual_revision = result.note.revision;
+    var actual_creation = result.note.creation;
     var note_text = result.note.contents;
     var deleted_from_id = result.note.deleted;
   } else {
@@ -423,6 +431,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var note_text = "<h3>" + note_title;
     var deleted_from_id = null;
     var actual_revision = null;
+    var actual_creation = null;
     this.increment_total_notes_count();
   }
 
@@ -431,7 +440,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
   else
     var read_write = this.notebook.read_write;
 
-  var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, read_write, true, false );
+  var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false );
   id = editor.id;
 
   // if a link that launched this editor was provided, update it with the created note's id
@@ -439,7 +448,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, read_write, highlight, focus ) {
+Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus ) {
   var self = this;
   if ( isUndefinedOrNull( id ) ) {
     if ( this.notebook.read_write ) {
@@ -456,6 +465,11 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   if ( !read_write && this.notebook.read_write && revision ) {
     var short_revision = this.brief_revision( revision );
     note_text = "<p>Previous revision from " + short_revision + "</p>" + note_text;
+  }
+
+  if ( !read_write && creation ) {
+    var short_creation = this.brief_revision( creation );
+    note_text = "<p>" + short_creation + "</p>" + note_text;
   }
 
   var startup = this.startup_notes[ id ];
