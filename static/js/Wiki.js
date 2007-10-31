@@ -653,6 +653,9 @@ Wiki.prototype.make_image_button = function ( name, filename_prefix, handle_mous
 Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
 
+  if ( /_down/.test( button.src ) )
+    return;
+
   if ( /_hover/.test( button.src ) )
     button.src = IMAGE_DIR + button.filename_prefix + "_button_down_hover.png";
   else
@@ -661,6 +664,9 @@ Wiki.prototype.down_image_button = function ( name ) {
 
 Wiki.prototype.up_image_button = function ( name ) {
   var button = getElement( name );
+
+  if ( !/_down/.test( button.src ) )
+    return;
 
   if ( /_hover/.test( button.src ) )
     button.src = IMAGE_DIR + button.filename_prefix + "_button_hover.png";
