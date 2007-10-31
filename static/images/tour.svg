@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.44.1"
+   width="1300"
+   height="806"
+   version="1.0"
+   sodipodi:docbase="/home/witten/luminotes/trunk/static/images"
+   sodipodi:docname="tour.svg"
+   inkscape:export-filename="/home/witten/luminotes/trunk/static/images/tour.png"
+   inkscape:export-xdpi="70.892311"
+   inkscape:export-ydpi="70.892311">
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs5">
+    <marker
+       inkscape:stockid="RazorWire"
+       id="RazorWire"
+       refX="0"
+       refY="0"
+       orient="auto">
+       style=&quot;overflow:visible&quot;&gt;
+      <path
+   id="path3694"
+   transform="scale(0.8,0.8)"
+   style="fill:#808080;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.1pt"
+   d="M 0.022727273,-0.74009011 L 0.022727273,0.69740989 L -7.7585227,3.0099099 L 10.678977,3.0099099 L 3.4914773,0.69740989 L 3.4914773,-0.74009011 L 10.741477,-2.8963401 L -7.7272727,-2.8963401 L 0.022727273,-0.74009011 z " />
+</marker>
+    <marker
+       inkscape:stockid="TriangleOutL"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="TriangleOutL"
+       style="overflow:visible">
+      <path
+         id="path3766"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+         transform="scale(0.8)" />
+    </marker>
+    <marker
+       inkscape:stockid="Dot_l"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Dot_l"
+       style="overflow:visible">
+      <path
+         id="path3802"
+         d="M -2.5,-1.0 C -2.5,1.7600000 -4.7400000,4.0 -7.5,4.0 C -10.260000,4.0 -12.5,1.7600000 -12.5,-1.0 C -12.5,-3.7600000 -10.260000,-6.0 -7.5,-6.0 C -4.7400000,-6.0 -2.5,-3.7600000 -2.5,-1.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;marker-end:none"
+         transform="scale(0.8) translate(7.4, 1)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-height="1026"
+     inkscape:window-width="1400"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     showgrid="true"
+     inkscape:zoom="1"
+     inkscape:cx="639.19931"
+     inkscape:cy="506.0702"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:current-layer="svg2" />
+  <g
+     id="g9451"
+     transform="translate(-100.0391,90)"
+     inkscape:export-filename="/home/witten/luminotes/trunk/static/images/tour.png"
+     inkscape:export-xdpi="74.373459"
+     inkscape:export-ydpi="74.373459">
+    <image
+       xlink:href="tour_screenshot.png"
+       sodipodi:absref="/home/witten/luminotes/trunk/static/images/tour_screenshot.png"
+       width="800"
+       height="522"
+       id="image2349"
+       x="280"
+       y="4" />
+    <text
+       sodipodi:linespacing="140%"
+       id="text2780"
+       y="53.15625"
+       x="350.86719"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:end;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="53.15625"
+         x="350.86719"
+         id="tspan2790"
+         sodipodi:role="line">Just click on a note and</tspan><tspan
+         y="75.55625"
+         x="350.86719"
+         id="tspan2792"
+         sodipodi:role="line">start typing. There's no</tspan><tspan
+         y="97.956249"
+         x="350.86719"
+         id="tspan2794"
+         sodipodi:role="line">separate edit mode.</tspan></text>
+    <text
+       sodipodi:linespacing="140%"
+       id="text3875"
+       y="403.15625"
+       x="350.78906"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:end;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="403.15625"
+         x="350.78906"
+         id="tspan14594"
+         sodipodi:role="line">Make links between notes</tspan><tspan
+         y="425.55625"
+         x="350.78906"
+         id="tspan14596"
+         sodipodi:role="line">and connect your ideas.</tspan></text>
+    <text
+       sodipodi:linespacing="140%"
+       id="text4774"
+       y="80.271873"
+       x="1109.3281"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="80.271873"
+         x="1109.3281"
+         id="tspan19065"
+         sodipodi:role="line">Download your entire wiki</tspan><tspan
+         y="102.67187"
+         x="1109.3281"
+         id="tspan19067"
+         sodipodi:role="line">whenever you want.</tspan></text>
+    <text
+       sodipodi:linespacing="140%"
+       id="text9211"
+       y="170.47426"
+       x="1110.4763"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="170.47426"
+         x="1110.4763"
+         id="tspan19069"
+         sodipodi:role="line">You can always go back and</tspan><tspan
+         y="192.87426"
+         x="1110.4763"
+         id="tspan19071"
+         sodipodi:role="line">view old versions of your wiki.</tspan></text>
+    <text
+       sodipodi:linespacing="140%"
+       id="text9219"
+       y="228.15625"
+       x="1109.7578"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="228.15625"
+         x="1109.7578"
+         id="tspan9221"
+         sodipodi:role="line">Easily change a link's</tspan><tspan
+         id="tspan20851"
+         y="250.55625"
+         x="1109.7578"
+         sodipodi:role="line">destination to another</tspan><tspan
+         id="tspan20853"
+         y="272.95625"
+         x="1109.7578"
+         sodipodi:role="line">note or even an outside</tspan><tspan
+         id="tspan9225"
+         y="295.35625"
+         x="1109.7578"
+         sodipodi:role="line">web page.</tspan></text>
+    <path
+       id="path9242"
+       d="M 1062,86 L 1102,86"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="ccc"
+       id="path9244"
+       d="M 770,128 L 770,178.13823 L 1102.2804,178.40476"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="cc"
+       id="path9246"
+       d="M 1047,254 L 1102.4987,254"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="cccc"
+       id="path10133"
+       d="M 358.19246,73 C 448.19246,73 433,73 433,73 L 433,213 L 467.36831,213"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="ccc"
+       id="path11040"
+       d="M 358.18452,409 C 358.18452,409 647,409 647,409 L 647,394.32184"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       sodipodi:linespacing="100%"
+       id="text14604"
+       y="313.15625"
+       x="351.73438"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:100%;writing-mode:lr-tb;text-anchor:end;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="313.15625"
+         x="351.73438"
+         id="tspan20849"
+         sodipodi:role="line">See several notes at once.</tspan></text>
+    <path
+       sodipodi:nodetypes="cc"
+       id="path14616"
+       d="M 358.0463,309 L 467,309"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       sodipodi:linespacing="140%"
+       id="text16388"
+       y="223.15625"
+       x="351.375"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:end;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         id="tspan16392"
+         y="223.15625"
+         x="351.375"
+         sodipodi:role="line">Format your text with</tspan><tspan
+         id="tspan16396"
+         y="245.55625"
+         x="351.375"
+         sodipodi:role="line">these toolbar buttons.</tspan></text>
+    <path
+       sodipodi:nodetypes="ccc"
+       id="path18168"
+       d="M 358.06614,229 C 398.06614,229 397,229 397,229 L 397,229"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       sodipodi:linespacing="140%"
+       id="text19055"
+       y="18.15625"
+       x="1109.5234"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="18.15625"
+         x="1109.5234"
+         id="tspan19061"
+         sodipodi:role="line">Search or browse everything</tspan><tspan
+         y="40.55625"
+         x="1109.5234"
+         id="tspan19063"
+         sodipodi:role="line">you've written.</tspan></text>
+    <path
+       id="path19075"
+       d="M 1080,26 L 1080,66 L 1040,66"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="ccc"
+       id="path19962"
+       d="M 1102.2804,26 L 914.01786,26 L 914.01786,46"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       sodipodi:linespacing="140%"
+       id="text21773"
+       y="335.47186"
+       x="1109.5703"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:139.99999762%;writing-mode:lr-tb;text-anchor:start;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="335.47186"
+         x="1109.5703"
+         id="tspan22681"
+         sodipodi:role="line">Focus on the task at</tspan><tspan
+         y="357.87186"
+         x="1109.5703"
+         id="tspan22683"
+         sodipodi:role="line">hand by hiding notes</tspan><tspan
+         y="380.27186"
+         x="1109.5703"
+         id="tspan22685"
+         sodipodi:role="line">that you're done</tspan><tspan
+         y="402.67186"
+         x="1109.5703"
+         id="tspan22687"
+         sodipodi:role="line">working on.</tspan></text>
+    <path
+       sodipodi:nodetypes="ccc"
+       id="path22689"
+       d="M 1102.4669,364.04629 L 883,363.77976 L 883,293"
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#03f;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+  </g>
+</svg>
