@@ -758,7 +758,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
       this.display_empty_message();
     } else {
       // before hiding an editor, save it
-      if ( this.notebook.read_write )
+      if ( this.notebook.read_write && editor.read_write )
         this.save_editor( editor );
 
       editor.shutdown();
@@ -998,7 +998,7 @@ Wiki.prototype.display_search_results = function ( result ) {
     }
 
     // otherwise, create an editor for the one note
-    this.create_editor( note.object_id, note.contents, note.deleted_from_id, note.revision, this.notebook.read_write, true, true );
+    this.create_editor( note.object_id, note.contents, note.deleted_from_id, note.revision, undefined, this.notebook.read_write, true, true );
     return;
   }
 
@@ -1036,7 +1036,7 @@ Wiki.prototype.display_search_results = function ( result ) {
     );
   }
 
-  this.search_results_editor = this.create_editor( "search_results", "<h3>search results</h3>" + list.innerHTML, undefined, undefined, false, true, true );
+  this.search_results_editor = this.create_editor( "search_results", "<h3>search results</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true );
 }
 
 Wiki.prototype.display_all_notes_list = function ( result ) {
@@ -1069,8 +1069,7 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
   }
   var list_holder = createDOM( "div", {}, list );
 
-  this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list_holder.innerHTML, undefined, undefined, false, true, true );
-
+  this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list_holder.innerHTML, undefined, undefined, undefined, false, true, true );
 }
 
 Wiki.prototype.display_message = function ( text, nodes ) {
