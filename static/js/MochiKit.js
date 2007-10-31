@@ -6385,20 +6385,8 @@ var _672=p.cumulativeOffset(this.element);
 if(this.options.offset){
 _672.y+=this.options.offset;
 }
-var max;
-if(window.innerHeight){
-max=window.innerHeight-window.height;
-}else{
-if(document.documentElement&&document.documentElement.clientHeight){
-max=document.documentElement.clientHeight-document.body.scrollHeight;
-}else{
-if(document.body){
-max=document.body.clientHeight-document.body.scrollHeight;
-}
-}
-}
 this.scrollStart=p.windowOffset.y;
-this.delta=(_672.y>max?max:_672.y)-this.scrollStart;
+this.delta=_672.y-this.scrollStart;
 },update:function(_674){
 var p=MochiKit.Position;
 p.prepare();
