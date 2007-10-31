@@ -55,9 +55,9 @@ def expose( view = None, rss = None ):
         if hasattr( error, "to_dict" ):
           result = error.to_dict()
         else:
-          # TODO: it'd be nice to send an email to myself with the traceback
           import traceback
           traceback.print_exc()
+          cherrypy.root.report_traceback()
           result = dict( error = u"An error occurred when processing your request. Please try again or contact support." )
 
       redirect = result.get( u"redirect", None )

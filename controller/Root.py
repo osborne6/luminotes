@@ -164,11 +164,41 @@ class Root( object ):
       cherrypy.response.body = [ unicode( Not_found_page( support_email ) ) ]
       return
 
-    # TODO: it'd be nice to send an email to myself with the traceback
     import traceback
     traceback.print_exc()
+    self.report_traceback()
 
     cherrypy.response.body = [ unicode( Error_page( support_email ) ) ]
+
+  def report_traceback( self ):
+    """
+    If a support email address is configured, send it an email with the current traceback.
+    """
+    support_email = self.__settings[ u"global" ].get( u"luminotes.support_email" )
+    if not support_email: return False
+
+    import smtplib
+    import traceback
+    from email import Message
+    
+    message = Message.Message()
+    message[ u"from" ] = support_email
+    message[ u"to" ] = support_email
+    message[ u"subject" ] = u"Luminotes traceback"
+    message.set_payload(
+      u"requested URL: %s\n" % cherrypy.request.browser_url +
+      u"user id: %s\n" % cherrypy.session.get( "user_id" ) +
+      u"username: %s\n\n" % cherrypy.session.get( "username" ) +
+      traceback.format_exc()
+    )
+
+    # send the message out through localhost's smtp server
+    server = smtplib.SMTP()
+    server.connect()
+    server.sendmail( message[ u"from" ], [ support_email ], message.as_string() )
+    server.quit()
+
+    return True
 
   database = property( lambda self: self.__database )
   notebooks = property( lambda self: self.__notebooks )
