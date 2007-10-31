@@ -67,8 +67,6 @@ h3 {
   font-size: 100%;
   outline: none;
   cursor: pointer;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .button:hover {
@@ -79,8 +77,6 @@ h3 {
   margin-top: 0.25em;
   padding: 0.25em;
   border: #999999 1px solid;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 ul {

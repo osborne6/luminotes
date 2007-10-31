@@ -1,4 +1,5 @@
 from Tags import Div, Span, H4, A
+from Rounded_div import Rounded_div
 
 
 class Link_area( Div ):
@@ -44,14 +45,15 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          ( notebook.name == u"trash" ) and Div(
+          ( notebook.name == u"trash" ) and Rounded_div(
+            u"trash_notebook",
             A(
               u"trash",
               href = u"#",
               id = u"trash_link",
               title = u"Look here for notes you've deleted.",
             ),
-            class_ = u"link_area_item current_trash_notebook_name",
+            class_ = u"link_area_item",
           ) or None,
         ) or None,
 
@@ -60,15 +62,23 @@ class Link_area( Div ):
 
       Div(
         ( len( linked_notebooks ) > 0 ) and H4( u"notebooks" ) or None,
-        [ Span(
-          Div(
+        [ ( nb.object_id == notebook.object_id ) and Rounded_div(
+          u"current_notebook",
           A(
             nb.name,
             href = u"/notebooks/%s" % nb.object_id,
             id = u"notebook_%s" % nb.object_id,
           ),
-          class_ = ( nb.object_id == notebook.object_id ) and u"link_area_item current_notebook_name" or u"link_area_item",
-        ) ) for nb in linked_notebooks ],
+          class_ = u"link_area_item",
+        ) or
+        Div(
+          A(
+            nb.name,
+            href = u"/notebooks/%s" % nb.object_id,
+            id = u"notebook_%s" % nb.object_id,
+          ),
+          class_ = u"link_area_item",
+        ) for nb in linked_notebooks ],
         id = u"notebooks_area"
       ),
 

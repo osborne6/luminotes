@@ -6,6 +6,7 @@ from User_area import User_area
 from Link_area import Link_area
 from Toolbar import Toolbar
 from Json import Json
+from Rounded_div import Rounded_div
 
 
 class Main_page( Page ):
@@ -95,7 +96,8 @@ class Main_page( Page ):
             ),
             id = u"top_area",
           ),
-          Div(
+          Rounded_div(
+            ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
             Strong( notebook.name ),
             parent_id and Span(
               u" | ",
@@ -104,10 +106,11 @@ class Main_page( Page ):
               A( u"return to notebook", href = u"/notebooks/%s" % parent_id ),
             ) or None,
             id = u"notebook_header_area",
-            class_ = ( notebook.name == u"trash" ) and u"current_trash_notebook_name" or u"current_notebook_name",
+            corners = ( u"tl", u"tr", u"br" ),
           ),
           Div(
-            Div(
+            Rounded_div(
+              ( notebook.name == u"trash" ) and u"trash_notebook_inner" or u"current_notebook_inner",
               Div(
                 id = u"notes",
               ),
@@ -125,9 +128,10 @@ class Main_page( Page ):
                 type = u"text/javascript",
               ),
               id = u"notebook_background",
+              corners = ( u"tl", ),
             ),
             id = u"notebook_border",
-            class_ = ( notebook.name == u"trash" ) and u"current_trash_notebook_name" or u"current_notebook_name",
+            class_ = ( notebook.name == u"trash" ) and u"trash_notebook_color" or u"current_notebook_color",
           ),
           id = u"center_area",
         ),

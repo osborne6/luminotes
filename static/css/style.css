@@ -251,8 +251,6 @@ ol li {
 #search_text {
   padding: 0.25em;
   border: #999999 1px solid;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 #user_area {
@@ -265,21 +263,15 @@ ol li {
 }
 
 #notebook_header_area {
-  -moz-border-radius: 0.5em 0.5em 0.5em 0;
-  -webkit-border-radius: 0.5em 0.5em 0.5em 0;
+  padding: 0.2em;
 }
 
 #notebook_border {
-  padding: 0 0 0 0.3em;
-  -moz-border-radius: 0 0 0 1px;
-  -webkit-border-radius: 0 0 0 1px;
+  padding: 0 0 0 0.4em;
 }
 
 #notebook_background {
   padding: 0.25em 0.5em 0 1em;
-  background-color: #fafafa;
-  -moz-border-radius: 0.5em 0 0 0;
-  -webkit-border-radius: 0.5em 0 0 0;
 }
 
 #static_notes {
@@ -301,8 +293,6 @@ ol li {
   text-align: left;
   padding: 0.5em;
   background-color: #fafafa;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .blank_note_stub_hidden_border {
@@ -330,8 +320,6 @@ ol li {
   font-size: 100%;
   outline: none;
   cursor: pointer;
-  -moz-border-radius: 0.25em;
-  -webkit-border-radius: 0.25em;
 }
 
 .note_button:hover {
@@ -347,8 +335,6 @@ ol li {
   border: 1px solid #999999;
   margin-bottom: 0.75em;
   background-color: #ffffff;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .focused_note_frame {
@@ -382,8 +368,6 @@ ol li {
   padding: 0.5em;
   border: 1px solid #000000;
   background: #ffff99;
-  -moz-border-radius: 0.25em;
-  -webkit-border-radius: 0.25em;
 }
 
 .pulldown_link {
@@ -401,16 +385,12 @@ ol li {
   margin-bottom: 0.5em;
   font-weight: bold;
   background-color: #ffcc66;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .message_inner {
   padding: 0.5em;
   line-height: 140%;
   background-color: #ffaa44;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .error {
@@ -420,8 +400,6 @@ ol li {
   font-weight: bold;
   color: #ffffff;
   background-color: #ff3333;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .error_inner {
@@ -429,8 +407,6 @@ ol li {
   line-height: 140%;
   color: #ffffff;
   background-color: #dd1111;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .message_button {
@@ -441,8 +417,6 @@ ol li {
   font-size: 100%;
   outline: none;
   cursor: pointer;
-  -moz-border-radius: 0.25em;
-  -webkit-border-radius: 0.25em;
 }
 
 .message_button:hover {
@@ -454,8 +428,6 @@ ol li {
   color: #ffffff;
   border: 1px solid #005500;
   background-color: #11bb11;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .error_box {
@@ -472,8 +444,6 @@ ol li {
   margin-right: 0.5em;
   padding: 0.25em;
   border: #999999 1px solid;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .link_area_item {
@@ -481,7 +451,8 @@ ol li {
   padding: 0.25em 0.25em 0.25em 0.5em;
 }
 
-.storage_usage_area {
+#storage_usage_area {
+  padding-top: 0.1em;
 }
 
 .storage_usage_low {
@@ -502,16 +473,60 @@ ol li {
   margin-top: 1.5em;
 }
 
-.current_notebook_name {
+.current_notebook_color {
   background-color: #b0d0ff;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
-.current_trash_notebook_name {
+.current_notebook_tl {
+  background: url(/static/images/current_notebook_tl.png) no-repeat top left;
+}
+
+.current_notebook_tr {
+  background: url(/static/images/current_notebook_tr.png) no-repeat top right;
+}
+
+.current_notebook_bl {
+  background: url(/static/images/current_notebook_bl.png) no-repeat bottom left;
+}
+
+.current_notebook_br {
+  background: url(/static/images/current_notebook_br.png) no-repeat bottom right;
+}
+
+.current_notebook_inner_color {
+  background-color: #fafafa;
+}
+
+.current_notebook_inner_tl {
+  background: url(/static/images/current_notebook_inner_tl.png) no-repeat top left;
+}
+
+.trash_notebook_color {
   background-color: #d0d0d0;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
+}
+
+.trash_notebook_tl {
+  background: url(/static/images/trash_notebook_tl.png) no-repeat top left;
+}
+
+.trash_notebook_tr {
+  background: url(/static/images/trash_notebook_tr.png) no-repeat top right;
+}
+
+.trash_notebook_bl {
+  background: url(/static/images/trash_notebook_bl.png) no-repeat bottom left;
+}
+
+.trash_notebook_br {
+  background: url(/static/images/trash_notebook_br.png) no-repeat bottom right;
+}
+
+.trash_notebook_inner_color {
+  background-color: #fafafa;
+}
+
+.trash_notebook_inner_tl {
+  background: url(/static/images/trash_notebook_inner_tl.png) no-repeat top left;
 }
 
 .button {
@@ -521,8 +536,6 @@ ol li {
   font-size: 100%;
   outline: none;
   cursor: pointer;
-  -moz-border-radius: 0.5em;
-  -webkit-border-radius: 0.5em;
 }
 
 .button:hover {

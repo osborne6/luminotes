@@ -11,3 +11,11 @@ Switch to the duplicate. Enable the "select contiguous regions" tool. Click on
 the duplicate layer's background. Invert selection. Grow selection by two
 pixels. Fill the entire selection with white (or whatever glow color you
 want). Select none. Gaussian blur the layer with a 5x5 pixel radius.
+
+To make round corner images, use Google's Rounded Corner Generator:
+
+http://ajaxian.com/archives/googles-rounded-corner-generator
+
+For instance:
+
+http://groups-beta.google.com/groups/roundedcorners?c=b0d0ff&bc=fafafa&w=6&h=6&a=tl
