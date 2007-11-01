@@ -20,9 +20,10 @@ class Initializer( object ):
     ( u"meet the team.html", False ),
     ( u"contact info.html", False ),
     ( u"login.html", False ),
+    ( u"download.html", False ),
     ( u"password reset.html", False ),
-    ( u"supported browsers.html", False ),
     ( u"advanced browser features.html", False ),
+    ( u"supported browsers.html", False ),
   ]
 
   def __init__( self, database, nuke = False ):
