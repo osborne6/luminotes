@@ -19,6 +19,18 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
+
+--
+-- Name: drop_html_tags(text); Type: FUNCTION; Schema: public; Owner: luminotes
+--
+
+CREATE FUNCTION drop_html_tags(text) RETURNS text
+    AS $_$select regexp_replace( regexp_replace( $1, '</?(div|p|br|ul|ol|li|h3)( [^>]*?)?>', ' ', 'gi' ), '<[^>]+?>', '', 'g' );$_$
+    LANGUAGE sql;
+
+
+ALTER FUNCTION public.drop_html_tags(text) OWNER TO luminotes;
+
 --
 -- Name: luminotes_user; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
@@ -59,7 +71,8 @@ CREATE TABLE note (
     notebook_id text,
     startup boolean DEFAULT false,
     deleted_from_id text,
-    rank numeric
+    rank numeric,
+    search tsvector
 );
 
 
@@ -70,7 +83,7 @@ ALTER TABLE public.note OWNER TO luminotes;
 --
 
 CREATE VIEW note_current AS
-    SELECT note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
+    SELECT note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank, note.search FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
 
 
 ALTER TABLE public.note_current OWNER TO luminotes;
@@ -199,6 +212,26 @@ CREATE INDEX note_notebook_id_title_index ON note USING btree (notebook_id, titl
 --
 
 CREATE INDEX password_reset_email_address_index ON password_reset USING btree (email_address);
+
+
+--
+-- Name: search_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX search_index ON note USING gist (search);
+
+
+--
+-- Name: search_update; Type: TRIGGER; Schema: public; Owner: luminotes
+--
+
+CREATE TRIGGER search_update
+    BEFORE INSERT OR UPDATE ON note
+    FOR EACH ROW
+    EXECUTE PROCEDURE tsearch2('search', 'drop_html_tags', 'title', 'contents');
+
+
+UPDATE pg_ts_cfg SET locale = 'en_US.UTF-8' WHERE ts_name = 'default';
 
 
 --

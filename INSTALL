@@ -18,15 +18,11 @@ packages:
           postgresql-contrib-8.1 python-psycopg2 python-simplejson python-tz
 
 
-development mode
-----------------
+database setup
+--------------
 
-Running the Luminotes server in development mode is convenient for testing out
-changes, because it uses CherryPy's built-in web server with auto-reload
-enabled, so the server will automatically reload any modified source files as
-soon as they're modified.
-
-Configure PostgreSQL's pg_hba.conf to require passwords for local connections:
+Configure PostgreSQL's pg_hba.conf (usually found under /etc/postgresql/) to
+require passwords for local connections:
 
   local all all md5
 
@@ -35,15 +31,36 @@ Restart postgresql so these changes take effect:
   /etc/init.d/postgresql restart
 
 As the PostgreSQL superuser (usually "postgres"), create a new database user
-and set the password to "dev".
+and set a new password, for instance, "mypassword".
 
   createuser -S -d -R -P -E luminotes
+  createdb -E UTF8 luminotes
+  echo "alter database luminotes owner to luminotes;" | psql luminotes
+
+Also as the PostgreSQL superuser, setup full-text searching. The path to the
+tsearch2.sql file may be different depending on your Linux distribution or
+PostgreSQL version:
+
+  psql luminotes < /usr/share/postgresql/8.1/contrib/tsearch2.sql
+  echo "grant all on pg_ts_cfg to luminotes;" | psql luminotes
+  echo "grant all on pg_ts_cfgmap to luminotes;" | psql luminotes
+  echo "grant all on pg_ts_dict to luminotes;" | psql luminotes
+  echo "grant all on pg_ts_parser to luminotes;" | psql luminotes
 
 Initialize the database with the starting schema and default data:
 
-  createdb -W -E UTF8 -U luminotes luminotes
   export PYTHONPATH=.
+  export PGPASSWORD=mypassword
   python2.4 tools/initdb.py
+
+
+development mode
+----------------
+
+Running the Luminotes server in development mode is convenient for testing out
+changes, because it uses CherryPy's built-in web server with auto-reload
+enabled, so the server will automatically reload any modified source files as
+soon as they're modified.
 
 To start the server in development mode, run:
 
@@ -106,26 +123,6 @@ domain you're using. For instance:
   "luminotes.http_url": "http://luminotes.com",
   "luminotes.https_url": "https://luminotes.com",
 
-Configure PostgreSQL's pg_hba.conf to require passwords for local connections:
-
-  local all all md5
-
-Restart postgresql so these changes take effect:
-
-  /etc/init.d/postgresql restart
-
-As the PostgreSQL superuser (usually "postgres"), create a new database user
-and set a new password, for instance, "mypassword".
-
-  createuser -S -d -R -P -E luminotes
-
-Initialize the database with the starting schema and default data:
-
-  createdb -W -E UTF8 -U luminotes luminotes
-  export PYTHONPATH=.
-  export PGPASSWORD=mypassword
-  python2.4 tools/initdb.py
-
 Then to actually start the production mode server, run:
 
   python2.4 luminotes.py
@@ -139,7 +136,7 @@ sending email
 
 If you would like Luminotes to be able to send password reset emails, then
 you'll need a mail server running on the same machine that is capabable of
-receiving local SMTP connections and sending email. Either way, please change
+receiving local SMTP connections and sending email. Either way, please set
 the luminotes.support_email address in config/Common.py to the email address
 you'd like in the From field of all outgoing emails. This email address also
 shows up in various error messages and other places for a support contact
