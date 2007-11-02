@@ -1475,7 +1475,23 @@ class Test_notebooks( Test_controller ):
 
     notes = result.get( "notes" )
 
-    assert len( notes ) == 0
+    assert result[ "error" ]
+    assert u"missing" in result[ "error" ]
+
+  def test_long_search( self ):
+    self.login()
+
+    search_text = "w" * 257
+
+    result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert result[ "error" ]
+    assert u"too long" in result[ "error" ]
 
   def test_search_with_no_results( self ):
     self.login()
@@ -1511,20 +1527,6 @@ class Test_notebooks( Test_controller ):
     assert len( notes ) == 2
     assert notes[ 0 ].object_id == note3.object_id
     assert notes[ 1 ].object_id == self.note.object_id
-
-  def test_search_html_tags( self ):
-    self.login()
-
-    search_text = "h3"
-
-    result = self.http_post( "/notebooks/search/", dict(
-      notebook_id = self.notebook.object_id,
-      search_text = search_text,
-    ), session_id = self.session_id )
-
-    notes = result.get( "notes" )
-
-    assert len( notes ) == 0
 
   def test_search_character_refs( self ):
     self.login()

@@ -1,3 +1,4 @@
+import re
 from copy import copy
 from Note import Note
 from Persistent import Persistent, quote
@@ -7,6 +8,10 @@ class Notebook( Persistent ):
   """
   A collection of wiki notes.
   """
+
+  WHITESPACE_PATTERN = re.compile( r"\s+" )
+  SEARCH_OPERATORS = re.compile( r"[&|!()]" )
+
   def __init__( self, object_id, revision = None, name = None, trash_id = None, read_write = True ):
     """
     Create a new notebook with the given id and name.
@@ -78,19 +83,19 @@ class Notebook( Persistent ):
     """
     Return a SQL string to load a list of all the notes within this notebook.
     """
-    return "select * from note_current where notebook_id = %s order by revision desc;" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s order by revision desc;" % quote( self.object_id )
 
   def sql_load_non_startup_notes( self ):
     """
     Return a SQL string to load a list of the non-startup notes within this notebook.
     """
-    return "select * from note_current where notebook_id = %s and startup = 'f' order by revision desc;" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and startup = 'f' order by revision desc;" % quote( self.object_id )
 
   def sql_load_startup_notes( self ):
     """
     Return a SQL string to load a list of the startup notes within this notebook.
     """
-    return "select * from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
 
   def sql_load_recent_notes( self, start = 0, count = 10 ):
     """
@@ -104,7 +109,9 @@ class Notebook( Persistent ):
     return \
       """
       select
-        note_current.*, note_creation.revision as creation
+        note_current.id, note_current.revision, note_current.title, note_current.contents,
+        note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
+        note_current.rank, note_creation.revision as creation
       from
         note_current,
         ( select id, min( revision ) as revision from note where notebook_id = %s group by id ) as note_creation
@@ -120,7 +127,7 @@ class Notebook( Persistent ):
     @type note_id: unicode
     @param note_id: id of note to load
     """
-    return "select * from note_current where notebook_id = %s and id = %s;" % ( quote( self.object_id ), quote( note_id ) )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and id = %s;" % ( quote( self.object_id ), quote( note_id ) )
 
   def sql_load_note_by_title( self, title ):
     """
@@ -129,19 +136,34 @@ class Notebook( Persistent ):
     @type note_id: unicode
     @param note_id: title of note to load
     """
-    return "select * from note_current where notebook_id = %s and title = %s;" % ( quote( self.object_id ), quote( title ) )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and title = %s;" % ( quote( self.object_id ), quote( title ) )
 
   def sql_search_notes( self, search_text ):
     """
-    Return a SQL string to search for notes whose contents contain the given search_text. This
-    is a case-insensitive search.
+    Return a SQL string to perform a full-text search for notes whose contents contain the given
+    search_text. This is a case-insensitive search.
 
     @type search_text: unicode
     @param search_text: text to search for within the notes
     """
+    # strip out all search operators
+    search_text = self.SEARCH_OPERATORS.sub( u"", search_text ).strip()
+
+    # join all words with boolean "and" operator
+    search_text = u"&".join( self.WHITESPACE_PATTERN.split( search_text ) )
+
+    print search_text
     return \
-      "select * from note_current where notebook_id = %s and contents ilike %s;" % \
-      ( quote( self.object_id ), quote( "%" + search_text + "%" ) )
+      """
+      select id, revision, title, headline( drop_html_tags( contents ), query ), notebook_id, startup, deleted_from_id from (
+        select
+         id, revision, title, contents, notebook_id, startup, deleted_from_id, query, rank_cd( search, query ) as rank
+        from
+          note_current, to_tsquery( 'default', %s ) query
+        where
+          notebook_id = %s and query @@ search order by rank desc limit 20
+      ) as sub;
+      """ % ( quote( search_text ), quote( self.object_id ) )
 
   def sql_highest_rank( self ):
     """

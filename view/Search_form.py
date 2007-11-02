@@ -8,6 +8,6 @@ class Search_form( Form ):
     Form.__init__(
       self,
       Strong( u"search: " ),
-      Input( type = u"text", name = u"search_text", id = u"search_text", size = 30, maxlength = 100 ),
+      Input( type = u"text", name = u"search_text", id = u"search_text", size = 30, maxlength = 512 ),
       id = u"search_form",
     )

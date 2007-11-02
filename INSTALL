@@ -14,7 +14,8 @@ First, install the prerequisites:
 In Debian GNU/Linux, you can issue the following command to install these
 packages:
 
-  apt-get install python2.4 python-cherrypy postgresql-8.1 python-psycopg2 python-simplejson python-tz
+  apt-get install python2.4 python-cherrypy postgresql-8.1 \
+          postgresql-contrib-8.1 python-psycopg2 python-simplejson python-tz
 
 
 development mode

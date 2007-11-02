@@ -989,25 +989,6 @@ Wiki.prototype.display_search_results = function ( result ) {
     return;
   }
 
-  // TODO: highlight the search term within the search results, idealy showing
-  // a section of the note contents including the search term
-
-  // if there's only one search result, automatically feel lucky^Wfortunate
-  if ( result.notes.length == 1 ) {
-    var note = result.notes[ 0 ]
-
-    // if the editor is already open, highlight it and bail
-    var iframe = getElement( "note_" + note.object_id );
-    if ( iframe ) {
-      iframe.editor.highlight();
-      return;
-    }
-
-    // otherwise, create an editor for the one note
-    this.create_editor( note.object_id, note.contents, note.deleted_from_id, note.revision, undefined, this.notebook.read_write, true, true );
-    return;
-  }
-
   // otherwise, there are multiple search results, so create a "magic" search results note. but
   // first close any open search results notes
   if ( this.search_results_editor )
@@ -1018,26 +999,24 @@ Wiki.prototype.display_search_results = function ( result ) {
     var note = result.notes[ i ]
     if ( !note.title ) continue;
 
-    var contents_node = createDOM( "span", {} );
-    contents_node.innerHTML = note.contents;
-    contents = strip( scrapeText( contents_node ) );
-
-    // remove the title from the scraped contents text
-    if ( contents.indexOf( note.title ) == 0 )
-      contents = contents.substr( note.title.length );
-
-    if ( contents.length == 0 ) {
+    if ( note.contents.length == 0 ) {
       var preview = "empty note";
     } else {
-      var max_preview_length = 160;
-      var preview = contents.substr( 0, max_preview_length ) + ( ( contents.length > max_preview_length ) ? "..." : "" );
+      var preview = note.contents;
+
+      // if the preview appears not to end with a complete sentence, add "..."
+      if ( !/[?!.]\s*$/.test( preview ) )
+        preview = preview + " <b>...</b>";
     }
+
+    var preview_span = createDOM( "span" );
+    preview_span.innerHTML = preview;
 
     appendChildNodes( list,
       createDOM( "p", {},
         createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id }, note.title ),
         createDOM( "br" ),
-        createDOM( "span", {}, preview )
+        preview_span
       )
     );
   }

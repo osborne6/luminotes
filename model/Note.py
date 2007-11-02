@@ -105,9 +105,9 @@ class Note( Persistent ):
   @staticmethod
   def sql_load( object_id, revision = None ):
     if revision:
-      return "select * from note where id = %s and revision = %s;" % ( quote( object_id ), quote( revision ) )
+      return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note where id = %s and revision = %s;" % ( quote( object_id ), quote( revision ) )
 
-    return "select * from note_current where id = %s;" % quote( object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where id = %s;" % quote( object_id )
 
   @staticmethod
   def sql_id_exists( object_id, revision = None ):

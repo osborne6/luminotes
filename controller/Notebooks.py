@@ -576,14 +576,15 @@ class Notebooks( object ):
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
-    search_text = Valid_string( min = 0, max = 100 ),
+    search_text = unicode,
     user_id = Valid_id( none_okay = True ),
   )
   def search( self, notebook_id, search_text, user_id ):
     """
     Search the notes within a particular notebook for the given search text. Note that the search
-    is case-insensitive, and all HTML tags are ignored. The matching notes are returned with title
-    matches first, followed by all other matches.
+    is case-insensitive, and all HTML tags are ignored. Notes with title matches are generally
+    ranked higher than matches that are only in the note contents. The returned notes have their
+    normal contents replaced with summary contents with the search terms highlighted.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to search
@@ -595,6 +596,7 @@ class Notebooks( object ):
     @return: { 'notes': [ matching notes ] }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
+    @raise Search_error: the provided search_text is invalid
     """
     if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
@@ -604,26 +606,17 @@ class Notebooks( object ):
     if not notebook:
       raise Access_error()
 
-    search_text = search_text.lower()
-    if len( search_text ) == 0:
-      return dict( notes = [] )
+    MAX_SEARCH_TEXT_LENGTH = 256
+    if len( search_text ) > MAX_SEARCH_TEXT_LENGTH:
+      raise Validation_error( u"search_text", None, unicode, message = u"is too long" )
 
-    title_matches = []
-    content_matches = []
-    nuker = Html_nuker()
+    if len( search_text ) == 0:
+      raise Validation_error( u"search_text", None, unicode, message = u"is missing" )
 
     notes = self.__database.select_many( Note, notebook.sql_search_notes( search_text ) )
 
-    # further narrow the search results by making sure notes still match after all HTML tags are
-    # stripped out
-    for note in notes:
-      if search_text in nuker.nuke( note.title ).lower():
-        title_matches.append( note )
-      elif search_text in nuker.nuke( note.contents ).lower():
-        content_matches.append( note )
-
     return dict(
-      notes = title_matches + content_matches,
+      notes = notes,
     )
 
   @expose( view = Json )
