@@ -152,7 +152,6 @@ class Notebook( Persistent ):
     # join all words with boolean "and" operator
     search_text = u"&".join( self.WHITESPACE_PATTERN.split( search_text ) )
 
-    print search_text
     return \
       """
       select id, revision, title, headline( drop_html_tags( contents ), query ), notebook_id, startup, deleted_from_id from (
