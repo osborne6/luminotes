@@ -17,6 +17,9 @@ packages:
   apt-get install python2.4 python-cherrypy postgresql-8.1 \
           postgresql-contrib-8.1 python-psycopg2 python-simplejson python-tz
 
+Note: If you're using Debian Etch, you will need to get PostgreSQL 8.1 from
+another source such as http://backports.org as 8.1 is not present in Etch.
+
 
 database setup
 --------------
