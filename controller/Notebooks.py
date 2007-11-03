@@ -175,6 +175,11 @@ class Notebooks( object ):
     if note and note.notebook_id != notebook_id:
       notebook = self.__database.load( Notebook, notebook_id )
       if notebook and note.notebook_id == notebook.trash_id:
+        if revision:
+          return dict(
+            note = note,
+          )
+
         return dict(
           note = None,
           note_id_in_trash = note.object_id,

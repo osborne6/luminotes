@@ -343,6 +343,18 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_load_note_with_incorrect_notebook( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.anon_notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_load_unknown_note( self ):
     self.login()
 
@@ -1177,7 +1189,14 @@ class Test_notebooks( Test_controller ):
       note_id = self.note.object_id,
     ), session_id = self.session_id )
 
-    # then undelete it
+    # get the revision of the deleted note
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.trash.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+    deleted_revision = result[ "note" ].revision
+
+    # then undelete the note
     result = self.http_post( "/notebooks/undelete_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -1198,6 +1217,19 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == None
     assert note.notebook_id == self.notebook.object_id
+
+    # test that the revision of the note from when it was deleted is loadable
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = deleted_revision,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from_id == self.notebook.object_id
+    assert note.notebook_id == self.trash.object_id
 
   def test_undelete_note_that_is_not_deleted( self ):
     self.login()
