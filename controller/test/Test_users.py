@@ -82,6 +82,28 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
+  def test_signup_without_email_address( self ):
+    result = self.http_post( "/users/signup", dict(
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = u"",
+      signup_button = u"sign up",
+    ) )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+  def test_signup_with_invalid_email_address( self ):
+    result = self.http_post( "/users/signup", dict(
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = u"foo@",
+      signup_button = u"sign up",
+    ) )
+
+    assert u"error" in result
+
   def test_current_after_signup( self ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,

@@ -161,7 +161,7 @@ class Users( object ):
     username = ( Valid_string( min = 1, max = 30 ), valid_username ),
     password = Valid_string( min = 1, max = 30 ),
     password_repeat = Valid_string( min = 1, max = 30 ),
-    email_address = ( Valid_string( min = 1, max = 60 ), valid_email_address ),
+    email_address = ( Valid_string( min = 0, max = 60 ) ),
     signup_button = unicode,
   )
   def signup( self, username, password, password_repeat, email_address, signup_button ):
@@ -191,6 +191,12 @@ class Users( object ):
 
     if user is not None:
       raise Signup_error( u"Sorry, that username is not available. Please try something else." )
+
+    if len( email_address ) > 0:
+      try:
+        email_address = valid_email_address( email_address )
+      except ValueError:
+        raise Validation_error( "email_address", email_address, valid_email_address )
 
     # create a notebook for this user, along with a trash for that notebook
     trash_id = self.__database.next_id( Notebook, commit = False )
