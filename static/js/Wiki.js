@@ -985,7 +985,7 @@ Wiki.prototype.search = function ( event ) {
 Wiki.prototype.display_search_results = function ( result ) {
   // if there are no search results, indicate that and bail
   if ( !result || result.notes.length == 0 ) {
-    this.display_error( "No matching notes." );
+    this.display_message( "No matching notes." );
     return;
   }
 
