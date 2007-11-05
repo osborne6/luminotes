@@ -37,15 +37,6 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     } );
     connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
 
-    this.changes_button = createDOM( "input", {
-      "type": "button",
-      "class": "note_button",
-      "id": "changes_" + iframe_id,
-      "value": "changes",
-      "title": "previous revisions"
-    } );
-    connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
-
     if ( this.deleted_from_id ) {
       this.undelete_button = createDOM( "input", {
         "type": "button",
@@ -56,6 +47,15 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
       } );
       connect( this.undelete_button, "onclick", function ( event ) { signal( self, "undelete_clicked", event ); } );
     } else {
+      this.changes_button = createDOM( "input", {
+        "type": "button",
+        "class": "note_button",
+        "id": "changes_" + iframe_id,
+        "value": "changes",
+        "title": "previous revisions"
+      } );
+      connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
+
       this.options_button = createDOM( "input", {
         "type": "button",
         "class": "note_button",
