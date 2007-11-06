@@ -134,7 +134,29 @@ class Root( object ):
     result = self.__users.current( user_id = None )
     blog_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes blog" ]
 
-    return self.__notebooks.load_recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id )
+    result.update( self.__notebooks.load_recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id ) )
+
+    return result
+
+  @expose( view = Main_page )
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def guide( self, user_id = None ):
+    """
+    Provide the information necessary to display the Luminotes user guide.
+
+    @rtype: unicode
+    @return: rendered HTML page
+    @raise Validation_error: one of the arguments is invalid
+    """
+    result = self.__users.current( user_id = None )
+    guide_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes user guide" ]
+
+    result.update( self.__notebooks.contents( guide_notebooks[ 0 ].object_id, user_id = user_id ) )
+
+    return result
 
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )

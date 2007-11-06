@@ -29,6 +29,14 @@ class Test_root( Test_controller ):
     )
     self.database.save( self.blog_note )
 
+    self.guide_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes user guide" )
+    self.database.save( self.guide_notebook )
+    self.guide_note = Note.create(
+      self.database.next_id( Note ), u"<h3>it's all self-explanatory</h3>",
+      notebook_id = self.guide_notebook.object_id,
+    )
+    self.database.save( self.guide_note )
+
     self.username = u"mulder"
     self.password = u"trustno1"
     self.email_address = u"outthere@example.com"
@@ -43,6 +51,7 @@ class Test_root( Test_controller ):
     self.database.save( self.anonymous )
     self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ) )
     self.database.execute( self.anonymous.sql_save_notebook( self.blog_notebook.object_id ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.guide_notebook.object_id ) )
 
   def test_index( self ):
     result = self.http_get( "/" )
@@ -112,6 +121,13 @@ class Test_root( Test_controller ):
   def test_blog( self ):
     result = self.http_get(
       "/blog",
+    )
+
+    assert result
+
+  def test_guide( self ):
+    result = self.http_get(
+      "/guide",
     )
 
     assert result
