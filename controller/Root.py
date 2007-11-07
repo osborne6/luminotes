@@ -131,7 +131,7 @@ class Root( object ):
     @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid
     """
-    result = self.__users.current( user_id = None )
+    result = self.__users.current( user_id )
     blog_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes blog" ]
 
     result.update( self.__notebooks.load_recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id ) )
@@ -151,7 +151,7 @@ class Root( object ):
     @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid
     """
-    result = self.__users.current( user_id = None )
+    result = self.__users.current( user_id )
     guide_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes user guide" ]
 
     result.update( self.__notebooks.contents( guide_notebooks[ 0 ].object_id, user_id = user_id ) )
