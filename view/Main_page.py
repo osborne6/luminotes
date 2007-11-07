@@ -98,7 +98,9 @@ class Main_page( Page ):
           ),
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
-            Strong( notebook.name ),
+            ( len( notes ) > 0 and notebook.name != u"Luminotes" ) and \
+              A( Strong( notebook.name ), href = u"/notebooks/%s" % notebook.object_id ) \
+              or Strong( notebook.name ),
             parent_id and Span(
               u" | ",
               A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
