@@ -90,3 +90,7 @@ ul li {
 ol li {
   margin-top: 0.5em;
 }
+
+.small_text {
+  font-size: 90%;
+}
