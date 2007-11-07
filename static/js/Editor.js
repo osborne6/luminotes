@@ -179,8 +179,14 @@ Editor.prototype.finish_init = function () {
   if ( this.init_highlight ) self.highlight();
 
   this.scrape_title();
-  if ( this.init_focus )
+  if ( this.init_focus ) {
     this.focus();
+
+    // special-case: focus any username field
+    var username = withDocument( this.document, function () { return getElement( "username" ); } );
+    if ( username )
+      username.focus();
+  }
 
   signal( self, "init_complete" );
 }
