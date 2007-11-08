@@ -57,7 +57,11 @@ class Main_page( Page ):
     def json( string ):
       return escape( unicode( Json( string ) ), quote = True )
 
-    title = None
+    if len( notes ) == 1:
+      title = notes[ 0 ].title
+    else:
+      title = None
+
     Page.__init__(
       self,
       title,
