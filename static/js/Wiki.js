@@ -251,8 +251,6 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link ) {
       pulldown_title = strip( pulldown.title_field.value );
       if ( pulldown_title )
         note_title = pulldown_title;
-      else
-        pulldown.title_field.value = note_title;
     }
 
     // if the title looks like a URL, then make it a link to an external site
