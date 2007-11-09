@@ -1,4 +1,4 @@
-function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus ) {
+function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after ) {
   this.id = id;
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
@@ -90,8 +90,13 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     this.hide_button ? this.hide_button : null
   );
 
-  appendChildNodes( "notes", this.note_controls );
-  appendChildNodes( "notes", this.iframe );
+  if ( position_after ) {
+    insertSiblingNodesAfter( position_after, this.note_controls );
+    insertSiblingNodesAfter( this.note_controls, this.iframe );
+  } else {
+    appendChildNodes( "notes", this.note_controls );
+    appendChildNodes( "notes", this.iframe );
+  }
 
   connect( this.iframe, "onload", function ( event ) { self.init_document(); } );
 }
@@ -313,7 +318,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
   var query = parse_query( link );
   var title = link_title( link, query );
   var id = query.note_id;
-  signal( this, "load_editor", title, id, null, link );
+  signal( this, "load_editor", title, id, null, link, this.iframe );
 }
 
 Editor.prototype.scrape_title = function () {
