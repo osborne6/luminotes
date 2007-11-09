@@ -200,14 +200,19 @@ Editor.prototype.highlight = function ( scroll ) {
   if ( scroll == undefined )
     scroll = true;
 
+  if ( scroll ) {
+    // if the editor is already completely on-screen, then there's no need to scroll
+    var viewport_position = getViewportPosition();
+    if ( getElementPosition( this.note_controls ).y < viewport_position.y ||
+         getElementPosition( this.iframe ).y + getElementDimensions( this.iframe ).h > viewport_position.y + getViewportDimensions().h )
+      new ScrollTo( this.note_controls );
+  }
+
   if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight for iframes is broken in Opera
-    if ( scroll ) ScrollTo( this.note_controls );
     pulsate( this.iframe, options = { "pulses": 1, "duration": 0.5 } );
   } else if ( this.iframe.contentDocument ) { // browsers such as Firefox
-    if ( scroll ) ScrollTo( this.note_controls );
     Highlight( this.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
   } else { // browsers such as IE
-    if ( scroll ) ScrollTo( this.note_controls );
     if ( this.document && this.document.body )
       Highlight( this.document.body, options = { "queue": { "scope": "highlight", "limit": 1 } } );
   }
