@@ -25,7 +25,7 @@ SET default_with_oids = false;
 --
 
 CREATE FUNCTION drop_html_tags(text) RETURNS text
-    AS $_$select regexp_replace( regexp_replace( $1, '</?(div|p|br|ul|ol|li|h3)( [^>]*?)?>', ' ', 'gi' ), '<[^>]+?>', '', 'g' );$_$
+    AS $_$select regexp_replace( regexp_replace( $1, '</?(div|p|br|ul|ol|li|h3)( [^>]*?)?/?>', ' ', 'gi' ), '<[^>]+?>', '', 'g' );$_$
     LANGUAGE sql;
 
 
