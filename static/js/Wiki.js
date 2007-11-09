@@ -883,7 +883,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
   event.stop();
 }
 
-Wiki.prototype.undelete_editor_via_undelete = function( event, note_id ) {
+Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position_after ) {
   if ( this.notebook.read_write ) {
     var self = this;
     this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
