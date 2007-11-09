@@ -46,6 +46,7 @@ function Wiki( invoker ) {
   connect( this.invoker, "message", this, "display_message" );
   connect( "search_form", "onsubmit", this, "search" );
   connect( "html", "onclick", this, "background_clicked" );
+  connect( "html", "onkeydown", this, "key_pressed" );
 
   var blank_note_stub = getElement( "blank_note_stub" );
   if ( blank_note_stub ) {
@@ -563,6 +564,15 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
   this.focused_editor = editor;
 }
 
+Wiki.prototype.key_pressed = function ( event ) {
+  var code = event.key().code;
+  if ( event.modifier().ctrl ) {
+    // ctrl-n: new note
+    if ( code == 78 )
+      this.create_blank_editor( event );
+  }
+}
+
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   var code = event.key().code;
   if ( event.modifier().ctrl ) {
@@ -585,10 +595,10 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-period: unordered list
     } else if ( code == 190 ) {
       this.toggle_button( event, "insertUnorderedList" );
-    // ctrl-n: ordered list
+    // ctrl-1: ordered list
     } else if ( code == 49 ) {
       this.toggle_button( event, "insertOrderedList" );
-    // ctrl-l: make a note link
+    // ctrl-l: link
     } else if ( code == 76 ) {
       this.toggle_link_button( event );
     // ctrl-n: new note
