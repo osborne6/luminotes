@@ -153,7 +153,7 @@ class Main_page( Page ):
                   href = "%s?start=%d&count=%d" % ( notebook_path, max( start - count, 0 ), count ),
                 ) ) or None,
                 ( start + count < total_notes_count ) and Div( A(
-                  u"next_page",
+                  u"next page",
                   href = "%s?start=%d&count=%d" % ( notebook_path, min( start + count, total_notes_count - 1 ), count ),
                 ) ) or None,
               ) or None,

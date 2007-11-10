@@ -91,6 +91,11 @@ ol li {
   margin-top: 0.5em;
 }
 
+.center_text {
+  text-align: center;
+}
+
 .small_text {
+  padding-top: 0.5em;
   font-size: 90%;
 }
