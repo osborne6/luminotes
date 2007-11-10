@@ -25,6 +25,7 @@ class Main_page( Page ):
     note_read_write = True,
     start = None,
     count = None,
+    http_url = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -93,7 +94,7 @@ class Main_page( Page ):
           Toolbar( hide_toolbar = not notebook.read_write ),
           id = u"toolbar_area",
         ),
-        Link_area( notebooks, notebook, total_notes_count, parent_id ),
+        Link_area( notebooks, notebook, total_notes_count, parent_id, notebook_path ),
         Div(
           Div(
             Div(
@@ -146,7 +147,7 @@ class Main_page( Page ):
                 type = u"text/javascript",
               ),
               # make page navigation for those notebooks that require it (such as the blog)
-              ( start is not None and count is not None ) and Div(
+              ( start is not None and count is not None and len( notes ) > 1 ) and Div(
                 ( start > 0 ) and Div( A(
                   u"previous page",
                   href = "%s?start=%d&count=%d" % ( notebook_path, max( start - count, 0 ), count ),

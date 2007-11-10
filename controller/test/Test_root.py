@@ -124,6 +124,23 @@ class Test_root( Test_controller ):
     )
 
     assert result
+    assert u"error" not in result
+
+  def test_blog_with_note_id( self ):
+    result = self.http_get(
+      "/blog?note_id=%s" % self.blog_note.object_id,
+    )
+
+    assert result
+    assert u"error" not in result
+
+  def test_blog_rss( self ):
+    result = self.http_get(
+      "/blog?rss",
+    )
+
+    assert result
+    assert u"error" not in result
 
   def test_guide( self ):
     result = self.http_get(
@@ -131,6 +148,7 @@ class Test_root( Test_controller ):
     )
 
     assert result
+    assert u"error" not in result
 
   def test_next_id( self ):
     result = self.http_get( "/next_id" )

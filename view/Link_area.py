@@ -3,7 +3,7 @@ from Rounded_div import Rounded_div
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, total_notes_count, parent_id ):
+  def __init__( self, notebooks, notebook, total_notes_count, parent_id, notebook_path ):
     linked_notebooks = [ nb for nb in notebooks if nb.read_write and nb.name not in ( u"trash" ) ]
 
     Div.__init__(
@@ -30,6 +30,16 @@ class Link_area( Div ):
             href = u"/notebooks/download_html/%s" % notebook.object_id,
             id = u"download_html_link",
             title = u"Download a stand-alone copy of the entire wiki notebook.",
+          ),
+          class_ = u"link_area_item",
+        ) or None,
+
+        ( notebook.name == u"Luminotes blog" ) and Div (
+          A(
+            u"subscribe to rss",
+            href = u"%s?rss" % notebook_path,
+            id = u"rss link",
+            title = u"Subscribe to the RSS feed for the Luminotes blog.",
           ),
           class_ = u"link_area_item",
         ) or None,

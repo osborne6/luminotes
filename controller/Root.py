@@ -10,6 +10,7 @@ from model.Note import Note
 from model.Notebook import Notebook
 from model.User import User
 from view.Main_page import Main_page
+from view.Notebook_rss import Notebook_rss
 from view.Json import Json
 from view.Error_page import Error_page
 from view.Not_found_page import Not_found_page
@@ -111,14 +112,15 @@ class Root( object ):
 
     return result
 
-  @expose( view = Main_page )
+  @expose( view = Main_page, rss = Notebook_rss )
   @grab_user_id
   @validate(
     start = Valid_int( min = 0 ),
     count = Valid_int( min = 1, max = 50 ),
+    note_id = Valid_id( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def blog( self, start = 0, count = 3, user_id = None ):
+  def blog( self, start = 0, count = 5, note_id = None, user_id = None ):
     """
     Provide the information necessary to display the blog notebook with notes in reverse
     chronological order.
@@ -135,6 +137,12 @@ class Root( object ):
     blog_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes blog" ]
 
     result.update( self.__notebooks.load_recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id ) )
+
+    # if a single note was requested, just return that one note
+    if note_id:
+      result[ "notes" ] = [ note for note in result[ "notes" ] if note.object_id == note_id ]
+
+    result[ "http_url" ] = self.__settings[ u"global" ].get( u"luminotes.http_url", u"" )
 
     return result
 
