@@ -23,6 +23,8 @@ class Main_page( Page ):
     total_notes_count = None,
     notes = None,
     note_read_write = True,
+    start = None,
+    count = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -61,6 +63,15 @@ class Main_page( Page ):
       title = notes[ 0 ].title
     else:
       title = None
+
+    if notebook.name == u"Luminotes":
+      notebook_path = u"/"
+    elif notebook.name == u"Luminotes user guide":
+      notebook_path = u"/guide"
+    elif notebook.name == u"Luminotes blog":
+      notebook_path = u"/blog"
+    else:
+      notebook_path = u"/notebooks/%s" % notebook.object_id
 
     Page.__init__(
       self,
@@ -102,8 +113,8 @@ class Main_page( Page ):
           ),
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
-            ( len( notes ) > 0 and notebook.name != u"Luminotes" ) and \
-              A( Strong( notebook.name ), href = u"/notebooks/%s" % notebook.object_id ) \
+            ( len( notes ) > 0 ) and \
+              A( Strong( notebook.name ), href = notebook_path ) \
               or Strong( notebook.name ),
             parent_id and Span(
               u" | ",
@@ -134,6 +145,17 @@ class Main_page( Page ):
                 u"document.getElementById( 'static_notes' ).style.display = 'none';",
                 type = u"text/javascript",
               ),
+              # make page navigation for those notebooks that require it (such as the blog)
+              ( start is not None and count is not None ) and Div(
+                ( start > 0 ) and Div( A(
+                  u"previous page",
+                  href = "%s?start=%d&count=%d" % ( notebook_path, max( start - count, 0 ), count ),
+                ) ) or None,
+                ( start + count < total_notes_count ) and Div( A(
+                  u"next_page",
+                  href = "%s?start=%d&count=%d" % ( notebook_path, min( start + count, total_notes_count - 1 ), count ),
+                ) ) or None,
+              ) or None,
               id = u"notebook_background",
               corners = ( u"tl", ),
             ),

@@ -723,6 +723,8 @@ class Notebooks( object ):
 
     result = self.__users.current( user_id )
     result.update( self.contents( notebook_id, user_id = user_id ) )
-    result[ u"notes" ] = recent_notes
+    result[ "notes" ] = recent_notes
+    result[ "start" ] = start
+    result[ "count" ] = count
 
     return result

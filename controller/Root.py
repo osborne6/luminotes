@@ -118,7 +118,7 @@ class Root( object ):
     count = Valid_int( min = 1, max = 50 ),
     user_id = Valid_id( none_okay = True ),
   )
-  def blog( self, start = 0, count = 10, user_id = None ):
+  def blog( self, start = 0, count = 3, user_id = None ):
     """
     Provide the information necessary to display the blog notebook with notes in reverse
     chronological order.

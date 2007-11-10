@@ -1673,6 +1673,8 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"start" ) == 0
+    assert result.get( u"count" ) == 10
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
@@ -1700,6 +1702,8 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"start" ) == 1
+    assert result.get( u"count" ) == 10
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
@@ -1727,6 +1731,8 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"start" ) == 0
+    assert result.get( u"count" ) == 1
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
