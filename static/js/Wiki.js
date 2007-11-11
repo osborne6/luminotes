@@ -468,7 +468,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 
   if ( !read_write && creation ) {
     var short_creation = this.brief_revision( creation );
-    note_text = "<p>" + short_creation + "</p>" + note_text;
+    note_text = '<p>' + short_creation + ' | <a href="/blog?note_id=' + id + '" target="_top">permalink</a></p>' + note_text;
   }
 
   var startup = this.startup_notes[ id ];
