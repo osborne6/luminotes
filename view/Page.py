@@ -25,6 +25,7 @@ class Page( Html ):
         include_js and Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
         include_js and Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
         include_js and Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ) or None,
+        include_js and Script( type = u"text/javascript", src = u"https://ssl.google-analytics.com/urchin.js" ) or None,
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
         [ child for child in children if type( child ) in head_types ],
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),
