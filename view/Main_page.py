@@ -26,6 +26,7 @@ class Main_page( Page ):
     start = None,
     count = None,
     http_url = None,
+    conversion = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -73,6 +74,14 @@ class Main_page( Page ):
       notebook_path = u"/blog"
     else:
       notebook_path = u"/notebooks/%s" % notebook.object_id
+
+    conversion_html = None
+
+    if conversion:
+      try:
+        conversion_html = file( u"static/html/%s_conversion.html" % conversion ).read()
+      except IOError:
+        pass
 
     Page.__init__(
       self,
@@ -164,6 +173,10 @@ class Main_page( Page ):
             class_ = ( notebook.name == u"trash" ) and u"trash_notebook_color" or u"current_notebook_color",
           ),
           id = u"center_area",
+        ),
+        Div(
+          conversion_html,
+          id = u"conversion_area",
         ),
         id = u"everything_area",
       ),

@@ -20,6 +20,7 @@ class Notebook_rss( Rss_channel ):
     start = None,
     count = None,
     http_url = u"",
+    conversion = None,
   ):
     if notebook.name == u"Luminotes":
       notebook_path = u"/"

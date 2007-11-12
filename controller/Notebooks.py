@@ -79,6 +79,14 @@ class Notebooks( object ):
     if revision:
       result[ "note_read_write" ] = False
 
+    # if the user doesn't have any storage bytes yet, they're a new user, so see what type of
+    # conversion this is (demo or signup)
+    if result[ "user" ].storage_bytes == 0:
+      if u"demo" in [ note.title for note in result[ "startup_notes" ] ]:
+        result[ "conversion" ] = u"demo"
+      else:
+        result[ "conversion" ] = u"signup"
+
     return result
 
   def contents( self, notebook_id, note_id = None, revision = None, user_id = None ):
