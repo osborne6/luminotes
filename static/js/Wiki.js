@@ -565,6 +565,9 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
 }
 
 Wiki.prototype.key_pressed = function ( event ) {
+  if ( !this.notebook.read_write )
+    return;
+
   var code = event.key().code;
   if ( event.modifier().ctrl ) {
     // ctrl-n: new note
