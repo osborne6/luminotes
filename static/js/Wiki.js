@@ -1143,6 +1143,17 @@ Wiki.prototype.clear_messages = function () {
       } catch ( e ) { }
     } } );
   }
+
+  var results = getElementsByTagAndClassName( "div", "error" );
+
+  for ( var i in results ) {
+    var result = results[ i ];
+    blindUp( result, options = { "duration": 0.5, afterFinish: function () {
+      try {
+        removeElement( result );
+      } catch ( e ) { }
+    } } );
+  }
 }
 
 Wiki.prototype.clear_pulldowns = function () {
