@@ -37,6 +37,14 @@ class Test_root( Test_controller ):
     )
     self.database.save( self.guide_note )
 
+    self.privacy_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes privacy policy" )
+    self.database.save( self.privacy_notebook )
+    self.privacy_note = Note.create(
+      self.database.next_id( Note ), u"<h3>yay privacy</h3>",
+      notebook_id = self.privacy_notebook.object_id,
+    )
+    self.database.save( self.privacy_note )
+
     self.username = u"mulder"
     self.password = u"trustno1"
     self.email_address = u"outthere@example.com"
@@ -52,6 +60,7 @@ class Test_root( Test_controller ):
     self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ) )
     self.database.execute( self.anonymous.sql_save_notebook( self.blog_notebook.object_id ) )
     self.database.execute( self.anonymous.sql_save_notebook( self.guide_notebook.object_id ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.privacy_notebook.object_id ) )
 
   def test_index( self ):
     result = self.http_get( "/" )
@@ -145,6 +154,14 @@ class Test_root( Test_controller ):
   def test_guide( self ):
     result = self.http_get(
       "/guide",
+    )
+
+    assert result
+    assert u"error" not in result
+
+  def test_privacy( self ):
+    result = self.http_get(
+      "/privacy",
     )
 
     assert result

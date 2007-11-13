@@ -166,6 +166,26 @@ class Root( object ):
 
     return result
 
+  @expose( view = Main_page )
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def privacy( self, user_id = None ):
+    """
+    Provide the information necessary to display the Luminotes privacy policy.
+
+    @rtype: unicode
+    @return: rendered HTML page
+    @raise Validation_error: one of the arguments is invalid
+    """
+    result = self.__users.current( user_id )
+    privacy_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes privacy policy" ]
+
+    result.update( self.__notebooks.contents( privacy_notebooks[ 0 ].object_id, user_id = user_id ) )
+
+    return result
+
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )
   def next_id( self ):
