@@ -1396,7 +1396,7 @@ Wiki.prototype.end_notebook_rename = function () {
   if ( /^\s*$/.test( new_notebook_name ) )
     new_notebook_name = this.notebook.name;
 
-  if ( /^\s*Luminotes/.test( new_notebook_name ) ) {
+  if ( /^\s*Luminotes/.test( new_notebook_name ) || /^\s*trash\s*$/.test( new_notebook_name ) ) {
     new_notebook_name = this.notebook.name;
     this.display_error( "That notebook name is not available. Please try a different one." );
   }

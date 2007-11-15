@@ -1727,10 +1727,32 @@ class Test_notebooks( Test_controller ):
 
     assert result[ u"error" ]
 
-  def test_rename_with_reserved_name( self ):
+  def test_rename_trash( self ):
+    self.login()
+
+    new_name = u"renamed notebook"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.trash_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_rename_with_reserved_luminotes_name( self ):
     self.login()
 
     new_name = u"Luminotes blog"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+
+  def test_rename_with_reserved_trash_name( self ):
+    self.login()
+
+    new_name = u" trash  "
     result = self.http_post( "/notebooks/rename", dict(
       notebook_id = self.notebook.object_id,
       name = new_name,

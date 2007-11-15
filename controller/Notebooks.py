@@ -772,9 +772,17 @@ class Notebooks( object ):
     if not notebook:
       raise Access_error()
 
+    # prevent renaming of the trash notebook to anything
+    if notebook.name == u"trash":
+      raise Access_error()
+
     # prevent just anyone from making official Luminotes notebooks
     if name.startswith( u"Luminotes" ) and not notebook.name.startswith( u"Luminotes" ):
-      raise Access_error( "That notebook name is not available. Please try a different one." )
+      raise Access_error()
+
+    # prevent renaming of another notebook to "trash"
+    if name == u"trash":
+      raise Access_error()
 
     notebook.name = name
     self.__database.save( notebook, commit = False )

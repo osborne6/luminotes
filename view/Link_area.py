@@ -3,7 +3,7 @@ from Rounded_div import Rounded_div
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, total_notes_count, parent_id, notebook_path ):
+  def __init__( self, notebooks, notebook, total_notes_count, parent_id, notebook_path, user ):
     linked_notebooks = [ nb for nb in notebooks if nb.read_write and nb.name not in ( u"trash" ) ]
 
     Div.__init__(
@@ -99,7 +99,7 @@ class Link_area( Div ):
           ),
           class_ = u"link_area_item",
         ) for nb in linked_notebooks ],
-        Div(
+        ( user.username != u"anonymous" ) and Div(
           A(
             u"add new notebook",
             href = u"#",
@@ -107,7 +107,7 @@ class Link_area( Div ):
             title = u"Create a new wiki notebook.",
           ),
           class_ = u"link_area_item",
-        ),
+        ) or None,
         id = u"notebooks_area"
       ),
 
