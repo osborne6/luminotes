@@ -13,6 +13,12 @@ function Wiki( invoker ) {
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
   this.storage_usage_high = false;
 
+  var total_notes_count_node = getElement( "total_notes_count" );
+  if ( total_notes_count_node )
+    this.total_notes_count = parseInt( scrapeText( total_notes_count_node ) );
+  else
+    this.total_notes_count = null;
+
   // grab the current notebook from the list of available notebooks
   var notebooks = evalJSON( getElement( "notebooks" ).value );
   for ( var i in notebooks ) {
@@ -799,7 +805,6 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
       this.remove_all_notes_link( editor.id );
       editor.shutdown();
       this.decrement_total_notes_count();
-      this.display_empty_message();
     } else {
       // before hiding an editor, save it
       if ( this.notebook.read_write && editor.read_write )
@@ -1060,10 +1065,8 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
   this.clear_messages();
   this.clear_pulldowns();
 
-  if ( result.notes.length == 0 && !this.focused_editor ) {
-    this.display_message( "This notebook is empty." );
+  if ( this.display_empty_message() == true )
     return;
-  }
 
   if ( this.all_notes_editor )
     this.all_notes_editor.shutdown();
@@ -1225,15 +1228,30 @@ Wiki.prototype.delete_all_editors = function ( event ) {
 Wiki.prototype.display_empty_message = function () {
   var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
 
+  // if there are any messages already open, bail
+  var messages = getElementsByTagAndClassName( "div", "message" );
+  if ( messages.length > 0 ) return false;
+
+  // if there are any errors open, bail
+  var errors = getElementsByTagAndClassName( "div", "error" );
+  if ( errors.length > 0 ) return false;
+
   // if there are any open editors, bail
   for ( var i in iframes ) {
     var iframe = iframes[ i ];
     if ( iframe.editor.closed == false )
-      return;
+      return false;
   }  
 
-  if ( this.parent_id )
-    this.display_message( "The trash is empty." )
+  if ( !this.total_notes_count ) {
+    if ( this.parent_id )
+      this.display_message( "The trash is empty." )
+    else
+      this.display_message( "This notebook is empty." );
+    return true;
+  }
+
+  return false;
 }
 
 DATE_PATTERN = /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d).(\d+)[+-](\d\d:?\d\d)/;
@@ -1253,21 +1271,21 @@ Wiki.prototype.brief_revision = function ( revision ) {
 }
 
 Wiki.prototype.increment_total_notes_count = function () {
-  var total_notes_count = getElement( "total_notes_count" );
-  if ( !total_notes_count ) return;
-  replaceChildNodes( total_notes_count, parseInt( scrapeText( total_notes_count ) ) + 1 );
+  if ( this.total_notes_count == null ) return;
+  this.total_notes_count += 1;
+  replaceChildNodes( "total_notes_count", this.total_notes_count );
 }
 
 Wiki.prototype.decrement_total_notes_count = function () {
-  var total_notes_count = getElement( "total_notes_count" );
-  if ( !total_notes_count ) return;
-  replaceChildNodes( total_notes_count, parseInt( scrapeText( total_notes_count ) ) - 1 );
+  if ( this.total_notes_count == null ) return;
+  this.total_notes_count -= 1;
+  replaceChildNodes( "total_notes_count", this.total_notes_count );
 }
 
 Wiki.prototype.zero_total_notes_count = function () {
-  var total_notes_count = getElement( "total_notes_count" );
-  if ( !total_notes_count ) return;
-  replaceChildNodes( total_notes_count, 0 );
+  if ( this.total_notes_count == null ) return;
+  this.total_notes_count = 0;
+  replaceChildNodes( "total_notes_count", this.total_notes_count );
 }
 
 Wiki.prototype.remove_all_notes_link = function ( note_id ) {
