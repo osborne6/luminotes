@@ -76,6 +76,10 @@ function Wiki( invoker ) {
       event.stop();
     } );
   }
+
+  var rename = evalJSON( getElement( "rename" ).value );
+  if ( rename )
+    this.start_notebook_rename();
 }
 
 Wiki.prototype.update_next_id = function ( result ) {

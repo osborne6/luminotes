@@ -53,9 +53,10 @@ class Notebooks( object ):
     note_id = Valid_id(),
     parent_id = Valid_id(),
     revision = Valid_revision(),
+    rename = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, notebook_id, note_id = None, parent_id = None, revision = None, user_id = None ):
+  def default( self, notebook_id, note_id = None, parent_id = None, revision = None, rename = False, user_id = None ):
     """
     Provide the information necessary to display the page for a particular notebook. If a
     particular note id is given without a revision, then the most recent version of that note is
@@ -87,6 +88,7 @@ class Notebooks( object ):
         result[ "conversion" ] = u"demo"
       else:
         result[ "conversion" ] = u"signup"
+    result[ "rename" ] = rename
 
     return result
 
@@ -739,7 +741,7 @@ class Notebooks( object ):
     self.__database.commit()
 
     return dict(
-      redirect = u"/notebooks/%s" % notebook_id,
+      redirect = u"/notebooks/%s?rename=true" % notebook_id,
     )
 
   @expose( view = Json )
