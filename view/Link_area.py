@@ -13,7 +13,7 @@ class Link_area( Div ):
         ( parent_id is None ) and Div(
           A(
             u"all notes",
-            href = u"/notebooks/%s" % notebook.object_id,
+            href = u"#",
             id = u"all_notes_link",
             title = u"View a list of all notes in this notebook.",
           ),
@@ -45,6 +45,16 @@ class Link_area( Div ):
         ) or None,
 
         notebook.read_write and Span(
+          ( notebook.name != u"trash" ) and Div(
+            A(
+              u"rename notebook",
+              href = u"#",
+              id = u"rename_notebook_link",
+              title = u"Change the name of this notebook.",
+            ),
+            class_ = u"link_area_item",
+          ) or None,
+
           notebook.trash_id and Div(
             A(
               u"trash",
@@ -89,6 +99,15 @@ class Link_area( Div ):
           ),
           class_ = u"link_area_item",
         ) for nb in linked_notebooks ],
+        Div(
+          A(
+            u"add new notebook",
+            href = u"#",
+            id = u"add_notebook_link",
+            title = u"Create a new wiki notebook.",
+          ),
+          class_ = u"link_area_item",
+        ),
         id = u"notebooks_area"
       ),
 

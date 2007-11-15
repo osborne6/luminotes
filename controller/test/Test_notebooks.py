@@ -1650,6 +1650,94 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" )
 
+  def test_create( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/create", dict(), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    notebook = self.database.last_saved_obj
+
+    assert isinstance( notebook, Notebook )
+    assert notebook.object_id == new_notebook_id
+    assert notebook.name == u"new notebook"
+    assert notebook.read_write == True
+    assert notebook.trash_id
+
+  def test_contents_after_create( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/create", dict(), session_id = self.session_id )
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = new_notebook_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert result[ "total_notes_count" ] == 0
+    assert result[ "startup_notes" ] == []
+    assert result[ "notes" ] == []
+
+    assert notebook.object_id == new_notebook_id
+    assert notebook.read_write == True
+
+  def test_create_without_login( self ):
+    result = self.http_post( "/notebooks/create", dict() )
+
+    assert result[ u"error" ]
+
+  def test_rename( self ):
+    self.login()
+
+    new_name = u"renamed notebook"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+  def test_contents_after_rename( self ):
+    self.login()
+
+    new_name = u"renamed notebook"
+    self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert notebook.name == new_name
+
+  def test_rename_without_login( self ):
+    new_name = u"renamed notebook"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ) )
+
+    assert result[ u"error" ]
+
+  def test_rename_with_reserved_name( self ):
+    self.login()
+
+    new_name = u"Luminotes blog"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+
   def test_recent_notes( self ):
     result = cherrypy.root.notebooks.load_recent_notes(
       self.notebook.object_id,

@@ -1,2 +1,6 @@
+1.0.1: November ??, 2007
+ * Ability to create, rename, delete, and switch between multiple wiki
+   notebooks in a single account.
+
 1.0.0: November 12, 2007
  * Initial release.

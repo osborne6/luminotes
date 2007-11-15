@@ -64,7 +64,9 @@ class Test_root( Test_controller ):
 
   def test_index( self ):
     result = self.http_get( "/" )
+
     assert result
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
 
   def test_index_after_login( self ):
     self.login()
@@ -88,6 +90,7 @@ class Test_root( Test_controller ):
 
     assert result
     assert result.get( u"redirect" ) is None
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
 
   def test_default( self ):
     result = self.http_get(
@@ -98,6 +101,7 @@ class Test_root( Test_controller ):
     assert result[ u"notes" ]
     assert len( result[ u"notes" ] ) == 1
     assert result[ u"notes" ][ 0 ].object_id == self.anon_note.object_id
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
 
   def test_default_with_unknown_note( self ):
     result = self.http_get(
@@ -134,6 +138,7 @@ class Test_root( Test_controller ):
 
     assert result
     assert u"error" not in result
+    assert result[ u"notebook" ].object_id == self.blog_notebook.object_id
 
   def test_blog_with_note_id( self ):
     result = self.http_get(
@@ -142,6 +147,7 @@ class Test_root( Test_controller ):
 
     assert result
     assert u"error" not in result
+    assert result[ u"notebook" ].object_id == self.blog_notebook.object_id
 
   def test_blog_rss( self ):
     result = self.http_get(
@@ -150,6 +156,7 @@ class Test_root( Test_controller ):
 
     assert result
     assert u"error" not in result
+    assert result[ u"notebook" ].object_id == self.blog_notebook.object_id
 
   def test_guide( self ):
     result = self.http_get(
@@ -158,6 +165,7 @@ class Test_root( Test_controller ):
 
     assert result
     assert u"error" not in result
+    assert result[ u"notebook" ].object_id == self.guide_notebook.object_id
 
   def test_privacy( self ):
     result = self.http_get(
@@ -166,6 +174,7 @@ class Test_root( Test_controller ):
 
     assert result
     assert u"error" not in result
+    assert result[ u"notebook" ].object_id == self.privacy_notebook.object_id
 
   def test_next_id( self ):
     result = self.http_get( "/next_id" )

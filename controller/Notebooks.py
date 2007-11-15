@@ -8,6 +8,7 @@ from Expire import strongly_expire
 from Html_nuker import Html_nuker
 from model.Notebook import Notebook
 from model.Note import Note
+from model.User import User
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
@@ -701,6 +702,85 @@ class Notebooks( object ):
       notebook_name = notebook.name,
       notes = startup_notes + other_notes,
     )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def create( self, user_id ):
+    """
+    Create a new notebook and give it a default name.
+
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype dict
+    @return { "redirect": notebookurl }
+    @raise Access_error: the current user doesn't have access to create a notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if user_id is None:
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+
+    # create the notebook along with a trash
+    trash_id = self.__database.next_id( Notebook, commit = False )
+    trash = Notebook.create( trash_id, u"trash" )
+    self.__database.save( trash, commit = False )
+
+    notebook_id = self.__database.next_id( Notebook, commit = False )
+    notebook = Notebook.create( notebook_id, u"new notebook", trash_id )
+    self.__database.save( notebook, commit = False )
+
+    # record the fact that the user has access to their new notebook
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
+    self.__database.commit()
+
+    return dict(
+      redirect = u"/notebooks/%s" % notebook_id,
+    )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    name = Valid_string( min = 1, max = 100 ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def rename( self, notebook_id, name, user_id ):
+    """
+    Change the name of the given notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to rename
+    @type name: unicode
+    @param name: new name of the notebook
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype dict
+    @return {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      raise Access_error()
+
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if not notebook:
+      raise Access_error()
+
+    # prevent just anyone from making official Luminotes notebooks
+    if name.startswith( u"Luminotes" ) and not notebook.name.startswith( u"Luminotes" ):
+      raise Access_error( "That notebook name is not available. Please try a different one." )
+
+    notebook.name = name
+    self.__database.save( notebook, commit = False )
+    self.__database.commit()
+
+    return dict()
 
   def load_recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
     """

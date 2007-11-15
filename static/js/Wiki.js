@@ -201,6 +201,30 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       self.save_editor( null, true );
     } );
   }
+
+  var add_notebook_link = getElement( "add_notebook_link" );
+  if ( add_notebook_link ) {
+    connect( add_notebook_link, "onclick", function ( event ) {
+      self.invoker.invoke( "/notebooks/create", "POST" );
+      event.stop();
+    } );
+  }
+
+  var rename_notebook_link = getElement( "rename_notebook_link" );
+  if ( rename_notebook_link ) {
+    connect( rename_notebook_link, "onclick", function ( event ) {
+      self.start_notebook_rename();
+      event.stop();
+    } );
+  }
+
+  var notebook_header_name = getElement( "notebook_header_name" );
+  if ( notebook_header_name ) {
+    connect( notebook_header_name, "onclick", function ( event ) {
+      self.start_notebook_rename();
+      event.stop();
+    } );
+  }
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -1293,6 +1317,101 @@ Wiki.prototype.create_all_notes_link = function ( note_id, note_title ) {
   return createDOM( "li", { "id": "note_link_" + note_id },
     createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id }, note_title )
   );
+}
+
+Wiki.prototype.start_notebook_rename = function () {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  // if a renaming is already in progress, end the renaming instead of starting one
+  var notebook_name_field = getElement( "notebook_name_field" );
+  if ( notebook_name_field ) {
+    this.end_notebook_rename();
+    return; 
+  }
+
+  notebook_name_field = createDOM(
+    "input", {
+      "type": "text",
+      "value": this.notebook.name,
+      "id": "notebook_name_field",
+      "name": "notebook_name_field",
+      "size": "30",
+      "maxlength": "100",
+      "class": "text_field"
+    }
+  );
+
+  var ok_button = createDOM(
+    "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "ok",
+      "title": "dismiss this message"
+    }
+  );
+
+  var rename_form = createDOM(
+    "form", { "id": "rename_form" }, notebook_name_field, ok_button
+  );
+
+  replaceChildNodes( "notebook_header_area", rename_form );
+
+  var self = this;
+  connect( rename_form, "onsubmit", function ( event ) {
+    self.end_notebook_rename();
+    event.stop();
+  } );
+  connect( ok_button, "onclick", function ( event ) {
+    self.end_notebook_rename();
+    event.stop();
+  } );
+
+  notebook_name_field.focus();
+  notebook_name_field.select();
+}
+
+Wiki.prototype.end_notebook_rename = function () {
+  var new_notebook_name = getElement( "notebook_name_field" ).value;
+
+  // if the new name is blank or reserved, don't actually rename the notebook
+  if ( /^\s*$/.test( new_notebook_name ) )
+    new_notebook_name = this.notebook.name;
+
+  if ( /^\s*Luminotes/.test( new_notebook_name ) ) {
+    new_notebook_name = this.notebook.name;
+    this.display_error( "That notebook name is not available. Please try a different one." );
+  }
+
+  // rename the notebook in the header
+  var notebook_header_name = createDOM(
+    "span",
+    { "id": "notebook_header_name" },
+    createDOM( "strong", {}, new_notebook_name )
+  );
+  replaceChildNodes( "notebook_header_area", notebook_header_name );
+
+  var self = this;
+  connect( notebook_header_name, "onclick", function ( event ) {
+    self.start_notebook_rename();
+    event.stop();
+  } );
+
+  // rename the notebook link on the right side of the page
+  replaceChildNodes(
+    "notebook_" + this.notebook.object_id,
+    document.createTextNode( new_notebook_name )
+  );
+
+  // if the name has changed, then send the new name to the server
+  if ( new_notebook_name == this.notebook.name )
+    return;
+
+  this.notebook.name = new_notebook_name;
+  this.invoker.invoke( "/notebooks/rename", "POST", {
+    "notebook_id": this.notebook_id,
+    "name": new_notebook_name
+  } );
 }
 
 Wiki.prototype.toggle_editor_changes = function ( event, editor ) {

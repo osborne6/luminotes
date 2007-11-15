@@ -266,6 +266,14 @@ ol li {
   padding: 0.2em;
 }
 
+#notebook_header_name:hover {
+  color: #ff6600;
+}
+
+#rename_form {
+  margin: 0;
+}
+
 #notebook_border {
   padding: 0 0 0 0.4em;
 }

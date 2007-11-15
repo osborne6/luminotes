@@ -123,9 +123,7 @@ class Main_page( Page ):
           ),
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
-            ( len( notes ) > 0 ) and \
-              A( Strong( notebook.name ), href = notebook_path ) \
-              or Strong( notebook.name ),
+            ( notebook.name == u"trash" ) and Strong( u"trash" ) or Span( Strong( notebook.name ), id = u"notebook_header_name" ),
             parent_id and Span(
               u" | ",
               A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),

@@ -108,6 +108,7 @@ class Root( object ):
 
     result = self.__users.current( user_id )
     main_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes" ]
+
     result.update( self.__notebooks.contents( main_notebooks[ 0 ].object_id, user_id = user_id ) )
 
     return result
