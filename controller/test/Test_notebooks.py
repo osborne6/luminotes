@@ -1657,7 +1657,7 @@ class Test_notebooks( Test_controller ):
 
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
-    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
     notebook = self.database.last_saved_obj
 
     assert isinstance( notebook, Notebook )
@@ -1670,7 +1670,7 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     result = self.http_post( "/notebooks/create", dict(), session_id = self.session_id )
-    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
 
     result = cherrypy.root.notebooks.contents(
       notebook_id = new_notebook_id,
