@@ -125,7 +125,9 @@ class Main_page( Page ):
           ),
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
-            ( notebook.name == u"trash" ) and Strong( u"trash" ) or Span( Strong( notebook.name ), id = u"notebook_header_name" ),
+            ( notebook.name == u"trash" or not notebook.read_write ) \
+              and Strong( notebook.name ) \
+              or Span( Strong( notebook.name ), id = u"notebook_header_name" ),
             parent_id and Span(
               u" | ",
               A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
