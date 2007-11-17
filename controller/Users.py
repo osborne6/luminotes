@@ -251,7 +251,7 @@ class Users( object ):
     # notebook
     if user_id:
       user = self.__database.load( User, user_id )
-      first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True ) )
+      first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
       if user.username is None and first_notebook:
         redirect = u"/notebooks/%s" % first_notebook.object_id
         return dict( redirect = redirect )
@@ -319,7 +319,7 @@ class Users( object ):
     if user is None or user.check_password( password ) is False:
       raise Authentication_error( u"Invalid username or password." )
 
-    first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True ) )
+    first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
 
     # redirect to the user's first notebook (if any)
     if first_notebook:
@@ -376,7 +376,7 @@ class Users( object ):
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None
-    anon_notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks() )
+    anon_notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
 
     if user_id and user_id != anonymous.object_id:
       notebooks = self.__database.select_many( Notebook, user.sql_load_notebooks() )
@@ -531,7 +531,7 @@ class Users( object ):
     """
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
     if anonymous:
-      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks() )
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
 
     if not anonymous or not main_notebook:
       raise Password_reset_error( "There was an error when completing your password reset. Please contact %s." % self.__support_email )
