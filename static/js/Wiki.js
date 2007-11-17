@@ -972,7 +972,7 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
 
 Wiki.prototype.undelete_notebook_via_undo = function( event, notebook_id, position_after ) {
   this.invoker.invoke( "/notebooks/undelete", "POST", { 
-    "notebook_id": notebook_id,
+    "notebook_id": notebook_id
   } );
 
   event.stop();
@@ -1470,7 +1470,7 @@ Wiki.prototype.end_notebook_rename = function () {
 
 Wiki.prototype.delete_notebook = function () {
   this.invoker.invoke( "/notebooks/delete", "POST", {
-    "notebook_id": this.notebook_id,
+    "notebook_id": this.notebook_id
   } );
 }
 
