@@ -1805,7 +1805,26 @@ class Test_notebooks( Test_controller ):
   def test_contents_after_delete( self ):
     self.login()
 
-    result = self.http_post( "/notebooks/delete", dict(
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert notebook.deleted == True
+
+  def test_contents_after_delete_twice( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    self.http_post( "/notebooks/delete", dict(
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 
@@ -1828,6 +1847,74 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.trash_id,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_delete_forever( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete_forever", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+  @raises( Access_error )
+  def test_contents_after_delete_forever( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete_forever", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+  def test_delete_then_delete_forever( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/delete_forever", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+  @raises( Access_error )
+  def test_contents_after_delete_then_delete_forever( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    self.http_post( "/notebooks/delete_forever", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+  def test_delete_forever_without_login( self ):
+    result = self.http_post( "/notebooks/delete_forever", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+
+  def test_delete_forever_trash( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete_forever", dict(
       notebook_id = self.notebook.trash_id,
     ), session_id = self.session_id )
 

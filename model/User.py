@@ -156,6 +156,13 @@ class User( Persistent ):
       "insert into user_notebook ( user_id, notebook_id, read_write ) values " + \
       "( %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ) )
 
+  def sql_remove_notebook( self, notebook_id ):
+    """
+    Return a SQL string to remove this user's access to a particular notebook.
+    """
+    return \
+      "delete from user_notebook where user_id = %s and notebook_id = %s;" % ( quote( self.object_id ), quote( notebook_id ) )
+
   def sql_has_access( self, notebook_id, read_write = False ):
     """
     Return a SQL string to determine whether this user has access to the given notebook.

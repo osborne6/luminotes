@@ -185,7 +185,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       connect_undelete( notebook.object_id );
 
       appendChildNodes( deleted_notebooks, createDOM( "div",
-        { "id": "deleted_notebook_" + notebook.object_id },
+        { "id": "deleted_notebook_" + notebook.object_id, "class": "deleted_notebook_item" },
         createDOM( "span", {}, delete_button ),
         createDOM( "span", {}, undelete_button ),
         createDOM( "span", {}, notebook.name )
@@ -304,9 +304,9 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     } );
   }
 
-  var rename_notebook_link = getElement( "delete_notebook_link" );
-  if ( rename_notebook_link ) {
-    connect( rename_notebook_link, "onclick", function ( event ) {
+  var delete_notebook_link = getElement( "delete_notebook_link" );
+  if ( delete_notebook_link ) {
+    connect( delete_notebook_link, "onclick", function ( event ) {
       self.delete_notebook();
       event.stop();
     } );
@@ -1425,7 +1425,6 @@ Wiki.prototype.create_all_notes_link = function ( note_id, note_title ) {
 }
 
 Wiki.prototype.start_notebook_rename = function () {
-  this.clear_messages();
   this.clear_pulldowns();
 
   // if a renaming is already in progress, end the renaming instead of starting one
@@ -1539,7 +1538,11 @@ Wiki.prototype.delete_notebook_forever = function ( event, notebook_id ) {
 
   removeElement( deleted_notebook_node );
 
-  this.invoker.invoke( "/notebooks/delete", "POST", {
+  var items = getElementsByTagAndClassName( "div", "deleted_notebook_item" );
+  if ( items.length == 0 )
+    removeElement( "deleted_notebooks" );
+
+  this.invoker.invoke( "/notebooks/delete_forever", "POST", {
     "notebook_id": notebook_id
   } );
 

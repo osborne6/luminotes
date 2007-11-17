@@ -835,7 +835,6 @@ class Notebooks( object ):
 
     notebook = self.__database.load( Notebook, notebook_id )
 
-    # TODO: maybe if notebook.deleted is already True, then the notebook should be "deleted forever"
     if not notebook:
       raise Access_error()
 
@@ -856,6 +855,47 @@ class Notebooks( object ):
     return dict(
       redirect = u"/notebooks/%s?deleted_id=%s" % ( remaining_notebook.object_id, notebook.object_id ),
     )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def delete_forever( self, notebook_id, user_id ):
+    """
+    Delete the given notebook permanently (by simply revoking the user's access to it).
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to delete
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype dict
+    @return {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if user_id is None:
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      raise Access_error()
+
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if not notebook:
+      raise Access_error()
+
+    # prevent deletion of a trash notebook directly
+    if notebook.name == u"trash":
+      raise Access_error()
+
+    self.__database.execute( user.sql_remove_notebook( notebook_id ), commit = False )
+    self.__database.commit()
+
+    return dict()
 
   @expose( view = Json )
   @grab_user_id

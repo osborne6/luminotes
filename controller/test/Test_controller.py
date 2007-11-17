@@ -26,6 +26,15 @@ class Test_controller( object ):
     User.sql_save_notebook = lambda self, notebook_id, read_write = False: \
       lambda database: sql_save_notebook( self, notebook_id, read_write, database )
 
+    def sql_remove_notebook( self, notebook_id, database ):
+      if self.object_id in database.user_notebook:
+        for access_tuple in database.user_notebook[ self.object_id ]:
+          if access_tuple[ 0 ] == notebook_id:
+            database.user_notebook[ self.object_id ].remove( access_tuple )
+
+    User.sql_remove_notebook = lambda self, notebook_id: \
+      lambda database: sql_remove_notebook( self, notebook_id, database )
+
     def sql_load_notebooks( self, parents_only, undeleted_only, database ):
       notebooks = []
       notebook_tuples = database.user_notebook.get( self.object_id )
