@@ -39,28 +39,15 @@ function Wiki( invoker ) {
       alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
   }
 
-  // if a notebook was just deleted, show a message with an undo button
   var deleted_id = getElement( "deleted_id" ).value;
-  if ( deleted_id && this.notebook.read_write ) {
-    var undo_button = createDOM( "input", {
-      "type": "button",
-      "class": "message_button",
-      "value": "undo",
-      "title": "undo deletion"
-    } );
-    var trash_link = createDOM( "a", {
-      "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
-    }, "trash" );
-    var message_div = this.display_message( "The notebook has been moved to the", [ trash_link, ". ", undo_button ] );
-    var self = this;
-    connect( undo_button, "onclick", function ( event ) { self.undelete_notebook_via_undo( event, deleted_id, message_div ); } );
-  }
+  var skip_empty_message = deleted_id ? true : false;
 
   // populate the wiki with startup notes
   this.populate(
     evalJSON( getElement( "startup_notes" ).value || "null" ),
     evalJSON( getElement( "current_notes" ).value || "null" ),
-    evalJSON( getElement( "note_read_write" ).value || "true" )
+    evalJSON( getElement( "note_read_write" ).value || "true" ),
+    skip_empty_message
   );
 
   this.display_storage_usage( evalJSON( getElement( "storage_bytes" ).value || "0" ) );
@@ -97,6 +84,22 @@ function Wiki( invoker ) {
   var rename = evalJSON( getElement( "rename" ).value );
   if ( rename && this.notebook.read_write )
     this.start_notebook_rename();
+
+  // if a notebook was just deleted, show a message with an undo button
+  if ( deleted_id && this.notebook.read_write ) {
+    var undo_button = createDOM( "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "undo",
+      "title": "undo deletion"
+    } );
+    var trash_link = createDOM( "a", {
+      "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
+    }, "trash" );
+    var message_div = this.display_message( "The notebook has been moved to the", [ trash_link, ". ", undo_button ], "notes_top" );
+    var self = this;
+    connect( undo_button, "onclick", function ( event ) { self.undelete_notebook_via_undo( event, deleted_id, message_div ); } );
+  }
 }
 
 Wiki.prototype.update_next_id = function ( result ) {
@@ -139,7 +142,7 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   );
 }
 
-Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_write ) {
+Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_write, skip_empty_message ) {
   // create an editor for each startup note in the received notebook, focusing the first one
   var focus = true;
   for ( var i in startup_notes ) {
@@ -179,7 +182,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     focus = false;
   }
 
-  if ( startup_notes.length == 0 && current_notes.length == 0 )
+  if ( startup_notes.length == 0 && current_notes.length == 0 && !skip_empty_message )
     this.display_empty_message();
 
   var self = this;
@@ -1469,6 +1472,9 @@ Wiki.prototype.end_notebook_rename = function () {
 }
 
 Wiki.prototype.delete_notebook = function () {
+  if ( this.focused_editor )
+    this.save_editor( this.focused_editor, true );
+
   this.invoker.invoke( "/notebooks/delete", "POST", {
     "notebook_id": this.notebook_id
   } );
