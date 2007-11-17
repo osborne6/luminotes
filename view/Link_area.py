@@ -55,6 +55,16 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
+          ( notebook.name != u"trash" ) and Div(
+            A(
+              u"delete notebook",
+              href = u"#",
+              id = u"delete_notebook_link",
+              title = u"Move this notebook to the trash.",
+            ),
+            class_ = u"link_area_item",
+          ) or None,
+
           notebook.trash_id and Div(
             A(
               u"trash",

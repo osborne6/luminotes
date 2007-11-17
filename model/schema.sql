@@ -96,7 +96,8 @@ CREATE TABLE notebook (
     id text NOT NULL,
     revision timestamp with time zone NOT NULL,
     name text,
-    trash_id text
+    trash_id text,
+    deleted boolean DEFAULT false
 );
 
 
@@ -107,7 +108,7 @@ ALTER TABLE public.notebook OWNER TO luminotes;
 --
 
 CREATE VIEW notebook_current AS
-    SELECT notebook.id, notebook.revision, notebook.name, notebook.trash_id FROM notebook WHERE (notebook.revision IN (SELECT max(sub_notebook.revision) AS max FROM notebook sub_notebook WHERE (sub_notebook.id = notebook.id)));
+    SELECT notebook.id, notebook.revision, notebook.name, notebook.trash_id, notebook.deleted FROM notebook WHERE (notebook.revision IN (SELECT max(sub_notebook.revision) AS max FROM notebook sub_notebook WHERE (sub_notebook.id = notebook.id)));
 
 
 ALTER TABLE public.notebook_current OWNER TO luminotes;

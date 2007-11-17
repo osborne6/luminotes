@@ -39,6 +39,23 @@ function Wiki( invoker ) {
       alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
   }
 
+  // if a notebook was just deleted, show a message with an undo button
+  var deleted_id = getElement( "deleted_id" ).value;
+  if ( deleted_id && this.notebook.read_write ) {
+    var undo_button = createDOM( "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "undo",
+      "title": "undo deletion"
+    } );
+    var trash_link = createDOM( "a", {
+      "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
+    }, "trash" );
+    var message_div = this.display_message( "The notebook has been moved to the", [ trash_link, ". ", undo_button ] );
+    var self = this;
+    connect( undo_button, "onclick", function ( event ) { self.undelete_notebook_via_undo( event, deleted_id, message_div ); } );
+  }
+
   // populate the wiki with startup notes
   this.populate(
     evalJSON( getElement( "startup_notes" ).value || "null" ),
@@ -78,7 +95,7 @@ function Wiki( invoker ) {
   }
 
   var rename = evalJSON( getElement( "rename" ).value );
-  if ( rename )
+  if ( rename && this.notebook.read_write )
     this.start_notebook_rename();
 }
 
@@ -232,6 +249,14 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
   if ( notebook_header_name ) {
     connect( notebook_header_name, "onclick", function ( event ) {
       self.start_notebook_rename();
+      event.stop();
+    } );
+  }
+
+  var rename_notebook_link = getElement( "delete_notebook_link" );
+  if ( rename_notebook_link ) {
+    connect( rename_notebook_link, "onclick", function ( event ) {
+      self.delete_notebook();
       event.stop();
     } );
   }
@@ -945,6 +970,13 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
   event.stop();
 }
 
+Wiki.prototype.undelete_notebook_via_undo = function( event, notebook_id, position_after ) {
+  this.invoker.invoke( "/notebooks/undelete", "POST", { 
+    "notebook_id": notebook_id,
+  } );
+
+  event.stop();
+}
 
 Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
@@ -1433,6 +1465,12 @@ Wiki.prototype.end_notebook_rename = function () {
   this.invoker.invoke( "/notebooks/rename", "POST", {
     "notebook_id": this.notebook_id,
     "name": new_notebook_name
+  } );
+}
+
+Wiki.prototype.delete_notebook = function () {
+  this.invoker.invoke( "/notebooks/delete", "POST", {
+    "notebook_id": this.notebook_id,
   } );
 }
 

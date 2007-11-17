@@ -12,8 +12,8 @@ class Test_notebook( object ):
     self.trash_name = u"trash"
     self.delta = timedelta( seconds = 1 )
 
-    self.trash = Notebook.create( self.trash_id, self.trash_name, read_write = False )
-    self.notebook = Notebook.create( self.object_id, self.name, trash_id = self.trash.object_id )
+    self.trash = Notebook.create( self.trash_id, self.trash_name, read_write = False, deleted = False )
+    self.notebook = Notebook.create( self.object_id, self.name, trash_id = self.trash.object_id, deleted = False )
     self.note = Note.create( "19", u"<h3>title</h3>blah" )
 
   def test_create( self ):
@@ -22,12 +22,14 @@ class Test_notebook( object ):
     assert self.notebook.name == self.name
     assert self.notebook.read_write == True
     assert self.notebook.trash_id == self.trash_id
+    assert self.notebook.deleted == False
 
     assert self.trash.object_id == self.trash_id
     assert datetime.now( tz = utc ) - self.trash.revision < self.delta
     assert self.trash.name == self.trash_name
     assert self.trash.read_write == False
     assert self.trash.trash_id == None
+    assert self.trash.deleted == False
 
   def test_set_name( self ):
     new_name = u"my new notebook"
@@ -44,11 +46,19 @@ class Test_notebook( object ):
     assert self.notebook.read_write == True
     assert self.notebook.revision == original_revision
 
+  def test_set_deleted( self ):
+    previous_revision = self.notebook.revision
+    self.notebook.deleted = True
+
+    assert self.notebook.deleted == True
+    assert self.notebook.revision > previous_revision
+
   def test_to_dict( self ):
     d = self.notebook.to_dict()
 
     assert d.get( "name" ) == self.name
     assert d.get( "trash_id" ) == self.trash.object_id
     assert d.get( "read_write" ) == True
+    assert d.get( "deleted" ) == self.notebook.deleted
     assert d.get( "object_id" ) == self.notebook.object_id
     assert datetime.now( tz = utc ) - d.get( "revision" ) < self.delta

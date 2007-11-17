@@ -28,6 +28,7 @@ class Main_page( Page ):
     http_url = None,
     conversion = None,
     rename = False,
+    deleted_id = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -96,6 +97,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"current_notes", id = u"current_notes", value = json( note_dicts ) ),
       Input( type = u"hidden", name = u"note_read_write", id = u"note_read_write", value = json( note_read_write ) ),
       Input( type = u"hidden", name = u"rename", id = u"rename", value = json( rename ) ),
+      Input( type = u"hidden", name = u"deleted_id", id = u"deleted_id", value = deleted_id ),
       Div(
         id = u"status_area",
       ),

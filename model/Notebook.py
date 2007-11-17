@@ -12,7 +12,7 @@ class Notebook( Persistent ):
   WHITESPACE_PATTERN = re.compile( r"\s+" )
   SEARCH_OPERATORS = re.compile( r"[&|!()]" )
 
-  def __init__( self, object_id, revision = None, name = None, trash_id = None, read_write = True ):
+  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, read_write = True ):
     """
     Create a new notebook with the given id and name.
 
@@ -24,6 +24,8 @@ class Notebook( Persistent ):
     @param name: name of this notebook (optional)
     @type trash_id: Notebook or NoneType
     @param trash_id: id of the notebook where deleted notes from this notebook go to die (optional)
+    @type deleted: bool or NoneType
+    @param deleted: whether this notebook is currently deleted (optional, defaults to False)
     @type read_write: bool or NoneType
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
     @rtype: Notebook
@@ -32,10 +34,11 @@ class Notebook( Persistent ):
     Persistent.__init__( self, object_id, revision )
     self.__name = name
     self.__trash_id = trash_id
+    self.__deleted = deleted
     self.__read_write = read_write
 
   @staticmethod
-  def create( object_id, name = None, trash_id = None, read_write = True ):
+  def create( object_id, name = None, trash_id = None, deleted = False, read_write = True ):
     """
     Convenience constructor for creating a new notebook.
 
@@ -45,6 +48,8 @@ class Notebook( Persistent ):
     @param name: name of this notebook (optional)
     @type trash_id: Notebook or NoneType
     @param trash_id: id of the notebook where deleted notes from this notebook go to die (optional)
+    @type deleted: bool or NoneType
+    @param deleted: whether this notebook is currently deleted (optional, defaults to False)
     @type read_write: bool or NoneType
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
     @rtype: Notebook
@@ -71,10 +76,10 @@ class Notebook( Persistent ):
 
   def sql_create( self ):
     return \
-      "insert into notebook ( id, revision, name, trash_id ) " + \
-      "values ( %s, %s, %s, %s );" % \
+      "insert into notebook ( id, revision, name, trash_id, deleted ) " + \
+      "values ( %s, %s, %s, %s, %s );" % \
       ( quote( self.object_id ), quote( self.revision ), quote( self.__name ),
-        quote( self.__trash_id ) )
+        quote( self.__trash_id ), quote( self.deleted ) )
 
   def sql_update( self ):
     return self.sql_create()
@@ -187,6 +192,7 @@ class Notebook( Persistent ):
       name = self.__name,
       trash_id = self.__trash_id,
       read_write = self.__read_write,
+      deleted = self.__deleted,
     ) )
 
     return d
@@ -196,8 +202,15 @@ class Notebook( Persistent ):
     self.update_revision()
 
   def __set_read_write( self, read_write ):
+    # The read_write member isn't actually saved to the database, so setting it doesn't need to
+    # call update_revision().
     self.__read_write = read_write
+
+  def __set_deleted( self, deleted ):
+    self.__deleted = deleted
+    self.update_revision()
 
   name = property( lambda self: self.__name, __set_name )
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
+  deleted = property( lambda self: self.__deleted, __set_deleted )

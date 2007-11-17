@@ -1760,6 +1760,159 @@ class Test_notebooks( Test_controller ):
 
     assert result[ u"error" ]
 
+  def test_delete( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    # assert that we're redirected to a newly created notebook
+    remaining_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
+    notebook = self.database.last_saved_obj
+
+    assert isinstance( notebook, Notebook )
+    assert notebook.object_id == remaining_notebook_id
+    assert notebook.name == u"my notebook"
+    assert notebook.read_write == True
+    assert notebook.trash_id
+
+  def test_delete_with_multiple_notebooks( self ):
+    # create a second notebook, which we should be redirected to after the first notebook is deleted
+    trash = Notebook.create( self.database.next_id( Notebook ), u"trash" )
+    self.database.save( trash, commit = False )
+    notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", trash.object_id )
+    self.database.save( notebook, commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = True ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = True ) )
+    self.database.commit()
+
+    self.login()
+
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    # assert that we're redirected to the second notebook
+    remaining_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
+    assert remaining_notebook_id
+    assert remaining_notebook_id == notebook.object_id
+
+  def test_contents_after_delete( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert notebook.deleted == True
+
+  def test_delete_without_login( self ):
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+
+  def test_delete_trash( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.trash_id,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_undelete( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    # assert that we're redirected to the undeleted notebook
+    notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    notebook = self.database.last_saved_obj
+
+    assert isinstance( notebook, Notebook )
+    assert notebook.object_id == notebook_id
+    assert notebook.name == self.notebook.name
+    assert notebook.read_write == True
+    assert notebook.trash_id
+
+  def test_contents_after_undelete( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert notebook.deleted == False
+
+  def test_undelete_without_login( self ):
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+
+  def test_undelete_twice( self ):
+    self.login()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    self.http_post( "/notebooks/undelete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    # assert that we're redirected to the undeleted notebook
+    notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    notebook = self.database.last_saved_obj
+
+    assert isinstance( notebook, Notebook )
+    assert notebook.object_id == notebook_id
+    assert notebook.name == self.notebook.name
+    assert notebook.read_write == True
+    assert notebook.trash_id
+
   def test_recent_notes( self ):
     result = cherrypy.root.notebooks.load_recent_notes(
       self.notebook.object_id,

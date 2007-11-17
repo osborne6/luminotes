@@ -26,7 +26,7 @@ class Test_controller( object ):
     User.sql_save_notebook = lambda self, notebook_id, read_write = False: \
       lambda database: sql_save_notebook( self, notebook_id, read_write, database )
 
-    def sql_load_notebooks( self, parents_only, database ):
+    def sql_load_notebooks( self, parents_only, deleted, database ):
       notebooks = []
       notebook_tuples = database.user_notebook.get( self.object_id )
 
@@ -38,12 +38,14 @@ class Test_controller( object ):
         notebook._Notebook__read_write = read_write
         if parents_only and notebook.trash_id is None:
           continue
+        if deleted != notebook.deleted:
+          continue
         notebooks.append( notebook )
 
       return notebooks
 
-    User.sql_load_notebooks = lambda self, parents_only = False: \
-      lambda database: sql_load_notebooks( self, parents_only, database )
+    User.sql_load_notebooks = lambda self, parents_only = False, deleted = False: \
+      lambda database: sql_load_notebooks( self, parents_only, deleted, database )
 
     def sql_load_by_username( username, database ):
       users = []

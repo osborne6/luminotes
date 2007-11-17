@@ -54,9 +54,11 @@ class Notebooks( object ):
     parent_id = Valid_id(),
     revision = Valid_revision(),
     rename = Valid_bool(),
+    deleted_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, notebook_id, note_id = None, parent_id = None, revision = None, rename = False, user_id = None ):
+  def default( self, notebook_id, note_id = None, parent_id = None, revision = None, rename = False,
+               deleted_id = None, user_id = None ):
     """
     Provide the information necessary to display the page for a particular notebook. If a
     particular note id is given without a revision, then the most recent version of that note is
@@ -70,6 +72,10 @@ class Notebooks( object ):
     @param parent_id: id of parent notebook to this notebook (optional)
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
+    @type rename: bool or NoneType
+    @param rename: whether this is a new notebook and should be renamed (optional, defaults to False)
+    @type deleted_id: unicode or NoneType
+    @param deleted_id: id of the notebook that was just deleted, if any (optional)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: unicode
@@ -89,6 +95,7 @@ class Notebooks( object ):
       else:
         result[ "conversion" ] = u"signup"
     result[ "rename" ] = rename
+    result[ "deleted_id" ] = deleted_id
 
     return result
 
@@ -725,24 +732,30 @@ class Notebooks( object ):
       raise Access_error()
 
     user = self.__database.load( User, user_id )
+    notebook = self.__create_notebook( u"new notebook", user )
 
+    return dict(
+      redirect = u"/notebooks/%s?rename=true" % notebook.object_id,
+    )
+
+  def __create_notebook( self, name, user, commit = True ):
     # create the notebook along with a trash
     trash_id = self.__database.next_id( Notebook, commit = False )
     trash = Notebook.create( trash_id, u"trash" )
     self.__database.save( trash, commit = False )
 
     notebook_id = self.__database.next_id( Notebook, commit = False )
-    notebook = Notebook.create( notebook_id, u"new notebook", trash_id )
+    notebook = Notebook.create( notebook_id, name, trash_id )
     self.__database.save( notebook, commit = False )
 
     # record the fact that the user has access to their new notebook
     self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
     self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
-    self.__database.commit()
 
-    return dict(
-      redirect = u"/notebooks/%s?rename=true" % notebook_id,
-    )
+    if commit:
+      self.__database.commit()
+
+    return notebook
 
   @expose( view = Json )
   @grab_user_id
@@ -766,6 +779,7 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
+    user = self.__database.load( User, user_id )
     if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
@@ -791,6 +805,95 @@ class Notebooks( object ):
     self.__database.commit()
 
     return dict()
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def delete( self, notebook_id, user_id ):
+    """
+    Delete the given notebook and redirect to a remaining notebook. If there is none, create one.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to delete
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype dict
+    @return { "redirect": remainingnotebookurl }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if user_id is None:
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      raise Access_error()
+
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    # TODO: maybe if notebook.deleted is already True, then the notebook should be "deleted forever"
+    if not notebook:
+      raise Access_error()
+
+    # prevent deletion of a trash notebook directly
+    if notebook.name == u"trash":
+      raise Access_error()
+
+    notebook.deleted = True
+    self.__database.save( notebook, commit = False )
+
+    # redirect to a remaining undeleted notebook, or if there isn't one, create an empty notebook
+    remaining_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True ) )
+    if remaining_notebook is None:
+      remaining_notebook = self.__create_notebook( u"my notebook", user, commit = False )
+
+    self.__database.commit()
+
+    return dict(
+      redirect = u"/notebooks/%s?deleted_id=%s" % ( remaining_notebook.object_id, notebook.object_id ),
+    )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def undelete( self, notebook_id, user_id ):
+    """
+    Undelete the given notebook and redirect to it.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to undelete
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype dict
+    @return { "redirect": notebookurl }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if user_id is None:
+      raise Access_error()
+
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      raise Access_error()
+
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if not notebook:
+      raise Access_error()
+
+    notebook.deleted = False
+    self.__database.save( notebook, commit = False )
+    self.__database.commit()
+
+    return dict(
+      redirect = u"/notebooks/%s" % notebook.object_id,
+    )
 
   def load_recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
     """
