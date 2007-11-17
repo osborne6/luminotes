@@ -129,7 +129,7 @@ class User( Persistent ):
   def sql_load_by_email_address( email_address ):
     return "select * from luminotes_user_current where email_address = %s;" % quote( email_address )
 
-  def sql_load_notebooks( self, parents_only = False ):
+  def sql_load_notebooks( self, parents_only = False, undeleted_only = False ):
     """
     Return a SQL string to load a list of the notebooks to which this user has access.
     """
@@ -138,10 +138,15 @@ class User( Persistent ):
     else:
       parents_only_clause = ""
 
+    if undeleted_only:
+      undeleted_only_clause = " and deleted = 'f'"
+    else:
+      undeleted_only_clause = ""
+
     return \
       "select notebook_current.*, user_notebook.read_write from user_notebook, notebook_current " + \
-      "where user_id = %s%s and user_notebook.notebook_id = notebook_current.id order by revision;" % \
-      ( quote( self.object_id ), parents_only_clause )
+      "where user_id = %s%s%s and user_notebook.notebook_id = notebook_current.id order by revision;" % \
+      ( quote( self.object_id ), parents_only_clause, undeleted_only_clause )
 
   def sql_save_notebook( self, notebook_id, read_write = True ):
     """

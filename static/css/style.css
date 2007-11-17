@@ -282,6 +282,20 @@ ol li {
   padding: 0.25em 0.5em 0 1em;
 }
 
+#deleted_notebooks {
+  text-align: left;
+  margin: 1em;
+  line-height: 140%;
+}
+
+#deleted_notebooks div {
+  margin-left: 0.75em;
+}
+
+#deleted_notebooks span {
+  margin: 0.25em;
+}
+
 #static_notes {
   text-align: left;
   margin: 1em;

@@ -20,10 +20,10 @@ function Wiki( invoker ) {
     this.total_notes_count = null;
 
   // grab the current notebook from the list of available notebooks
-  var notebooks = evalJSON( getElement( "notebooks" ).value );
-  for ( var i in notebooks ) {
-    if ( notebooks[ i ].object_id == this.notebook_id ) {
-      this.notebook = notebooks[ i ]
+  this.notebooks = evalJSON( getElement( "notebooks" ).value );
+  for ( var i in this.notebooks ) {
+    if ( this.notebooks[ i ].object_id == this.notebook_id ) {
+      this.notebook = this.notebooks[ i ]
       break;
     }
   }
@@ -98,7 +98,7 @@ function Wiki( invoker ) {
     }, "trash" );
     var message_div = this.display_message( "The notebook has been moved to the", [ trash_link, ". ", undo_button ], "notes_top" );
     var self = this;
-    connect( undo_button, "onclick", function ( event ) { self.undelete_notebook_via_undo( event, deleted_id, message_div ); } );
+    connect( undo_button, "onclick", function ( event ) { self.undelete_notebook( event, deleted_id ); } );
   }
 }
 
@@ -143,6 +143,56 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
 }
 
 Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_write, skip_empty_message ) {
+  var self = this;
+
+  // if this is the trash, display a list of all deleted notebooks
+  if ( this.notebook.name == "trash" ) {
+    var heading_shown = false;
+    var deleted_notebooks = getElement( "deleted_notebooks" );
+
+    for ( var i in this.notebooks ) {
+      var notebook = this.notebooks[ i ];
+      if ( !notebook.deleted )
+        continue;
+
+      if ( !heading_shown ) {
+        appendChildNodes( deleted_notebooks, createDOM( "h4", {}, "deleted notebooks" ) );
+        heading_shown = true;
+      }
+
+      delete_button = createDOM( "input", {
+        "type": "button",
+        "class": "note_button",
+        "id": "delete_notebook_" + notebook.object_id,
+        "value": "delete forever",
+        "title": "delete notebook"
+      } );
+      function connect_delete( notebook_id ) {
+        connect( delete_button, "onclick", function ( event ) { self.delete_notebook_forever( event, notebook_id ); } );
+      }
+      connect_delete( notebook.object_id );
+
+      undelete_button = createDOM( "input", {
+        "type": "button",
+        "class": "note_button",
+        "id": "undelete_notebook_" + notebook.object_id,
+        "value": "undelete",
+        "title": "undelete notebook"
+      } );
+      function connect_undelete( notebook_id ) {
+        connect( undelete_button, "onclick", function ( event ) { self.undelete_notebook( event, notebook_id ); } );
+      }
+      connect_undelete( notebook.object_id );
+
+      appendChildNodes( deleted_notebooks, createDOM( "div",
+        { "id": "deleted_notebook_" + notebook.object_id },
+        createDOM( "span", {}, delete_button ),
+        createDOM( "span", {}, undelete_button ),
+        createDOM( "span", {}, notebook.name )
+      ) );
+    }
+  }
+
   // create an editor for each startup note in the received notebook, focusing the first one
   var focus = true;
   for ( var i in startup_notes ) {
@@ -184,8 +234,6 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
   if ( startup_notes.length == 0 && current_notes.length == 0 && !skip_empty_message )
     this.display_empty_message();
-
-  var self = this;
 
   var empty_trash_link = getElement( "empty_trash_link" );
   if ( empty_trash_link )
@@ -973,7 +1021,7 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
   event.stop();
 }
 
-Wiki.prototype.undelete_notebook_via_undo = function( event, notebook_id, position_after ) {
+Wiki.prototype.undelete_notebook = function( event, notebook_id ) {
   this.invoker.invoke( "/notebooks/undelete", "POST", { 
     "notebook_id": notebook_id
   } );
@@ -1284,7 +1332,7 @@ Wiki.prototype.display_empty_message = function () {
 
   if ( !this.total_notes_count ) {
     if ( this.parent_id )
-      this.display_message( "The trash is empty." )
+      this.display_message( "There are no notes in the trash." )
     else
       this.display_message( "This notebook is empty." );
     return true;
@@ -1478,6 +1526,24 @@ Wiki.prototype.delete_notebook = function () {
   this.invoker.invoke( "/notebooks/delete", "POST", {
     "notebook_id": this.notebook_id
   } );
+}
+
+Wiki.prototype.delete_notebook_forever = function ( event, notebook_id ) {
+  var deleted_notebook_node = getElement( "deleted_notebook_" + notebook_id );
+  if ( !deleted_notebook_node ) return;
+
+  for ( var i in deleted_notebook_node.childNodes ) {
+    var child = deleted_notebook_node.childNodes[ i ];
+    disconnectAll( child );
+  }
+
+  removeElement( deleted_notebook_node );
+
+  this.invoker.invoke( "/notebooks/delete", "POST", {
+    "notebook_id": notebook_id
+  } );
+
+  event.stop();
 }
 
 Wiki.prototype.toggle_editor_changes = function ( event, editor ) {

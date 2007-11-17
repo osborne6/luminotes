@@ -145,6 +145,9 @@ class Main_page( Page ):
             Rounded_div(
               ( notebook.name == u"trash" ) and u"trash_notebook_inner" or u"current_notebook_inner",
               Div(
+                id = u"deleted_notebooks",
+              ),
+              Div(
                 Span( id = u"notes_top" ),
                 id = u"notes",
               ),

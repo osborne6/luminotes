@@ -847,7 +847,7 @@ class Notebooks( object ):
     self.__database.save( notebook, commit = False )
 
     # redirect to a remaining undeleted notebook, or if there isn't one, create an empty notebook
-    remaining_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True ) )
+    remaining_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
     if remaining_notebook is None:
       remaining_notebook = self.__create_notebook( u"my notebook", user, commit = False )
 
