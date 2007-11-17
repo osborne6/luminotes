@@ -47,6 +47,7 @@ class Notebooks( object ):
     self.__users = users
 
   @expose( view = Main_page )
+  @strongly_expire
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
