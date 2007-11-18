@@ -1,4 +1,4 @@
-from Tags import Div, Span, H4, A
+from Tags import Div, Span, H4, A, Strong
 from Rounded_div import Rounded_div
 
 
@@ -65,6 +65,16 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
+          Div(
+            A(
+              u"add new notebook",
+              href = u"#",
+              id = u"add_notebook_link",
+              title = u"Create a new wiki notebook.",
+            ),
+            class_ = u"link_area_item",
+          ),
+
           notebook.trash_id and Div(
             A(
               u"trash",
@@ -109,15 +119,6 @@ class Link_area( Div ):
           ),
           class_ = u"link_area_item",
         ) for nb in linked_notebooks ],
-        ( user.username != u"anonymous" ) and Div(
-          A(
-            u"add new notebook",
-            href = u"#",
-            id = u"add_notebook_link",
-            title = u"Create a new wiki notebook.",
-          ),
-          class_ = u"link_area_item",
-        ) or None,
         id = u"notebooks_area"
       ),
 
