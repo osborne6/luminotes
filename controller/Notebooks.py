@@ -872,7 +872,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype dict
-    @return {}
+    @return: { 'storage_bytes': current storage usage by user }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -894,9 +894,10 @@ class Notebooks( object ):
       raise Access_error()
 
     self.__database.execute( user.sql_remove_notebook( notebook_id ), commit = False )
+    user = self.__users.update_storage( user_id, commit = False )
     self.__database.commit()
 
-    return dict()
+    return dict( storage_bytes = user.storage_bytes )
 
   @expose( view = Json )
   @grab_user_id

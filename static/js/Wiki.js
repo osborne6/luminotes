@@ -1544,9 +1544,10 @@ Wiki.prototype.delete_notebook_forever = function ( event, notebook_id ) {
   if ( items.length == 0 )
     removeElement( "deleted_notebooks" );
 
+  var self = this;
   this.invoker.invoke( "/notebooks/delete_forever", "POST", {
     "notebook_id": notebook_id
-  } );
+  }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
 
   event.stop();
 }
