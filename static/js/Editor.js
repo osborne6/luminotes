@@ -383,8 +383,7 @@ Editor.prototype.start_link = function () {
     } else {
       this.link_started = null;
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
-      var link = this.find_link_at_cursor();
-      signal( this, "resolve_link", link_title( link ), link );
+      return this.find_link_at_cursor();
     }
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
@@ -400,8 +399,7 @@ Editor.prototype.start_link = function () {
     } else {
       this.link_started = null;
       this.exec_command( "createLink", "/notebooks/" + this.notebook_id + "?note_id=new" );
-      var link = this.find_link_at_cursor();
-      signal( this, "resolve_link", link_title( link ), link );
+      return this.find_link_at_cursor();
     }
   }
 }
@@ -430,7 +428,6 @@ Editor.prototype.end_link = function () {
     range.pasteHTML( "" );
   }
 
-  signal( this, "resolve_link", link_title( link ), link );
   return link;
 }
 
@@ -560,6 +557,48 @@ Editor.prototype.shutdown = function( event ) {
       removeElement( iframe );
     } catch ( e ) { }
   } } );
+}
+
+Editor.prototype.summarize = function () {
+  var summary = strip( scrapeText( this.document.body ) );
+
+  // remove the title from the scraped summary text
+  if ( summary.indexOf( this.title ) == 0 )
+    summary = summary.substr( this.title.length );
+
+  if ( summary.length == 0 )
+    return null;
+
+  var MAX_SUMMARY_LENGTH = 40;
+  var word_count = 10;
+
+  // split the summary on whitespace
+  var words = summary.split( /\s+/ );
+
+  function first_words( words, word_count ) {
+    return words.slice( 0, word_count ).join( " " );
+  }
+
+  var truncated = false;
+  summary = first_words( words, word_count );
+
+  // find a summary less than MAX_SUMMARY_LENGTH and, if possible, truncated on a word boundary
+  while ( summary.length > MAX_SUMMARY_LENGTH ) {
+    word_count -= 1;
+    summary = first_words( words, word_count );
+
+    // if the first word is just ridiculously long, truncate it without finding a word boundary
+    if ( word_count == 1 ) {
+      summary = summary.substr( 0, MAX_SUMMARY_LENGTH );
+      truncated = true;
+      break;
+    }
+  }
+
+  if ( truncated ||  word_count < words.length )
+    summary += " ...";
+
+  return summary;
 }
 
 // convenience function for parsing a link that has an href URL containing a query string

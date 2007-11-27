@@ -384,6 +384,24 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_load_note_with_summary( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      summarize = True,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    assert note.summary == u"blah"
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_load_note_by_title( self ):
     self.login()
 
@@ -434,6 +452,64 @@ class Test_notebooks( Test_controller ):
     assert note == None
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
+
+  def test_load_note_by_title_with_summary( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = self.note.title,
+      summarize = True,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    assert note.summary == u"blah"
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_summarize_note( self ):
+    note = cherrypy.root.notebooks.summarize_note( self.note )
+
+    assert note.summary == u"blah"
+
+  def test_summarize_note_truncated_at_word_boundary( self ):
+    self.note.contents = u"<h3>the title</h3>" + u"foo bar baz quux " * 10
+    note = cherrypy.root.notebooks.summarize_note( self.note )
+
+    assert note.summary == u"foo bar baz quux foo bar baz quux foo ..."
+
+  def test_summarize_note_truncated_at_character_boundary( self ):
+    self.note.contents = u"<h3>the title</h3>" + u"foobarbazquux" * 10
+    note = cherrypy.root.notebooks.summarize_note( self.note )
+
+    assert note.summary == u"foobarbazquuxfoobarbazquuxfoobarbazquuxf ..."
+
+  def test_summarize_note_with_short_words( self ):
+    self.note.contents = u"<h3>the title</h3>" + u"a b c d e f g h i j k l"
+    note = cherrypy.root.notebooks.summarize_note( self.note )
+
+    assert note.summary == u"a b c d e f g h i j ..."
+
+  def test_summarize_note_without_title( self ):
+    self.note.contents = "foo bar baz quux"
+    note = cherrypy.root.notebooks.summarize_note( self.note )
+
+    assert note.summary == u"foo bar baz quux"
+
+  def test_summarize_note_without_contents( self ):
+    self.note.contents = None
+    note = cherrypy.root.notebooks.summarize_note( self.note )
+
+    assert note.summary == None
+
+  def test_summarize_note_none( self ):
+    note = cherrypy.root.notebooks.summarize_note( None )
+
+    assert note == None
 
   def test_lookup_note_id( self ):
     self.login()

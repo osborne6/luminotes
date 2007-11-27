@@ -8,18 +8,20 @@ class Test_note( object ):
     self.object_id = u"17"
     self.title = u"title goes here"
     self.contents = u"<h3>%s</h3>blah" % self.title
+    self.summary = None
     self.notebook_id = u"18"
     self.startup = False
     self.rank = 17.5
     self.creation = datetime.now()
     self.delta = timedelta( seconds = 1 )
 
-    self.note = Note.create( self.object_id, self.contents, self.notebook_id, self.startup, self.rank, self.creation )
+    self.note = Note.create( self.object_id, self.contents, self.notebook_id, self.startup, self.rank, self.creation, self.summary )
 
   def test_create( self ):
     assert self.note.object_id == self.object_id
     assert datetime.now( tz = utc ) - self.note.revision < self.delta
     assert self.note.contents == self.contents
+    assert self.note.summary == None
     assert self.note.title == self.title
     assert self.note.notebook_id == self.notebook_id
     assert self.note.startup == self.startup
@@ -36,6 +38,7 @@ class Test_note( object ):
 
     assert self.note.revision > previous_revision
     assert self.note.contents == new_contents
+    assert self.note.summary == None
     assert self.note.title == new_title
     assert self.note.notebook_id == self.notebook_id
     assert self.note.startup == self.startup
@@ -53,6 +56,7 @@ class Test_note( object ):
     # html should be stripped out of the title
     assert self.note.revision > previous_revision
     assert self.note.contents == new_contents
+    assert self.note.summary == None
     assert self.note.title == new_title
     assert self.note.notebook_id == self.notebook_id
     assert self.note.startup == self.startup
@@ -70,7 +74,24 @@ class Test_note( object ):
     # should only use the first title
     assert self.note.revision > previous_revision
     assert self.note.contents == new_contents
+    assert self.note.summary == None
     assert self.note.title == new_title
+    assert self.note.notebook_id == self.notebook_id
+    assert self.note.startup == self.startup
+    assert self.note.deleted_from_id == None
+    assert self.note.rank == self.rank
+    assert self.note.creation == self.creation
+
+  def test_set_summary( self ):
+    summary = u"summary goes here..."
+    original_revision = self.note.revision
+
+    self.note.summary = summary
+
+    assert self.note.revision == original_revision
+    assert self.note.contents == self.contents
+    assert self.note.summary == summary
+    assert self.note.title == self.title
     assert self.note.notebook_id == self.notebook_id
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
@@ -111,6 +132,7 @@ class Test_note( object ):
     assert d.get( "object_id" ) == self.note.object_id
     assert datetime.now( tz = utc ) - d.get( "revision" ) < self.delta
     assert d.get( "contents" ) == self.contents
+    assert d.get( "summary" ) == self.summary
     assert d.get( "title" ) == self.title
     assert d.get( "deleted_from_id" ) == None
     assert d.get( "creation" ) == self.note.creation
@@ -121,6 +143,7 @@ class Test_note_blank( Test_note ):
     self.object_id = u"17"
     self.title = None
     self.contents = None
+    self.summary = None
     self.notebook_id = None
     self.startup = False
     self.rank = None
@@ -133,6 +156,7 @@ class Test_note_blank( Test_note ):
     assert self.note.object_id == self.object_id
     assert datetime.now( tz = utc ) - self.note.revision < self.delta
     assert self.note.contents == None
+    assert self.note.summary == None
     assert self.note.title == None
     assert self.note.notebook_id == None
     assert self.note.startup == False

@@ -161,9 +161,10 @@ class Notebook( Persistent ):
 
     return \
       """
-      select id, revision, title, headline( drop_html_tags( contents ), query ), notebook_id, startup, deleted_from_id from (
+      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, null,
+             headline( drop_html_tags( contents ), query ) as summary from (
         select
-         id, revision, title, contents, notebook_id, startup, deleted_from_id, query, rank_cd( search, query ) as rank
+         id, revision, title, contents, notebook_id, startup, deleted_from_id, rank_cd( search, query ) as rank, null, query
         from
           note_current, to_tsquery( 'default', %s ) query
         where

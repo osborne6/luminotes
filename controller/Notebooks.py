@@ -1,3 +1,4 @@
+import re
 import cherrypy
 from datetime import datetime
 from Expose import expose
@@ -29,6 +30,8 @@ class Access_error( Exception ):
 
 
 class Notebooks( object ):
+  WHITESPACE_PATTERN = re.compile( u"\s+" )
+
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
   """
@@ -161,9 +164,10 @@ class Notebooks( object ):
     notebook_id = Valid_id(),
     note_id = Valid_id(),
     revision = Valid_revision(),
+    summarize = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
   )
-  def load_note( self, notebook_id, note_id, revision = None, user_id = None ):
+  def load_note( self, notebook_id, note_id, revision = None, summarize = False, user_id = None ):
     """
     Return the information on a particular note by its id.
 
@@ -173,6 +177,9 @@ class Notebooks( object ):
     @param note_id: id of note to return
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the note (optional)
+    @type summarize: bool or NoneType
+    @param summarize: True to return a summary of the note's contents, False to return full text
+                      (optional, defaults to False)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
@@ -196,7 +203,7 @@ class Notebooks( object ):
       if notebook and note.notebook_id == notebook.trash_id:
         if revision:
           return dict(
-            note = note,
+            note = summarize and self.summarize_note( note ) or note,
           )
 
         return dict(
@@ -207,7 +214,7 @@ class Notebooks( object ):
       raise Access_error()
 
     return dict(
-      note = note,
+      note = summarize and self.summarize_note( note ) or note,
     )
 
   @expose( view = Json )
@@ -216,9 +223,10 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_title = Valid_string( min = 1, max = 500 ),
+    summarize = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
   )
-  def load_note_by_title( self, notebook_id, note_title, user_id ):
+  def load_note_by_title( self, notebook_id, note_title, summarize = False, user_id = None ):
     """
     Return the information on a particular note by its title.
 
@@ -226,6 +234,9 @@ class Notebooks( object ):
     @param notebook_id: id of notebook the note is in
     @type note_title: unicode
     @param note_title: title of the note to return
+    @type summarize: bool or NoneType
+    @param summarize: True to return a summary of the note's contents, False to return full text
+                      (optional, defaults to False)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
@@ -244,8 +255,58 @@ class Notebooks( object ):
       note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
 
     return dict(
-      note = note,
+      note = summarize and self.summarize_note( note ) or note,
     )
+
+  def summarize_note( self, note ):
+    """
+    Create a truncated note summary for the given note, and then return the note with its summary
+    set.
+
+    @type note: model.Note or NoneType
+    @param note: note to summarize, or None
+    @rtype: model.Note or NoneType
+    @return: note with its summary member set, or None if no note was provided
+    """
+    MAX_SUMMARY_LENGTH = 40
+    word_count = 10
+
+    if note is None:
+      return None
+
+    if note.contents is None:
+      return note
+
+    # remove all HTML from the contents and also remove the title
+    summary = Html_nuker().nuke( note.contents ).strip()
+    if note.title and summary.startswith( note.title ):
+      summary = summary[ len( note.title ) : ]
+
+    # split the summary on whitespace
+    words = self.WHITESPACE_PATTERN.split( summary )
+
+    def first_words( words, word_count ):
+      return u" ".join( words[ : word_count ] )
+
+    # find a summary less than MAX_SUMMARY_LENGTH and, if possible, truncated on a word boundary
+    truncated = False
+    summary = first_words( words, word_count )
+
+    while len( summary ) > MAX_SUMMARY_LENGTH:
+      word_count -= 1
+      summary = first_words( words, word_count )
+
+      # if the first word is just ridiculously long, truncate it without finding a word boundary
+      if word_count == 1:
+        summary = summary[ : MAX_SUMMARY_LENGTH ]
+        truncated = True
+        break
+
+    if truncated or word_count < len( words ):
+      summary += " ..."
+
+    note.summary = summary
+    return note
 
   @expose( view = Json )
   @strongly_expire
@@ -607,8 +668,8 @@ class Notebooks( object ):
     """
     Search the notes within a particular notebook for the given search text. Note that the search
     is case-insensitive, and all HTML tags are ignored. Notes with title matches are generally
-    ranked higher than matches that are only in the note contents. The returned notes have their
-    normal contents replaced with summary contents with the search terms highlighted.
+    ranked higher than matches that are only in the note contents. The returned notes include
+    content summaries with the search terms highlighted.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to search

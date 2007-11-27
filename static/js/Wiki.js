@@ -490,22 +490,43 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   }
 
   var self = this;
+  if ( callback ) {
+    this.invoker.invoke(
+      "/notebooks/load_note_by_title", "GET", {
+        "notebook_id": this.notebook_id,
+        "note_title": note_title,
+        "summarize": true
+      },
+      function ( result ) {
+        if ( result && result.note ) {
+          link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note.object_id;
+        } else {
+          link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
+            [ "title", "note_id" ],
+            [ note_title, "null" ]
+          );
+        }
+
+        callback( ( result && result.note ) ? result.note.summary : null );
+      }
+    );
+    return;
+  }
+
   this.invoker.invoke(
-    "/notebooks/" + ( callback ? "load_note_by_title" : "lookup_note_id" ), "GET", {
+    "/notebooks/lookup_note_id", "GET", {
       "notebook_id": this.notebook_id,
       "note_title": note_title
     },
     function ( result ) {
-      if ( result && ( result.note || result.note_id ) ) {
-        link.href = "/notebooks/" + self.notebook_id + "?note_id=" + ( result.note ? result.note.object_id : result.note_id );
+      if ( result && result.note_id ) {
+        link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note_id;
       } else {
         link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
           [ "title", "note_id" ],
           [ note_title, "null" ]
         );
       }
-      if ( callback )
-        callback( ( result && result.note ) ? result.note.contents : null );
     }
   );
 }
@@ -596,7 +617,6 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   connect( editor, "load_editor", this, "load_editor" );
-  connect( editor, "resolve_link", this, "resolve_link" );
   connect( editor, "hide_clicked", function ( event ) { self.hide_editor( event, editor ) } );
   connect( editor, "submit_form", function ( url, form ) {
     self.invoker.invoke( url, "POST", null, null, form );
@@ -857,11 +877,18 @@ Wiki.prototype.toggle_link_button = function ( event ) {
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
     if ( this.toggle_image_button( "createLink" ) )
-      this.focused_editor.start_link();
+      link = this.focused_editor.start_link();
     else
       link = this.focused_editor.end_link();
 
-    this.display_link_pulldown( this.focused_editor, link );
+    if ( link ) {
+      var self = this;
+      this.resolve_link( link_title( link ), link, function ( summary ) {
+        self.display_link_pulldown( self.focused_editor, link );
+      } );
+    } else {
+      this.display_link_pulldown( this.focused_editor );
+    }
   }
 
   event.stop();
@@ -1124,23 +1151,23 @@ Wiki.prototype.display_search_results = function ( result ) {
     if ( !note.title ) continue;
 
     if ( note.contents.length == 0 ) {
-      var preview = "empty note";
+      var summary = "empty note";
     } else {
-      var preview = note.contents;
+      var summary = note.summary;
 
-      // if the preview appears not to end with a complete sentence, add "..."
-      if ( !/[?!.]\s*$/.test( preview ) )
-        preview = preview + " <b>...</b>";
+      // if the summary appears not to end with a complete sentence, add "..."
+      if ( !/[?!.]\s*$/.test( summary ) )
+        summary = summary + " <b>...</b>";
     }
 
-    var preview_span = createDOM( "span" );
-    preview_span.innerHTML = preview;
+    var summary_span = createDOM( "span" );
+    summary_span.innerHTML = summary;
 
     appendChildNodes( list,
       createDOM( "p", {},
         createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id }, note.title ),
         createDOM( "br" ),
-        preview_span
+        summary_span
       )
     );
   }
@@ -1756,7 +1783,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   this.invoker = invoker;
   this.editor = editor;
   this.title_field = createDOM( "input", { "class": "text_field", "size": "30", "maxlength": "256" } );
-  this.note_preview = createDOM( "span", {} );
+  this.note_summary = createDOM( "span", {} );
   this.previous_title = "";
 
   var self = this;
@@ -1768,12 +1795,12 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
 
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "links to: " ) );
   appendChildNodes( this.div, this.title_field );
-  appendChildNodes( this.div, this.note_preview );
+  appendChildNodes( this.div, this.note_summary );
 
   // links with targets are considered links to external sites
   if ( link.target ) {
     this.title_field.value = link.href;
-    replaceChildNodes( this.note_preview, "web link" );
+    replaceChildNodes( this.note_summary, "web link" );
     return;
   }
 
@@ -1785,20 +1812,21 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   if ( ( id == undefined || id == "new" || id == "null" ) && title.length > 0 ) {
     if ( title == "all notes" ) {
       this.title_field.value = title;
-      this.display_preview( title, "list of all notes in this notebook" );
+      this.display_summary( title, "list of all notes in this notebook" );
       return;
     }
 
     if ( title == "search results" ) {
       this.title_field.value = title;
-      this.display_preview( title, "current search results" );
+      this.display_summary( title, "current search results" );
       return;
     }
 
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
         "notebook_id": this.notebook_id,
-        "note_title": title
+        "note_title": title,
+        "summarize": true
       },
       function ( result ) {
         // if the user has already started typing something, don't overwrite it
@@ -1806,10 +1834,10 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
           return;
         if ( result.note ) {
           self.title_field.value = result.note.title;
-          self.display_preview( result.note.title, result.note.contents );
+          self.display_summary( result.note.title, result.note.summary );
         } else {
           self.title_field.value = title;
-          replaceChildNodes( self.note_preview, "empty note" );
+          replaceChildNodes( self.note_summary, "empty note" );
         }
       }
     );
@@ -1817,20 +1845,21 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   }
 
   // if this link has an actual destination note id set, then see if that note is already open. if
-  // so, display its title and a preview of its contents
+  // so, display its title and a summary of its contents
   var iframe = getElement( "note_" + id );
   if ( iframe ) {
     this.title_field.value = iframe.editor.title;
-    this.display_preview( iframe.editor.title, iframe.editor.document );
+    this.display_summary( iframe.editor.title, iframe.editor.summarize() );
     return;
   }
 
-  // otherwise, load the destination note from the server, displaying its title and a preview of
+  // otherwise, load the destination note from the server, displaying its title and a summary of
   // its contents
   this.invoker.invoke(
     "/notebooks/load_note", "GET", {
       "notebook_id": this.notebook_id,
-      "note_id": id
+      "note_id": id,
+      "summarize": true
     },
     function ( result ) {
       // if the user has already started typing something, don't overwrite it
@@ -1838,10 +1867,10 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
         return;
       if ( result.note ) {
         self.title_field.value = result.note.title;
-        self.display_preview( result.note.title, result.note.contents );
+        self.display_summary( result.note.title, result.note.summary );
       } else {
         self.title_field.value = title;
-        replaceChildNodes( self.note_preview, "empty note" );
+        replaceChildNodes( self.note_summary, "empty note" );
       }
     }
   );
@@ -1850,33 +1879,13 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
 Link_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Link_pulldown.prototype.constructor = Link_pulldown;
 
-Link_pulldown.prototype.display_preview = function ( title, contents ) {
-  if ( !contents ) {
-    replaceChildNodes( this.note_preview, "empty note" );
-    return;
-  }
-
-  // if contents is a DOM node, just scrape its text
-  if ( contents.nodeType ) {
-    contents = strip( scrapeText( contents ) );
-  // otherwise, assume contents is a string, so put it into a DOM node and then scrape its contents
-  } else {
-    var contents_node = createDOM( "span", {} );
-    contents_node.innerHTML = contents;
-    contents = strip( scrapeText( contents_node ) );
-  }
-
-  // remove the title from the scraped contents text
-  if ( contents.indexOf( title ) == 0 )
-    contents = contents.substr( title.length );
-
-  if ( contents.length == 0 ) {
-    replaceChildNodes( this.note_preview, "empty note" );
-  } else {
-    var max_preview_length = 40;
-    var preview = contents.substr( 0, max_preview_length ) + ( ( contents.length > max_preview_length ) ? "..." : "" );
-    replaceChildNodes( this.note_preview, preview );
-  }
+Link_pulldown.prototype.display_summary = function ( title, summary ) {
+  if ( !summary )
+    replaceChildNodes( this.note_summary, "empty note" );
+  else if ( summary.length == 0 )
+    replaceChildNodes( this.note_summary, "empty note" );
+  else
+    replaceChildNodes( this.note_summary, summary );
 }
 
 Link_pulldown.prototype.title_field_clicked = function ( event ) {
@@ -1892,13 +1901,13 @@ Link_pulldown.prototype.title_field_changed = function ( event ) {
   if ( this.title_field.value == this.previous_title )
     return;
 
-  replaceChildNodes( this.note_preview, "" );
+  replaceChildNodes( this.note_summary, "" );
   var title = strip( this.title_field.value );
   this.previous_title = title;
 
   var self = this;
-  this.wiki.resolve_link( title, this.link, function ( contents ) {
-    self.display_preview( title, contents );
+  this.wiki.resolve_link( title, this.link, function ( summary ) {
+    self.display_summary( title, summary );
   } );
 }
 

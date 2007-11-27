@@ -10,7 +10,7 @@ class Note( Persistent ):
   TITLE_PATTERN = re.compile( u"<h3>(.*?)</h3>", flags = re.IGNORECASE )
 
   def __init__( self, object_id, revision = None, title = None, contents = None, notebook_id = None,
-                startup = None, deleted_from_id = None, rank = None, creation = None ):
+                startup = None, deleted_from_id = None, rank = None, creation = None, summary = None ):
     """
     Create a new note with the given id and contents.
 
@@ -32,12 +32,15 @@ class Note( Persistent ):
     @param rank: indicates numeric ordering of this note in relation to other startup notes
     @type creation: datetime or NoneType
     @param creation: creation timestamp of the object (optional, defaults to None)
+    @type summary: unicode or NoneType
+    @param summary: textual summary of the note's contents (optional, defaults to None)
     @rtype: Note
     @return: newly constructed note
     """
     Persistent.__init__( self, object_id, revision )
     self.__title = title
     self.__contents = contents
+    self.__summary = summary
     self.__notebook_id = notebook_id
     self.__startup = startup or False
     self.__deleted_from_id = deleted_from_id
@@ -45,7 +48,7 @@ class Note( Persistent ):
     self.__creation = creation
 
   @staticmethod
-  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None, creation = None ):
+  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None, creation = None, summary = None ):
     """
     Convenience constructor for creating a new note.
 
@@ -61,10 +64,12 @@ class Note( Persistent ):
     @param rank: indicates numeric ordering of this note in relation to other startup notes
     @type creation: datetime or NoneType
     @param creation: creation timestamp of the object (optional, defaults to None)
+    @type summary: unicode or NoneType
+    @param summary: textual summary of the note's contents (optional, defaults to None)
     @rtype: Note
     @return: newly constructed note
     """
-    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank, creation = creation )
+    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank, creation = creation, summary = summary )
     note.contents = contents
 
     return note
@@ -85,6 +90,9 @@ class Note( Persistent ):
       self.__title = Html_nuker( allow_refs = True ).nuke( self.__title )
     else:
       self.__title = None
+
+  def __set_summary( self, summary ):
+    self.__summary = summary
 
   def __set_notebook_id( self, notebook_id ):
     self.__notebook_id = notebook_id
@@ -141,6 +149,7 @@ class Note( Persistent ):
     d = Persistent.to_dict( self )
     d.update( dict(
       contents = self.__contents,
+      summary = self.__summary,
       title = self.__title,
       deleted_from_id = self.__deleted_from_id,
       creation = self.__creation,
@@ -150,6 +159,7 @@ class Note( Persistent ):
 
   title = property( lambda self: self.__title )
   contents = property( lambda self: self.__contents, __set_contents )
+  summary = property( lambda self: self.__summary, __set_summary )
   notebook_id = property( lambda self: self.__notebook_id, __set_notebook_id )
   startup = property( lambda self: self.__startup, __set_startup )
   deleted_from_id = property( lambda self: self.__deleted_from_id, __set_deleted_from_id )
