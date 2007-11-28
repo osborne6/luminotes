@@ -19,3 +19,6 @@ http://ajaxian.com/archives/googles-rounded-corner-generator
 For instance:
 
 http://groups-beta.google.com/groups/roundedcorners?c=b0d0ff&bc=fafafa&w=6&h=6&a=tl
+
+The title image is in a 50 pt Qlassik medium font, with a 25 pt sub-heading
+and a manually modified "k" character.

@@ -1,6 +1,6 @@
 from cgi import escape
 from Page import Page
-from Tags import Input, Div, Span, H2, H4, A, Br, Strong, Script
+from Tags import Input, Div, Span, H2, H4, A, Br, Strong, Script, Img
 from Search_form import Search_form
 from User_area import User_area
 from Link_area import Link_area
@@ -119,8 +119,7 @@ class Main_page( Page ):
               id = u"search_and_user_area",
             ),
             Div(
-              H2( A( u"Luminotes", href = "/" ), class_ = "page_title" ),
-              H4( A( u"personal wiki notebook", href = "/" ), class_ = u"page_title" ),
+              A( Img( src = "/static/images/luminotes_title.png" ), href = "/", title = "Luminotes personal wiki notebook" ),
               id = u"title_area",
             ),
             id = u"top_area",
