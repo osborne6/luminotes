@@ -372,7 +372,7 @@ class Users( object ):
       user = anonymous
 
     if not user or not anonymous:
-      raise Access_error( u"Sorry, you don't have access to do that." )
+      raise Access_error( u"Sorry, you don't have access to do that. Please make sure you're logged in first." )
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None

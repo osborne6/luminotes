@@ -47,11 +47,13 @@ def expose( view = None, rss = None ):
       kwargs = dict( [ ( str( key ), value ) for ( key, value ) in kwargs.items() ] )
 
       # try executing the exposed function
+      original_error = None
       try:
         result = function( *args, **kwargs )
       except cherrypy.NotFound:
         raise
       except Exception, error:
+        original_error = error
         if hasattr( error, "to_dict" ):
           result = error.to_dict()
         else:
@@ -74,8 +76,10 @@ def expose( view = None, rss = None ):
           return unicode( view_override( **result ) )
       except:
         if redirect is None:
-          print result
-          raise
+          if original_error:
+            raise original_error
+          else:
+            raise
 
       # if that doesn't work, and there's a redirect, then redirect
       del( result[ u"redirect" ] )

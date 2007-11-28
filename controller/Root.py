@@ -219,7 +219,14 @@ class Root( object ):
     traceback.print_exc()
     self.report_traceback()
 
-    cherrypy.response.body = [ unicode( Error_page( support_email ) ) ]
+    import sys
+    error = sys.exc_info()[ 1 ]
+    if hasattr( error, "to_dict" ):
+      error_message = error.to_dict().get( u"error" )
+    else:
+      error_message = None
+
+    cherrypy.response.body = [ unicode( Error_page( support_email, message = error_message ) ) ]
 
   def report_traceback( self ):
     """

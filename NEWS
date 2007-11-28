@@ -1,3 +1,7 @@
+1.0.2: November 28, 2007
+ * Refactored code that creates note summaries for the link info box.
+ * Improved error reporting when a loading a page that causes an exception.
+
 1.0.1: November 17, 2007
  * Ability to create, rename, delete, and switch between multiple wiki
    notebooks in a single account.
