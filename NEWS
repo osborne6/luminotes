@@ -1,3 +1,7 @@
+1.0.3: November 28, 2007
+ * Updated logo, which is now an image and could be theoretically replaced for
+   branding purposes.
+
 1.0.2: November 28, 2007
  * Refactored code that creates note summaries for the link info box.
  * Improved error reporting when a loading a page that causes an exception.
