@@ -57,6 +57,7 @@ function Wiki( invoker ) {
   connect( "search_form", "onsubmit", this, "search" );
   connect( "html", "onclick", this, "background_clicked" );
   connect( "html", "onkeydown", this, "key_pressed" );
+  connect( window, "onresize", this, "resize_editors" );
 
   var blank_note_stub = getElement( "blank_note_stub" );
   if ( blank_note_stub ) {
@@ -626,6 +627,14 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   this.clear_pulldowns();
 
   return editor;
+}
+
+Wiki.prototype.resize_editors = function () {
+  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
+  for ( var i in iframes ) {
+    var editor = iframes[ i ].editor;
+    editor.resize();
+  }
 }
 
 Wiki.prototype.editor_state_changed = function ( editor ) {
