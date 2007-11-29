@@ -22,7 +22,8 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     "id": iframe_id,
     "name": iframe_id,
     "class": "note_frame",
-    "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
+    "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
+    "onload": function () { setTimeout( function () { self.resize() }, 250 ); }
   } );
   this.iframe.editor = this;
   this.title = "";
