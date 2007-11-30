@@ -536,6 +536,9 @@ Editor.prototype.current_node_names = function () {
   while ( node ) {
     var name = node.nodeName.toLowerCase();
 
+    if ( name == "strong" ) name = "b";
+    if ( name == "em" ) name = "i";
+
     if ( name != "a" || node.href )
       node_names.push( name );
 
