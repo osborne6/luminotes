@@ -282,7 +282,8 @@ Editor.prototype.key_released = function ( event ) {
 
   // if ctrl keys are released, bail
   var code = event.key().code;
-  if ( event.modifier().ctrl )
+  var CTRL = 17;
+  if ( event.modifier().ctrl || code == CTRL )
     return;
 
   signal( this, "state_changed", this );
