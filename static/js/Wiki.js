@@ -247,7 +247,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
-    connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title", "h3" ); } );
+    connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
 
@@ -733,7 +733,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
       this.toggle_button( event, "underline" );
     // ctrl-t: title
     } else if ( code == 84 ) {
-      this.toggle_button( event, "title", "h3" );
+      this.toggle_button( event, "title" );
     // ctrl-period: unordered list
     } else if ( code == 190 ) {
       this.toggle_button( event, "insertUnorderedList" );
@@ -845,22 +845,25 @@ Wiki.prototype.toggle_image_button = function ( name ) {
   }
 }
 
-Wiki.prototype.toggle_button = function ( event, button_id, state_name ) {
+Wiki.prototype.toggle_button = function ( event, button_id ) {
   this.clear_messages();
   this.clear_pulldowns();
 
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
-    this.focused_editor.exec_command( state_name || button_id );
+    if ( button_id == "title" )
+      this.focused_editor.exec_command( "h3" );
+    else
+      this.focused_editor.exec_command( button_id );
     this.focused_editor.resize();
-    this.update_button( button_id, state_name );
+    this.toggle_image_button( button_id );
   }
 
   event.stop();
 }
 
 Wiki.prototype.update_button = function ( button_id, state_name, node_names ) {
-  if ( this.focused_editor.state_enabled( state_name || button_id, node_names ) )
+  if ( this.focused_editor.state_enabled( state_name, node_names ) )
     this.down_image_button( button_id );
   else
     this.up_image_button( button_id );

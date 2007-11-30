@@ -491,39 +491,6 @@ Editor.prototype.focus = function () {
     this.iframe.contentWindow.focus();
 }
 
-// return true if the specified state is enabled
-Editor.prototype.state_enabled = function ( state_name ) {
-  if ( !this.read_write ) return false;
-
-  var node_name = state_name.toLowerCase();
-
-  if ( state_name == "b" && this.state_enabled( "h3" ) )
-    return false;
-
-  // to determine whether the specified state is enabled, see whether the current selection is
-  // contained (directly or indirectly) by a node of the appropriate type (e.g. "h3", "a", etc.)
-  var node;
-  if ( window.getSelection ) { // browsers such as Firefox
-    var selection = this.iframe.contentWindow.getSelection();
-    var range = selection.getRangeAt( 0 );
-    node = range.endContainer;
-  } else if ( this.document.selection ) { // browsers such as IE
-    var range = this.document.selection.createRange();
-    node = range.parentElement();
-  }
-
-  while ( node.nodeName.toLowerCase() != node_name ) {
-    node = node.parentNode;
-    if ( !node )
-      return false;
-  }
-
-  if ( state_name == "a" && !node.href )
-    return false;
-
-  return true;
-}
-
 Editor.prototype.contents = function () {
   return this.document.body.innerHTML;
 }

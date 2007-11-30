@@ -1,3 +1,8 @@
+1.0.4: November ??, 2007
+ * When the web browser is resized, all notes are automatically resized as well.
+ * Fixed note focusing in Safari.
+ * Fixed note state detection (bold, italic, etc.) in Safari.
+
 1.0.3: November 28, 2007
  * Updated logo, which is now an image and could be theoretically replaced for
    branding purposes.
