@@ -35,8 +35,8 @@ function Wiki( invoker ) {
     if ( /Opera/.test( navigator.userAgent ) )
       unsupported_agent = "Opera";
 
-    if ( unsupported_agent )
-      alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
+//    if ( unsupported_agent )
+//      alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
   }
 
   var deleted_id = getElement( "deleted_id" ).value;
@@ -755,7 +755,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
       this.delete_editor( event );
     }
   // IE: hitting space or tab while making a link shouldn't end the link
-  } else if ( ( code == 32 || code == 9 ) && editor.document.selection && editor.state_enabled( "createLink" ) ) {
+  } else if ( ( code == 32 || code == 9 ) && editor.document.selection && editor.state_enabled( "a" ) ) {
     var range = editor.document.selection.createRange();
     var text = range.parentElement().firstChild;
     text.nodeValue += " ";
@@ -859,23 +859,25 @@ Wiki.prototype.toggle_button = function ( event, button_id, state_name ) {
   event.stop();
 }
 
-Wiki.prototype.update_button = function ( button_id, state_name ) {
-  if ( this.focused_editor.state_enabled( state_name || button_id ) )
+Wiki.prototype.update_button = function ( button_id, state_name, node_names ) {
+  if ( this.focused_editor.state_enabled( state_name || button_id, node_names ) )
     this.down_image_button( button_id );
   else
     this.up_image_button( button_id );
 }
 
 Wiki.prototype.update_toolbar = function() {
-  if ( this.focused_editor ) {
-    this.update_button( "bold" );
-    this.update_button( "italic" );
-    this.update_button( "underline" );
-    this.update_button( "title", "h3" );
-    this.update_button( "insertUnorderedList" );
-    this.update_button( "insertOrderedList" );
-    this.update_button( "createLink" );
-  }
+  if ( !this.focused_editor )
+    return;
+
+  var node_names = this.focused_editor.current_node_names();
+  this.update_button( "bold", "b", node_names );
+  this.update_button( "italic", "i", node_names );
+  this.update_button( "underline", "u", node_names );
+  this.update_button( "title", "h3", node_names );
+  this.update_button( "insertUnorderedList", "ul", node_names );
+  this.update_button( "insertOrderedList", "ol", node_names );
+  this.update_button( "createLink", "a", node_names );
 }
 
 Wiki.prototype.toggle_link_button = function ( event ) {

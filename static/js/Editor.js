@@ -140,6 +140,8 @@ Editor.prototype.finish_init = function () {
     connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
     connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
     connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
+    connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
+    connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
   }
 
   connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
@@ -236,7 +238,7 @@ Editor.prototype.exec_command = function ( command, parameter ) {
 Editor.prototype.insert_html = function ( html ) {
   if ( html.length == 0 ) return;
 
-  if ( !this.read_write ) {
+  if ( !this.read_write || /Safari/.test( navigator.userAgent ) ) {
     this.document.body.innerHTML = html;
     return;
   }
@@ -493,46 +495,87 @@ Editor.prototype.focus = function () {
 Editor.prototype.state_enabled = function ( state_name ) {
   if ( !this.read_write ) return false;
 
-  state_name = state_name.toLowerCase();
+  var node_name = state_name.toLowerCase();
 
-  var format_block = this.document.queryCommandValue( "formatblock" ).toLowerCase();
-  var heading = ( format_block == "h3" || format_block == "heading 3" );
-
-  if ( state_name == "h3" )
-    return heading;
-
-  if ( state_name == "bold" && heading )
+  if ( state_name == "b" && this.state_enabled( "h3" ) )
     return false;
 
-  // to determine if we're within a link, see whether the current selection is contained (directly
-  // or indirectly) by an "A" node
-  if ( state_name == "createlink" ) {
-    var link;
-    if ( window.getSelection ) { // browsers such as Firefox
-      var selection = this.iframe.contentWindow.getSelection();
-      var range = selection.getRangeAt( 0 );
-      link = range.endContainer;
-    } else if ( this.document.selection ) { // browsers such as IE
-      var range = this.document.selection.createRange();
-      link = range.parentElement();
-    }
-
-    while ( link.nodeName != "A" ) {
-      link = link.parentNode;
-      if ( !link )
-        return false;
-    }
-    if ( !link.href )
-      return false;
-
-    return true;
+  // to determine whether the specified state is enabled, see whether the current selection is
+  // contained (directly or indirectly) by a node of the appropriate type (e.g. "h3", "a", etc.)
+  var node;
+  if ( window.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    var range = selection.getRangeAt( 0 );
+    node = range.endContainer;
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    node = range.parentElement();
   }
 
-  return this.document.queryCommandState( state_name )
+  while ( node.nodeName.toLowerCase() != node_name ) {
+    node = node.parentNode;
+    if ( !node )
+      return false;
+  }
+
+  if ( state_name == "a" && !node.href )
+    return false;
+
+  return true;
 }
 
 Editor.prototype.contents = function () {
   return this.document.body.innerHTML;
+}
+
+// return true if the given state_name is currently enabled, optionally using a given list of node
+// names
+Editor.prototype.state_enabled = function ( state_name, node_names ) {
+  if ( !this.read_write )
+    return false;
+
+  state_name = state_name.toLowerCase();
+  if ( !node_names )
+    node_names = this.current_node_names();
+
+  for ( var i in node_names ) {
+    var node_name = node_names[ i ];
+    if ( node_name == state_name )
+      return true;
+  }
+
+  return false;
+}
+
+// return a list of names for all the nodes containing the cursor
+Editor.prototype.current_node_names = function () {
+  var node_names = new Array();
+
+  if ( !this.read_write )
+    return node_names;
+
+  // to determine whether the specified state is enabled, see whether the current selection is
+  // contained (directly or indirectly) by a node of the appropriate type (e.g. "h3", "a", etc.)
+  var node;
+  if ( window.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    var range = selection.getRangeAt( 0 );
+    node = range.endContainer;
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    node = range.parentElement();
+  }
+
+  while ( node ) {
+    var name = node.nodeName.toLowerCase();
+
+    if ( name != "a" || node.href )
+      node_names.push( name );
+
+    node = node.parentNode;
+  }
+
+  return node_names;
 }
 
 Editor.prototype.shutdown = function( event ) {
