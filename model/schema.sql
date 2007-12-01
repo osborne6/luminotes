@@ -32,6 +32,24 @@ CREATE FUNCTION drop_html_tags(text) RETURNS text
 ALTER FUNCTION public.drop_html_tags(text) OWNER TO luminotes;
 
 --
+-- Name: invite; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE TABLE invite (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    sent_user_id text,
+    notebook_id text,
+    email_address text,
+    read_write boolean,
+    "owner" boolean,
+    redeemed_user_id text
+);
+
+
+ALTER TABLE public.invite OWNER TO luminotes;
+
+--
 -- Name: luminotes_user; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
 
@@ -72,7 +90,8 @@ CREATE TABLE note (
     startup boolean DEFAULT false,
     deleted_from_id text,
     rank numeric,
-    search tsvector
+    search tsvector,
+    user_id text
 );
 
 
@@ -83,7 +102,7 @@ ALTER TABLE public.note OWNER TO luminotes;
 --
 
 CREATE VIEW note_current AS
-    SELECT note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank, note.search FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
+    SELECT note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank, note.search, note.user_id FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
 
 
 ALTER TABLE public.note_current OWNER TO luminotes;
@@ -97,7 +116,8 @@ CREATE TABLE notebook (
     revision timestamp with time zone NOT NULL,
     name text,
     trash_id text,
-    deleted boolean DEFAULT false
+    deleted boolean DEFAULT false,
+    user_id text
 );
 
 
@@ -108,7 +128,7 @@ ALTER TABLE public.notebook OWNER TO luminotes;
 --
 
 CREATE VIEW notebook_current AS
-    SELECT notebook.id, notebook.revision, notebook.name, notebook.trash_id, notebook.deleted FROM notebook WHERE (notebook.revision IN (SELECT max(sub_notebook.revision) AS max FROM notebook sub_notebook WHERE (sub_notebook.id = notebook.id)));
+    SELECT notebook.id, notebook.revision, notebook.name, notebook.trash_id, notebook.deleted, notebook.user_id FROM notebook WHERE (notebook.revision IN (SELECT max(sub_notebook.revision) AS max FROM notebook sub_notebook WHERE (sub_notebook.id = notebook.id)));
 
 
 ALTER TABLE public.notebook_current OWNER TO luminotes;
@@ -134,11 +154,20 @@ ALTER TABLE public.password_reset OWNER TO luminotes;
 CREATE TABLE user_notebook (
     user_id text NOT NULL,
     notebook_id text NOT NULL,
-    read_write boolean DEFAULT false
+    read_write boolean DEFAULT false,
+    "owner" boolean DEFAULT false
 );
 
 
 ALTER TABLE public.user_notebook OWNER TO luminotes;
+
+--
+-- Name: invite_pkey; Type: CONSTRAINT; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+ALTER TABLE ONLY invite
+    ADD CONSTRAINT invite_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: luminotes_user_pkey; Type: CONSTRAINT; Schema: public; Owner: luminotes; Tablespace: 

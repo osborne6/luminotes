@@ -145,7 +145,7 @@ class User( Persistent ):
 
     return \
       "select notebook_current.*, user_notebook.read_write from user_notebook, notebook_current " + \
-      "where user_id = %s%s%s and user_notebook.notebook_id = notebook_current.id order by revision;" % \
+      "where user_notebook.user_id = %s%s%s and user_notebook.notebook_id = notebook_current.id order by revision;" % \
       ( quote( self.object_id ), parents_only_clause, undeleted_only_clause )
 
   def sql_save_notebook( self, notebook_id, read_write = True ):

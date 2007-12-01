@@ -10,7 +10,7 @@ class Note( Persistent ):
   TITLE_PATTERN = re.compile( u"<h3>(.*?)</h3>", flags = re.IGNORECASE )
 
   def __init__( self, object_id, revision = None, title = None, contents = None, notebook_id = None,
-                startup = None, deleted_from_id = None, rank = None, creation = None, summary = None ):
+                startup = None, deleted_from_id = None, rank = None, user_id = None, creation = None, summary = None ):
     """
     Create a new note with the given id and contents.
 
@@ -30,6 +30,8 @@ class Note( Persistent ):
     @param deleted_from_id: id of the notebook that this note was deleted from (optional)
     @type rank: float or NoneType
     @param rank: indicates numeric ordering of this note in relation to other startup notes
+    @type user_id: unicode or NoneType
+    @param user_id: id of the user who most recently updated this note object (optional)
     @type creation: datetime or NoneType
     @param creation: creation timestamp of the object (optional, defaults to None)
     @type summary: unicode or NoneType
@@ -45,10 +47,11 @@ class Note( Persistent ):
     self.__startup = startup or False
     self.__deleted_from_id = deleted_from_id
     self.__rank = rank
+    self.__user_id = user_id
     self.__creation = creation
 
   @staticmethod
-  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None, creation = None, summary = None ):
+  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None, user_id = None, creation = None, summary = None ):
     """
     Convenience constructor for creating a new note.
 
@@ -62,6 +65,8 @@ class Note( Persistent ):
     @param startup: whether this note should be displayed upon startup (optional, defaults to False)
     @type rank: float or NoneType
     @param rank: indicates numeric ordering of this note in relation to other startup notes
+    @type user_id: unicode or NoneType
+    @param user_id: id of the user who most recently updated this note object (optional)
     @type creation: datetime or NoneType
     @param creation: creation timestamp of the object (optional, defaults to None)
     @type summary: unicode or NoneType
@@ -69,7 +74,7 @@ class Note( Persistent ):
     @rtype: Note
     @return: newly constructed note
     """
-    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank, creation = creation, summary = summary )
+    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank, user_id = user_id, creation = creation, summary = summary )
     note.contents = contents
 
     return note
@@ -113,9 +118,9 @@ class Note( Persistent ):
   @staticmethod
   def sql_load( object_id, revision = None ):
     if revision:
-      return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note where id = %s and revision = %s;" % ( quote( object_id ), quote( revision ) )
+      return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note where id = %s and revision = %s;" % ( quote( object_id ), quote( revision ) )
 
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where id = %s;" % quote( object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where id = %s;" % quote( object_id )
 
   @staticmethod
   def sql_id_exists( object_id, revision = None ):
@@ -133,11 +138,11 @@ class Note( Persistent ):
       rank = quote( None )
 
     return \
-      "insert into note ( id, revision, title, contents, notebook_id, startup, deleted_from_id, rank ) " + \
-      "values ( %s, %s, %s, %s, %s, %s, %s, %s );" % \
+      "insert into note ( id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id ) " + \
+      "values ( %s, %s, %s, %s, %s, %s, %s, %s, %s );" % \
       ( quote( self.object_id ), quote( self.revision ), quote( self.__title ),
         quote( self.__contents ), quote( self.__notebook_id ), quote( self.__startup and 't' or 'f' ),
-        quote( self.__deleted_from_id ), rank )
+        quote( self.__deleted_from_id ), rank, quote( self.user_id ) )
 
   def sql_update( self ):
     return self.sql_create()
@@ -152,6 +157,7 @@ class Note( Persistent ):
       summary = self.__summary,
       title = self.__title,
       deleted_from_id = self.__deleted_from_id,
+      user_id = self.__user_id,
       creation = self.__creation,
     ) )
 
@@ -164,4 +170,5 @@ class Note( Persistent ):
   startup = property( lambda self: self.__startup, __set_startup )
   deleted_from_id = property( lambda self: self.__deleted_from_id, __set_deleted_from_id )
   rank = property( lambda self: self.__rank, __set_rank )
+  user_id = property( lambda self: self.__user_id )
   creation = property( lambda self: self.__creation )

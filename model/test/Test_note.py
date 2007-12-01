@@ -12,10 +12,11 @@ class Test_note( object ):
     self.notebook_id = u"18"
     self.startup = False
     self.rank = 17.5
+    self.user_id = u"me"
     self.creation = datetime.now()
     self.delta = timedelta( seconds = 1 )
 
-    self.note = Note.create( self.object_id, self.contents, self.notebook_id, self.startup, self.rank, self.creation, self.summary )
+    self.note = Note.create( self.object_id, self.contents, self.notebook_id, self.startup, self.rank, self.user_id, self.creation, self.summary )
 
   def test_create( self ):
     assert self.note.object_id == self.object_id
@@ -27,6 +28,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
   def test_set_contents( self ):
@@ -44,6 +46,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
   def test_set_contents_with_html_title( self ):
@@ -62,6 +65,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
   def test_set_contents_with_multiple_titles( self ):
@@ -80,6 +84,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
   def test_set_summary( self ):
@@ -96,6 +101,7 @@ class Test_note( object ):
     assert self.note.startup == self.startup
     assert self.note.deleted_from_id == None
     assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
   def test_set_notebook_id( self ):
@@ -135,6 +141,7 @@ class Test_note( object ):
     assert d.get( "summary" ) == self.summary
     assert d.get( "title" ) == self.title
     assert d.get( "deleted_from_id" ) == None
+    assert d.get( "user_id" ) == self.user_id
     assert d.get( "creation" ) == self.note.creation
 
 
@@ -147,6 +154,7 @@ class Test_note_blank( Test_note ):
     self.notebook_id = None
     self.startup = False
     self.rank = None
+    self.user_id = None
     self.creation = None
     self.delta = timedelta( seconds = 1 )
 
@@ -162,4 +170,5 @@ class Test_note_blank( Test_note ):
     assert self.note.startup == False
     assert self.note.deleted_from_id == None
     assert self.note.rank == None
+    assert self.note.user_id == None
     assert self.note.creation == None

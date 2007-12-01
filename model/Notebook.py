@@ -12,7 +12,7 @@ class Notebook( Persistent ):
   WHITESPACE_PATTERN = re.compile( r"\s+" )
   SEARCH_OPERATORS = re.compile( r"[&|!()]" )
 
-  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, read_write = True ):
+  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, user_id = None, read_write = True ):
     """
     Create a new notebook with the given id and name.
 
@@ -26,6 +26,8 @@ class Notebook( Persistent ):
     @param trash_id: id of the notebook where deleted notes from this notebook go to die (optional)
     @type deleted: bool or NoneType
     @param deleted: whether this notebook is currently deleted (optional, defaults to False)
+    @type user_id: unicode or NoneType
+    @param user_id: id of the user who most recently updated this notebook object (optional)
     @type read_write: bool or NoneType
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
     @rtype: Notebook
@@ -35,10 +37,11 @@ class Notebook( Persistent ):
     self.__name = name
     self.__trash_id = trash_id
     self.__deleted = deleted
+    self.__user_id = user_id
     self.__read_write = read_write
 
   @staticmethod
-  def create( object_id, name = None, trash_id = None, deleted = False, read_write = True ):
+  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = True ):
     """
     Convenience constructor for creating a new notebook.
 
@@ -50,12 +53,14 @@ class Notebook( Persistent ):
     @param trash_id: id of the notebook where deleted notes from this notebook go to die (optional)
     @type deleted: bool or NoneType
     @param deleted: whether this notebook is currently deleted (optional, defaults to False)
+    @type user_id: unicode or NoneType
+    @param user_id: id of the user who most recently updated this notebook object (optional)
     @type read_write: bool or NoneType
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
     @rtype: Notebook
     @return: newly constructed notebook
     """
-    return Notebook( object_id, name = name, trash_id = trash_id, read_write = read_write )
+    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write )
 
   @staticmethod
   def sql_load( object_id, revision = None ):
@@ -76,10 +81,10 @@ class Notebook( Persistent ):
 
   def sql_create( self ):
     return \
-      "insert into notebook ( id, revision, name, trash_id, deleted ) " + \
-      "values ( %s, %s, %s, %s, %s );" % \
+      "insert into notebook ( id, revision, name, trash_id, deleted, user_id ) " + \
+      "values ( %s, %s, %s, %s, %s, %s );" % \
       ( quote( self.object_id ), quote( self.revision ), quote( self.__name ),
-        quote( self.__trash_id ), quote( self.deleted ) )
+        quote( self.__trash_id ), quote( self.deleted ), quote( self.user_id ) )
 
   def sql_update( self ):
     return self.sql_create()
@@ -88,19 +93,19 @@ class Notebook( Persistent ):
     """
     Return a SQL string to load a list of all the notes within this notebook.
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s order by revision desc;" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc;" % quote( self.object_id )
 
   def sql_load_non_startup_notes( self ):
     """
     Return a SQL string to load a list of the non-startup notes within this notebook.
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and startup = 'f' order by revision desc;" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and startup = 'f' order by revision desc;" % quote( self.object_id )
 
   def sql_load_startup_notes( self ):
     """
     Return a SQL string to load a list of the startup notes within this notebook.
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
 
   def sql_load_recent_notes( self, start = 0, count = 10 ):
     """
@@ -116,7 +121,7 @@ class Notebook( Persistent ):
       select
         note_current.id, note_current.revision, note_current.title, note_current.contents,
         note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
-        note_current.rank, note_creation.revision as creation
+        note_current.rank, note_current.user_id, note_creation.revision as creation
       from
         note_current,
         ( select id, min( revision ) as revision from note where notebook_id = %s group by id ) as note_creation
@@ -134,7 +139,7 @@ class Notebook( Persistent ):
     @type note_id: unicode
     @param note_id: id of note to load
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and id = %s;" % ( quote( self.object_id ), quote( note_id ) )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and id = %s;" % ( quote( self.object_id ), quote( note_id ) )
 
   def sql_load_note_by_title( self, title ):
     """
@@ -143,7 +148,7 @@ class Notebook( Persistent ):
     @type note_id: unicode
     @param note_id: title of note to load
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank from note_current where notebook_id = %s and title = %s;" % ( quote( self.object_id ), quote( title ) )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and title = %s;" % ( quote( self.object_id ), quote( title ) )
 
   def sql_search_notes( self, search_text ):
     """
@@ -161,10 +166,10 @@ class Notebook( Persistent ):
 
     return \
       """
-      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, null,
+      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
              headline( drop_html_tags( contents ), query ) as summary from (
         select
-         id, revision, title, contents, notebook_id, startup, deleted_from_id, rank_cd( search, query ) as rank, null, query
+         id, revision, title, contents, notebook_id, startup, deleted_from_id, rank_cd( search, query ) as rank, user_id, null, query
         from
           note_current, to_tsquery( 'default', %s ) query
         where
@@ -194,6 +199,7 @@ class Notebook( Persistent ):
       trash_id = self.__trash_id,
       read_write = self.__read_write,
       deleted = self.__deleted,
+      user_id = self.__user_id,
     ) )
 
     return d
@@ -215,3 +221,4 @@ class Notebook( Persistent ):
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
   deleted = property( lambda self: self.__deleted, __set_deleted )
+  user_id = property( lambda self: self.__user_id )

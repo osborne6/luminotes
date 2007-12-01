@@ -10,10 +10,11 @@ class Test_notebook( object ):
     self.trash_id = "18"
     self.name = u"my notebook"
     self.trash_name = u"trash"
+    self.user_id = u"me"
     self.delta = timedelta( seconds = 1 )
 
-    self.trash = Notebook.create( self.trash_id, self.trash_name, read_write = False, deleted = False )
-    self.notebook = Notebook.create( self.object_id, self.name, trash_id = self.trash.object_id, deleted = False )
+    self.trash = Notebook.create( self.trash_id, self.trash_name, read_write = False, deleted = False, user_id = self.user_id )
+    self.notebook = Notebook.create( self.object_id, self.name, trash_id = self.trash.object_id, deleted = False, user_id = self.user_id )
     self.note = Note.create( "19", u"<h3>title</h3>blah" )
 
   def test_create( self ):
@@ -23,6 +24,7 @@ class Test_notebook( object ):
     assert self.notebook.read_write == True
     assert self.notebook.trash_id == self.trash_id
     assert self.notebook.deleted == False
+    assert self.notebook.user_id == self.user_id
 
     assert self.trash.object_id == self.trash_id
     assert datetime.now( tz = utc ) - self.trash.revision < self.delta
@@ -30,6 +32,7 @@ class Test_notebook( object ):
     assert self.trash.read_write == False
     assert self.trash.trash_id == None
     assert self.trash.deleted == False
+    assert self.trash.user_id == self.user_id
 
   def test_set_name( self ):
     new_name = u"my new notebook"
@@ -60,5 +63,6 @@ class Test_notebook( object ):
     assert d.get( "trash_id" ) == self.trash.object_id
     assert d.get( "read_write" ) == True
     assert d.get( "deleted" ) == self.notebook.deleted
+    assert d.get( "user_id" ) == self.notebook.user_id
     assert d.get( "object_id" ) == self.notebook.object_id
     assert datetime.now( tz = utc ) - d.get( "revision" ) < self.delta
