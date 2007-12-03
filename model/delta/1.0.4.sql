@@ -1,7 +1,7 @@
 create table invite (
   id text not null,
   revision timestamp with time zone not null,
-  sent_user_id text,
+  from_user_id text,
   notebook_id text,
   email_address text,
   read_write boolean,

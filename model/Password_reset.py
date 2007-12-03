@@ -13,8 +13,8 @@ class Password_reset( Persistent ):
     @param object_id: id of the password reset
     @type revision: datetime or NoneType
     @param revision: revision timestamp of the object (optional, defaults to now)
-    @type email_address: unicode
-    @param email_address: where the reset confirmation was emailed
+    @type email_address: unicode or NoneType
+    @param email_address: where the reset confirmation was emailed (optional)
     @type redeemed: bool or NoneType
     @param redeemed: whether this password reset has been redeemed yet (optional, defaults to False)
     @rtype: Password_reset
@@ -27,7 +27,7 @@ class Password_reset( Persistent ):
   @staticmethod
   def create( object_id, email_address = None ):
     """
-    Convenience constructor for creating a new note.
+    Convenience constructor for creating a new password reset.
 
     @type email_address: unicode
     @param email_address: where the reset confirmation was emailed
@@ -38,7 +38,7 @@ class Password_reset( Persistent ):
 
   @staticmethod
   def sql_load( object_id, revision = None ):
-    # password resets don't track revisions
+    # password resets don't store old revisions
     if revision:
       raise NotImplementedError()
 

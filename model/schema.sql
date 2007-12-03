@@ -38,7 +38,7 @@ ALTER FUNCTION public.drop_html_tags(text) OWNER TO luminotes;
 CREATE TABLE invite (
     id text NOT NULL,
     revision timestamp with time zone NOT NULL,
-    sent_user_id text,
+    from_user_id text,
     notebook_id text,
     email_address text,
     read_write boolean,
