@@ -35,8 +35,8 @@ function Wiki( invoker ) {
     if ( /Opera/.test( navigator.userAgent ) )
       unsupported_agent = "Opera";
 
-//    if ( unsupported_agent )
-//      alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
+    if ( unsupported_agent )
+      alert( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
   }
 
   var deleted_id = getElement( "deleted_id" ).value;
