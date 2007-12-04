@@ -17,7 +17,7 @@ class Invite( Persistent ):
     @type from_user_id: unicode or NoneType
     @param from_user_id: id of the user who sent the invite (optional)
     @type notebook_id: unicode or NoneType
-    @param notebook_id: id of the notebook that the invitation is to
+    @param notebook_id: id of the notebook that the invitation is for
     @type email_address: unicode or NoneType
     @param email_address: where the invitation was emailed (optional)
     @type read_write: bool or NoneType
@@ -47,7 +47,7 @@ class Invite( Persistent ):
     @type from_user_id: unicode or NoneType
     @param from_user_id: id of the user who sent the invite (optional)
     @type notebook_id: unicode or NoneType
-    @param notebook_id: id of the notebook that the invitation is to
+    @param notebook_id: id of the notebook that the invitation is for
     @type email_address: unicode or NoneType
     @param email_address: where the invitation was emailed (optional)
     @type read_write: bool or NoneType

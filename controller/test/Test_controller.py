@@ -17,34 +17,35 @@ class Test_controller( object ):
     # SQL-returning methods in User, Note, and Notebook to return functions that manipulate data in
     # Stub_database directly instead. This is all a little fragile, but it's better than relying on
     # the presence of a real database for unit tests.
-    def sql_save_notebook( self, notebook_id, read_write, database ):
+    def sql_save_notebook( self, notebook_id, read_write, owner, database ):
       if self.object_id in database.user_notebook:
-        database.user_notebook[ self.object_id ].append( ( notebook_id, read_write ) )
+        database.user_notebook[ self.object_id ].append( ( notebook_id, read_write, owner ) )
       else:
-        database.user_notebook[ self.object_id ] = [ ( notebook_id, read_write ) ]
+        database.user_notebook[ self.object_id ] = [ ( notebook_id, read_write, owner ) ]
 
-    User.sql_save_notebook = lambda self, notebook_id, read_write = False: \
-      lambda database: sql_save_notebook( self, notebook_id, read_write, database )
+    User.sql_save_notebook = lambda self, notebook_id, read_write = False, owner = False: \
+      lambda database: sql_save_notebook( self, notebook_id, read_write, owner, database )
 
     def sql_remove_notebook( self, notebook_id, database ):
       if self.object_id in database.user_notebook:
-        for access_tuple in database.user_notebook[ self.object_id ]:
-          if access_tuple[ 0 ] == notebook_id:
-            database.user_notebook[ self.object_id ].remove( access_tuple )
+        for notebook_info in database.user_notebook[ self.object_id ]:
+          if notebook_info[ 0 ] == notebook_id:
+            database.user_notebook[ self.object_id ].remove( notebook_info )
 
     User.sql_remove_notebook = lambda self, notebook_id: \
       lambda database: sql_remove_notebook( self, notebook_id, database )
 
     def sql_load_notebooks( self, parents_only, undeleted_only, database ):
       notebooks = []
-      notebook_tuples = database.user_notebook.get( self.object_id )
+      notebook_infos = database.user_notebook.get( self.object_id )
 
-      if not notebook_tuples: return []
+      if not notebook_infos: return []
 
-      for notebook_tuple in notebook_tuples:
-        ( notebook_id, read_write ) = notebook_tuple
+      for notebook_info in notebook_infos:
+        ( notebook_id, read_write, owner ) = notebook_info
         notebook = database.objects.get( notebook_id )[ -1 ]
-        notebook._Notebook__read_write = read_write
+        notebook.read_write = read_write
+        notebook.owner = owner
         if parents_only and notebook.trash_id is None:
           continue
         if undeleted_only and notebook.deleted is True:
@@ -88,20 +89,22 @@ class Test_controller( object ):
     User.sql_calculate_storage = lambda self: \
       lambda database: sql_calculate_storage( self, database )
 
-    def sql_has_access( self, notebook_id, read_write, database ):
-      for ( user_id, notebook_tuples ) in database.user_notebook.items():
-        for notebook_tuple in notebook_tuples:
-          ( db_notebook_id, db_read_write ) = notebook_tuple
+    def sql_has_access( self, notebook_id, read_write, owner, database ):
+      for ( user_id, notebook_infos ) in database.user_notebook.items():
+        for notebook_info in notebook_infos:
+          ( db_notebook_id, db_read_write, db_owner ) = notebook_info
 
           if self.object_id == user_id and notebook_id == db_notebook_id:
             if read_write is True and db_read_write is False:
+              return False
+            if owner is True and db_owner is False:
               return False
             return True
 
       return False
 
-    User.sql_has_access = lambda self, notebook_id, read_write = False: \
-      lambda database: sql_has_access( self, notebook_id, read_write, database )
+    User.sql_has_access = lambda self, notebook_id, read_write = False, owner = False: \
+      lambda database: sql_has_access( self, notebook_id, read_write, owner, database )
 
     def sql_load_revisions( self, database ):
       note_list = database.objects.get( self.object_id )

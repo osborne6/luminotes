@@ -48,12 +48,12 @@ class Test_notebooks( Test_controller ):
   def make_users( self ):
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user, commit = False )
-    self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True ) )
-    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True ) )
 
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
-    self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False ) )
+    self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
   def test_default_without_login( self ):
     result = self.http_get(
@@ -181,6 +181,7 @@ class Test_notebooks( Test_controller ):
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
     user = self.database.load( User, self.user.object_id )
@@ -199,6 +200,7 @@ class Test_notebooks( Test_controller ):
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
 
@@ -226,6 +228,7 @@ class Test_notebooks( Test_controller ):
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
 
@@ -272,6 +275,7 @@ class Test_notebooks( Test_controller ):
 
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.read_write == False
+    assert notebook.owner == False
     assert len( startup_notes ) == 0
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
@@ -1740,6 +1744,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == new_notebook_id
     assert notebook.name == u"new notebook"
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert notebook.trash_id
 
   def test_contents_after_create( self ):
@@ -1760,6 +1765,7 @@ class Test_notebooks( Test_controller ):
 
     assert notebook.object_id == new_notebook_id
     assert notebook.read_write == True
+    assert notebook.owner == True
 
   def test_create_without_login( self ):
     result = self.http_post( "/notebooks/create", dict() )
@@ -1853,6 +1859,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == remaining_notebook_id
     assert notebook.name == u"my notebook"
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert notebook.trash_id
 
   def test_delete_with_multiple_notebooks( self ):
@@ -1861,8 +1868,8 @@ class Test_notebooks( Test_controller ):
     self.database.save( trash, commit = False )
     notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", trash.object_id )
     self.database.save( notebook, commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = True ) )
-    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = True ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = True, owner = True ) )
     self.database.commit()
 
     self.login()
@@ -2017,6 +2024,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == notebook_id
     assert notebook.name == self.notebook.name
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert notebook.trash_id
 
   def test_contents_after_undelete( self ):
@@ -2074,6 +2082,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == notebook_id
     assert notebook.name == self.notebook.name
     assert notebook.read_write == True
+    assert notebook.owner == True
     assert notebook.trash_id
 
   def test_recent_notes( self ):

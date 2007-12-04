@@ -12,7 +12,7 @@ class Notebook( Persistent ):
   WHITESPACE_PATTERN = re.compile( r"\s+" )
   SEARCH_OPERATORS = re.compile( r"[&|!()]" )
 
-  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, user_id = None, read_write = True ):
+  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True ):
     """
     Create a new notebook with the given id and name.
 
@@ -30,6 +30,8 @@ class Notebook( Persistent ):
     @param user_id: id of the user who most recently updated this notebook object (optional)
     @type read_write: bool or NoneType
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
+    @type owner: bool or NoneType
+    @param owner: whether this view of the notebook currently has owner-level access (optional, defaults to True)
     @rtype: Notebook
     @return: newly constructed notebook
     """
@@ -39,9 +41,10 @@ class Notebook( Persistent ):
     self.__deleted = deleted
     self.__user_id = user_id
     self.__read_write = read_write
+    self.__owner = owner
 
   @staticmethod
-  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = True ):
+  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True ):
     """
     Convenience constructor for creating a new notebook.
 
@@ -57,10 +60,12 @@ class Notebook( Persistent ):
     @param user_id: id of the user who most recently updated this notebook object (optional)
     @type read_write: bool or NoneType
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
+    @type owner: bool or NoneType
+    @param owner: whether this view of the notebook currently has owner-level access (optional, defaults to True)
     @rtype: Notebook
     @return: newly constructed notebook
     """
-    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write )
+    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner )
 
   @staticmethod
   def sql_load( object_id, revision = None ):
@@ -198,6 +203,7 @@ class Notebook( Persistent ):
       name = self.__name,
       trash_id = self.__trash_id,
       read_write = self.__read_write,
+      owner = self.__owner,
       deleted = self.__deleted,
       user_id = self.__user_id,
     ) )
@@ -213,6 +219,11 @@ class Notebook( Persistent ):
     # call update_revision().
     self.__read_write = read_write
 
+  def __set_owner( self, owner ):
+    # The owner member isn't actually saved to the database, so setting it doesn't need to
+    # call update_revision().
+    self.__owner = owner
+
   def __set_deleted( self, deleted ):
     self.__deleted = deleted
     self.update_revision()
@@ -220,5 +231,6 @@ class Notebook( Persistent ):
   name = property( lambda self: self.__name, __set_name )
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
+  owner = property( lambda self: self.__owner, __set_owner )
   deleted = property( lambda self: self.__deleted, __set_deleted )
   user_id = property( lambda self: self.__user_id )

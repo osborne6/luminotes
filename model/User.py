@@ -144,17 +144,18 @@ class User( Persistent ):
       undeleted_only_clause = ""
 
     return \
-      "select notebook_current.*, user_notebook.read_write from user_notebook, notebook_current " + \
+      "select notebook_current.*, user_notebook.read_write, user_notebook.owner from user_notebook, notebook_current " + \
       "where user_notebook.user_id = %s%s%s and user_notebook.notebook_id = notebook_current.id order by revision;" % \
       ( quote( self.object_id ), parents_only_clause, undeleted_only_clause )
 
-  def sql_save_notebook( self, notebook_id, read_write = True ):
+  def sql_save_notebook( self, notebook_id, read_write = True, owner = True ):
     """
     Return a SQL string to save the id of a notebook to which this user has access.
     """
     return \
-      "insert into user_notebook ( user_id, notebook_id, read_write ) values " + \
-      "( %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ) )
+      "insert into user_notebook ( user_id, notebook_id, read_write, owner ) values " + \
+      "( %s, %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ),
+                                quote( owner and 't' or 'f' ) )
 
   def sql_remove_notebook( self, notebook_id ):
     """
@@ -163,13 +164,21 @@ class User( Persistent ):
     return \
       "delete from user_notebook where user_id = %s and notebook_id = %s;" % ( quote( self.object_id ), quote( notebook_id ) )
 
-  def sql_has_access( self, notebook_id, read_write = False ):
+  def sql_has_access( self, notebook_id, read_write = False, owner = False ):
     """
     Return a SQL string to determine whether this user has access to the given notebook.
     """
-    if read_write is True:
+    if read_write is True and owner is True:
+      return \
+        "select user_id from user_notebook where user_id = %s and notebook_id = %s and read_write = 't' and owner = 't';" % \
+        ( quote( self.object_id ), quote( notebook_id ) )
+    elif read_write is True:
       return \
         "select user_id from user_notebook where user_id = %s and notebook_id = %s and read_write = 't';" % \
+        ( quote( self.object_id ), quote( notebook_id ) )
+    elif owner is True:
+      return \
+        "select user_id from user_notebook where user_id = %s and notebook_id = %s and owner = 't';" % \
         ( quote( self.object_id ), quote( notebook_id ) )
     else:
       return \

@@ -219,8 +219,8 @@ class Users( object ):
     self.__database.save( user, commit = False )
 
     # record the fact that the new user has access to their new notebook
-    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
-    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
     self.__database.commit()
 
     redirect = u"/notebooks/%s" % notebook.object_id
@@ -282,8 +282,8 @@ class Users( object ):
     self.__database.save( user, commit = False )
 
     # record the fact that the new user has access to their new notebook
-    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
-    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
     self.__database.commit()
 
     redirect = u"/notebooks/%s" % notebook.object_id
@@ -428,7 +428,7 @@ class Users( object ):
 
     return user
 
-  def check_access( self, user_id, notebook_id, read_write = False ):
+  def check_access( self, user_id, notebook_id, read_write = False, owner = False ):
     """
     Determine whether the given user has access to the given notebook.
 
@@ -438,20 +438,21 @@ class Users( object ):
     @param notebook_id: id of notebook to check access for
     @type read_write: bool
     @param read_write: True if read-write access is being checked, False if read-only access (defaults to False)
+    @type owner: bool
+    @param owner: True if owner-level access is being checked (defaults to False)
     @rtype: bool
     @return: True if the user has access
     """
-    # check if the anonymous user has access to this notebook
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
 
-    if self.__database.select_one( bool, anonymous.sql_has_access( notebook_id, read_write ) ):
+    if self.__database.select_one( bool, anonymous.sql_has_access( notebook_id, read_write, owner ) ):
       return True
 
     if user_id:
       # check if the given user has access to this notebook
       user = self.__database.load( User, user_id )
 
-      if user and self.__database.select_one( bool, user.sql_has_access( notebook_id, read_write ) ):
+      if user and self.__database.select_one( bool, user.sql_has_access( notebook_id, read_write, owner ) ):
         return True
 
     return False
@@ -469,7 +470,7 @@ class Users( object ):
     @type send_reset_button: unicode
     @param send_reset_button: ignored
     @rtype: json dict
-    @return: { 'error': message }
+    @return: { 'message': message }
     @raise Password_reset_error: an error occured when sending the password reset email
     @raise Validation_error: one of the arguments is invalid
     """
@@ -630,3 +631,64 @@ class Users( object ):
     self.__database.commit()
 
     return dict( redirect = u"/" )
+
+  @expose( view = Json )
+  @validate(
+    notebook_id = Valid_id(),
+    email_address = ( Valid_string( min = 1, max = 60 ), valid_email_address ),
+    read_write = Valid_bool(),
+    owner = Valid_bool(),
+    invite_button = unicode,
+  )
+  def send_invite( self, notebook_id, email_address, read_write, owner, invite_button ):
+    """
+    Send a notebook invitation to the given email address.
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook that the invitation is for
+    @type email_address: unicode
+    @param email_address: an email address where the invitation should be sent
+    @type read_write: bool
+    @param read_write: whether the invitation is for read-write access
+    @type owner: bool
+    @param owner: whether the invitation is for owner-level access
+    @type invite_button: unicode
+    @param invite_button: ignored
+    @rtype: json dict
+    @return: { 'message': message }
+    @raise Password_reset_error: an error occured when sending the password reset email
+    @raise Validation_error: one of the arguments is invalid
+    """
+    import sha
+    import random
+    import smtplib
+    from email import Message
+
+    # record the sending of this reset email
+    password_reset_id = self.__database.next_id( Password_reset, commit = False )
+    password_reset = Password_reset.create( password_reset_id, email_address )
+    self.__database.save( password_reset )
+
+    # create an email message with a unique link
+    message = Message.Message()
+    message[ u"from" ] = u"Luminotes support <%s>" % self.__support_email
+    message[ u"to" ] = email_address
+    message[ u"subject" ] = u"Luminotes password reset"
+    message.set_payload(
+      u"Someone has requested a password reset for a Luminotes user with your email\n" +
+      u"address. If this someone is you, please visit the following link for a\n" +
+      u"username reminder or a password reset:\n\n" +
+      u"%s/r/%s\n\n" % ( self.__https_url or self.__http_url, password_reset.object_id ) +
+      u"This link will expire in 24 hours.\n\n" +
+      u"Thanks!"
+    )
+
+    # send the message out through localhost's smtp server
+    server = smtplib.SMTP()
+    server.connect()
+    server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
+    server.quit()
+
+    return dict(
+      message = u"Please check your inbox. A password reset email has been sent to %s" % email_address,
+    )
+

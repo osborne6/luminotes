@@ -137,6 +137,9 @@ class Notebooks( object ):
     if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       notebook.read_write = False
 
+    if not self.__users.check_access( user_id, notebook_id, owner = True ):
+      notebook.owner = False
+
     if note_id:
       note = self.__database.load( Note, note_id, revision )
       if note and note.notebook_id != notebook_id:
@@ -811,8 +814,8 @@ class Notebooks( object ):
     self.__database.save( notebook, commit = False )
 
     # record the fact that the user has access to their new notebook
-    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True ), commit = False )
-    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
 
     if commit:
       self.__database.commit()
@@ -842,7 +845,7 @@ class Notebooks( object ):
     @raise Validation_error: one of the arguments is invalid
     """
     user = self.__database.load( User, user_id )
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
       raise Access_error()
 
     notebook = self.__database.load( Notebook, notebook_id )
@@ -892,7 +895,7 @@ class Notebooks( object ):
 
     user = self.__database.load( User, user_id )
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
       raise Access_error()
 
     notebook = self.__database.load( Notebook, notebook_id )
@@ -942,7 +945,7 @@ class Notebooks( object ):
 
     user = self.__database.load( User, user_id )
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
       raise Access_error()
 
     notebook = self.__database.load( Notebook, notebook_id )
@@ -982,7 +985,7 @@ class Notebooks( object ):
     if user_id is None:
       raise Access_error()
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
       raise Access_error()
 
     notebook = self.__database.load( Notebook, notebook_id )

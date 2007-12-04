@@ -59,8 +59,8 @@ class Test_users( Test_controller ):
 
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user, commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True ), commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True ), commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True, owner = True ), commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True, owner = True ), commit = False )
 
     self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2 )
     self.database.save( self.user2, commit = False )
@@ -131,6 +131,7 @@ class Test_users( Test_controller ):
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
     assert notebook.read_write == True
+    assert notebook.owner == True
 
     notebook = notebooks[ 1 ]
     assert notebook.object_id == notebooks[ 0 ].trash_id
@@ -138,6 +139,7 @@ class Test_users( Test_controller ):
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
     assert notebook.read_write == True
+    assert notebook.owner == True
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -145,6 +147,7 @@ class Test_users( Test_controller ):
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
     assert notebook.read_write == False
+    assert notebook.owner == False
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
@@ -191,6 +194,7 @@ class Test_users( Test_controller ):
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
     assert notebook.read_write == True
+    assert notebook.owner == True
 
     notebook = notebooks[ 1 ]
     assert notebook.object_id == notebooks[ 0 ].trash_id
@@ -198,6 +202,7 @@ class Test_users( Test_controller ):
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
     assert notebook.read_write == True
+    assert notebook.owner == True
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -205,6 +210,7 @@ class Test_users( Test_controller ):
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
     assert notebook.read_write == False
+    assert notebook.owner == False
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
@@ -283,10 +289,13 @@ class Test_users( Test_controller ):
     assert len( result[ u"notebooks" ] ) == 3
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].owner == True
     assert result[ u"notebooks" ][ 1 ].object_id == self.notebooks[ 1 ].object_id
     assert result[ u"notebooks" ][ 1 ].read_write == True
+    assert result[ u"notebooks" ][ 1 ].owner == True
     assert result[ u"notebooks" ][ 2 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 2 ].read_write == False
+    assert result[ u"notebooks" ][ 2 ].owner == False
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
 
@@ -303,6 +312,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 0 ].owner == False
 
     login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
     assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
@@ -338,6 +348,46 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert self.user.storage_bytes == 0
     assert self.user.revision == original_revision
+
+  def test_check_access( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id )
+
+    assert access is True
+
+  def test_check_access_read_write( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert access is True
+
+  def test_check_access_owner( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert access is True
+
+  def test_check_access_full( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert access is True
+
+  def test_check_access_anon( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id )
+
+    assert access is True
+
+  def test_check_access_anon_read_write( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, read_write = True )
+
+    assert access is False
+
+  def test_check_access_anon_owner( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, owner = True )
+
+    assert access is False
+
+  def test_check_access_anon_full( self ):
+    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, read_write = True, owner = True )
+
+    assert access is False
 
   def test_send_reset( self ):
     # trick send_reset() into using a fake SMTP server
@@ -392,6 +442,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 0 ].owner == False
 
     login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
     assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
