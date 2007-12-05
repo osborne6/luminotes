@@ -1484,7 +1484,7 @@ Wiki.prototype.start_notebook_rename = function () {
   notebook_name_field = createDOM(
     "input", {
       "type": "text",
-      "value": unescape( notebook_name ),
+      "value": notebook_name,
       "id": "notebook_name_field",
       "name": "notebook_name_field",
       "size": "30",
