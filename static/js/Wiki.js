@@ -1477,10 +1477,14 @@ Wiki.prototype.start_notebook_rename = function () {
     return; 
   }
 
+  var div = createDOM( "div" );
+  div.innerHTML = this.notebook.name;
+  var notebook_name = scrapeText( div );
+
   notebook_name_field = createDOM(
     "input", {
       "type": "text",
-      "value": this.notebook.name,
+      "value": unescape( notebook_name ),
       "id": "notebook_name_field",
       "name": "notebook_name_field",
       "size": "30",
