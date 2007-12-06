@@ -10,7 +10,7 @@ class Notebook( Persistent ):
   """
 
   WHITESPACE_PATTERN = re.compile( r"\s+" )
-  SEARCH_OPERATORS = re.compile( r"[&|!()]" )
+  SEARCH_OPERATORS = re.compile( r"[&|!()'\\:]" )
 
   def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True ):
     """
