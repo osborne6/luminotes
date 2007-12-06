@@ -853,6 +853,60 @@ class Test_users( Test_controller ):
       assert self.notebooks[ 0 ].name in message
       assert self.INVITE_LINK_PATTERN.search( message )
 
+  def test_send_invites_similar( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    # first send an invite with read_write and owner set to False
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id1 = matches.group( 2 )
+    assert invite_id1
+
+    # then send a similar invite to the same email address with read_write and owner set to True
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = True,
+      owner = True,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id2 = matches.group( 2 )
+    assert invite_id2
+
+    # assert that both invites have the read_write / owner flags set to True now
+    invite1_list = self.database.objects.get( invite_id1 )
+    assert invite1_list
+    assert len( invite1_list ) >= 2
+    invite1 = invite1_list[ -1 ]
+    assert invite1
+    assert invite1.read_write is True
+    assert invite1.owner is True
+
+    invite2_list = self.database.objects.get( invite_id2 )
+    assert invite2_list
+    assert len( invite2_list ) >= 1
+    invite2 = invite2_list[ -1 ]
+    assert invite2
+    assert invite2.read_write is True
+    assert invite2.owner is True
+
   def test_send_invites_with_generic_from_address( self ):
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp

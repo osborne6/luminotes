@@ -717,7 +717,14 @@ class Users( object ):
       # record the sending of this invite email
       invite_id = self.__database.next_id( Invite, commit = False )
       invite = Invite.create( invite_id, user_id, notebook_id, email_address, read_write, owner )
-      self.__database.save( invite )
+      self.__database.save( invite, commit = False )
+
+      # update any unredeemed invitations for this notebook already sent to the same email address
+      similar_invites = self.__database.select_many( Invite, invite.sql_load_similar() )
+      for similar in similar_invites:
+        similar.read_write = read_write
+        similar.owner = owner
+        self.__database.save( similar, commit = False )
 
       # create an email message with a unique invitation link
       notebook_name = notebook.name.strip().replace( "\n", " " ).replace( "\r", " " )
@@ -738,6 +745,8 @@ class Users( object ):
       server.connect()
       server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
       server.quit()
+
+    self.__database.commit()
 
     if email_count == 1:
       return dict( message = u"An invitation has been sent." )

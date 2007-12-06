@@ -90,6 +90,22 @@ class Invite( Persistent ):
       quote( self.__email_address ), quote( self.__read_write and "t" or "f" ), quote( self.__owner and "t" or "f" ),
       quote( self.__redeemed_user_id ) )
 
+  def sql_load_similar( self ):
+    # select unredeemed invitations with the same from_user_id, notebook_id, and email_address as this invitation
+    return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
+           "where from_user_id = %s and notebook_id = %s and email_address = %s and id != %s and redeemed_user_id is null;" % \
+           ( quote( self.__from_user_id ), quote( self.__notebook_id ), quote( self.__email_address ), quote( self.object_id ) )
+
+  def __set_read_write( self, read_write ):
+    if read_write != self.__read_write:
+      self.update_revision()
+      self.__read_write = read_write
+
+  def __set_owner( self, owner ):
+    if owner != self.__owner:
+      self.update_revision()
+      self.__owner = owner
+
   def __set_redeemed_user_id( self, redeemed_user_id ):
     if redeemed_user_id != self.__redeemed_user_id:
       self.update_revision()
@@ -98,6 +114,6 @@ class Invite( Persistent ):
   from_user_id = property( lambda self: self.__from_user_id )
   notebook_id = property( lambda self: self.__notebook_id )
   email_address = property( lambda self: self.__email_address )
-  read_write = property( lambda self: self.__read_write )
-  owner = property( lambda self: self.__owner )
+  read_write = property( lambda self: self.__read_write, __set_read_write )
+  owner = property( lambda self: self.__owner, __set_owner )
   redeemed_user_id = property( lambda self: self.__redeemed_user_id, __set_redeemed_user_id )
