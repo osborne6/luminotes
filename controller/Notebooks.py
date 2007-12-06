@@ -18,7 +18,7 @@ from view.Html_file import Html_file
 class Access_error( Exception ):
   def __init__( self, message = None ):
     if message is None:
-      message = u"Sorry, you don't have access to do that. Please make sure you're logged in first."
+      message = u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user."
 
     Exception.__init__( self, message )
     self.__message = message

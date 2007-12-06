@@ -9,6 +9,8 @@ create table invite (
   redeemed_user_id text
 );
 alter table invite add primary key ( id );
+create index invite_notebook_id_index on invite ( notebook_id );
+create index invite_email_address_index on invite ( email_address );
 alter table user_notebook add column owner boolean default false;
 update user_notebook set owner = 't' where read_write = 't';
 alter table notebook add column user_id text;

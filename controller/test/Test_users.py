@@ -16,6 +16,7 @@ from controller.Users import Access_error
 
 class Test_users( Test_controller ):
   RESET_LINK_PATTERN = re.compile( "(https?://\S+)?/r/(\S+)" )
+  INVITE_LINK_PATTERN = re.compile( "(https?://\S+)?/i/(\S+)" )
 
   def setUp( self ):
     Test_controller.setUp( self )
@@ -33,6 +34,7 @@ class Test_users( Test_controller ):
     self.user2 = None
     self.anonymous = None
     self.notebooks = None
+    self.session_id = None
 
     self.make_users()
 
@@ -751,3 +753,344 @@ class Test_users( Test_controller ):
     assert user.check_password( new_password )
     user2 = self.database.load( User, self.user2.object_id )
     assert user2.check_password( new_password2 )
+
+  def test_send_invites( self ):
+    # trick send_invites() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert u"An invitation has been sent." in result[ u"message" ]
+    assert smtplib.SMTP.connected == False
+    assert len( smtplib.SMTP.emails ) == 1
+
+    ( from_address, to_addresses, message ) = smtplib.SMTP.emails[ 0 ]
+    assert self.email_address in from_address
+    assert to_addresses == email_addresses_list
+    assert self.notebooks[ 0 ].name in message
+    assert self.INVITE_LINK_PATTERN.search( message )
+
+  def test_send_invites_multiple( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com", u"bar@example.com", u"baz@example.com" ]
+    email_addresses = u"Bob <%s>,%s\n %s  " % \
+      ( email_addresses_list[ 0 ], email_addresses_list[ 1 ], email_addresses_list[ 2 ] )
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    email_count = len( email_addresses_list )
+    assert u"%s invitations have been sent." % email_count in result[ u"message" ]
+    assert smtplib.SMTP.connected == False
+    assert len( smtplib.SMTP.emails ) == email_count
+
+    for ( from_address, to_addresses, message ) in smtplib.SMTP.emails:
+      assert self.email_address in from_address
+      assert len( to_addresses ) == 1
+      assert to_addresses[ 0 ] in email_addresses_list
+      email_addresses_list.remove( to_addresses[ 0 ] )
+      assert self.notebooks[ 0 ].name in message
+      assert self.INVITE_LINK_PATTERN.search( message )
+
+  def test_send_invites_duplicate( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com", u"bar@example.com", u"foo@example.com" ]
+    email_addresses = u" %s N.E. One <%s>,\n%s" % \
+      ( email_addresses_list[ 0 ], email_addresses_list[ 1 ], email_addresses_list[ 2 ] )
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    email_count = len( email_addresses_list ) - 1 # -1 because of the duplicate
+    assert u"%s invitations have been sent." % email_count in result[ u"message" ]
+    assert smtplib.SMTP.connected == False
+    assert len( smtplib.SMTP.emails ) == email_count
+
+    for ( from_address, to_addresses, message ) in smtplib.SMTP.emails:
+      assert self.email_address in from_address
+      assert len( to_addresses ) == 1
+      assert to_addresses[ 0 ] in email_addresses_list
+      email_addresses_list.remove( to_addresses[ 0 ] )
+      assert self.notebooks[ 0 ].name in message
+      assert self.INVITE_LINK_PATTERN.search( message )
+
+  def test_send_invites_with_generic_from_address( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.user._User__email_address = None
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert u"An invitation has been sent." in result[ u"message" ]
+    assert smtplib.SMTP.connected == False
+    assert len( smtplib.SMTP.emails ) == 1
+
+    ( from_address, to_addresses, message ) = smtplib.SMTP.emails[ 0 ]
+    assert self.settings[ u"global" ][ u"luminotes.support_email" ] in from_address
+    assert to_addresses == email_addresses_list
+    assert self.notebooks[ 0 ].name in message
+    assert self.INVITE_LINK_PATTERN.search( message )
+
+  def test_send_invites_without_login( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_send_invites_too_short( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+
+  def test_send_invites_too_long( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"x" * 5001 ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+
+  def test_send_invites_no_addresses( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"this is not an @email address!" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+
+  def test_send_invites_without_any_access( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.database.user_notebook = {}
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_send_invites_without_read_write_access( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.database.user_notebook = {}
+    self.database.execute( self.user.sql_save_notebook( self.notebooks[ 0 ].object_id, read_write = False, owner = True ) )
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_send_invites_without_owner_access( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.database.user_notebook = {}
+    self.database.execute( self.user.sql_save_notebook( self.notebooks[ 0 ].object_id, read_write = True, owner = False ) )
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_send_invites_without_sufficient_rate_plan( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_send_invites_with_unknown_notebook( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+    unknown_notebook_id = u"neverheardofit"
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = unknown_notebook_id,
+      email_addresses = email_addresses,
+      read_write = False,
+      owner = False,
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def login( self ):
+    result = self.http_post( "/users/login", dict(
+      username = self.username,
+      password = self.password,
+      login_button = u"login",
+    ) )
+    self.session_id = result[ u"session_id" ]

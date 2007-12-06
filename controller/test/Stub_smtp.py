@@ -6,6 +6,7 @@ class Stub_smtp( object ):
   from_address = None
   to_addresses = None
   message = None
+  emails = []
 
   def connect( self ):
     Stub_smtp.connected = True
@@ -17,6 +18,7 @@ class Stub_smtp( object ):
     Stub_smtp.from_address = from_address
     Stub_smtp.to_addresses = to_addresses
     Stub_smtp.message = message
+    Stub_smtp.emails.append( ( from_address, to_addresses, message ) )
 
   def quit( self ):
     Stub_smtp.connected = False
@@ -27,3 +29,4 @@ class Stub_smtp( object ):
     Stub_smtp.from_address = None
     Stub_smtp.to_addresses = None
     Stub_smtp.message = None
+    Stub_smtp.emails = []

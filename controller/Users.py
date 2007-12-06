@@ -6,6 +6,7 @@ from model.User import User
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
+from model.Invite import Invite
 from Expose import expose
 from Validate import validate, Valid_string, Valid_bool, Validation_error
 from Database import Valid_id
@@ -17,6 +18,8 @@ from view.Redeem_reset_note import Redeem_reset_note
 
 USERNAME_PATTERN = re.compile( "^[a-zA-Z0-9]+$" )
 EMAIL_ADDRESS_PATTERN = re.compile( "^[\w.+]+@\w+(\.\w+)+$" )
+EMBEDDED_EMAIL_ADDRESS_PATTERN = re.compile( "(?:^|[\s,<])([\w.+]+@\w+(?:\.\w+)+)(?:[\s,>]|$)" )
+WHITESPACE_OR_COMMA_PATTERN = re.compile( "[\s,]" )
 
 
 def valid_username( username ):
@@ -68,8 +71,22 @@ class Password_reset_error( Exception ):
     )
 
 
-class Access_error( Exception ):
+class Invite_error( Exception ):
   def __init__( self, message ):
+    Exception.__init__( self, message )
+    self.__message = message
+
+  def to_dict( self ):
+    return dict(
+      error = self.__message
+    )
+
+
+class Access_error( Exception ):
+  def __init__( self, message = None ):
+    if message is None:
+      message = u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user."
+
     Exception.__init__( self, message )
     self.__message = message
 
@@ -372,7 +389,7 @@ class Users( object ):
       user = anonymous
 
     if not user or not anonymous:
-      raise Access_error( u"Sorry, you don't have access to do that. Please make sure you're logged in first." )
+      raise Access_error()
 
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None
@@ -465,6 +482,7 @@ class Users( object ):
   def send_reset( self, email_address, send_reset_button ):
     """
     Send a password reset email to the given email address.
+
     @type email_address: unicode
     @param email_address: an existing user's email address
     @type send_reset_button: unicode
@@ -474,8 +492,6 @@ class Users( object ):
     @raise Password_reset_error: an error occured when sending the password reset email
     @raise Validation_error: one of the arguments is invalid
     """
-    import sha
-    import random
     import smtplib
     from email import Message
 
@@ -523,6 +539,7 @@ class Users( object ):
     """
     Provide the information necessary to display the web site's main page along with a dynamically
     generated "complete your password reset" note.
+
     @type password_reset_id: unicode
     @param password_reset_id: id of model.Password_reset to redeem
     @rtype: unicode
@@ -568,6 +585,7 @@ class Users( object ):
   def reset_password( self, password_reset_id, reset_button, **new_passwords ):
     """
     Reset all the users with the provided passwords.
+
     @type password_reset_id: unicode
     @param password_reset_id: id of model.Password_reset to use
     @type reset_button: unicode
@@ -633,62 +651,95 @@ class Users( object ):
     return dict( redirect = u"/" )
 
   @expose( view = Json )
+  @grab_user_id
   @validate(
     notebook_id = Valid_id(),
-    email_address = ( Valid_string( min = 1, max = 60 ), valid_email_address ),
+    email_addresses = unicode,
     read_write = Valid_bool(),
     owner = Valid_bool(),
     invite_button = unicode,
+    user_id = Valid_id( none_okay = True ),
   )
-  def send_invite( self, notebook_id, email_address, read_write, owner, invite_button ):
+  def send_invites( self, notebook_id, email_addresses, read_write, owner, invite_button, user_id = None ):
     """
-    Send a notebook invitation to the given email address.
+    Send notebook invitations to the given email addresses.
+
     @type notebook_id: unicode
     @param notebook_id: id of the notebook that the invitation is for
-    @type email_address: unicode
-    @param email_address: an email address where the invitation should be sent
+    @type email_addresses: unicode
+    @param email_addresses: a string containing whitespace- or comma-separated email addresses
     @type read_write: bool
     @param read_write: whether the invitation is for read-write access
     @type owner: bool
     @param owner: whether the invitation is for owner-level access
     @type invite_button: unicode
     @param invite_button: ignored
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
     @return: { 'message': message }
     @raise Password_reset_error: an error occured when sending the password reset email
     @raise Validation_error: one of the arguments is invalid
+    @raise Access_error: user_id doesn't have owner-level notebook access to send an invite
     """
-    import sha
-    import random
+    if len( email_addresses ) < 5:
+      raise Invite_error( u"Please enter at least one email valid address." )
+    if len( email_addresses ) > 5000:
+      raise Invite_error( u"Please enter fewer email addresses." )
+
+    if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
+      raise Access_error()
+
+    # this feature requires a rate plan above basic
+    user = self.__database.load( User, user_id )
+    if user is None or user.rate_plan == 0:
+      raise Access_error()
+
+    notebook = self.__database.load( Notebook, notebook_id )
+    if notebook is None:
+      raise Access_error()
+
+    # parse email_addresses string into individual email addresses
+    email_addresses_list = set()
+    for piece in WHITESPACE_OR_COMMA_PATTERN.split( email_addresses ):
+      for match in EMBEDDED_EMAIL_ADDRESS_PATTERN.finditer( piece ):
+        email_addresses_list.add( match.groups( 0 )[ 0 ] )
+
+    email_count = len( email_addresses_list )
+
+    if email_count == 0:
+      raise Invite_error( u"Please enter at least one valid email address." )
+
     import smtplib
     from email import Message
 
-    # record the sending of this reset email
-    password_reset_id = self.__database.next_id( Password_reset, commit = False )
-    password_reset = Password_reset.create( password_reset_id, email_address )
-    self.__database.save( password_reset )
+    for email_address in email_addresses_list:
+      # record the sending of this invite email
+      invite_id = self.__database.next_id( Invite, commit = False )
+      invite = Invite.create( invite_id, user_id, notebook_id, email_address, read_write, owner )
+      self.__database.save( invite )
 
-    # create an email message with a unique link
-    message = Message.Message()
-    message[ u"from" ] = u"Luminotes support <%s>" % self.__support_email
-    message[ u"to" ] = email_address
-    message[ u"subject" ] = u"Luminotes password reset"
-    message.set_payload(
-      u"Someone has requested a password reset for a Luminotes user with your email\n" +
-      u"address. If this someone is you, please visit the following link for a\n" +
-      u"username reminder or a password reset:\n\n" +
-      u"%s/r/%s\n\n" % ( self.__https_url or self.__http_url, password_reset.object_id ) +
-      u"This link will expire in 24 hours.\n\n" +
-      u"Thanks!"
-    )
+      # create an email message with a unique invitation link
+      notebook_name = notebook.name.strip().replace( "\n", " " ).replace( "\r", " " )
+      message = Message.Message()
+      message[ u"from" ] = user.email_address or u"Luminotes personal wiki <%s>" % self.__support_email
+      if not user.email_address:
+        message[ u"sender" ] = u"Luminotes personal wiki <%s>" % self.__support_email
+      message[ u"to" ] = email_address
+      message[ u"subject" ] = notebook_name
+      message.set_payload(
+        u"I've shared a wiki with you called \"%s\"\n" % notebook_name +
+        u"Please visit the following link to view it online:\n\n" +
+        u"%s/i/%s\n\n" % ( self.__https_url or self.__http_url, invite.object_id )
+      )
 
-    # send the message out through localhost's smtp server
-    server = smtplib.SMTP()
-    server.connect()
-    server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
-    server.quit()
+      # send the message out through localhost's smtp server
+      server = smtplib.SMTP()
+      server.connect()
+      server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
+      server.quit()
 
-    return dict(
-      message = u"Please check your inbox. A password reset email has been sent to %s" % email_address,
-    )
-
+    if email_count == 1:
+      return dict( message = u"An invitation has been sent." )
+    else:
+      return dict( message = u"%s invitations have been sent." % email_count )
