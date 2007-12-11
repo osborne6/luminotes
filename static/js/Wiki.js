@@ -1250,15 +1250,6 @@ Wiki.prototype.share_notebook = function () {
     return;
   }
 
-  if ( !this.rate_plan.notebook_sharing ) {
-    this.display_message(
-      "If you'd like to share your notebook, please ",
-      [ createDOM( "a", { "href": "/upgrade", "target": "_new" }, "upgrade" ),
-       " your account first." ]
-    );
-    return;
-  }
-
   var collaborators_link = createDOM( "a",
     { "href": "#", "id": "collaborators_link", "class": "radio_link", "title": "Collaborators may view and edit this notebook." },
     "collaborators"
@@ -1282,6 +1273,28 @@ Wiki.prototype.share_notebook = function () {
     { "type": "radio", "id": "owners_radio", "name": "access", "value": "owner" }
   )
 
+  if ( this.rate_plan.notebook_collaboration ) {
+    var access_area = createDOM( "p", { "id": "access_choices" },
+      createDOM( "p", {}, "Invite these people as:" ),
+      createDOM( "table" , { "id": "access_table" },
+        createDOM( "tr", {},
+          createDOM( "td", {}, collaborators_radio, collaborators_link ),
+          createDOM( "td", {}, viewers_radio, viewers_link ),
+          createDOM( "td", {}, owners_radio, owners_link )
+        )
+      )
+    );
+  } else {
+    var access_area = createDOM( "p", {},
+      createDOM( "b", {}, "Note: " ),
+      "These people will only be able to view your notebook. If you'd like them to be able to edit ",
+      "your notebook as well, please ",
+      createDOM( "a", { "href": "/upgrade", "target": "_new" }, "upgrade" ),
+      " your account.",
+      createDOM( "input", { "type": "hidden", "name": "access", "value": "viewer" } )
+    );
+  }
+
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "invite_form" },
       createDOM( "input", { "type": "hidden", "name": "notebook_id", "value": this.notebook_id } ),
@@ -1293,16 +1306,7 @@ Wiki.prototype.share_notebook = function () {
         )
       ),
       createDOM( "p", {}, "Please separate email addresses with commas, spaces, or the enter key." ),
-      createDOM( "p", {},
-        createDOM( "p", {}, "Invite these people as:" ),
-        createDOM( "table" , { "id": "access_table" },
-          createDOM( "tr", {},
-            createDOM( "td", {}, collaborators_radio, collaborators_link ),
-            createDOM( "td", {}, viewers_radio, viewers_link ),
-            createDOM( "td", {}, owners_radio, owners_link )
-          )
-        )
-      ),
+      access_area,
       createDOM( "p", {},
         createDOM( "input",
           { "type": "submit", "name": "invite_button", "id": "invite_button", "class": "button", "value": "send invites" }

@@ -1180,7 +1180,7 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
     assert "access" in result[ u"error" ]
 
-  def test_send_invites_without_sufficient_rate_plan( self ):
+  def test_send_invites_viewer_with_lowest_rate_plan( self ):
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp
     self.login()
@@ -1192,6 +1192,51 @@ class Test_users( Test_controller ):
       notebook_id = self.notebooks[ 0 ].object_id,
       email_addresses = email_addresses,
       access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert u"An invitation has been sent." in result[ u"message" ]
+    assert smtplib.SMTP.connected == False
+    assert len( smtplib.SMTP.emails ) == 1
+
+    ( from_address, to_addresses, message ) = smtplib.SMTP.emails[ 0 ]
+    assert self.email_address in from_address
+    assert to_addresses == email_addresses_list
+    assert self.notebooks[ 0 ].name in message
+    assert self.INVITE_LINK_PATTERN.search( message )
+
+  def test_send_invites_collaborator_with_lowest_rate_plan( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"collaborator",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_send_invites_owner_with_lowest_rate_plan( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"owner",
       invite_button = u"send invites",
     ), session_id = self.session_id )
     session_id = result[ u"session_id" ]

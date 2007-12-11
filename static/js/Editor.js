@@ -185,23 +185,25 @@ Editor.prototype.finish_init = function () {
 
     var invite_button = getElement( "invite_button" );
     if ( invite_button ) {
-      var collaborators_radio = getElement( "collaborators_radio" );
-      connect( "collaborators_link", "onclick", function ( event ) {
-        collaborators_radio.checked = true; 
-        event.stop();
-      } );
+      if ( getElement( "access_choices" ) ) {
+        var collaborators_radio = getElement( "collaborators_radio" );
+        connect( "collaborators_link", "onclick", function ( event ) {
+          collaborators_radio.checked = true; 
+          event.stop();
+        } );
 
-      var viewers_radio = getElement( "viewers_radio" );
-      connect( "viewers_link", "onclick", function ( event ) {
-        viewers_radio.checked = true; 
-        event.stop();
-      } );
+        var viewers_radio = getElement( "viewers_radio" );
+        connect( "viewers_link", "onclick", function ( event ) {
+          viewers_radio.checked = true; 
+          event.stop();
+        } );
 
-      var owners_radio = getElement( "owners_radio" );
-      connect( "owners_link", "onclick", function ( event ) {
-        owners_radio.checked = true; 
-        event.stop();
-      } );
+        var owners_radio = getElement( "owners_radio" );
+        connect( "owners_link", "onclick", function ( event ) {
+          owners_radio.checked = true; 
+          event.stop();
+        } );
+      }
 
       var invite_form = getElement( "invite_form" );
       connect( invite_button, "onclick", function ( event ) {

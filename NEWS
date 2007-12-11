@@ -1,4 +1,5 @@
-1.0.4: December ??, 2007
+1.1.0: December ??, 2007
+ * Ability to invite people to your notebook.
  * When the web browser is resized, all notes are automatically resized as well.
  * Fixed note focusing in Safari.
  * Fixed note state detection (bold, italic, etc.) in Safari.

@@ -668,7 +668,8 @@ class Users( object ):
     @type email_addresses: unicode
     @param email_addresses: a string containing whitespace- or comma-separated email addresses
     @type access: unicode
-    @param access: type of access to grant, either "collaborator", "viewer", or "owner"
+    @param access: type of access to grant, either "collaborator", "viewer", or "owner". with
+                   certain rate plans, only "viewer" is allowed
     @type invite_button: unicode
     @param invite_button: ignored
     @type user_id: unicode
@@ -677,12 +678,21 @@ class Users( object ):
     @return: { 'message': message }
     @raise Password_reset_error: an error occured when sending the password reset email
     @raise Validation_error: one of the arguments is invalid
-    @raise Access_error: user_id doesn't have owner-level notebook access to send an invite
+    @raise Access_error: user_id doesn't have owner-level notebook access to send an invite or
+                         doesn't have a rate plan supporting notebook collaboration
     """
     if len( email_addresses ) < 5:
       raise Invite_error( u"Please enter at least one valid email address." )
     if len( email_addresses ) > 5000:
       raise Invite_error( u"Please enter fewer email addresses." )
+
+    if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
+      raise Access_error()
+
+    # this feature requires a rate plan above basic
+    user = self.__database.load( User, user_id )
+    if user is None or ( user.rate_plan == 0 and access != u"viewer" ):
+      raise Access_error()
 
     if access == u"collaborator":
       read_write = True
@@ -694,14 +704,6 @@ class Users( object ):
       read_write = True
       owner = True
     else:
-      raise Access_error()
-
-    if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
-      raise Access_error()
-
-    # this feature requires a rate plan above basic
-    user = self.__database.load( User, user_id )
-    if user is None or user.rate_plan == 0:
       raise Access_error()
 
     notebook = self.__database.load( Notebook, notebook_id )

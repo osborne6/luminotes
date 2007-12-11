@@ -27,22 +27,22 @@ settings = {
       {
         "name": "free",
         "storage_quota_bytes": 30 * MEGABYTE,
-        "notebook_sharing": False,
+        "notebook_collaboration": False,
       },
       {
         "name": "basic",
         "storage_quota_bytes": 250 * MEGABYTE,
-        "notebook_sharing": True,
+        "notebook_collaboration": True,
       },
       {
         "name": "standard",
         "storage_quota_bytes": 500 * MEGABYTE,
-        "notebook_sharing": True,
+        "notebook_collaboration": True,
       },
       {
         "name": "premium",
         "storage_quota_bytes": 1000 * MEGABYTE,
-        "notebook_sharing": True,
+        "notebook_collaboration": True,
       },
     ],
   },
