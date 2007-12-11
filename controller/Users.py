@@ -17,8 +17,8 @@ from view.Redeem_reset_note import Redeem_reset_note
 
 
 USERNAME_PATTERN = re.compile( "^[a-zA-Z0-9]+$" )
-EMAIL_ADDRESS_PATTERN = re.compile( "^[\w.+]+@\w+(\.\w+)+$" )
-EMBEDDED_EMAIL_ADDRESS_PATTERN = re.compile( "(?:^|[\s,<])([\w.+]+@\w+(?:\.\w+)+)(?:[\s,>]|$)" )
+EMAIL_ADDRESS_PATTERN = re.compile( "^[\w.%+-]+@[\w-]+(\.[\w-]+)+$" )
+EMBEDDED_EMAIL_ADDRESS_PATTERN = re.compile( "(?:^|[\s,<])([\w.%+-]+@[\w-]+(?:\.[\w-]+)+)(?:[\s,>]|$)" )
 WHITESPACE_OR_COMMA_PATTERN = re.compile( "[\s,]" )
 
 
@@ -508,9 +508,9 @@ class Users( object ):
 
     # create an email message with a unique link
     message = Message.Message()
-    message[ u"from" ] = u"Luminotes support <%s>" % self.__support_email
-    message[ u"to" ] = email_address
-    message[ u"subject" ] = u"Luminotes password reset"
+    message[ u"From" ] = u"Luminotes support <%s>" % self.__support_email
+    message[ u"To" ] = email_address
+    message[ u"Subject" ] = u"Luminotes password reset"
     message.set_payload(
       u"Someone has requested a password reset for a Luminotes user with your email\n" +
       u"address. If this someone is you, please visit the following link for a\n" +
@@ -523,7 +523,7 @@ class Users( object ):
     # send the message out through localhost's smtp server
     server = smtplib.SMTP()
     server.connect()
-    server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
+    server.sendmail( message[ u"From" ], [ email_address ], message.as_string() )
     server.quit()
 
     return dict(
@@ -655,12 +655,11 @@ class Users( object ):
   @validate(
     notebook_id = Valid_id(),
     email_addresses = unicode,
-    read_write = Valid_bool(),
-    owner = Valid_bool(),
+    access = Valid_string(),
     invite_button = unicode,
     user_id = Valid_id( none_okay = True ),
   )
-  def send_invites( self, notebook_id, email_addresses, read_write, owner, invite_button, user_id = None ):
+  def send_invites( self, notebook_id, email_addresses, access, invite_button, user_id = None ):
     """
     Send notebook invitations to the given email addresses.
 
@@ -668,10 +667,8 @@ class Users( object ):
     @param notebook_id: id of the notebook that the invitation is for
     @type email_addresses: unicode
     @param email_addresses: a string containing whitespace- or comma-separated email addresses
-    @type read_write: bool
-    @param read_write: whether the invitation is for read-write access
-    @type owner: bool
-    @param owner: whether the invitation is for owner-level access
+    @type access: unicode
+    @param access: type of access to grant, either "collaborator", "viewer", or "owner"
     @type invite_button: unicode
     @param invite_button: ignored
     @type user_id: unicode
@@ -683,9 +680,21 @@ class Users( object ):
     @raise Access_error: user_id doesn't have owner-level notebook access to send an invite
     """
     if len( email_addresses ) < 5:
-      raise Invite_error( u"Please enter at least one email valid address." )
+      raise Invite_error( u"Please enter at least one valid email address." )
     if len( email_addresses ) > 5000:
       raise Invite_error( u"Please enter fewer email addresses." )
+
+    if access == u"collaborator":
+      read_write = True
+      owner = False
+    elif access == u"viewer":
+      read_write = False
+      owner = False
+    elif access == u"owner":
+      read_write = True
+      owner = True
+    else:
+      raise Access_error()
 
     if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
       raise Access_error()
@@ -729,11 +738,11 @@ class Users( object ):
       # create an email message with a unique invitation link
       notebook_name = notebook.name.strip().replace( "\n", " " ).replace( "\r", " " )
       message = Message.Message()
-      message[ u"from" ] = user.email_address or u"Luminotes personal wiki <%s>" % self.__support_email
-      if not user.email_address:
-        message[ u"sender" ] = u"Luminotes personal wiki <%s>" % self.__support_email
-      message[ u"to" ] = email_address
-      message[ u"subject" ] = notebook_name
+      message[ u"From" ] = user.email_address or u"Luminotes personal wiki <%s>" % self.__support_email
+      if user.email_address:
+        message[ u"Sender" ] = u"Luminotes personal wiki <%s>" % self.__support_email
+      message[ u"To" ] = email_address
+      message[ u"Subject" ] = notebook_name
       message.set_payload(
         u"I've shared a wiki with you called \"%s\"\n" % notebook_name +
         u"Please visit the following link to view it online:\n\n" +
@@ -743,7 +752,7 @@ class Users( object ):
       # send the message out through localhost's smtp server
       server = smtplib.SMTP()
       server.connect()
-      server.sendmail( message[ u"from" ], [ email_address ], message.as_string() )
+      server.sendmail( message[ u"From" ], [ email_address ], message.as_string() )
       server.quit()
 
     self.__database.commit()

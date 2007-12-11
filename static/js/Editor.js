@@ -136,48 +136,79 @@ Editor.prototype.finish_init = function () {
   if ( this.read_write ) {
     connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
     connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
-    connect( this.document, "onblur", function ( event ) { self.blurred( event ); } );
-    connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
-    connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
-    connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
-    connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
-    connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
   }
+  connect( this.document, "onblur", function ( event ) { self.blurred( event ); } );
+  connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
+  connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
+  connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
+  connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
+  connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
 
-  connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+  // special case: don't handle mouse click for share_notebook magic note, so radio button links
+  // work as intended
+  if ( this.id != "share_notebook" )
+    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
 
   // special-case: connect any submit buttons within the contents of this note
-  var signup_button = withDocument( this.document, function () { return getElement( "signup_button" ); } );
-  if ( signup_button ) {
-    var signup_form = withDocument( this.document, function () { return getElement( "signup_form" ); } );
-    connect( signup_button, "onclick", function ( event ) {
-      signal( self, "submit_form", "/users/signup", signup_form ); event.stop();
-    } );
-  }
+  withDocument( this.document, function () {
+    var signup_button = getElement( "signup_button" );
+    if ( signup_button ) {
+      var signup_form = getElement( "signup_form" );
+      connect( signup_button, "onclick", function ( event ) {
+        signal( self, "submit_form", "/users/signup", signup_form ); event.stop();
+      } );
+    }
 
-  var login_button = withDocument( this.document, function () { return getElement( "login_button" ); } );
-  if ( login_button ) {
-    var login_form = withDocument( this.document, function () { return getElement( "login_form" ); } );
-    connect( login_button, "onclick", function ( event ) {
-      signal( self, "submit_form", "/users/login", login_form ); event.stop();
-    } );
-  }
+    var login_button = getElement( "login_button" );
+    if ( login_button ) {
+      var login_form = getElement( "login_form" );
+      connect( login_button, "onclick", function ( event ) {
+        signal( self, "submit_form", "/users/login", login_form ); event.stop();
+      } );
+    }
 
-  var send_reset_button = withDocument( this.document, function () { return getElement( "send_reset_button" ); } );
-  if ( send_reset_button ) {
-    var send_reset_form = withDocument( this.document, function () { return getElement( "send_reset_form" ); } );
-    connect( send_reset_button, "onclick", function ( event ) {
-      signal( self, "submit_form", "/users/send_reset", send_reset_form ); event.stop();
-    } );
-  }
+    var send_reset_button = getElement( "send_reset_button" );
+    if ( send_reset_button ) {
+      var send_reset_form = getElement( "send_reset_form" );
+      connect( send_reset_button, "onclick", function ( event ) {
+        signal( self, "submit_form", "/users/send_reset", send_reset_form ); event.stop();
+      } );
+    }
 
-  var reset_button = withDocument( this.document, function () { return getElement( "reset_button" ); } );
-  if ( reset_button ) {
-    var reset_form = withDocument( this.document, function () { return getElement( "reset_form" ); } );
-    connect( reset_button, "onclick", function ( event ) {
-      signal( self, "submit_form", "/users/reset_password", reset_form ); event.stop();
-    } );
-  }
+    var reset_button = getElement( "reset_button" );
+    if ( reset_button ) {
+      var reset_form = getElement( "reset_form" );
+      connect( reset_button, "onclick", function ( event ) {
+        signal( self, "submit_form", "/users/reset_password", reset_form ); event.stop();
+      } );
+    }
+
+    var invite_button = getElement( "invite_button" );
+    if ( invite_button ) {
+      var collaborators_radio = getElement( "collaborators_radio" );
+      connect( "collaborators_link", "onclick", function ( event ) {
+        collaborators_radio.checked = true; 
+        event.stop();
+      } );
+
+      var viewers_radio = getElement( "viewers_radio" );
+      connect( "viewers_link", "onclick", function ( event ) {
+        viewers_radio.checked = true; 
+        event.stop();
+      } );
+
+      var owners_radio = getElement( "owners_radio" );
+      connect( "owners_link", "onclick", function ( event ) {
+        owners_radio.checked = true; 
+        event.stop();
+      } );
+
+      var invite_form = getElement( "invite_form" );
+      connect( invite_button, "onclick", function ( event ) {
+        signal( self, "submit_form", "/users/send_invites", invite_form ); event.stop();
+      } );
+    }
+  } );
 
   // browsers such as Firefox, but not Opera
   if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.read_write )

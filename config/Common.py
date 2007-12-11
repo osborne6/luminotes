@@ -25,16 +25,24 @@ settings = {
     "luminotes.support_email": "",
     "luminotes.rate_plans": [
       {
-        "name": "basic",
+        "name": "free",
         "storage_quota_bytes": 30 * MEGABYTE,
+        "notebook_sharing": False,
+      },
+      {
+        "name": "basic",
+        "storage_quota_bytes": 250 * MEGABYTE,
+        "notebook_sharing": True,
       },
       {
         "name": "standard",
-        "storage_quota_bytes": 100 * MEGABYTE,
+        "storage_quota_bytes": 500 * MEGABYTE,
+        "notebook_sharing": True,
       },
       {
-        "name": "professional",
-        "storage_quota_bytes": 300 * MEGABYTE,
+        "name": "premium",
+        "storage_quota_bytes": 1000 * MEGABYTE,
+        "notebook_sharing": True,
       },
     ],
   },

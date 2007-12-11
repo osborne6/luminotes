@@ -79,6 +79,13 @@ h3 {
   border: #999999 1px solid;
 }
 
+.textarea_field {
+  margin-top: 0.25em;
+  padding: 0.25em;
+  border: #999999 1px solid;
+  overflow: auto;
+}
+
 ul {
   list-style-type: disc;
 }
@@ -98,4 +105,50 @@ ol li {
 .small_text {
   padding-top: 0.5em;
   font-size: 90%;
+}
+
+.radio_link {
+  color: #000000;
+  text-decoration: none;
+}
+
+.radio_link:hover {
+  color: #ff6600;
+  text-decoration: none;
+}
+
+#access_table td {
+  padding-right: 1em;
+}
+
+#upgrade_table {
+  border-collapse: collapse;
+  border: 1px solid #999999;
+}
+
+#upgrade_table .plan_name {
+  width: 16%;
+  text-align: center;
+  background-color: #d0e0f0;
+}
+
+#upgrade_table .feature_name {
+  width: 36%;
+  text-align: left;
+  background-color: #fafafa;
+}
+
+#upgrade_table .price_text {
+  color: #ff6600;
+}
+
+#upgrade_table .month_text {
+  padding-top: 0.5em;
+  font-size: 75%;
+}
+
+#upgrade_table td {
+  text-align: center;
+  background-color: #fafafa;
+  padding: 0.5em;
 }

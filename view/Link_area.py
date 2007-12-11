@@ -45,7 +45,7 @@ class Link_area( Div ):
         ) or None,
 
         notebook.read_write and Span(
-          ( notebook.name != u"trash" ) and Div(
+          ( notebook.owner and notebook.name != u"trash" ) and Div(
             A(
               u"rename notebook",
               href = u"#",
@@ -55,7 +55,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          ( notebook.name != u"trash" ) and Div(
+          ( notebook.owner and notebook.name != u"trash" ) and Div(
             A(
               u"delete notebook",
               href = u"#",
@@ -74,6 +74,16 @@ class Link_area( Div ):
             ),
             class_ = u"link_area_item",
           ),
+
+          ( notebook.owner ) and Div(
+            A(
+              u"share",
+              href = u"#",
+              id = u"share_notebook_link",
+              title = u"Share this notebook with others.",
+            ),
+            class_ = u"link_area_item",
+          ) or None,
 
           notebook.trash_id and Div(
             A(

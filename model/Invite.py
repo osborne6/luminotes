@@ -86,9 +86,9 @@ class Invite( Persistent ):
 
   def sql_update( self ):
     return "update invite set revision = %s, from_user_id = %s, notebook_id = %s, email_address = %s, read_write = %s, owner = %s, redeemed_user_id = %s where id = %s;" % \
-    ( quote( self.object_id ), quote( self.revision ), quote( self.__from_user_id ), quote( self.__notebook_id ),
+    ( quote( self.revision ), quote( self.__from_user_id ), quote( self.__notebook_id ),
       quote( self.__email_address ), quote( self.__read_write and "t" or "f" ), quote( self.__owner and "t" or "f" ),
-      quote( self.__redeemed_user_id ) )
+      quote( self.__redeemed_user_id ), quote( self.object_id ) )
 
   def sql_load_similar( self ):
     # select unredeemed invitations with the same from_user_id, notebook_id, and email_address as this invitation

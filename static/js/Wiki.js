@@ -146,8 +146,8 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
 Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_write, skip_empty_message ) {
   var self = this;
 
-  // if this is the trash, display a list of all deleted notebooks
-  if ( this.notebook.name == "trash" ) {
+  // if this is the trash and the user has owner-level access, then display a list of all deleted notebooks
+  if ( this.notebook.owner && this.notebook.name == "trash" ) {
     var heading_shown = false;
     var deleted_notebooks = getElement( "deleted_notebooks" );
 
@@ -312,6 +312,14 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       event.stop();
     } );
   }
+
+  var share_notebook_link = getElement( "share_notebook_link" );
+  if ( share_notebook_link ) {
+    connect( share_notebook_link, "onclick", function ( event ) {
+      self.load_editor( "share this notebook", "null", null, null, getElement( "notes_top" ) );
+      event.stop();
+    } );
+  }
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -413,6 +421,16 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, pos
       this.display_search_results();
       return;
     }
+    if ( note_title == "share this notebook" ) {
+      var editor = this.open_editors[ note_title ];
+      if ( editor ) {
+        editor.highlight();
+        return;
+      }
+
+      this.share_notebook();
+      return;
+    }
 
     // but if the note corresponding to the link's title is already open, highlight it and bail
     if ( !revision ) {
@@ -457,7 +475,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   if ( link && link.target )
     link.removeAttribute( "target" );
 
-  if ( note_title == "all notes" || note_title == "search results" ) {
+  if ( note_title == "all notes" || note_title == "search results" || note_title == "share this notebook" ) {
     link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
       [ "title", "note_id" ],
       [ note_title, "null" ]
@@ -465,8 +483,10 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
     if ( callback ) {
       if ( note_title == "all notes" )
         callback( "list of all notes in this notebook" );
-      else
+      if ( note_title == "search results" )
         callback( "current search results" );
+      else
+        callback( "share this notebook with others" );
     }
     return;
   }
@@ -1220,6 +1240,80 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
   this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list_holder.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
 }
 
+Wiki.prototype.share_notebook = function () {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  var share_notebook_frame = getElement( "note_share_notebook" );
+  if ( share_notebook_frame ) {
+    share_notebook_frame.editor.highlight();
+    return;
+  }
+
+  if ( !this.rate_plan.notebook_sharing ) {
+    this.display_message(
+      "If you'd like to share your notebook, please ",
+      [ createDOM( "a", { "href": "/upgrade", "target": "_new" }, "upgrade" ),
+       " your account first." ]
+    );
+    return;
+  }
+
+  var collaborators_link = createDOM( "a",
+    { "href": "#", "id": "collaborators_link", "class": "radio_link", "title": "Collaborators may view and edit this notebook." },
+    "collaborators"
+  );
+  var viewers_link = createDOM( "a",
+    { "href": "#", "id": "viewers_link", "class": "radio_link", "title": "Viewers may only view this notebook." },
+    "viewers"
+  );
+  var owners_link = createDOM( "a",
+    { "href": "#", "id": "owners_link", "class": "radio_link", "title": "Owners may view, edit, rename, delete, and invite people to this notebook." },
+    "owners"
+  );
+
+  var collaborators_radio = createDOM( "input",
+    { "type": "radio", "id": "collaborators_radio", "name": "access", "value": "collaborator", "checked": "true" }
+  );
+  var viewers_radio = createDOM( "input",
+    { "type": "radio", "id": "viewers_radio", "name": "access", "value": "viewer" }
+  );
+  var owners_radio = createDOM( "input",
+    { "type": "radio", "id": "owners_radio", "name": "access", "value": "owner" }
+  )
+
+  var div = createDOM( "div", {}, 
+    createDOM( "form", { "id": "invite_form" },
+      createDOM( "input", { "type": "hidden", "name": "notebook_id", "value": this.notebook_id } ),
+      createDOM( "p", {},
+        createDOM( "b", {}, "people to invite" ),
+        createDOM( "br", {} ),
+        createDOM( "textarea",
+          { "name": "email_addresses", "class": "textarea_field", "cols": "40", "rows": "4", "wrap": "off" }
+        )
+      ),
+      createDOM( "p", {}, "Please separate email addresses with commas, spaces, or the enter key." ),
+      createDOM( "p", {},
+        createDOM( "p", {}, "Invite these people as:" ),
+        createDOM( "table" , { "id": "access_table" },
+          createDOM( "tr", {},
+            createDOM( "td", {}, collaborators_radio, collaborators_link ),
+            createDOM( "td", {}, viewers_radio, viewers_link ),
+            createDOM( "td", {}, owners_radio, owners_link )
+          )
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "input",
+          { "type": "submit", "name": "invite_button", "id": "invite_button", "class": "button", "value": "send invites" }
+        )
+      )
+    )
+  );
+
+  this.create_editor( "share_notebook", "<h3>share this notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+}
+
 Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   this.clear_messages();
   this.clear_pulldowns();
@@ -1432,7 +1526,7 @@ Wiki.prototype.remove_all_notes_link = function ( note_id ) {
 
 Wiki.prototype.add_all_notes_link = function ( note_id, note_title ) {
   if ( !this.all_notes_editor ) return;
-  if ( note_title == "all notes" || note_title == "search results" ) return;
+  if ( note_title == "all notes" || note_title == "search results" || note_title == "share this notebook" ) return;
 
   if ( !note_title || note_title.length == 0 )
     note_title = "untitled note";
@@ -1709,7 +1803,7 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
   this.invoker = invoker;
   this.editor = editor;
   this.startup_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox" } );
-  this.startup_toggle = createDOM( "a", { "href": "", "class": "pulldown_link", "title": "Display this note whenever the notebook is loaded." },
+  this.startup_toggle = createDOM( "a", { "href": "#", "class": "pulldown_link", "title": "Display this note whenever the notebook is loaded." },
     "show on startup"
   );
 
@@ -1837,6 +1931,12 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
     if ( title == "search results" ) {
       this.title_field.value = title;
       this.display_summary( title, "current search results" );
+      return;
+    }
+
+    if ( title == "share this notebook" ) {
+      this.title_field.value = title;
+      this.display_summary( title, "share this notebook with others" );
       return;
     }
 
