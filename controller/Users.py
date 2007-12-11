@@ -691,7 +691,7 @@ class Users( object ):
 
     # this feature requires a rate plan above basic
     user = self.__database.load( User, user_id )
-    if user is None or ( user.rate_plan == 0 and access != u"viewer" ):
+    if user is None or user.username is None or ( user.rate_plan == 0 and access != u"viewer" ):
       raise Access_error()
 
     if access == u"collaborator":
@@ -746,7 +746,7 @@ class Users( object ):
       message[ u"To" ] = email_address
       message[ u"Subject" ] = notebook_name
       message.set_payload(
-        u"I've shared a wiki with you called \"%s\"\n" % notebook_name +
+        u"I've shared a wiki with you called: %s\n" % notebook_name +
         u"Please visit the following link to view it online:\n\n" +
         u"%s/i/%s\n\n" % ( self.__https_url or self.__http_url, invite.object_id )
       )

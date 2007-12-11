@@ -75,7 +75,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ),
 
-          ( notebook.owner ) and Div(
+          ( notebook.owner and user.username ) and Div(
             A(
               u"share",
               href = u"#",

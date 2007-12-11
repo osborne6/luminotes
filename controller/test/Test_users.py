@@ -1109,6 +1109,29 @@ class Test_users( Test_controller ):
     
     assert result[ u"error" ]
 
+  def test_send_invites_without_username( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user._User__username = None
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
   def test_send_invites_without_any_access( self ):
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp
