@@ -1287,8 +1287,9 @@ Wiki.prototype.share_notebook = function () {
   } else {
     var access_area = createDOM( "p", {},
       createDOM( "b", {}, "Note: " ),
-      "These people will only be able to view your notebook. If you'd like them to be able to edit ",
-      "your notebook as well, please ",
+      "These people will only be able to ", createDOM( "i", "view" ), " your notebook. ",
+      "If you'd like them to be able to ", createDOM( "i", "edit" ),
+      " your notebook as well, please ",
       createDOM( "a", { "href": "/upgrade", "target": "_new" }, "upgrade" ),
       " your account.",
       createDOM( "input", { "type": "hidden", "name": "access", "value": "viewer" } )
