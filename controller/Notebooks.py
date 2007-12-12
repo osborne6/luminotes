@@ -9,6 +9,7 @@ from Expire import strongly_expire
 from Html_nuker import Html_nuker
 from model.Notebook import Notebook
 from model.Note import Note
+from model.Invite import Invite
 from model.User import User
 from view.Main_page import Main_page
 from view.Json import Json
@@ -152,12 +153,14 @@ class Notebooks( object ):
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
     total_notes_count = self.__database.select_one( int, notebook.sql_count_notes() )
+    invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
 
     return dict(
       notebook = notebook,
       startup_notes = startup_notes,
       total_notes_count = total_notes_count,
       notes = note and [ note ] or [],
+      invites = invites or [],
     )
 
   @expose( view = Json )

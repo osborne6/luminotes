@@ -91,10 +91,30 @@ class Invite( Persistent ):
       quote( self.__redeemed_user_id ), quote( self.object_id ) )
 
   def sql_load_similar( self ):
-    # select unredeemed invitations with the same from_user_id, notebook_id, and email_address as this invitation
+    # select unredeemed invites with the same from_user_id, notebook_id, and email_address as this invite
     return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
            "where from_user_id = %s and notebook_id = %s and email_address = %s and id != %s and redeemed_user_id is null;" % \
            ( quote( self.__from_user_id ), quote( self.__notebook_id ), quote( self.__email_address ), quote( self.object_id ) )
+
+  @staticmethod
+  def sql_load_notebook_invites( notebook_id ):
+    # select a list of invites to the given notebook. if there are multiple invites for a given
+    # email_address, arbitrarily pick one of them
+    return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
+           "where id in ( select max( id ) from invite where notebook_id = %s group by email_address ) order by email_address;" % quote( notebook_id )
+
+  def to_dict( self ):
+    d = Persistent.to_dict( self )
+    d.update( dict(
+      from_user_id = self.__from_user_id,
+      notebook_id = self.__notebook_id,
+      email_address = self.__email_address,
+      read_write = self.__read_write,
+      owner = self.__owner,
+      redeemed_user_id = self.__redeemed_user_id,
+    ) )
+
+    return d
 
   def __set_read_write( self, read_write ):
     if read_write != self.__read_write:

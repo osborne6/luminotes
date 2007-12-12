@@ -1,3 +1,5 @@
+from pytz import utc
+from datetime import datetime, timedelta
 from model.User import User
 from model.Invite import Invite
 
@@ -10,6 +12,7 @@ class Test_invite( object ):
     self.email_address = u"bob@example.com"
     self.read_write = True
     self.owner = False
+    self.delta = timedelta( seconds = 1 )
 
     self.invite = Invite.create( self.object_id, self.from_user_id, self.notebook_id,
                                  self.email_address, self.read_write, self.owner )
@@ -39,3 +42,14 @@ class Test_invite( object ):
 
     assert self.invite.redeemed_user_id == redeemed_user_id
     assert self.invite.revision == current_revision
+
+  def test_to_dict( self ):
+    d = self.invite.to_dict()
+
+    assert d.get( "object_id" ) == self.object_id
+    assert datetime.now( tz = utc ) - d.get( "revision" ) < self.delta
+    assert d.get( "from_user_id" ) == self.from_user_id
+    assert d.get( "notebook_id" ) == self.notebook_id
+    assert d.get( "read_write" ) == self.read_write
+    assert d.get( "owner" ) == self.owner
+    assert d.get( "redeemed_user_id" ) == None

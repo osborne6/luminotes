@@ -6,6 +6,7 @@ from Test_controller import Test_controller
 from model.Notebook import Notebook
 from model.Note import Note
 from model.User import User
+from model.Invite import Invite
 from controller.Notebooks import Access_error
 
 
@@ -21,6 +22,7 @@ class Test_notebooks( Test_controller ):
     self.password = u"trustno1"
     self.email_address = u"outthere@example.com"
     self.user = None
+    self.invite = None
     self.anonymous = None
     self.session_id = None
 
@@ -55,6 +57,12 @@ class Test_notebooks( Test_controller ):
     self.database.save( self.anonymous, commit = False )
     self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
+    self.invite = Invite.create(
+      self.database.next_id( Invite ), self.user.object_id, self.notebook.object_id,
+      u"skinner@example.com", read_write = True, owner = False,
+    )
+    self.database.save( self.invite, commit = False )
+
   def test_default_without_login( self ):
     result = self.http_get(
       "/notebooks/%s" % self.notebook.object_id,
@@ -84,6 +92,11 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
 
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
@@ -109,6 +122,11 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" )[ 0 ].object_id == self.note.object_id
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
@@ -141,6 +159,11 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) == False
 
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
@@ -165,6 +188,11 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"parent_id" ) == parent_id
     assert result.get( u"note_read_write" ) in ( None, True )
 
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
@@ -178,6 +206,11 @@ class Test_notebooks( Test_controller ):
     startup_notes = result[ "startup_notes" ]
     assert result[ "total_notes_count" ] == 2
     assert result[ "notes" ] == []
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -197,6 +230,11 @@ class Test_notebooks( Test_controller ):
     notebook = result[ "notebook" ]
     startup_notes = result[ "startup_notes" ]
     assert result[ "total_notes_count" ] == 2
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -226,6 +264,11 @@ class Test_notebooks( Test_controller ):
     startup_notes = result[ "startup_notes" ]
     assert result[ "total_notes_count" ] == 2
 
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
     assert notebook.owner == True
@@ -239,6 +282,71 @@ class Test_notebooks( Test_controller ):
     note = notes[ 0 ]
     assert note.object_id == self.note.object_id
     assert note.revision == self.note.revision
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_contents_with_different_invites( self ):
+    # create an invite with a different email address from the previous
+    invite = Invite.create(
+      self.database.next_id( Invite ), self.user.object_id, self.notebook.object_id,
+      u"smoking@example.com", read_write = True, owner = False,
+    )
+    self.database.save( invite )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
+    assert result[ "notes" ] == []
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 2
+    invite = invites[ 0 ]
+    assert invite.object_id == invite.object_id
+    invite = invites[ 1 ]
+    assert invite.object_id == self.invite.object_id
+
+    assert notebook.object_id == self.notebook.object_id
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ].object_id == self.note.object_id
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_contents_with_duplicate_invites( self ):
+    # create an invite with the same email address as the previous invite
+    invite = Invite.create(
+      self.database.next_id( Invite ), self.user.object_id, self.notebook.object_id,
+      u"skinner@example.com", read_write = True, owner = False,
+    )
+    self.database.save( invite )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
+    assert result[ "notes" ] == []
+
+    # the two invites should be collapsed down into one
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == invite.object_id
+
+    assert notebook.object_id == self.notebook.object_id
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ].object_id == self.note.object_id
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
@@ -272,6 +380,7 @@ class Test_notebooks( Test_controller ):
     startup_notes = result[ "startup_notes" ]
     assert result[ "notes" ] == []
     assert result[ "total_notes_count" ] == 0
+    assert result[ "invites" ] == []
 
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.read_write == False
@@ -1762,6 +1871,7 @@ class Test_notebooks( Test_controller ):
     assert result[ "total_notes_count" ] == 0
     assert result[ "startup_notes" ] == []
     assert result[ "notes" ] == []
+    assert result[ "invites" ] == []
 
     assert notebook.object_id == new_notebook_id
     assert notebook.read_write == True

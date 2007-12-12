@@ -230,6 +230,20 @@ class Test_controller( object ):
     Invite.sql_load_similar = lambda self: \
       lambda database: sql_load_similar( self, database )
 
+    def sql_load_notebook_invites( notebook_id, database ):
+      invites = []
+
+      for ( object_id, obj_list ) in database.objects.items():
+        obj = obj_list[ -1 ]
+        if isinstance( obj, Invite ) and obj.notebook_id == notebook_id and \
+           obj.email_address not in [ i.email_address for i in invites ]:
+          invites.append( obj )
+
+      return invites
+
+    Invite.sql_load_notebook_invites = staticmethod( lambda notebook_id:
+      lambda database: sql_load_notebook_invites( notebook_id, database ) )
+
   def setUp( self ):
     from controller.Root import Root
     cherrypy.lowercase_api = True

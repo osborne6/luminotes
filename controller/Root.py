@@ -240,9 +240,9 @@ class Root( object ):
     from email import Message
     
     message = Message.Message()
-    message[ u"from" ] = support_email
-    message[ u"to" ] = support_email
-    message[ u"subject" ] = u"Luminotes traceback"
+    message[ u"From" ] = support_email
+    message[ u"To" ] = support_email
+    message[ u"Subject" ] = u"Luminotes traceback"
     message.set_payload(
       u"requested URL: %s\n" % cherrypy.request.browser_url +
       u"user id: %s\n" % cherrypy.session.get( "user_id" ) +
@@ -253,7 +253,7 @@ class Root( object ):
     # send the message out through localhost's smtp server
     server = smtplib.SMTP()
     server.connect()
-    server.sendmail( message[ u"from" ], [ support_email ], message.as_string() )
+    server.sendmail( message[ u"From" ], [ support_email ], message.as_string() )
     server.quit()
 
     return True

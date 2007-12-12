@@ -578,6 +578,7 @@ class Users( object ):
       contents = unicode( Redeem_reset_note( password_reset_id, matching_users ) ),
       notebook_id = main_notebook.object_id,
     ) ]
+    result[ "invites" ] = []
 
     return result
 

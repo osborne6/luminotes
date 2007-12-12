@@ -12,6 +12,7 @@ function Wiki( invoker ) {
   this.invoker = invoker;
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
   this.storage_usage_high = false;
+  this.invites = evalJSON( getElement( "invites" ).value );
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -1296,6 +1297,41 @@ Wiki.prototype.share_notebook = function () {
     );
   }
 
+  if ( this.invites ) {
+    var collaborators = createDOM( "ul", { "id": "collaborators" } );
+    var viewers = createDOM( "ul", { "id": "viewers" } );
+    var owners = createDOM( "ul", { "id": "owners" } );
+
+    for ( var i in this.invites ) {
+      var invite = this.invites[ i ];
+      if ( invite.owner ) {
+          appendChildNodes( owners, createDOM( "li", {}, invite.email_address ) );
+      } else {
+        if ( invite.read_write )
+          appendChildNodes( collaborators, createDOM( "li", {}, invite.email_address ) );
+        else
+          appendChildNodes( viewers, createDOM( "li", {}, invite.email_address ) );
+      }
+    }
+
+    var invite_area = createDOM( "p", { "id": "invite_area" } );
+
+    if ( collaborators.childNodes.length > 0 ) {
+      appendChildNodes( invite_area, createDOM( "h3", {}, "collaborators" ) );
+      appendChildNodes( invite_area, collaborators );
+    }
+    if ( viewers.childNodes.length > 0 ) {
+      appendChildNodes( invite_area, createDOM( "h3", {}, "viewers" ) );
+      appendChildNodes( invite_area, viewers );
+    }
+    if ( owners.childNodes.length > 0 ) {
+      appendChildNodes( invite_area, createDOM( "h3", {}, "owners" ) );
+      appendChildNodes( invite_area, owners );
+    }
+  } else {
+    var invite_area = createDOM( "p", {}, "There are no invites." );
+  }
+
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "invite_form" },
       createDOM( "input", { "type": "hidden", "name": "notebook_id", "value": this.notebook_id } ),
@@ -1312,7 +1348,8 @@ Wiki.prototype.share_notebook = function () {
         createDOM( "input",
           { "type": "submit", "name": "invite_button", "id": "invite_button", "class": "button", "value": "send invites" }
         )
-      )
+      ),
+      invite_area
     )
   );
 
