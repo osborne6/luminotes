@@ -153,7 +153,11 @@ class Notebooks( object ):
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
     total_notes_count = self.__database.select_one( int, notebook.sql_count_notes() )
-    invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
+
+    if self.__users.check_access( user_id, notebook_id, owner = True ):
+      invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
+    else:
+      invites = []
 
     return dict(
       notebook = notebook,
