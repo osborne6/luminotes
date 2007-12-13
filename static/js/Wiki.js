@@ -651,7 +651,6 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     }, callback );
   } );
 
-  this.clear_messages();
   this.clear_pulldowns();
 
   return editor;
@@ -1249,7 +1248,6 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
 }
 
 Wiki.prototype.share_notebook = function () {
-  this.clear_messages();
   this.clear_pulldowns();
 
   var share_notebook_frame = getElement( "note_share_notebook" );
