@@ -640,8 +640,9 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 
   connect( editor, "load_editor", this, "load_editor" );
   connect( editor, "hide_clicked", function ( event ) { self.hide_editor( event, editor ) } );
-  connect( editor, "submit_form", function ( url, form ) {
-    self.invoker.invoke( url, "POST", null, null, form );
+  connect( editor, "invites_updated", function ( invites ) { self.invites = invites; self.share_notebook(); } );
+  connect( editor, "submit_form", function ( url, form, callback ) {
+    self.invoker.invoke( url, "POST", null, callback, form );
   } );
 
   this.clear_messages();
@@ -1246,10 +1247,8 @@ Wiki.prototype.share_notebook = function () {
   this.clear_pulldowns();
 
   var share_notebook_frame = getElement( "note_share_notebook" );
-  if ( share_notebook_frame ) {
-    share_notebook_frame.editor.highlight();
-    return;
-  }
+  if ( share_notebook_frame )
+    share_notebook_frame.editor.shutdown();
 
   var collaborators_link = createDOM( "a",
     { "href": "#", "id": "collaborators_link", "class": "radio_link", "title": "Collaborators may view and edit this notebook." },
@@ -1297,40 +1296,8 @@ Wiki.prototype.share_notebook = function () {
     );
   }
 
-  if ( this.invites ) {
-    var collaborators = createDOM( "ul", { "id": "collaborators" } );
-    var viewers = createDOM( "ul", { "id": "viewers" } );
-    var owners = createDOM( "ul", { "id": "owners" } );
-
-    for ( var i in this.invites ) {
-      var invite = this.invites[ i ];
-      if ( invite.owner ) {
-          appendChildNodes( owners, createDOM( "li", {}, invite.email_address ) );
-      } else {
-        if ( invite.read_write )
-          appendChildNodes( collaborators, createDOM( "li", {}, invite.email_address ) );
-        else
-          appendChildNodes( viewers, createDOM( "li", {}, invite.email_address ) );
-      }
-    }
-
-    var invite_area = createDOM( "p", { "id": "invite_area" } );
-
-    if ( collaborators.childNodes.length > 0 ) {
-      appendChildNodes( invite_area, createDOM( "h3", {}, "collaborators" ) );
-      appendChildNodes( invite_area, collaborators );
-    }
-    if ( viewers.childNodes.length > 0 ) {
-      appendChildNodes( invite_area, createDOM( "h3", {}, "viewers" ) );
-      appendChildNodes( invite_area, viewers );
-    }
-    if ( owners.childNodes.length > 0 ) {
-      appendChildNodes( invite_area, createDOM( "h3", {}, "owners" ) );
-      appendChildNodes( invite_area, owners );
-    }
-  } else {
-    var invite_area = createDOM( "p", {}, "There are no invites." );
-  }
+  var invite_area = createDOM( "p", { "id": "invite_area" } );
+  this.update_invites( invite_area );
 
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "invite_form" },
@@ -1354,6 +1321,44 @@ Wiki.prototype.share_notebook = function () {
   );
 
   this.create_editor( "share_notebook", "<h3>share this notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+}
+
+Wiki.prototype.update_invites = function ( invite_area ) {
+  if ( !this.invites || this.invites.length == 0 )
+    return;
+
+  var collaborators = createDOM( "ul", { "id": "collaborators" } );
+  var viewers = createDOM( "ul", { "id": "viewers" } );
+  var owners = createDOM( "ul", { "id": "owners" } );
+
+  for ( var i in this.invites ) {
+    var invite = this.invites[ i ];
+    if ( invite.owner ) {
+        appendChildNodes( owners, createDOM( "li", {}, invite.email_address ) );
+    } else {
+      if ( invite.read_write )
+        appendChildNodes( collaborators, createDOM( "li", {}, invite.email_address ) );
+      else
+        appendChildNodes( viewers, createDOM( "li", {}, invite.email_address ) );
+    }
+  }
+
+  var div = createDOM( "div" );
+
+  if ( collaborators.childNodes.length > 0 ) {
+    appendChildNodes( div, createDOM( "h3", {}, "collaborators" ) );
+    appendChildNodes( div, collaborators );
+  }
+  if ( viewers.childNodes.length > 0 ) {
+    appendChildNodes( div, createDOM( "h3", {}, "viewers" ) );
+    appendChildNodes( div, viewers );
+  }
+  if ( owners.childNodes.length > 0 ) {
+    appendChildNodes( div, createDOM( "h3", {}, "owners" ) );
+    appendChildNodes( div, owners );
+  }
+
+  replaceChildNodes( invite_area, div );
 }
 
 Wiki.prototype.display_message = function ( text, nodes, position_after ) {

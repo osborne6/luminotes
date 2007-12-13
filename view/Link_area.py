@@ -82,6 +82,10 @@ class Link_area( Div ):
               id = u"share_notebook_link",
               title = u"Share this notebook with others.",
             ),
+            Span(
+              u"new!",
+              class_ = u"new_feature_text",
+            ),
             class_ = u"link_area_item",
           ) or None,
 

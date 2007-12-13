@@ -775,6 +775,13 @@ class Test_users( Test_controller ):
     session_id = result[ u"session_id" ]
     
     assert u"An invitation has been sent." in result[ u"message" ]
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
+    assert invite
+    assert invite.read_write is False
+    assert invite.owner is False
+
     assert smtplib.SMTP.connected == False
     assert len( smtplib.SMTP.emails ) == 1
 
@@ -787,10 +794,10 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invite_list = self.database.objects.get( invite_id )
-    assert invite_list
-    assert len( invite_list ) == 1
-    invite = invite_list[ -1 ]
+    invites = self.database.objects.get( invite_id )
+    assert invites
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
     assert invite
     assert invite.read_write is False
     assert invite.owner is False
@@ -816,6 +823,13 @@ class Test_users( Test_controller ):
     session_id = result[ u"session_id" ]
     
     assert u"An invitation has been sent." in result[ u"message" ]
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
+    assert invite
+    assert invite.read_write is True
+    assert invite.owner is False
+
     assert smtplib.SMTP.connected == False
     assert len( smtplib.SMTP.emails ) == 1
 
@@ -828,10 +842,10 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invite_list = self.database.objects.get( invite_id )
-    assert invite_list
-    assert len( invite_list ) == 1
-    invite = invite_list[ -1 ]
+    invites = self.database.objects.get( invite_id )
+    assert invites
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
     assert invite
     assert invite.read_write is True
     assert invite.owner is False
@@ -857,6 +871,13 @@ class Test_users( Test_controller ):
     session_id = result[ u"session_id" ]
     
     assert u"An invitation has been sent." in result[ u"message" ]
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
+    assert invite
+    assert invite.read_write is True
+    assert invite.owner is True
+
     assert smtplib.SMTP.connected == False
     assert len( smtplib.SMTP.emails ) == 1
 
@@ -869,10 +890,10 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invite_list = self.database.objects.get( invite_id )
-    assert invite_list
-    assert len( invite_list ) == 1
-    invite = invite_list[ -1 ]
+    invites = self.database.objects.get( invite_id )
+    assert invites
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
     assert invite
     assert invite.read_write is True
     assert invite.owner is True
@@ -898,6 +919,13 @@ class Test_users( Test_controller ):
     session_id = result[ u"session_id" ]
     
     email_count = len( email_addresses_list )
+    invites = result[ u"invites" ]
+    assert len( invites ) == email_count
+    for invite in invites:
+      assert invite
+      assert invite.read_write is False
+      assert invite.owner is False
+
     assert u"%s invitations have been sent." % email_count in result[ u"message" ]
     assert smtplib.SMTP.connected == False
     assert len( smtplib.SMTP.emails ) == email_count
@@ -931,6 +959,13 @@ class Test_users( Test_controller ):
     session_id = result[ u"session_id" ]
     
     email_count = len( email_addresses_list ) - 1 # -1 because of the duplicate
+    invites = result[ u"invites" ]
+    assert len( invites ) == email_count
+    for invite in invites:
+      assert invite
+      assert invite.read_write is False
+      assert invite.owner is False
+    
     assert u"%s invitations have been sent." % email_count in result[ u"message" ]
     assert smtplib.SMTP.connected == False
     assert len( smtplib.SMTP.emails ) == email_count
@@ -967,13 +1002,20 @@ class Test_users( Test_controller ):
     assert invite_id1
 
     # then send a similar invite to the same email address with read_write and owner set to True
-    self.http_post( "/users/send_invites", dict(
+    result = self.http_post( "/users/send_invites", dict(
       notebook_id = self.notebooks[ 0 ].object_id,
       email_addresses = email_addresses,
       access = u"owner",
       invite_button = u"send invites",
     ), session_id = self.session_id )
     
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite
+    assert invite.read_write is True
+    assert invite.owner is True
+
     matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
     invite_id2 = matches.group( 2 )
     assert invite_id2
@@ -1000,8 +1042,10 @@ class Test_users( Test_controller ):
     smtplib.SMTP = Stub_smtp
     self.login()
 
-    self.user.rate_plan = 1
+    # setting the user's email address to None means the invite will be sent
+    # with a "generic" From address (in this case, Luminotes support)
     self.user._User__email_address = None
+    self.user.rate_plan = 1
     self.database.save( self.user )
 
     email_addresses_list = [ u"foo@example.com" ]
@@ -1014,6 +1058,13 @@ class Test_users( Test_controller ):
       invite_button = u"send invites",
     ), session_id = self.session_id )
     session_id = result[ u"session_id" ]
+    
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite
+    assert invite.read_write is False
+    assert invite.owner is False
     
     assert u"An invitation has been sent." in result[ u"message" ]
     assert smtplib.SMTP.connected == False
@@ -1218,6 +1269,13 @@ class Test_users( Test_controller ):
       invite_button = u"send invites",
     ), session_id = self.session_id )
     session_id = result[ u"session_id" ]
+    
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite
+    assert invite.read_write is False
+    assert invite.owner is False
     
     assert u"An invitation has been sent." in result[ u"message" ]
     assert smtplib.SMTP.connected == False

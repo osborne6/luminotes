@@ -207,7 +207,10 @@ Editor.prototype.finish_init = function () {
 
       var invite_form = getElement( "invite_form" );
       connect( invite_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/send_invites", invite_form ); event.stop();
+        signal( self, "submit_form", "/users/send_invites", invite_form, function ( result ) {
+          if ( !result.invites ) return;
+          signal( self, "invites_updated", result.invites );
+        } ); event.stop();
       } );
     }
   } );

@@ -676,7 +676,7 @@ class Users( object ):
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: { 'message': message }
+    @return: { 'message': message, 'invites': invites }
     @raise Password_reset_error: an error occured when sending the password reset email
     @raise Validation_error: one of the arguments is invalid
     @raise Access_error: user_id doesn't have owner-level notebook access to send an invite or
@@ -747,7 +747,7 @@ class Users( object ):
       message[ u"To" ] = email_address
       message[ u"Subject" ] = notebook_name
       message.set_payload(
-        u"I've shared a wiki with you called: %s\n" % notebook_name +
+        u"I've shared a wiki with you called \"%s\".\n" % notebook_name +
         u"Please visit the following link to view it online:\n\n" +
         u"%s/i/%s\n\n" % ( self.__https_url or self.__http_url, invite.object_id )
       )
@@ -759,8 +759,15 @@ class Users( object ):
       server.quit()
 
     self.__database.commit()
+    invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
 
     if email_count == 1:
-      return dict( message = u"An invitation has been sent." )
+      return dict(
+        message = u"An invitation has been sent.",
+        invites = invites,
+      )
     else:
-      return dict( message = u"%s invitations have been sent." % email_count )
+      return dict(
+        message = u"%s invitations have been sent." % email_count,
+        invites = invites,
+      )

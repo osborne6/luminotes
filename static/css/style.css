@@ -576,3 +576,9 @@ img {
 .small_text {
   font-size: 90%;
 }
+
+.new_feature_text {
+  font-size: 90%;
+  font-weight: bold;
+  color: #ff6600;
+}
