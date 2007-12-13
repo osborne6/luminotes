@@ -644,6 +644,12 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   connect( editor, "submit_form", function ( url, form, callback ) {
     self.invoker.invoke( url, "POST", null, callback, form );
   } );
+  connect( editor, "revoke_invite", function ( invite_id, callback ) {
+    self.invoker.invoke( "/users/revoke_invite", "POST", {
+      "notebook_id": self.notebook_id,
+      "invite_id": invite_id
+    }, callback );
+  } );
 
   this.clear_messages();
   this.clear_pulldowns();
@@ -1297,7 +1303,7 @@ Wiki.prototype.share_notebook = function () {
   }
 
   var invite_area = createDOM( "p", { "id": "invite_area" } );
-  this.update_invites( invite_area );
+  this.display_invites( invite_area );
 
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "invite_form" },
@@ -1323,39 +1329,63 @@ Wiki.prototype.share_notebook = function () {
   this.create_editor( "share_notebook", "<h3>share this notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
 }
 
-Wiki.prototype.update_invites = function ( invite_area ) {
+Wiki.prototype.display_invites = function ( invite_area ) {
   if ( !this.invites || this.invites.length == 0 )
     return;
 
-  var collaborators = createDOM( "ul", { "id": "collaborators" } );
-  var viewers = createDOM( "ul", { "id": "viewers" } );
-  var owners = createDOM( "ul", { "id": "owners" } );
+  var collaborators = createDOM( "div", { "id": "collaborators" } );
+  var viewers = createDOM( "div", { "id": "viewers" } );
+  var owners = createDOM( "div", { "id": "owners" } );
+  var self = this;
 
   for ( var i in this.invites ) {
     var invite = this.invites[ i ];
+    var revoke_button = createDOM( "input", {
+      "type": "button",
+      "id": "revoke_" + invite.object_id,
+      "class": "revoke_button",
+      "value": " x ",
+      "title": "revoke this person's notebook access"
+    } );
+
     if ( invite.owner ) {
-        appendChildNodes( owners, createDOM( "li", {}, invite.email_address ) );
+        appendChildNodes(
+          owners, createDOM( "div", { "class": "invite" },
+          invite.email_address, " ", revoke_button )
+        );
     } else {
       if ( invite.read_write )
-        appendChildNodes( collaborators, createDOM( "li", {}, invite.email_address ) );
+        appendChildNodes(
+          collaborators, createDOM( "div", { "class": "invite" },
+          invite.email_address, " ", revoke_button )
+        );
       else
-        appendChildNodes( viewers, createDOM( "li", {}, invite.email_address ) );
+        appendChildNodes(
+          viewers, createDOM( "div", { "class": "invite" },
+          invite.email_address, " ", revoke_button )
+        );
     }
   }
 
   var div = createDOM( "div" );
 
   if ( collaborators.childNodes.length > 0 ) {
-    appendChildNodes( div, createDOM( "h3", {}, "collaborators" ) );
-    appendChildNodes( div, collaborators );
+    var p = createDOM( "p" );
+    appendChildNodes( p, createDOM( "b", {}, "collaborators" ) );
+    appendChildNodes( p, collaborators );
+    appendChildNodes( div, p );
   }
   if ( viewers.childNodes.length > 0 ) {
-    appendChildNodes( div, createDOM( "h3", {}, "viewers" ) );
-    appendChildNodes( div, viewers );
+    var p = createDOM( "p" );
+    appendChildNodes( p, createDOM( "b", {}, "viewers" ) );
+    appendChildNodes( p, viewers );
+    appendChildNodes( div, p );
   }
   if ( owners.childNodes.length > 0 ) {
-    appendChildNodes( div, createDOM( "h3", {}, "owners" ) );
-    appendChildNodes( div, owners );
+    var p = createDOM( "p" );
+    appendChildNodes( p, createDOM( "b", {}, "owners" ) );
+    appendChildNodes( p, owners );
+    appendChildNodes( div, p );
   }
 
   replaceChildNodes( invite_area, div );
@@ -1369,7 +1399,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   for ( var i in nodes )
     appendChildNodes( inner_div, nodes[ i ] );
 
-  ok_button = createDOM( "input", {
+  var ok_button = createDOM( "input", {
     "type": "button",
     "class": "message_button",
     "value": "ok",

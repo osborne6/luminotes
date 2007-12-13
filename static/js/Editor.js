@@ -210,8 +210,22 @@ Editor.prototype.finish_init = function () {
         signal( self, "submit_form", "/users/send_invites", invite_form, function ( result ) {
           if ( !result.invites ) return;
           signal( self, "invites_updated", result.invites );
-        } ); event.stop();
+        } );
+        event.stop();
       } );
+
+      var revoke_buttons = getElementsByTagAndClassName( "input", "revoke_button" );
+      for ( var i in revoke_buttons ) {
+        var revoke_button = revoke_buttons[ i ];
+        var invite_id = revoke_button.id.split( "_" ).pop();
+        connect( revoke_button, "onclick", function ( event ) {
+          signal( self, "revoke_invite", invite_id, function ( result ) {
+            if ( !result.invites ) return;
+            signal( self, "invites_updated", result.invites );
+          } );
+          event.stop();
+        } );
+      }
     }
   } );
 

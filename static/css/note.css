@@ -73,6 +73,19 @@ h3 {
   background-color: #ffcc66;
 }
 
+.revoke_button {
+  border-style: outset;
+  border-width: 0px;
+  background-color: #d0e0f0;
+  font-size: 90%;
+  outline: none;
+  cursor: pointer;
+}
+
+.revoke_button:hover {
+  background-color: #ffcc66;
+}
+
 .text_field {
   margin-top: 0.25em;
   padding: 0.25em;
@@ -115,6 +128,10 @@ ol li {
 .radio_link:hover {
   color: #ff6600;
   text-decoration: none;
+}
+
+.invite {
+  margin-left: 1em;
 }
 
 #access_table td {
