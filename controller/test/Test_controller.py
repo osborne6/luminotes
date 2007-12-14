@@ -244,6 +244,34 @@ class Test_controller( object ):
     Invite.sql_load_notebook_invites = staticmethod( lambda notebook_id:
       lambda database: sql_load_notebook_invites( notebook_id, database ) )
 
+    def sql_revoke_user_access( self, database ):
+      invites = []
+
+      for ( user_id, notebook_infos ) in database.user_notebook.items():
+        for ( index, ( notebook_id, read_write, owner ) ) in enumerate( notebook_infos ):
+          if notebook_id != self.notebook_id: continue
+          for ( object_id, obj_list ) in database.objects.items():
+            obj = obj_list[ -1 ]
+            if isinstance( obj, Invite ) and obj.notebook_id == self.notebook_id and \
+               obj.email_address == self.email_address:
+              del( database.user_notebook[ user_id ][ index ] )
+
+    Invite.sql_revoke_user_access = lambda self: \
+      lambda database: sql_revoke_user_access( self, database )
+
+    def sql_revoke_invites( self, database ):
+      invites = []
+
+      for ( object_id, obj_list ) in database.objects.items():
+        obj = obj_list[ -1 ]
+        if isinstance( obj, Invite ) and obj.notebook_id == self.notebook_id and \
+           obj.email_address == self.email_address:
+          del( database.objects[ object_id ] )
+
+    Invite.sql_revoke_invites = lambda self: \
+      lambda database: sql_revoke_invites( self, database )
+
+
   def setUp( self ):
     from controller.Root import Root
     cherrypy.lowercase_api = True

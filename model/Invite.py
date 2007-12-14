@@ -103,6 +103,15 @@ class Invite( Persistent ):
     return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
            "where id in ( select max( id ) from invite where notebook_id = %s group by email_address ) order by email_address;" % quote( notebook_id )
 
+  def sql_revoke_user_access( self ):
+    return "delete from user_notebook where notebook_id = %s and user_id in " % quote( self.__notebook_id ) + \
+           "( select redeemed_user_id from invite where notebook_id = %s and email_address = %s );" % \
+           ( quote( self.__notebook_id ), quote( self.__email_address ) )
+
+  def sql_revoke_invites( self ):
+    return "delete from invite where notebook_id = %s and email_address = %s;" % \
+           ( quote( self.__notebook_id ), quote( self.__email_address ) )
+
   def to_dict( self ):
     d = Persistent.to_dict( self )
     d.update( dict(

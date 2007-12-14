@@ -677,7 +677,7 @@ class Users( object ):
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
     @return: { 'message': message, 'invites': invites }
-    @raise Password_reset_error: an error occured when sending the password reset email
+    @raise Invite_error: an error occured when sending the invite
     @raise Validation_error: one of the arguments is invalid
     @raise Access_error: user_id doesn't have owner-level notebook access to send an invite or
                          doesn't have a rate plan supporting notebook collaboration
@@ -690,7 +690,7 @@ class Users( object ):
     if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
       raise Access_error()
 
-    # this feature requires a rate plan above basic
+    # except for viewer-only invites, this feature requires a rate plan above basic
     user = self.__database.load( User, user_id )
     if user is None or user.username is None or ( user.rate_plan == 0 and access != u"viewer" ):
       raise Access_error()
@@ -771,3 +771,43 @@ class Users( object ):
         message = u"%s invitations have been sent." % email_count,
         invites = invites,
       )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    invite_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def revoke_invite( self, notebook_id, invite_id, user_id = None ):
+    """
+    Revoke the invite's access to the given notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook that the invitation is for
+    @type invite_id: unicode
+    @param invite_id: id of the invite to revoke
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'message': message, 'invites': invites }
+    @raise Validation_error: one of the arguments is invalid
+    @raise Access_error: user_id doesn't have owner-level notebook access to revoke an invite
+    """
+    if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
+      raise Access_error()
+
+    invite = self.__database.load( Invite, invite_id )
+    if not invite or not invite.email_address or invite.notebook_id != notebook_id:
+      raise Access_error()
+
+    self.__database.execute( invite.sql_revoke_user_access(), commit = False )
+    self.__database.execute( invite.sql_revoke_invites(), commit = False )
+    self.__database.commit()
+
+    invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
+
+    return dict(
+      message = u"Notebook access for %s has been revoked." % invite.email_address,
+      invites = invites,
+    )

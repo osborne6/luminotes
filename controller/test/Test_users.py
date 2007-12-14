@@ -1345,6 +1345,144 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
     assert "access" in result[ u"error" ]
 
+  def test_revoke_invite( self ):
+    # trick revoke_invite() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    assert len( result[ u"invites" ] ) == 1
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    result = self.http_post( "/users/revoke_invite", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"message" ]
+    assert len( result[ u"invites" ] ) == 0
+
+  def test_revoke_invite_multiple( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com", u"bar@example.com", u"foo@example.com" ]
+    email_addresses = u" ".join( email_addresses_list )
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    assert len( result[ u"invites" ] ) == 2
+    ( from_address, to_addresses, message ) = smtplib.SMTP.emails[ 0 ]
+    matches = self.INVITE_LINK_PATTERN.search( message )
+    invite_id = matches.group( 2 )
+
+    result = self.http_post( "/users/revoke_invite", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"message" ]
+    assert len( result[ u"invites" ] ) == 1
+    assert result[ u"invites" ][ 0 ].email_address == email_addresses_list[ 1 ]
+
+  def test_revoke_invite_without_login( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
+    # login to send the invites, but don't send the logged-in session id for revoke_invite() below
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    assert len( result[ u"invites" ] ) == 1
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    result = self.http_post( "/users/revoke_invite", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      invite_id = invite_id,
+    ) )
+
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_revoke_invite_unknown( self ):
+    self.login()
+
+    invite_id = u"unknowninviteid"
+
+    result = self.http_post( "/users/revoke_invite", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
+  def test_revoke_invite_for_incorrect_notebook( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    assert len( result[ u"invites" ] ) == 1
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    result = self.http_post( "/users/revoke_invite", dict(
+      notebook_id = self.notebooks[ 1 ].object_id,
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"error" ]
+    assert "access" in result[ u"error" ]
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
