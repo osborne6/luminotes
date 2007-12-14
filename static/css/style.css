@@ -461,6 +461,11 @@ img {
   background-color: #11bb11;
 }
 
+.error_header {
+  text-align: left;
+  margin: 2em 2em 1em 2em;
+}
+
 .error_box {
   text-align: left;
   margin-left: 2em;
