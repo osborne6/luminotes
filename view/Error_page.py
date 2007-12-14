@@ -1,15 +1,25 @@
 from Page import Page
-from Tags import Div, H2, P, A, Ul, Li, Strong, Noscript
+from Tags import Div, H2, P, A, Ul, Li, Strong, Noscript, Img
 
 
 class Error_page( Page ):
   def __init__( self, support_email, message = None ):
+    header_image = Div(
+      A( Img( src = "/static/images/luminotes_title.png" ), href = "/", title = "Luminotes personal wiki notebook" ),
+      class_ = u"error_header",
+    )
+
     if message:
       title = u"whoops"
       Page.__init__(
         self,
-        H2( title ),
-        P( message ),
+        title,
+        header_image,
+        Div(
+          H2( title ),
+          P( message ),
+          class_ = u"error_box",
+        ),
         include_js = False,
       )
       return
@@ -18,6 +28,7 @@ class Error_page( Page ):
     Page.__init__(
       self,
       title,
+      header_image,
       Div(
         H2( title ),
         Noscript(
