@@ -55,6 +55,7 @@ def expose( view = None, rss = None ):
       except Exception, error:
         original_error = error
         if hasattr( error, "to_dict" ):
+          if not view: raise error
           result = error.to_dict()
         else:
           import traceback

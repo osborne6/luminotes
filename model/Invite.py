@@ -91,9 +91,9 @@ class Invite( Persistent ):
       quote( self.__redeemed_user_id ), quote( self.object_id ) )
 
   def sql_load_similar( self ):
-    # select unredeemed invites with the same notebook_id, and email_address as this invite
+    # select invites with the same notebook_id, and email_address as this invite
     return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
-           "where notebook_id = %s and email_address = %s and id != %s and redeemed_user_id is null;" % \
+           "where notebook_id = %s and email_address = %s and id != %s;" % \
            ( quote( self.__notebook_id ), quote( self.__email_address ), quote( self.object_id ) )
 
   @staticmethod

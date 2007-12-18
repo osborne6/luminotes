@@ -88,6 +88,23 @@ class Root( object ):
       redirect = u"/users/redeem_reset/%s" % password_reset_id,
     )
 
+  @expose()
+  def i( self, invite_id ):
+    """
+    Redirect to the invite redemption URL, based on the given invite id. The sole purpose of this
+    method is to shorten invite redemption URLs sent by email so email clients don't wrap them.
+    """
+    # if the value looks like an id, it's an invite id, so redirect
+    try:
+      validator = Valid_id()
+      invite_id = validator( invite_id )
+    except ValueError:
+      raise cherrypy.NotFound
+
+    return dict(
+      redirect = u"/users/redeem_invite/%s" % invite_id,
+    )
+
   @expose( view = Main_page )
   @strongly_expire
   @grab_user_id

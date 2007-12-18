@@ -738,6 +738,13 @@ class Users( object ):
         similar.owner = owner
         self.__database.save( similar, commit = False )
 
+        # if the invite is already redeemed, then update the relevant entry in the user_notebook
+        # access table as well
+        if similar.redeemed_user_id is not None:
+          redeemed_user = self.__database.load( User, redeemed_user_id )
+          if redeemed_user:
+            self.__database.execute( redeemed_user.sql_update_access( notebook_id, read_write, owner ) )
+
       # create an email message with a unique invitation link
       notebook_name = notebook.name.strip().replace( "\n", " " ).replace( "\r", " " )
       message = Message.Message()
@@ -811,3 +818,72 @@ class Users( object ):
       message = u"Notebook access for %s has been revoked." % invite.email_address,
       invites = invites,
     )
+
+  @expose( view = Main_page )
+  @grab_user_id
+  @validate(
+    invite_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def redeem_invite( self, invite_id, user_id = None ):
+    """
+    Begin the process of redeeming a notebook invite.
+
+    @type invite_id: unicode
+    @param invite_id: id of invite to redeem
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype:
+    @return:
+    @raise Validation_error: one of the arguments is invalid
+    @raise Invite_error: an error occured when redeeming the invite
+    """
+    invite = self.__database.load( Invite, invite_id )
+    if not invite:
+      raise Invite_error( "That invite is unknown. Please make sure that you typed the address correctly." )
+
+    if user_id is not None:
+      # if the user is logged in but the invite is unredeemed, redeem it and redirect to the notebook
+      if invite.redeemed_user_id is None:
+        self.convert_invite_to_access( invite, user_id )
+        return dict( redirect = u"/notebooks/%s" % invite.notebook_id )
+
+      # if the user is logged in and has already redeemed this invite, then just redirect to the notebook
+      if invite.redeemed_user_id == user_id:
+        return dict( redirect = u"/notebooks/%s" % invite.notebook_id )
+      else:
+        raise Invite_error( u"That invite has already been used by someone else." )
+
+    if invite.redeemed_user_id:
+      raise Invite_error( u"That invite has already been used. If you were the one who used it, then simply <a href=\"/login\">login</a> to your account." )
+
+    # TODO: give the user the option to sign up or login in order to redeem the invite
+
+  def convert_invite_to_access( self, invite, user_id ):
+    """
+    Grant the given user access to the notebook specified in the invite, and mark that invite as
+    redeemed.
+
+    @type invite: model.Invite
+    @param invite: invite to convert to notebook access
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @raise Invite_error: an error occured when redeeming the invite
+    """
+    user = self.__database.load( User, user_id )
+    notebook = self.__database.load( Notebook, invite.notebook_id )
+    if not user or not notebook:
+      raise Invite_error( "There was an error when redeeming your invite. Please contact %s." % self.__support_email )
+
+    # if the user doesn't already have access to this notebook, then grant access
+    if not self.__database.select_one( bool, user.sql_has_access( notebook.object_id ) ):
+      self.__database.execute( user.sql_save_notebook( notebook.object_id, invite.read_write, invite.owner ), commit = False )
+
+    # the same goes for the trash notebook
+    if not self.__database.select_one( bool, user.sql_has_access( notebook.trash_id ) ):
+      self.__database.execute( user.sql_save_notebook( notebook.trash_id, invite.read_write, invite.owner ), commit = False )
+
+    invite.redeemed_user_id = user_id
+    self.__database.save( invite, commit = False )
+
+    self.__database.commit()

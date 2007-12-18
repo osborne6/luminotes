@@ -5,7 +5,7 @@ class Stub_database( object ):
   def __init__( self, connection = None ):
     # map of object id to list of saved objects (presumably in increasing order of revisions)
     self.objects = {}
-    self.user_notebook = {} # map of user_id to ( notebook_id, read_write )
+    self.user_notebook = {} # map of user_id to ( notebook_id, read_write, owner )
     self.last_saved_obj = None
     self.__next_id = 0
 

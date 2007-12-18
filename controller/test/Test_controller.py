@@ -221,7 +221,7 @@ class Test_controller( object ):
       for ( object_id, obj_list ) in database.objects.items():
         obj = obj_list[ -1 ]
         if isinstance( obj, Invite ) and obj.notebook_id == self.notebook_id and \
-           obj.email_address == self.email_address and obj.redeemed_user_id is None and \
+           obj.email_address == self.email_address and \
            obj.object_id != self.object_id:
           invites.append( obj )
 

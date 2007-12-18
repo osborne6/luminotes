@@ -213,3 +213,9 @@ class Test_root( Test_controller ):
     result = self.http_get( "/r/%s" % redeem_reset_id )
 
     assert result[ u"redirect" ] == u"/users/redeem_reset/%s" % redeem_reset_id
+
+  def test_redeem_invite( self ):
+    invite_id = u"foobarbaz"
+    result = self.http_get( "/i/%s" % invite_id )
+
+    assert result[ u"redirect" ] == u"/users/redeem_invite/%s" % invite_id

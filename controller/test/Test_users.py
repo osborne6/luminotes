@@ -4,14 +4,14 @@ import smtplib
 from pytz import utc
 from nose.tools import raises
 from datetime import datetime, timedelta
-from nose.tools import raises
 from Test_controller import Test_controller
 from Stub_smtp import Stub_smtp
 from model.User import User
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
-from controller.Users import Access_error
+from model.Invite import Invite
+from controller.Users import Invite_error
 
 
 class Test_users( Test_controller ):
@@ -1001,6 +1001,13 @@ class Test_users( Test_controller ):
     invite_id1 = matches.group( 2 )
     assert invite_id1
 
+    # update the user_notebook table accordingly. this normally happens when an invite is redeemed
+    self.database.execute( self.user.sql_save_notebook(
+      self.notebooks[ 0 ].object_id,
+      read_write = False,
+      owner = False,
+    ) )
+
     # then send a similar invite to the same email address with read_write and owner set to True
     result = self.http_post( "/users/send_invites", dict(
       notebook_id = self.notebooks[ 0 ].object_id,
@@ -1036,6 +1043,14 @@ class Test_users( Test_controller ):
     assert invite2
     assert invite2.read_write is True
     assert invite2.owner is True
+
+    # assert that the user_notebook table has also been updated accordingly
+    access = self.database.select_one( bool, self.user.sql_has_access(
+      self.notebooks[ 0 ].object_id,
+      read_write = True,
+      owner = True,
+    ) )
+    assert access is True
 
   def test_send_invites_with_generic_from_address( self ):
     Stub_smtp.reset()
@@ -1482,6 +1497,115 @@ class Test_users( Test_controller ):
 
     assert result[ u"error" ]
     assert "access" in result[ u"error" ]
+
+  def test_convert_invite_to_access( self ):
+    # trick send_invites() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    invite = self.database.load( Invite, invite_id )
+    cherrypy.root.users.convert_invite_to_access( invite, self.user.object_id )
+
+    access = self.database.select_one( bool, self.user.sql_has_access(
+      invite.notebook_id,
+      invite.read_write,
+      invite.owner,
+    ) )
+    assert access is True
+
+    notebook = self.database.load( Notebook, invite.notebook_id )
+    access = self.database.select_one( bool, self.user.sql_has_access(
+      notebook.trash_id,
+      invite.read_write,
+      invite.owner,
+    ) )
+    assert access is True
+
+    assert invite.redeemed_user_id == self.user.object_id
+
+  def test_convert_invite_to_access_twice( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    invite = self.database.load( Invite, invite_id )
+    cherrypy.root.users.convert_invite_to_access( invite, self.user.object_id )
+    cherrypy.root.users.convert_invite_to_access( invite, self.user.object_id )
+
+    access = self.database.select_one( bool, self.user.sql_has_access(
+      invite.notebook_id,
+      invite.read_write,
+      invite.owner,
+    ) )
+    assert access is True
+
+    notebook = self.database.load( Notebook, invite.notebook_id )
+    access = self.database.select_one( bool, self.user.sql_has_access(
+      notebook.trash_id,
+      invite.read_write,
+      invite.owner,
+    ) )
+    assert access is True
+
+    assert invite.redeemed_user_id == self.user.object_id
+
+  @raises( Invite_error )
+  def test_convert_invite_with_unknown_user( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    invite = self.database.load( Invite, invite_id )
+    cherrypy.root.users.convert_invite_to_access( invite, u"unknown_user_id" )
 
   def login( self ):
     result = self.http_post( "/users/login", dict(

@@ -185,6 +185,15 @@ class User( Persistent ):
         "select user_id from user_notebook where user_id = %s and notebook_id = %s;" % \
         ( quote( self.object_id ), quote( notebook_id ) )
 
+  def sql_update_access( self, notebook_id, read_write = False, owner = False ):
+    """
+    Return a SQL string to update the user's notebook access to the given read_write and owner level.
+    """
+    return \
+      "update user_notebook set read_write = %s, owner = %s where user_id = %s and notebook_id = %s;" % \
+      ( quote( read_write and 't' or 'f' ), quote( owner and 't' or 'f' ), quote( self.object_id ),
+        quote( notebook_id ) )
+
   def sql_calculate_storage( self ):
     """
     Return a SQL string to calculate the total bytes of storage usage by this user. Note that this
