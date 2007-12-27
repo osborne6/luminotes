@@ -103,6 +103,18 @@ class Test_root( Test_controller ):
     assert result[ u"notes" ][ 0 ].object_id == self.anon_note.object_id
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
 
+  def test_default_with_invite_id( self ):
+    result = self.http_get(
+      "/my_note?invite_id=whee",
+    )
+
+    assert result
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].object_id == self.anon_note.object_id
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert result[ u"invite_id" ] == u"whee"
+
   def test_default_with_unknown_note( self ):
     result = self.http_get(
       "/unknown_note",

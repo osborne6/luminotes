@@ -14,6 +14,7 @@ from Expire import strongly_expire
 from view.Json import Json
 from view.Main_page import Main_page
 from view.Redeem_reset_note import Redeem_reset_note
+from view.Redeem_invite_note import Redeem_invite_note
 
 
 USERNAME_PATTERN = re.compile( "^[a-zA-Z0-9]+$" )
@@ -180,8 +181,9 @@ class Users( object ):
     password_repeat = Valid_string( min = 1, max = 30 ),
     email_address = ( Valid_string( min = 0, max = 60 ) ),
     signup_button = unicode,
+    invite_id = Valid_id( none_okay = True ),
   )
-  def signup( self, username, password, password_repeat, email_address, signup_button ):
+  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None ):
     """
     Create a new User based on the given information. Start that user with their own Notebook and a
     "welcome to your wiki" Note. For convenience, login the newly created user as well.
@@ -196,6 +198,8 @@ class Users( object ):
     @param email_address: user's email address
     @type signup_button: unicode
     @param signup_button: ignored
+    @type invite_id: unicode
+    @param invite_id: id of invite to redeem upon signup (optional)
     @rtype: json dict
     @return: { 'redirect': url, 'authenticated': userdict }
     @raise Signup_error: passwords don't match or the username is unavailable
@@ -240,7 +244,17 @@ class Users( object ):
     self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
     self.__database.commit()
 
-    redirect = u"/notebooks/%s" % notebook.object_id
+    # if there's an invite_id, then redeem that invite and redirect to the invite's notebook
+    if invite_id:
+      invite = self.__database.load( Invite, invite_id )
+      if not invite:
+        raise Signup_error( u"The invite is unknown." )
+
+      self.convert_invite_to_access( invite, user_id )
+      redirect = u"/notebooks/%s" % invite.notebook_id
+    # otherwise, just redirect to the newly created notebook
+    else:
+      redirect = u"/notebooks/%s" % notebook.object_id
 
     return dict(
       redirect = redirect,
@@ -316,8 +330,9 @@ class Users( object ):
     username = ( Valid_string( min = 1, max = 30 ), valid_username ),
     password = Valid_string( min = 1, max = 30 ),
     login_button = unicode,
+    invite_id = Valid_id( none_okay = True ),
   )
-  def login( self, username, password, login_button ):
+  def login( self, username, password, login_button, invite_id = None ):
     """
     Attempt to authenticate the user. If successful, associate the given user with the current
     session.
@@ -326,6 +341,8 @@ class Users( object ):
     @param username: username to login
     @type password: unicode
     @param password: the user's password
+    @type invite_id: unicode
+    @param invite_id: id of invite to redeem upon login (optional)
     @rtype: json dict
     @return: { 'redirect': url, 'authenticated': userdict }
     @raise Authentication_error: invalid username or password
@@ -338,8 +355,16 @@ class Users( object ):
 
     first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
 
-    # redirect to the user's first notebook (if any)
-    if first_notebook:
+    # if there's an invite_id, then redeem that invite and redirect to the invite's notebook
+    if invite_id:
+      invite = self.__database.load( Invite, invite_id )
+      if not invite:
+        raise Authentication_error( u"The invite is unknown." )
+
+      self.convert_invite_to_access( invite, user.object_id )
+      redirect = u"/notebooks/%s" % invite.notebook_id
+    # otherwise, just redirect to the user's first notebook (if any)
+    elif first_notebook:
       redirect = u"/notebooks/%s" % first_notebook.object_id
     else:
       redirect = u"/"
@@ -741,7 +766,7 @@ class Users( object ):
         # if the invite is already redeemed, then update the relevant entry in the user_notebook
         # access table as well
         if similar.redeemed_user_id is not None:
-          redeemed_user = self.__database.load( User, redeemed_user_id )
+          redeemed_user = self.__database.load( User, similar.redeemed_user_id )
           if redeemed_user:
             self.__database.execute( redeemed_user.sql_update_access( notebook_id, read_write, owner ) )
 
@@ -833,8 +858,8 @@ class Users( object ):
     @param invite_id: id of invite to redeem
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype:
-    @return:
+    @rtype: unicode
+    @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid
     @raise Invite_error: an error occured when redeeming the invite
     """
@@ -857,7 +882,32 @@ class Users( object ):
     if invite.redeemed_user_id:
       raise Invite_error( u"That invite has already been used. If you were the one who used it, then simply <a href=\"/login\">login</a> to your account." )
 
-    # TODO: give the user the option to sign up or login in order to redeem the invite
+    notebook = self.__database.load( Notebook, invite.notebook_id )
+    if not notebook:
+      raise Invite_error( "That notebook you've been invited to is unknown." )
+
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    if anonymous:
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
+      invite_notebook = self.__database.load( Notebook, invite.notebook_id )
+
+    if not anonymous or not main_notebook or not invite_notebook:
+      raise Password_reset_error( "There was an error when redeeming your invite. Please contact %s." % self.__support_email )
+
+    # give the user the option to sign up or login in order to redeem the invite
+    result = self.current( anonymous.object_id )
+    result[ "notebook" ] = main_notebook
+    result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
+    result[ "note_read_write" ] = False
+    result[ "notes" ] = [ Note.create(
+      object_id = u"redeem_invite",
+      contents = unicode( Redeem_invite_note( invite, invite_notebook ) ),
+      notebook_id = main_notebook.object_id,
+    ) ]
+    result[ "invites" ] = []
+
+    return result
 
   def convert_invite_to_access( self, invite, user_id ):
     """

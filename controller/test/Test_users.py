@@ -44,6 +44,9 @@ class Test_users( Test_controller ):
     trash_id1 = self.database.next_id( Notebook )
     trash_id2 = self.database.next_id( Notebook )
 
+    self.database.save( Notebook.create( trash_id1, u"trash" ) )
+    self.database.save( Notebook.create( trash_id2, u"trash" ) )
+
     self.notebooks = [
       Notebook.create( notebook_id1, u"my notebook", trash_id = trash_id1 ),
       Notebook.create( notebook_id2, u"my other notebook", trash_id = trash_id2 ),
@@ -145,6 +148,83 @@ class Test_users( Test_controller ):
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.revision == self.anon_notebook.revision
+    assert notebook.name == self.anon_notebook.name
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
+    assert notebook.owner == False
+
+    assert result.get( u"login_url" ) is None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+  def test_current_after_signup_with_invite_id( self ):
+    # trick send_invites() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    result = self.http_post( "/users/signup", dict(
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      signup_button = u"sign up",
+      invite_id = invite_id,
+    ) )
+
+    invite_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    assert invite_notebook_id == self.notebooks[ 0 ].object_id
+
+    user = self.database.last_saved_user
+    assert isinstance( user, User )
+    result = cherrypy.root.users.current( user.object_id )
+
+    assert result[ u"user" ].object_id == user.object_id
+    assert result[ u"user" ].username == self.new_username
+    assert result[ u"user" ].email_address == self.new_email_address
+
+    assert cherrypy.root.users.check_access( user.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.check_access( user.object_id, self.notebooks[ 0 ].trash_id )
+
+    # the notebook that the user was invited to should be in the list of returned notebooks
+    notebooks = dict( [ ( notebook.object_id, notebook ) for notebook in result[ u"notebooks" ] ] )
+    
+    notebook = notebooks.get( invite_notebook_id )
+    assert notebook
+    assert notebook.revision
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.trash_id
+    assert notebook.read_write == False
+    assert notebook.owner == False
+
+    notebook = notebooks.get( self.notebooks[ 0 ].trash_id )
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
+    assert notebook.owner == False
+
+    notebook = notebooks.get( self.anon_notebook.object_id )
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
@@ -328,6 +408,41 @@ class Test_users( Test_controller ):
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+  def test_current_after_login_with_invite_id( self ):
+    # trick send_invites() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    result = self.http_post( "/users/login", dict(
+      username = self.username2,
+      password = self.password2,
+      invite_id = invite_id,
+      login_button = u"login",
+    ) )
+
+    invite_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    assert invite_notebook_id == self.notebooks[ 0 ].object_id
+
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_update_storage( self ):
     previous_revision = self.user.revision
@@ -1611,6 +1726,14 @@ class Test_users( Test_controller ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
       password = self.password,
+      login_button = u"login",
+    ) )
+    self.session_id = result[ u"session_id" ]
+
+  def login2( self ):
+    result = self.http_post( "/users/login", dict(
+      username = self.username2,
+      password = self.password2,
       login_button = u"login",
     ) )
     self.session_id = result[ u"session_id" ]

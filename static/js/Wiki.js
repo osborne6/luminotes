@@ -13,6 +13,7 @@ function Wiki( invoker ) {
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
   this.storage_usage_high = false;
   this.invites = evalJSON( getElement( "invites" ).value );
+  this.invite_id = getElement( "invite_id" ).value ;
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -642,7 +643,11 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   connect( editor, "hide_clicked", function ( event ) { self.hide_editor( event, editor ) } );
   connect( editor, "invites_updated", function ( invites ) { self.invites = invites; self.share_notebook(); } );
   connect( editor, "submit_form", function ( url, form, callback ) {
-    self.invoker.invoke( url, "POST", null, callback, form );
+    var args = {}
+    if ( url == "/users/signup" || url == "/users/login" )
+      args[ "invite_id" ] = self.invite_id;
+
+    self.invoker.invoke( url, "POST", args, callback, form );
   } );
   connect( editor, "revoke_invite", function ( invite_id, callback ) {
     self.invoker.invoke( "/users/revoke_invite", "POST", {
@@ -1346,23 +1351,20 @@ Wiki.prototype.display_invites = function ( invite_area ) {
       "title": "revoke this person's notebook access"
     } );
 
+    var add_invite_to = null;
     if ( invite.owner ) {
-        appendChildNodes(
-          owners, createDOM( "div", { "class": "invite" },
-          invite.email_address, " ", revoke_button )
-        );
+      add_invite_to = owners;
     } else {
       if ( invite.read_write )
-        appendChildNodes(
-          collaborators, createDOM( "div", { "class": "invite" },
-          invite.email_address, " ", revoke_button )
-        );
+        add_invite_to = collaborators;
       else
-        appendChildNodes(
-          viewers, createDOM( "div", { "class": "invite" },
-          invite.email_address, " ", revoke_button )
-        );
+        add_invite_to = viewers;
     }
+
+    appendChildNodes(
+      add_invite_to, createDOM( "div", { "class": "invite" },
+      invite.email_address, " ", revoke_button )
+    );
   }
 
   var div = createDOM( "div" );

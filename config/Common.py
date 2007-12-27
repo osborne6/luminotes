@@ -41,7 +41,7 @@ settings = {
       },
       {
         "name": "premium",
-        "storage_quota_bytes": 1000 * MEGABYTE,
+        "storage_quota_bytes": 2000 * MEGABYTE,
         "notebook_collaboration": True,
       },
     ],

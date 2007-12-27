@@ -4,7 +4,11 @@ from Rounded_div import Rounded_div
 
 class Link_area( Div ):
   def __init__( self, notebooks, notebook, total_notes_count, parent_id, notebook_path, user ):
-    linked_notebooks = [ nb for nb in notebooks if nb.read_write and nb.name not in ( u"trash" ) and nb.deleted is False ]
+    linked_notebooks = [ nb for nb in notebooks if
+      ( nb.read_write or not nb.name.startswith( u"Luminotes" ) ) and
+      nb.name not in ( u"trash" ) and
+      nb.deleted is False
+    ]
 
     Div.__init__(
       self,

@@ -45,10 +45,18 @@ class Root( object ):
   @expose( Main_page )
   @validate(
     note_title = unicode,
+    invite_id = Valid_id( none_okay = True ),
   )
-  def default( self, note_title ):
+  def default( self, note_title, invite_id = None ):
     """
     Convenience method for accessing a note in the main notebook by name rather than by note id.
+
+    @type note_title: unicode
+    @param note_title: title of the note to return
+    @type invite_id: unicode
+    @param invite_id: id of the invite used to get to this note (optional)
+    @rtype: unicode
+    @return: rendered HTML page
     """
     # if the user is logged in and not using https, and they request the sign up or login note, then
     # redirect to the https version of the page (if available)
@@ -56,7 +64,10 @@ class Root( object ):
     https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
     
     if note_title in ( u"sign_up", u"login" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
-      return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
+      if invite_id:
+        return dict( redirect = u"%s/%s?invite_id=%s" % ( https_url, note_title, invite_id ) )
+      else:
+        return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
 
     result = self.__users.current( user_id = None )
     first_notebook = result[ u"notebooks" ][ 0 ]
@@ -68,6 +79,8 @@ class Root( object ):
       raise cherrypy.NotFound
 
     result.update( self.__notebooks.contents( first_notebook.object_id, user_id = user_id, note_id = note.object_id ) )
+    if invite_id:
+      result[ "invite_id" ] = invite_id
 
     return result
 
