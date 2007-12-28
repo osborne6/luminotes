@@ -1476,7 +1476,7 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_revoke_invite( self ):
-    # trick revoke_invite() into using a fake SMTP server
+    # trick send_invite() into using a fake SMTP server
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp
     self.login()
@@ -1612,6 +1612,284 @@ class Test_users( Test_controller ):
 
     assert result[ u"error" ]
     assert "access" in result[ u"error" ]
+
+  def test_redeem_invite( self ):
+    # trick send_invite() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ) )
+
+    # assert that a redeem invite page is returned with sign up / login links
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebook" ].name == self.anon_notebook.name
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"total_notes_count" ] == 1
+    assert result[ u"note_read_write" ] == False
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].object_id == "redeem_invite"
+    assert u"sign up" in result[ u"notes" ][ 0 ].contents
+    assert u"login" in result[ u"notes" ][ 0 ].contents
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert len( result[ u"invites" ] ) == 0
+
+  def test_redeem_invite_unknown( self ):
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = "unknowninviteid",
+    ) )
+
+    assert result[ u"error" ]
+    assert u"unknown" in result[ u"error" ]
+
+  def test_redeem_invite_after_login( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    self.login2()
+    
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    # assert that access has been granted
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+
+    # assert that the user is redirected to the notebook that the invite is for
+    assert result[ u"redirect"].startswith( u"/notebooks/" )
+    notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    assert notebook_id == self.notebooks[ 0 ].object_id
+
+  def test_redeem_invite_after_login_already_redeemed( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    self.login2()
+    
+    self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    # assert that access is still granted
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+
+    # assert that the user is redirected to the notebook that the invite is for
+    assert result[ u"redirect"].startswith( u"/notebooks/" )
+    notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
+    assert notebook_id == self.notebooks[ 0 ].object_id
+
+  def test_redeem_invite_after_login_already_redeemed_by_different_user( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+
+    self.login2()
+    
+    self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    self.login()
+
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    assert u"already" in result[ u"error" ]
+
+  def test_redeem_invite_already_redeemed( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ) )
+
+    assert result[ u"error" ]
+    assert u"already" in result[ u"error" ]
+
+  def test_redeem_invite_already_redeemed( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    del( self.database.objects[ self.notebooks[ 0 ].object_id ] )
+
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ) )
+
+    assert result[ u"error" ]
+    assert u"unknown" in result[ u"error" ]
+
+  def test_redeem_invite_missing_anonymous_user( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    del( self.database.objects[ self.anonymous.object_id ] )
+
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ) )
+
+    assert result[ u"error" ]
+
+  def test_redeem_invite_missing_invite_notebook( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    del( self.database.objects[ self.notebooks[ 0 ].object_id ] )
+
+    result = self.http_post( "/users/redeem_invite", dict(
+      invite_id = invite_id,
+    ) )
+
+    assert result[ u"error" ]
 
   def test_convert_invite_to_access( self ):
     # trick send_invites() into using a fake SMTP server
