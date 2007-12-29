@@ -107,6 +107,20 @@ class Test_controller( object ):
     User.sql_has_access = lambda self, notebook_id, read_write = False, owner = False: \
       lambda database: sql_has_access( self, notebook_id, read_write, owner, database )
 
+    def sql_update_access( self, notebook_id, read_write, owner, database ):
+      for ( user_id, notebook_infos ) in database.user_notebook.items():
+        for notebook_info in notebook_infos:
+          ( db_notebook_id, db_read_write, db_owner ) = notebook_info
+
+          if self.object_id == user_id and notebook_id == db_notebook_id:
+            notebook_infos_copy = list( notebook_infos )
+            notebook_infos_copy.remove( notebook_info )
+            notebook_infos_copy.append( ( notebook_id, read_write, owner ) )
+            database.user_notebook[ user_id ] = notebook_infos_copy
+
+    User.sql_update_access = lambda self, notebook_id, read_write = False, owner = False: \
+      lambda database: sql_update_access( self, notebook_id, read_write, owner, database )
+
     def sql_load_revisions( self, database ):
       note_list = database.objects.get( self.object_id )
       if not note_list: return None
