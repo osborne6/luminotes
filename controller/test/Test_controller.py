@@ -121,6 +121,23 @@ class Test_controller( object ):
     User.sql_update_access = lambda self, notebook_id, read_write = False, owner = False: \
       lambda database: sql_update_access( self, notebook_id, read_write, owner, database )
 
+    def sql_revoke_invite_access( notebook_id, trash_id, email_address, excluded_user_id, database ):
+      invites = []
+
+      for ( user_id, notebook_infos ) in database.user_notebook.items():
+        if user_id == excluded_user_id: continue
+        for notebook_info in list( notebook_infos ):
+          ( db_notebook_id, read_write, owner ) = notebook_info
+          if db_notebook_id not in ( notebook_id, trash_id ): continue
+          for ( object_id, obj_list ) in database.objects.items():
+            obj = obj_list[ -1 ]
+            if isinstance( obj, Invite ) and obj.notebook_id == notebook_id and \
+               obj.email_address == email_address:
+              database.user_notebook[ user_id ].remove( notebook_info )
+
+    User.sql_revoke_invite_access = staticmethod( lambda notebook_id, trash_id, email_address, excluded_user_id: \
+      lambda database: sql_revoke_invite_access( notebook_id, trash_id, email_address, excluded_user_id, database ) )
+
     def sql_load_revisions( self, database ):
       note_list = database.objects.get( self.object_id )
       if not note_list: return None
@@ -257,21 +274,6 @@ class Test_controller( object ):
 
     Invite.sql_load_notebook_invites = staticmethod( lambda notebook_id:
       lambda database: sql_load_notebook_invites( notebook_id, database ) )
-
-    def sql_revoke_user_access( self, database ):
-      invites = []
-
-      for ( user_id, notebook_infos ) in database.user_notebook.items():
-        for ( index, ( notebook_id, read_write, owner ) ) in enumerate( notebook_infos ):
-          if notebook_id != self.notebook_id: continue
-          for ( object_id, obj_list ) in database.objects.items():
-            obj = obj_list[ -1 ]
-            if isinstance( obj, Invite ) and obj.notebook_id == self.notebook_id and \
-               obj.email_address == self.email_address:
-              del( database.user_notebook[ user_id ][ index ] )
-
-    Invite.sql_revoke_user_access = lambda self: \
-      lambda database: sql_revoke_user_access( self, database )
 
     def sql_revoke_invites( self, database ):
       invites = []

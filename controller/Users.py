@@ -756,7 +756,7 @@ class Users( object ):
       invite = Invite.create( invite_id, user_id, notebook_id, email_address, read_write, owner )
       self.__database.save( invite, commit = False )
 
-      # update any unredeemed invitations for this notebook already sent to the same email address
+      # update any invitations for this notebook already sent to the same email address
       similar_invites = self.__database.select_many( Invite, invite.sql_load_similar() )
       for similar in similar_invites:
         similar.read_write = read_write
@@ -764,11 +764,14 @@ class Users( object ):
         self.__database.save( similar, commit = False )
 
         # if the invite is already redeemed, then update the relevant entry in the user_notebook
-        # access table as well
-        if similar.redeemed_user_id is not None:
+        # access table as well. prevent the user from updating their own access
+        if similar.redeemed_user_id is not None and similar.redeemed_user_id != user_id:
           redeemed_user = self.__database.load( User, similar.redeemed_user_id )
           if redeemed_user:
             self.__database.execute( redeemed_user.sql_update_access( notebook_id, read_write, owner ) )
+            notebook = self.__database.load( Notebook, notebook_id )
+            if notebook:
+              self.__database.execute( redeemed_user.sql_update_access( notebook.trash_id, read_write, owner ) )
 
       # create an email message with a unique invitation link
       notebook_name = notebook.name.strip().replace( "\n", " " ).replace( "\r", " " )
@@ -830,10 +833,14 @@ class Users( object ):
       raise Access_error()
 
     invite = self.__database.load( Invite, invite_id )
-    if not invite or not invite.email_address or invite.notebook_id != notebook_id:
+    notebook = self.__database.load( Notebook, notebook_id )
+    if not notebook or not invite or not invite.email_address or invite.notebook_id != notebook_id:
       raise Access_error()
 
-    self.__database.execute( invite.sql_revoke_user_access(), commit = False )
+    self.__database.execute(
+      User.sql_revoke_invite_access( notebook_id, notebook.trash_id, invite.email_address, user_id ),
+      commit = False,
+    )
     self.__database.execute( invite.sql_revoke_invites(), commit = False )
     self.__database.commit()
 

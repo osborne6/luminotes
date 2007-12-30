@@ -194,6 +194,26 @@ class User( Persistent ):
       ( quote( read_write and 't' or 'f' ), quote( owner and 't' or 'f' ), quote( self.object_id ),
         quote( notebook_id ) )
 
+  @staticmethod
+  def sql_revoke_invite_access( notebook_id, trash_id, email_address, excluded_user_id ):
+    return \
+      """
+      delete from
+        user_notebook
+      where
+        notebook_id in ( %s, %s ) and
+        user_notebook.user_id != %s and
+        user_notebook.user_id in (
+          select
+            redeemed_user_id
+          from
+            invite
+          where
+            notebook_id = %s and
+            email_address = %s
+        );
+      """ % ( quote( notebook_id ), quote( trash_id ), quote( excluded_user_id ), quote( notebook_id ), quote( email_address ) )
+
   def sql_calculate_storage( self ):
     """
     Return a SQL string to calculate the total bytes of storage usage by this user. Note that this
