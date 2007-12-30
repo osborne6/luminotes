@@ -169,3 +169,17 @@ ol li {
   background-color: #fafafa;
   padding: 0.5em;
 }
+
+.thumbnail_left {
+  float: left;
+  border-width: 0;
+  padding-right: 2em;
+  padding-bottom: 1em;
+}
+
+.thumbnail_right {
+  float: right;
+  border-width: 0;
+  padding-left: 2em;
+  padding-bottom: 1em;
+}
