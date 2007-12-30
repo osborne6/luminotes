@@ -508,7 +508,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
     if ( link )
       link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
     if ( callback )
-      callback( editor.contents() );
+      callback( editor.summarize() );
     return;
   }
 
