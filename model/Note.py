@@ -115,6 +115,10 @@ class Note( Persistent ):
     self.__rank = rank
     self.update_revision()
 
+  def __set_user_id( self, user_id ):
+    self.__user_id = user_id
+    self.update_revision()
+
   @staticmethod
   def sql_load( object_id, revision = None ):
     if revision:
@@ -170,5 +174,5 @@ class Note( Persistent ):
   startup = property( lambda self: self.__startup, __set_startup )
   deleted_from_id = property( lambda self: self.__deleted_from_id, __set_deleted_from_id )
   rank = property( lambda self: self.__rank, __set_rank )
-  user_id = property( lambda self: self.__user_id )
+  user_id = property( lambda self: self.__user_id, __set_user_id )
   creation = property( lambda self: self.__creation )

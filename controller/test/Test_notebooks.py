@@ -26,37 +26,42 @@ class Test_notebooks( Test_controller ):
     self.anonymous = None
     self.session_id = None
 
-    self.make_notebooks()
     self.make_users()
+    self.make_notebooks()
+    self.make_invites()
     self.database.commit()
 
   def make_notebooks( self ):
-    self.trash = Notebook.create( self.database.next_id( Notebook ), u"trash" )
+    user_id = self.user.object_id
+
+    self.trash = Notebook.create( self.database.next_id( Notebook ), u"trash", user_id = user_id )
     self.database.save( self.trash, commit = False )
-    self.notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", self.trash.object_id )
+    self.notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", self.trash.object_id, user_id = user_id )
     self.database.save( self.notebook, commit = False )
 
     note_id = self.database.next_id( Note )
-    self.note = Note.create( note_id, u"<h3>my title</h3>blah", notebook_id = self.notebook.object_id, startup = True )
+    self.note = Note.create( note_id, u"<h3>my title</h3>blah", notebook_id = self.notebook.object_id, startup = True, user_id = user_id )
     self.database.save( self.note, commit = False )
 
     note_id = self.database.next_id( Note )
-    self.note2 = Note.create( note_id, u"<h3>other title</h3>whee", notebook_id = self.notebook.object_id )
+    self.note2 = Note.create( note_id, u"<h3>other title</h3>whee", notebook_id = self.notebook.object_id, user_id = user_id )
     self.database.save( self.note2, commit = False )
 
-    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"anon_notebook" )
+    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"anon_notebook", user_id = user_id )
     self.database.save( self.anon_notebook, commit = False )
+
+    self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
   def make_users( self ):
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user, commit = False )
-    self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True, owner = True ) )
-    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True ) )
 
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
-    self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
+  def make_invites( self ):
     self.invite = Invite.create(
       self.database.next_id( Invite ), self.user.object_id, self.notebook.object_id,
       u"skinner@example.com", read_write = True, owner = False,
@@ -725,6 +730,7 @@ class Test_notebooks( Test_controller ):
     assert note.title == "new title"
     assert note.contents == new_note_contents
     assert note.startup == startup
+    assert note.user_id == self.user.object_id
 
     if startup:
       assert note.rank == 0 
@@ -810,6 +816,7 @@ class Test_notebooks( Test_controller ):
     assert note.title == "new title"
     assert note.contents == new_note_contents
     assert note.deleted_from_id == None
+    assert note.user_id == self.user.object_id
 
     # make sure the old title can no longer be loaded from the trash
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -870,6 +877,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == "new title"
     assert note.contents == new_note_contents
+    assert note.user_id == self.user.object_id
     assert note.revision == previous_revision
 
   def test_save_unchanged_deleted_note( self, startup = False ):
@@ -920,6 +928,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == "new title"
     assert note.contents == new_note_contents
+    assert note.user_id == self.user.object_id
     assert note.revision == previous_revision
     assert note.deleted_from_id == None
 
@@ -973,6 +982,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == "new title"
     assert note.contents == new_note_contents
+    assert note.user_id == self.user.object_id
     assert note.revision > previous_revision
     assert note.startup == ( not startup )
 
@@ -1025,6 +1035,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == "new title"
     assert note.contents == new_note_contents
+    assert note.user_id == self.user.object_id
     assert note.revision == previous_revision
 
   def test_save_note_from_an_older_revision( self ):
@@ -1090,6 +1101,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.title == "new new title"
     assert note.contents == new_note_contents
+    assert note.user_id == self.user.object_id
 
   def test_save_note_with_unknown_notebook( self ):
     self.login()
@@ -1139,6 +1151,7 @@ class Test_notebooks( Test_controller ):
     assert note.title == new_note.title
     assert note.contents == new_note.contents
     assert note.startup == startup
+    assert note.user_id == self.user.object_id
 
     if startup:
       assert note.rank == 0 
@@ -1185,6 +1198,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == new_note.object_id
     assert note.title == new_note.title
     assert note.contents == expected_contents
+    assert note.user_id == self.user.object_id
 
   def test_save_new_note_with_bad_characters( self ):
     self.login()
@@ -1219,6 +1233,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == new_note.object_id
     assert note.title == new_note.title
     assert note.contents == contents + " bar"
+    assert note.user_id == self.user.object_id
 
   def test_save_two_new_notes( self, startup = False ):
     self.login()
@@ -1266,6 +1281,7 @@ class Test_notebooks( Test_controller ):
     assert note.title == new_note.title
     assert note.contents == new_note.contents
     assert note.startup == startup
+    assert note.user_id == self.user.object_id
 
     if startup:
       assert note.rank == 1 # one greater than the previous new note's rank 
@@ -1295,6 +1311,22 @@ class Test_notebooks( Test_controller ):
 
     assert result[ "note" ] is None
     assert result[ "note_id_in_trash" ] == self.note.object_id
+
+    # test that the deleted note can be loaded from the trash
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    assert note.startup == self.note.startup
+    assert note.deleted_from_id == self.notebook.object_id
+    assert note.user_id == self.user.object_id
 
   def test_delete_note_from_trash( self ):
     self.login()
@@ -1406,6 +1438,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == None
     assert note.notebook_id == self.notebook.object_id
+    assert note.user_id == self.user.object_id
 
     # test that the revision of the note from when it was deleted is loadable
     result = self.http_post( "/notebooks/load_note/", dict(
@@ -1419,6 +1452,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == self.notebook.object_id
     assert note.notebook_id == self.trash.object_id
+    assert note.user_id == self.user.object_id
 
   def test_undelete_note_that_is_not_deleted( self ):
     self.login()
@@ -1431,7 +1465,7 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" ) == None
 
-    # test that the "undeleted" is where it should be
+    # test that the "undeleted" note is where it should be
     result = self.http_post( "/notebooks/load_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -1477,6 +1511,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == self.notebook.object_id
     assert note.notebook_id == self.notebook.trash_id
+    assert note.user_id == self.user.object_id
 
   def test_undelete_unknown_note( self ):
     self.login()
@@ -1497,6 +1532,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == None
     assert note.notebook_id == self.notebook.object_id
+    assert note.user_id == self.user.object_id
 
   def test_undelete_note_from_incorrect_notebook( self ):
     self.login()
@@ -1524,6 +1560,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == self.notebook.object_id
     assert note.notebook_id == self.notebook.trash_id
+    assert note.user_id == self.user.object_id
 
   def test_undelete_note_that_is_not_deleted_from_id_incorrect_notebook( self ):
     self.login()
@@ -1546,6 +1583,7 @@ class Test_notebooks( Test_controller ):
     assert note.object_id == self.note.object_id
     assert note.deleted_from_id == None
     assert note.notebook_id == self.notebook.object_id
+    assert note.user_id == self.user.object_id
 
   def test_delete_all_notes( self ):
     self.login()
@@ -1572,6 +1610,31 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ "note" ] is None
+
+    # test that all notes can be loaded from the trash
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result.get( "note" )
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.deleted_from_id == self.notebook.object_id
+    assert note.notebook_id == self.notebook.trash_id
+    assert note.user_id == self.user.object_id
+
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash_id,
+      note_id = self.note2.object_id,
+    ), session_id = self.session_id )
+
+    note2 = result.get( "note" )
+    assert note2
+    assert note2.object_id == self.note2.object_id
+    assert note2.deleted_from_id == self.notebook.object_id
+    assert note2.notebook_id == self.notebook.trash_id
+    assert note2.user_id == self.user.object_id
 
   def test_delete_all_notes_from_trash( self ):
     self.login()
@@ -1909,6 +1972,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     assert notebook.name == new_name
+    assert notebook.user_id == self.user.object_id
 
   def test_rename_without_login( self ):
     new_name = u"renamed notebook"
@@ -1971,6 +2035,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.read_write == True
     assert notebook.owner == True
     assert notebook.trash_id
+    assert notebook.user_id == self.user.object_id
 
   def test_delete_with_multiple_notebooks( self ):
     # create a second notebook, which we should be redirected to after the first notebook is deleted
@@ -2009,6 +2074,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     assert notebook.deleted == True
+    assert notebook.user_id == self.user.object_id
 
   def test_contents_after_delete_twice( self ):
     self.login()
@@ -2028,6 +2094,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     assert notebook.deleted == True
+    assert notebook.user_id == self.user.object_id
 
   def test_delete_without_login( self ):
     result = self.http_post( "/notebooks/delete", dict(
@@ -2136,6 +2203,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.read_write == True
     assert notebook.owner == True
     assert notebook.trash_id
+    assert notebook.user_id == self.user.object_id
 
   def test_contents_after_undelete( self ):
     self.login()
@@ -2155,6 +2223,7 @@ class Test_notebooks( Test_controller ):
 
     notebook = result[ "notebook" ]
     assert notebook.deleted == False
+    assert notebook.user_id == self.user.object_id
 
   def test_undelete_without_login( self ):
     self.http_post( "/notebooks/delete", dict(
@@ -2194,6 +2263,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.read_write == True
     assert notebook.owner == True
     assert notebook.trash_id
+    assert notebook.user_id == self.user.object_id
 
   def test_recent_notes( self ):
     result = cherrypy.root.notebooks.load_recent_notes(

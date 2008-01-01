@@ -228,9 +228,13 @@ class Notebook( Persistent ):
     self.__deleted = deleted
     self.update_revision()
 
+  def __set_user_id( self, user_id ):
+    self.__user_id = user_id
+    self.update_revision()
+
   name = property( lambda self: self.__name, __set_name )
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
   owner = property( lambda self: self.__owner, __set_owner )
   deleted = property( lambda self: self.__deleted, __set_deleted )
-  user_id = property( lambda self: self.__user_id )
+  user_id = property( lambda self: self.__user_id, __set_user_id )

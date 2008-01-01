@@ -132,6 +132,13 @@ class Test_note( object ):
     assert self.note.revision > previous_revision
     assert self.note.rank == 5
 
+  def test_set_user_id( self ):
+    previous_revision = self.note.revision
+    self.note.user_id = u"5"
+
+    assert self.note.revision > previous_revision
+    assert self.note.user_id == u"5"
+
   def test_to_dict( self ):
     d = self.note.to_dict()
 

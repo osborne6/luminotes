@@ -456,7 +456,7 @@ class Notebooks( object ):
     note = self.__database.load( Note, note_id )
 
     # check whether the provided note contents have been changed since the previous revision
-    def update_note( current_notebook, old_note, startup ):
+    def update_note( current_notebook, old_note, startup, user_id ):
       # the note hasn't been changed, so bail without updating it
       if contents.replace( u"\n", u"" ) == old_note.contents.replace( u"\n", "" ) and startup == old_note.startup:
         new_revision = None
@@ -469,6 +469,7 @@ class Notebooks( object ):
             note.rank = self.__database.select_one( float, notebook.sql_highest_rank() ) + 1
         else:
           note.rank = None
+        note.user_id = user_id
 
         new_revision = note.revision
 
@@ -479,7 +480,7 @@ class Notebooks( object ):
       old_note = self.__database.load( Note, note_id, previous_revision )
 
       previous_revision = note.revision
-      new_revision = update_note( notebook, old_note, startup )
+      new_revision = update_note( notebook, old_note, startup, user_id )
 
     # the note is not already in the given notebook, so look for it in the trash
     elif note and notebook.trash_id and note.notebook_id == notebook.trash_id:
@@ -490,7 +491,7 @@ class Notebooks( object ):
       note.notebook_id = notebook.object_id
       note.deleted_from_id = None
 
-      new_revision = update_note( notebook, old_note, startup )
+      new_revision = update_note( notebook, old_note, startup, user_id )
     # otherwise, create a new note
     else:
       if startup:
@@ -499,7 +500,7 @@ class Notebooks( object ):
         rank = None
   
       previous_revision = None
-      note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = startup, rank = rank )
+      note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = startup, rank = rank, user_id = user_id )
       new_revision = note.revision
 
     if new_revision:
@@ -556,6 +557,7 @@ class Notebooks( object ):
         note.startup = True
       else:
         note.notebook_id = None
+      note.user_id = user_id
 
       self.__database.save( note, commit = False )
       user = self.__users.update_storage( user_id, commit = False )
@@ -610,6 +612,7 @@ class Notebooks( object ):
       note.notebook_id = note.deleted_from_id
       note.deleted_from_id = None
       note.startup = True
+      note.user_id = user_id
 
       self.__database.save( note, commit = False )
       user = self.__users.update_storage( user_id, commit = False )
@@ -657,6 +660,8 @@ class Notebooks( object ):
         note.startup = True
       else:
         note.notebook_id = None
+      note.user_id = user_id
+
       self.__database.save( note, commit = False )
 
     user = self.__users.update_storage( user_id, commit = False )
@@ -813,11 +818,11 @@ class Notebooks( object ):
   def __create_notebook( self, name, user, commit = True ):
     # create the notebook along with a trash
     trash_id = self.__database.next_id( Notebook, commit = False )
-    trash = Notebook.create( trash_id, u"trash" )
+    trash = Notebook.create( trash_id, u"trash", user_id = user.object_id )
     self.__database.save( trash, commit = False )
 
     notebook_id = self.__database.next_id( Notebook, commit = False )
-    notebook = Notebook.create( notebook_id, name, trash_id )
+    notebook = Notebook.create( notebook_id, name, trash_id, user_id = user.object_id )
     self.__database.save( notebook, commit = False )
 
     # record the fact that the user has access to their new notebook
@@ -873,6 +878,8 @@ class Notebooks( object ):
       raise Access_error()
 
     notebook.name = name
+    notebook.user_id = user_id
+
     self.__database.save( notebook, commit = False )
     self.__database.commit()
 
@@ -915,6 +922,8 @@ class Notebooks( object ):
       raise Access_error()
 
     notebook.deleted = True
+    notebook.user_id = user_id
+
     self.__database.save( notebook, commit = False )
 
     # redirect to a remaining undeleted notebook, or if there isn't one, create an empty notebook
@@ -1001,6 +1010,8 @@ class Notebooks( object ):
       raise Access_error()
 
     notebook.deleted = False
+    notebook.user_id = user_id
+
     self.__database.save( notebook, commit = False )
     self.__database.commit()
 

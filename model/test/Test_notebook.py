@@ -56,6 +56,13 @@ class Test_notebook( object ):
     assert self.notebook.deleted == True
     assert self.notebook.revision > previous_revision
 
+  def test_set_user_id( self ):
+    previous_revision = self.notebook.revision
+    self.notebook.user_id = u"5"
+
+    assert self.notebook.user_id == u"5"
+    assert self.notebook.revision > previous_revision
+
   def test_to_dict( self ):
     d = self.notebook.to_dict()
 
