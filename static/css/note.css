@@ -173,13 +173,14 @@ ol li {
 .thumbnail_left {
   float: left;
   border-width: 0;
-  padding-right: 2em;
-  padding-bottom: 1em;
+  margin: 1em;
+  margin-right: 2em;
+  margin-bottom: 1em;
 }
 
 .thumbnail_right {
   float: right;
   border-width: 0;
-  padding-left: 2em;
-  padding-bottom: 1em;
+  margin-left: 2em;
+  margin-bottom: 1em;
 }
