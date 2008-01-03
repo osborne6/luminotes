@@ -73,7 +73,7 @@ class User( Persistent ):
     if password is None or len( password ) == 0:
       return None
 
-    return sha.new( salt + password ).hexdigest()
+    return sha.new( ( salt + password ).encode( "utf8" ) ).hexdigest()
 
   def check_password( self, password ):
     """
