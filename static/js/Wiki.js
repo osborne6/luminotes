@@ -1106,8 +1106,8 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
 
   // display the two revisions for comparison by the user
-  this.load_editor( editor.title, editor.id, previous_revision, null, editor.iframe );
-  this.load_editor( editor.title, editor.id, null, null, editor.iframe );
+  this.load_editor( editor.title, editor.id, previous_revision, null, editor.closed ? null : editor.iframe );
+  this.load_editor( editor.title, editor.id, null, null, editor.closed ? null : editor.iframe );
 }
 
 Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
