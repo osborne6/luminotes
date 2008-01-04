@@ -1146,7 +1146,11 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
       "value": "compare versions",
       "title": "compare your version with the modified version"
     } );
-    this.display_error( 'Your changes to the note titled "' + editor.title + '" have overwritten changes made in another window.', [ compare_button ], editor.iframe );
+    this.display_error(
+      'Your changes to the note titled "' + editor.title +
+      '" have overwritten changes made in another window by ' + result.previous_revision.username + '.',
+      [ compare_button ], editor.iframe
+    );
 
     var self = this;
     connect( compare_button, "onclick", function ( event ) {
