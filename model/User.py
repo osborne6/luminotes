@@ -217,8 +217,8 @@ class User( Persistent ):
   def sql_calculate_storage( self ):
     """
     Return a SQL string to calculate the total bytes of storage usage by this user. Note that this
-    only includes storage for all the user's notes and past revisions. It doesn't include storage
-    for the notebooks themselves.
+    only includes storage for all the user's notes and past revisions in notebooks that they own. It
+    doesn't include storage for the notebooks themselves.
     """
     return \
       """
@@ -228,6 +228,7 @@ class User( Persistent ):
         user_notebook, note
       where
         user_notebook.user_id = %s and
+        user_notebook.owner = 't' and
         note.notebook_id = user_notebook.notebook_id;
       """ % quote( self.object_id )
 
