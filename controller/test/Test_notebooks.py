@@ -21,7 +21,11 @@ class Test_notebooks( Test_controller ):
     self.username = u"mulder"
     self.password = u"trustno1"
     self.email_address = u"outthere@example.com"
+    self.username2 = u"deepthroat"
+    self.password2 = u"mmmtobacco"
+    self.email_address2 = u"parkinglot@example.com"
     self.user = None
+    self.user2 = None
     self.invite = None
     self.anonymous = None
     self.session_id = None
@@ -54,9 +58,15 @@ class Test_notebooks( Test_controller ):
     self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True ) )
     self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
+    self.database.execute( self.user2.sql_save_notebook( self.notebook.object_id, read_write = True, owner = False ) )
+    self.database.execute( self.user2.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = False ) )
+
   def make_users( self ):
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user, commit = False )
+
+    self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2 )
+    self.database.save( self.user2, commit = False )
 
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
@@ -762,6 +772,75 @@ class Test_notebooks( Test_controller ):
 
   def test_save_startup_note( self ):
     self.test_save_note( startup = True )
+
+  def test_save_note_by_different_user( self, startup = False ):
+    self.login2()
+
+    # save over an existing note as a different user, supplying new contents and a new title
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user2.object_id
+    assert result[ "new_revision" ].username == self.username2
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+
+    self.login()
+
+    # make sure the old title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents
+    assert note.startup == startup
+    assert note.user_id == self.user2.object_id
+
+    if startup:
+      assert note.rank == 0 
+    else:
+      assert note.rank is None
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 2
+    assert revisions[ 0 ].revision == previous_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == current_revision
+    assert revisions[ 1 ].user_id == self.user2.object_id
+    assert revisions[ 1 ].username == self.username2
 
   def test_save_note_without_login( self, startup = False ):
     # save over an existing note supplying new contents and a new title
@@ -2413,6 +2492,14 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
       password = self.password,
+      login_button = u"login",
+    ) )
+    self.session_id = result[ u"session_id" ]
+
+  def login2( self ):
+    result = self.http_post( "/users/login", dict(
+      username = self.username2,
+      password = self.password2,
       login_button = u"login",
     ) )
     self.session_id = result[ u"session_id" ]
