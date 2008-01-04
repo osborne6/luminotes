@@ -13,6 +13,7 @@ class Test_controller( object ):
     from model.Notebook import Notebook
     from model.Note import Note
     from model.Invite import Invite
+    from model.User_revision import User_revision
 
     # Since Stub_database isn't a real database and doesn't know SQL, replace some of the
     # SQL-returning methods in User, Note, and Notebook to return functions that manipulate data in
@@ -141,8 +142,19 @@ class Test_controller( object ):
     def sql_load_revisions( self, database ):
       note_list = database.objects.get( self.object_id )
       if not note_list: return None
+      revisions = []
 
-      revisions = [ note.revision for note in note_list ]
+      for note in note_list:
+        user_list = database.objects.get( note.user_id )
+        user_id = None
+        username = None 
+
+        if user_list:
+          user_id = user_list[ -1 ].object_id
+          username = user_list[ -1 ].username
+
+        revisions.append( User_revision( note.revision, user_id, username ) )
+
       return revisions
 
     Note.sql_load_revisions = lambda self: \

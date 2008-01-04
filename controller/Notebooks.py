@@ -11,6 +11,7 @@ from model.Notebook import Notebook
 from model.Note import Note
 from model.Invite import Invite
 from model.User import User
+from model.User_revision import User_revision
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
@@ -374,7 +375,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
-    @return: { 'revisions': revisionslist or None }
+    @return: { 'revisions': userrevisionlist or None }
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
@@ -398,7 +399,7 @@ class Notebooks( object ):
 
         raise Access_error()
 
-      revisions = self.__database.select_many( unicode, note.sql_load_revisions() )
+      revisions = self.__database.select_many( User_revision, note.sql_load_revisions() )
     else:
       revisions = None
 
@@ -438,8 +439,8 @@ class Notebooks( object ):
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
     @return: {
-      'new_revision': new revision of saved note, or None if nothing was saved,
-      'previous_revision': revision immediately before new_revision, or None if the note is new
+      'new_revision': User_revision of saved note, or None if nothing was saved
+      'previous_revision': User_revision immediately before new_revision, or None if the note is new
       'storage_bytes': current storage usage by user,
     }
     @raise Access_error: the current user doesn't have access to the given notebook
@@ -448,15 +449,16 @@ class Notebooks( object ):
     if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
+    user = self.__database.load( User, user_id )
     notebook = self.__database.load( Notebook, notebook_id )
 
-    if not notebook:
+    if not user or not notebook:
       raise Access_error()
 
     note = self.__database.load( Note, note_id )
 
     # check whether the provided note contents have been changed since the previous revision
-    def update_note( current_notebook, old_note, startup, user_id ):
+    def update_note( current_notebook, old_note, startup, user ):
       # the note hasn't been changed, so bail without updating it
       if contents.replace( u"\n", u"" ) == old_note.contents.replace( u"\n", "" ) and startup == old_note.startup:
         new_revision = None
@@ -469,9 +471,9 @@ class Notebooks( object ):
             note.rank = self.__database.select_one( float, notebook.sql_highest_rank() ) + 1
         else:
           note.rank = None
-        note.user_id = user_id
+        note.user_id = user.object_id
 
-        new_revision = note.revision
+        new_revision = User_revision( note.revision, note.user_id, user.username )
 
       return new_revision
 
@@ -479,19 +481,21 @@ class Notebooks( object ):
     if note and note.notebook_id == notebook.object_id:
       old_note = self.__database.load( Note, note_id, previous_revision )
 
-      previous_revision = note.revision
-      new_revision = update_note( notebook, old_note, startup, user_id )
+      previous_user = self.__database.load( User, note.user_id )
+      previous_revision = User_revision( note.revision, note.user_id, previous_user and previous_user.username or None )
+      new_revision = update_note( notebook, old_note, startup, user )
 
     # the note is not already in the given notebook, so look for it in the trash
     elif note and notebook.trash_id and note.notebook_id == notebook.trash_id:
       old_note = self.__database.load( Note, note_id, previous_revision )
 
       # undelete the note, putting it back in the given notebook
-      previous_revision = note.revision
+      previous_user = self.__database.load( User, note.user_id )
+      previous_revision = User_revision( note.revision, note.user_id, previous_user and previous_user.username or None )
       note.notebook_id = notebook.object_id
       note.deleted_from_id = None
 
-      new_revision = update_note( notebook, old_note, startup, user_id )
+      new_revision = update_note( notebook, old_note, startup, user )
     # otherwise, create a new note
     else:
       if startup:
@@ -501,7 +505,7 @@ class Notebooks( object ):
   
       previous_revision = None
       note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = startup, rank = rank, user_id = user_id )
-      new_revision = note.revision
+      new_revision = User_revision( note.revision, note.user_id, user.username )
 
     if new_revision:
       self.__database.save( note, commit = False )

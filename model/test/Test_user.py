@@ -36,6 +36,15 @@ class Test_user( object ):
     assert self.user.check_password( new_password ) == True
     assert self.user.revision > previous_revision
 
+  def test_set_password_with_special_characters( self ):
+    previous_revision = self.user.revision
+    new_password = u"newpass\xe4"
+    self.user.password = new_password
+
+    assert self.user.check_password( self.password ) == False
+    assert self.user.check_password( new_password ) == True
+    assert self.user.revision > previous_revision
+
   def test_set_none_password( self ):
     previous_revision = self.user.revision
     new_password = None

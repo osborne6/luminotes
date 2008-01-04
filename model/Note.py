@@ -152,7 +152,16 @@ class Note( Persistent ):
     return self.sql_create()
 
   def sql_load_revisions( self ):
-    return "select revision from note where id = %s order by revision;" % quote( self.object_id )
+    return """ \
+      select
+        note.revision, luminotes_user_current.id, username
+      from
+        note left outer join luminotes_user_current
+      on
+        ( note.user_id = luminotes_user_current.id )
+      where
+        note.id = %s order by note.revision;
+    """ % quote( self.object_id )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )

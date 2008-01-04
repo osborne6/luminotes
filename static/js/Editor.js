@@ -4,7 +4,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.initial_text = note_text;
   this.deleted_from_id = deleted_from_id || null;
   this.revision = revision;
-  this.revisions_list = new Array(); // cache for this note's list of revisions, loaded from the server on-demand
+  this.user_revisions = new Array(); // cache for this note's list of revisions, loaded from the server on-demand
   this.read_write = read_write;
   this.startup = startup || false; // whether this Editor is for a startup note
   this.init_highlight = highlight || false;

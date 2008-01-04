@@ -1135,11 +1135,11 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
     return;
 
   var client_previous_revision = editor.revision;
-  editor.revision = result.new_revision;
+  editor.revision = result.new_revision.revision;
 
   // if the server's idea of the previous revision doesn't match the client's, then someone has
   // gone behind our back and saved the editor's note from another window
-  if ( result.previous_revision != client_previous_revision ) {
+  if ( result.previous_revision.revision != client_previous_revision ) {
     var compare_button = createDOM( "input", {
       "type": "button",
       "class": "message_button",
@@ -1150,18 +1150,18 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
 
     var self = this;
     connect( compare_button, "onclick", function ( event ) {
-      self.compare_versions( event, editor, result.previous_revision );
+      self.compare_versions( event, editor, result.previous_revision.revision );
     } );
 
-    if ( !editor.revisions_list || editor.revisions_list.length == 0 )
+    if ( !editor.user_revisions || editor.user_revisions.length == 0 )
       return;
-    editor.revisions_list.push( result.previous_revision );
+    editor.user_revisions.push( result.previous_revision );
   }
 
   // add the new revision to the editor's revisions list
-  if ( !editor.revisions_list || editor.revisions_list.length == 0 )
+  if ( !editor.user_revisions || editor.user_revisions.length == 0 )
     return;
-  editor.revisions_list.push( result.new_revision );
+  editor.user_revisions.push( result.new_revision );
 }
 
 Wiki.prototype.search = function ( event ) {
@@ -1341,8 +1341,15 @@ Wiki.prototype.display_invites = function ( invite_area ) {
   var owners = createDOM( "div", { "id": "owners" } );
   var self = this;
 
+  var addresses = new Array();
+
   for ( var i in this.invites ) {
     var invite = this.invites[ i ];
+
+    // only display the first invite for a given email address
+    if ( addresses[ invite.email_address ] == true )
+      continue;
+
     var revoke_button = createDOM( "input", {
       "type": "button",
       "id": "revoke_" + invite.object_id,
@@ -1363,8 +1370,12 @@ Wiki.prototype.display_invites = function ( invite_area ) {
 
     appendChildNodes(
       add_invite_to, createDOM( "div", { "class": "invite" },
-      invite.email_address, " ", revoke_button )
+      invite.email_address, " ",
+      ( invite.redeemed_username ? "(" + invite.redeemed_username + ")" : "" ),
+      " ", revoke_button )
     );
+
+    addresses[ invite.email_address ] = true;
   }
 
   var div = createDOM( "div" );
@@ -1781,7 +1792,7 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
 
   // if there's already a cached revision list, or the editor doesn't have a revision yet, then
   // display the changes pulldown and bail
-  if ( ( editor.revisions_list && editor.revisions_list.length > 0 ) || !editor.revision ) {
+  if ( ( editor.user_revisions && editor.user_revisions.length > 0 ) || !editor.revision ) {
     new Changes_pulldown( this, this.notebook_id, this.invoker, editor );
     return;
   }
@@ -1794,7 +1805,7 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
       "note_id": editor.id
     },
     function ( result ) {
-      editor.revisions_list = result.revisions;
+      editor.user_revisions = result.revisions;
       new Changes_pulldown( self, self.notebook_id, self.invoker, editor );
     }
   );
@@ -1920,26 +1931,32 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
   this.editor = editor;
   this.links = new Array();
   
-  if ( !editor.revisions_list || editor.revisions_list.length == 0 ) {
+  if ( !editor.user_revisions || editor.user_revisions.length == 0 ) {
     appendChildNodes( this.div, createDOM( "span", "This note has no previous changes." ) );
     return;
   }
 
   // display list of revision timestamps in reverse chronological order
-  var revisions_list = clone( editor.revisions_list );
-  revisions_list.reverse();
+  var user_revisions = clone( editor.user_revisions );
+  user_revisions.reverse();
 
   var self = this;
-  for ( var i = 0; i < revisions_list.length - 1; ++i ) { // -1 to skip the oldest revision
-    var revision = revisions_list[ i ];
-    var short_revision = this.wiki.brief_revision( revision );
+  for ( var i = 0; i < user_revisions.length - 1; ++i ) { // -1 to skip the oldest revision
+    var user_revision = user_revisions[ i ];
+    var short_revision = this.wiki.brief_revision( user_revision.revision );
     var href = "/notebooks/" + this.notebook_id + "?" + queryString(
       [ "note_id", "revision" ],
-      [ this.editor.id, revision ]
+      [ this.editor.id, user_revision.revision ]
     );
-    var link = createDOM( "a", { "href": href, "class": "pulldown_link" }, short_revision );
+
+    var link = createDOM(
+      "a",
+      { "href": href, "class": "pulldown_link" },
+      short_revision + ( user_revision.username ? " by " + user_revision.username : "" )
+    );
+
     this.links.push( link );
-    link.revision = revision;
+    link.revision = user_revision.revision;
     connect( link, "onclick", function ( event ) { self.link_clicked( event, self.editor.id ); } );
     appendChildNodes( this.div, link );
     appendChildNodes( this.div, createDOM( "br" ) );

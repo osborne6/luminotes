@@ -686,7 +686,9 @@ class Test_notebooks( Test_controller ):
     revisions = result[ "revisions" ]
     assert revisions != None
     assert len( revisions ) == 1
-    assert revisions[ 0 ] == self.note.revision
+    assert revisions[ 0 ].revision == self.note.revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
 
   def test_save_note( self, startup = False ):
     self.login()
@@ -702,9 +704,14 @@ class Test_notebooks( Test_controller ):
       previous_revision = previous_revision,
     ), session_id = self.session_id )
 
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
-    current_revision = result[ "new_revision" ]
-    assert result[ "previous_revision" ] == previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
@@ -746,8 +753,12 @@ class Test_notebooks( Test_controller ):
     revisions = result[ "revisions" ]
     assert revisions != None
     assert len( revisions ) == 2
-    assert revisions[ 0 ] == previous_revision
-    assert revisions[ 1 ] == current_revision
+    assert revisions[ 0 ].revision == previous_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == current_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
 
   def test_save_startup_note( self ):
     self.test_save_note( startup = True )
@@ -790,8 +801,13 @@ class Test_notebooks( Test_controller ):
       previous_revision = previous_revision,
     ), session_id = self.session_id )
 
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
-    assert result[ "previous_revision" ] == previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
@@ -851,7 +867,7 @@ class Test_notebooks( Test_controller ):
     # now attempt to save over that note again without changing the contents
     user = self.database.load( User, self.user.object_id )
     previous_storage_bytes = user.storage_bytes
-    previous_revision = result[ "new_revision" ]
+    previous_revision = result[ "new_revision" ].revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -862,7 +878,9 @@ class Test_notebooks( Test_controller ):
 
     # assert that the note wasn't actually updated the second time
     assert result[ "new_revision" ] == None
-    assert result[ "previous_revision" ] == previous_revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == previous_storage_bytes
     assert result[ "storage_bytes" ] == 0
@@ -902,7 +920,7 @@ class Test_notebooks( Test_controller ):
     # now attempt to save over that note again without changing the contents
     user = self.database.load( User, self.user.object_id )
     previous_storage_bytes = user.storage_bytes
-    previous_revision = result[ "new_revision" ]
+    previous_revision = result[ "new_revision" ].revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -913,7 +931,9 @@ class Test_notebooks( Test_controller ):
 
     # assert that the note wasn't actually updated the second time
     assert result[ "new_revision" ] == None
-    assert result[ "previous_revision" ] == previous_revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == previous_storage_bytes
     assert result[ "storage_bytes" ] == 0
@@ -956,7 +976,7 @@ class Test_notebooks( Test_controller ):
 
     # now attempt to save over that note again without changing the contents, but with a change
     # to its startup flag
-    previous_revision = result[ "new_revision" ]
+    previous_revision = result[ "new_revision" ].revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -966,8 +986,13 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     # assert that the note was updated the second time
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
-    assert result[ "previous_revision" ] == previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
@@ -1009,7 +1034,7 @@ class Test_notebooks( Test_controller ):
     # except for adding a newline
     user = self.database.load( User, self.user.object_id )
     previous_storage_bytes = user.storage_bytes
-    previous_revision = result[ "new_revision" ]
+    previous_revision = result[ "new_revision" ].revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -1020,7 +1045,9 @@ class Test_notebooks( Test_controller ):
 
     # assert that the note wasn't actually updated the second time
     assert result[ "new_revision" ] == None
-    assert result[ "previous_revision" ] == previous_revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == previous_storage_bytes
     assert result[ "storage_bytes" ] == 0
@@ -1054,7 +1081,7 @@ class Test_notebooks( Test_controller ):
 
     # save over that note again with new contents, providing the original
     # revision as the previous known revision
-    second_revision = result[ "new_revision" ]
+    second_revision = result[ "new_revision" ].revision
     new_note_contents = u"<h3>new new title</h3>new new blah"
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -1066,8 +1093,12 @@ class Test_notebooks( Test_controller ):
 
     # make sure the second save actually caused an update
     assert result[ "new_revision" ]
-    assert result[ "new_revision" ] not in ( first_revision, second_revision )
-    assert result[ "previous_revision" ] == second_revision
+    assert result[ "new_revision" ].revision not in ( first_revision, second_revision )
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ].revision == second_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
@@ -1133,7 +1164,10 @@ class Test_notebooks( Test_controller ):
       previous_revision = None,
     ), session_id = self.session_id )
 
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
     assert result[ "previous_revision" ] == None
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
@@ -1179,7 +1213,10 @@ class Test_notebooks( Test_controller ):
       previous_revision = None,
     ), session_id = self.session_id )
 
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
     assert result[ "previous_revision" ] == None
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
@@ -1216,7 +1253,10 @@ class Test_notebooks( Test_controller ):
       previous_revision = None,
     ), session_id = self.session_id )
 
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
     assert result[ "previous_revision" ] == None
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
@@ -1263,7 +1303,10 @@ class Test_notebooks( Test_controller ):
       previous_revision = None,
     ), session_id = self.session_id )
 
-    assert result[ "new_revision" ] and result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
     assert result[ "previous_revision" ] == None
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0

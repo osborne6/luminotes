@@ -25,6 +25,7 @@ class Test_invite( object ):
     assert self.invite.read_write == self.read_write
     assert self.invite.owner == self.owner
     assert self.invite.redeemed_user_id == None
+    assert self.invite.redeemed_username == None
 
   def test_redeem( self ):
     previous_revision = self.invite.revision
@@ -53,3 +54,4 @@ class Test_invite( object ):
     assert d.get( "read_write" ) == self.read_write
     assert d.get( "owner" ) == self.owner
     assert d.get( "redeemed_user_id" ) == None
+    assert d.get( "redeemed_username" ) == None

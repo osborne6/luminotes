@@ -6,7 +6,8 @@ class Invite( Persistent ):
   An invitiation to view or edit a notebook.
   """
   def __init__( self, object_id, revision = None, from_user_id = None, notebook_id = None,
-                email_address = None, read_write = False, owner = False, redeemed_user_id = None ):
+                email_address = None, read_write = False, owner = False, redeemed_user_id = None,
+                redeemed_username = None ):
     """
     Create an invitation with the given id.
 
@@ -26,6 +27,8 @@ class Invite( Persistent ):
     @param owner: whether the invitation is for owner-level access (optional, defaults to False)
     @type redeemed_user_id: unicode or NoneType
     @param redeemed_user_id: id of the user who has redeemed this invitation, if any (optional)
+    @type redeemed_username: unicode or NoneType
+    @param redeemed_username: username of the user who has redeemed this invitation, if any (optional)
     @rtype: Invite
     @return: newly constructed notebook invitation
     """
@@ -36,6 +39,7 @@ class Invite( Persistent ):
     self.__read_write = read_write
     self.__owner = owner
     self.__redeemed_user_id = redeemed_user_id
+    self.__redeemed_username = redeemed_username
 
   @staticmethod
   def create( object_id, from_user_id = None, notebook_id = None, email_address = None, read_write = False, owner = False ):
@@ -66,7 +70,18 @@ class Invite( Persistent ):
     if revision:
       raise NotImplementedError()
 
-    return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite where id = %s;" % quote( object_id )
+    return \
+      """
+      select
+        invite.id, invite.revision, invite.from_user_id, invite.notebook_id, invite.email_address,
+        invite.read_write, invite.owner, invite.redeemed_user_id, luminotes_user_current.username
+      from
+        invite left outer join luminotes_user_current
+      on
+        ( invite.redeemed_user_id = luminotes_user_current.id )
+      where
+        invite.id = %s;
+      """ % quote( object_id )
 
   @staticmethod
   def sql_id_exists( object_id, revision = None ):
@@ -92,16 +107,36 @@ class Invite( Persistent ):
 
   def sql_load_similar( self ):
     # select invites with the same notebook_id, and email_address as this invite
-    return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
-           "where notebook_id = %s and email_address = %s and id != %s;" % \
-           ( quote( self.__notebook_id ), quote( self.__email_address ), quote( self.object_id ) )
+    return \
+      """
+      select
+        invite.id, invite.revision, invite.from_user_id, invite.notebook_id, invite.email_address,
+        invite.read_write, invite.owner, invite.redeemed_user_id, luminotes_user_current.username
+      from
+        invite left outer join luminotes_user_current
+      on
+        ( invite.redeemed_user_id = luminotes_user_current.id )
+      where
+        invite.notebook_id = %s and invite.email_address = %s and invite.id != %s;
+      """ % ( quote( self.__notebook_id ), quote( self.__email_address ), quote( self.object_id ) )
 
   @staticmethod
   def sql_load_notebook_invites( notebook_id ):
-    # select a list of invites to the given notebook. if there are multiple invites for a given
-    # email_address, arbitrarily pick one of them
-    return "select id, revision, from_user_id, notebook_id, email_address, read_write, owner, redeemed_user_id from invite " + \
-           "where id in ( select max( id ) from invite where notebook_id = %s group by email_address ) order by email_address;" % quote( notebook_id )
+    # select a list of invites to the given notebook
+    return \
+      """
+      select
+        invite.id, invite.revision, invite.from_user_id, invite.notebook_id, invite.email_address,
+        invite.read_write, invite.owner, invite.redeemed_user_id, luminotes_user_current.username
+      from
+        invite left outer join luminotes_user_current
+      on
+        ( invite.redeemed_user_id = luminotes_user_current.id )
+      where
+        invite.notebook_id = %s
+      order by
+        invite.email_address, invite.redeemed_user_id;
+      """ % quote( notebook_id )
 
   def sql_revoke_invites( self ):
     return "delete from invite where notebook_id = %s and email_address = %s;" % \
@@ -116,6 +151,7 @@ class Invite( Persistent ):
       read_write = self.__read_write,
       owner = self.__owner,
       redeemed_user_id = self.__redeemed_user_id,
+      redeemed_username = self.__redeemed_username,
     ) )
 
     return d
@@ -141,3 +177,4 @@ class Invite( Persistent ):
   read_write = property( lambda self: self.__read_write, __set_read_write )
   owner = property( lambda self: self.__owner, __set_owner )
   redeemed_user_id = property( lambda self: self.__redeemed_user_id, __set_redeemed_user_id )
+  redeemed_username = property( lambda self: self.__redeemed_username )
