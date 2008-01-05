@@ -43,11 +43,13 @@ class Root( object ):
     self.__notebooks = Notebooks( database, self.__users )
 
   @expose( Main_page )
+  @grab_user_id
   @validate(
     note_title = unicode,
     invite_id = Valid_id( none_okay = True ),
+    user_id = Valid_id( none_okay = True ),
   )
-  def default( self, note_title, invite_id = None ):
+  def default( self, note_title, invite_id = None, user_id = None ):
     """
     Convenience method for accessing a note in the main notebook by name rather than by note id.
 
@@ -69,16 +71,18 @@ class Root( object ):
       else:
         return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
 
-    result = self.__users.current( user_id = None )
-    first_notebook = result[ u"notebooks" ][ 0 ]
-    user_id = result[ u"user" ].object_id
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    if anonymous:
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
+
+    result = self.__users.current( user_id = user_id )
 
     note_title = note_title.replace( u"_", " " )
-    note = self.__database.select_one( Note, first_notebook.sql_load_note_by_title( note_title ) )
+    note = self.__database.select_one( Note, main_notebook.sql_load_note_by_title( note_title ) )
     if not note:
       raise cherrypy.NotFound
 
-    result.update( self.__notebooks.contents( first_notebook.object_id, user_id = user_id, note_id = note.object_id ) )
+    result.update( self.__notebooks.contents( main_notebook.object_id, user_id = user_id, note_id = note.object_id ) )
     if invite_id:
       result[ "invite_id" ] = invite_id
 
