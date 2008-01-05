@@ -14,19 +14,18 @@ class User_area( Div ):
       ) or Div(
         u"logged in as %s" % ( user.username or u"a guest" ),
         " | ",
-        ( user.username == None ) and Span(
-          A(
-            u"sign up",
-            href = u"/sign_up",
-            title = u"Sign up for a real Luminotes account.",
-          ),
-          " | ",
-        ) or None,
-        ( user.username and user.rate_plan == 0 ) and Span(
+        user.username and Span(
           A(
             u"upgrade",
             href = u"/upgrade",
             title = u"Upgrade your Luminotes account.",
+          ),
+          " | ",
+        ) or Span(
+          A(
+            u"sign up",
+            href = u"/sign_up",
+            title = u"Sign up for a real Luminotes account.",
           ),
           " | ",
         ) or None,
