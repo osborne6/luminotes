@@ -214,10 +214,7 @@ Editor.prototype.finish_init = function () {
         event.stop();
       } );
 
-      var revoke_buttons = getElementsByTagAndClassName( "input", "revoke_button" );
-      for ( var i in revoke_buttons ) {
-        var revoke_button = revoke_buttons[ i ];
-        var invite_id = revoke_button.id.split( "_" ).pop();
+      function connect_button( revoke_button, invite_id ) {
         connect( revoke_button, "onclick", function ( event ) {
           signal( self, "revoke_invite", invite_id, function ( result ) {
             if ( !result.invites ) return;
@@ -225,6 +222,13 @@ Editor.prototype.finish_init = function () {
           } );
           event.stop();
         } );
+      }
+
+      var revoke_buttons = getElementsByTagAndClassName( "input", "revoke_button" );
+      for ( var i in revoke_buttons ) {
+        var revoke_button = revoke_buttons[ i ];
+        var invite_id = revoke_button.id.split( "_" ).pop();
+        connect_button( revoke_button, invite_id );
       }
     }
   } );
