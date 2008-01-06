@@ -122,11 +122,10 @@ class Test_controller( object ):
     User.sql_update_access = lambda self, notebook_id, read_write = False, owner = False: \
       lambda database: sql_update_access( self, notebook_id, read_write, owner, database )
 
-    def sql_revoke_invite_access( notebook_id, trash_id, email_address, excluded_user_id, database ):
+    def sql_revoke_invite_access( notebook_id, trash_id, email_address, database ):
       invites = []
 
       for ( user_id, notebook_infos ) in database.user_notebook.items():
-        if user_id == excluded_user_id: continue
         for notebook_info in list( notebook_infos ):
           ( db_notebook_id, read_write, owner ) = notebook_info
           if db_notebook_id not in ( notebook_id, trash_id ): continue
@@ -136,8 +135,8 @@ class Test_controller( object ):
                obj.email_address == email_address:
               database.user_notebook[ user_id ].remove( notebook_info )
 
-    User.sql_revoke_invite_access = staticmethod( lambda notebook_id, trash_id, email_address, excluded_user_id: \
-      lambda database: sql_revoke_invite_access( notebook_id, trash_id, email_address, excluded_user_id, database ) )
+    User.sql_revoke_invite_access = staticmethod( lambda notebook_id, trash_id, email_address: \
+      lambda database: sql_revoke_invite_access( notebook_id, trash_id, email_address, database ) )
 
     def sql_load_revisions( self, database ):
       note_list = database.objects.get( self.object_id )

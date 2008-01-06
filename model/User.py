@@ -195,14 +195,13 @@ class User( Persistent ):
         quote( notebook_id ) )
 
   @staticmethod
-  def sql_revoke_invite_access( notebook_id, trash_id, email_address, excluded_user_id ):
+  def sql_revoke_invite_access( notebook_id, trash_id, email_address ):
     return \
       """
       delete from
         user_notebook
       where
         notebook_id in ( %s, %s ) and
-        user_notebook.user_id != %s and
         user_notebook.user_id in (
           select
             redeemed_user_id
@@ -212,7 +211,7 @@ class User( Persistent ):
             notebook_id = %s and
             email_address = %s
         );
-      """ % ( quote( notebook_id ), quote( trash_id ), quote( excluded_user_id ), quote( notebook_id ), quote( email_address ) )
+      """ % ( quote( notebook_id ), quote( trash_id ), quote( notebook_id ), quote( email_address ) )
 
   def sql_calculate_storage( self ):
     """

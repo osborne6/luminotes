@@ -1266,86 +1266,6 @@ class Test_users( Test_controller ):
     ) )
     assert access is True
 
-  def test_send_invites_similar_downgrade_self( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-    self.login()
-
-    self.user.rate_plan = 1
-    self.database.save( self.user )
-
-    email_addresses_list = [ u"foo@example.com" ]
-    email_addresses = email_addresses_list[ 0 ]
-
-    # first send an invite with read_write and owner set to False
-    self.http_post( "/users/send_invites", dict(
-      notebook_id = self.notebooks[ 0 ].object_id,
-      email_addresses = email_addresses,
-      access = u"collaborator",
-      invite_button = u"send invites",
-    ), session_id = self.session_id )
-    
-    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
-    invite_id1 = matches.group( 2 )
-    assert invite_id1
-
-    # redeem the invite as the same user
-    result = self.http_post( "/users/redeem_invite", dict(
-      invite_id = invite_id1,
-    ), session_id = self.session_id )
-
-    # then send a similar invite to the same email address with read_write and owner set to False
-    result = self.http_post( "/users/send_invites", dict(
-      notebook_id = self.notebooks[ 0 ].object_id,
-      email_addresses = email_addresses,
-      access = u"viewer",
-      invite_button = u"send invites",
-    ), session_id = self.session_id )
-    
-    # assert that both invites have the read_write / owner flags set to False now
-    invites = result[ u"invites" ]
-    assert len( invites ) == 1
-    invite = invites[ 0 ]
-    assert invite
-    assert invite.read_write is False
-    assert invite.owner is False
-
-    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
-    invite_id2 = matches.group( 2 )
-    assert invite_id2
-
-    # assert that both invites have the read_write / owner flags set to False now
-    invite1_list = self.database.objects.get( invite_id1 )
-    assert invite1_list
-    assert len( invite1_list ) >= 2
-    invite1 = invite1_list[ -1 ]
-    assert invite1
-    assert invite1.read_write is False
-    assert invite1.owner is False
-
-    invite2_list = self.database.objects.get( invite_id2 )
-    assert invite2_list
-    assert len( invite2_list ) >= 1
-    invite2 = invite2_list[ -1 ]
-    assert invite2
-    assert invite2.read_write is False
-    assert invite2.owner is False
-
-    # since the user is trying to downgrade their own access, assert that the downgrade was
-    # prevented and the user still retains their original access
-    access = self.database.select_one( bool, self.user.sql_has_access(
-      self.notebooks[ 0 ].object_id,
-      read_write = True,
-      owner = True,
-    ) )
-    assert access is True
-    access = self.database.select_one( bool, self.user.sql_has_access(
-      self.notebooks[ 0 ].trash_id,
-      read_write = True,
-      owner = True,
-    ) )
-    assert access is True
-
   def test_send_invites_with_generic_from_address( self ):
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp
@@ -1773,7 +1693,7 @@ class Test_users( Test_controller ):
     result = self.http_post( "/users/send_invites", dict(
       notebook_id = self.notebooks[ 0 ].object_id,
       email_addresses = email_addresses,
-      access = u"viewer",
+      access = u"owner",
       invite_button = u"send invites",
     ), session_id = self.session_id )
     
@@ -1781,13 +1701,15 @@ class Test_users( Test_controller ):
     matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
     invite_id = matches.group( 2 )
 
+    self.login2()
     result = self.http_post( "/users/redeem_invite", dict(
       invite_id = invite_id,
     ), session_id = self.session_id )
 
-    assert cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
+    # as user2, revoke that user's own invite
     result = self.http_post( "/users/revoke_invite", dict(
       notebook_id = self.notebooks[ 0 ].object_id,
       invite_id = invite_id,
@@ -1796,9 +1718,9 @@ class Test_users( Test_controller ):
     assert result[ u"message" ]
     assert len( result[ u"invites" ] ) == 0
 
-    # the user should've been prevented from revoking their own access
-    assert cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].trash_id )
+    # the user should no longer have any access
+    assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_revoke_invite_without_login( self ):
     Stub_smtp.reset()
@@ -2175,9 +2097,53 @@ class Test_users( Test_controller ):
     matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
     invite_id = matches.group( 2 )
     
+    # convert the invite to access for a different user
+    invite = self.database.load( Invite, invite_id )
+    cherrypy.root.users.convert_invite_to_access( invite, self.user2.object_id )
+
+    access = self.database.select_one( bool, self.user2.sql_has_access(
+      invite.notebook_id,
+      invite.read_write,
+      invite.owner,
+    ) )
+    assert access is True
+
+    notebook = self.database.load( Notebook, invite.notebook_id )
+    access = self.database.select_one( bool, self.user2.sql_has_access(
+      notebook.trash_id,
+      invite.read_write,
+      invite.owner,
+    ) )
+    assert access is True
+
+    assert invite.redeemed_user_id == self.user2.object_id
+
+  def test_convert_invite_to_access_same_user( self ):
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    
+    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
+    invite_id = matches.group( 2 )
+    
+    # here, the same user that sent the invite is trying to convert it to access
     invite = self.database.load( Invite, invite_id )
     cherrypy.root.users.convert_invite_to_access( invite, self.user.object_id )
 
+    # assert that the user retains the access they already had
     access = self.database.select_one( bool, self.user.sql_has_access(
       invite.notebook_id,
       invite.read_write,
@@ -2193,7 +2159,8 @@ class Test_users( Test_controller ):
     ) )
     assert access is True
 
-    assert invite.redeemed_user_id == self.user.object_id
+    # assert that the invite was not actually redeemed
+    assert invite.redeemed_user_id == None
 
   def test_convert_invite_to_access_twice( self ):
     Stub_smtp.reset()
@@ -2217,10 +2184,10 @@ class Test_users( Test_controller ):
     invite_id = matches.group( 2 )
     
     invite = self.database.load( Invite, invite_id )
-    cherrypy.root.users.convert_invite_to_access( invite, self.user.object_id )
-    cherrypy.root.users.convert_invite_to_access( invite, self.user.object_id )
+    cherrypy.root.users.convert_invite_to_access( invite, self.user2.object_id )
+    cherrypy.root.users.convert_invite_to_access( invite, self.user2.object_id )
 
-    access = self.database.select_one( bool, self.user.sql_has_access(
+    access = self.database.select_one( bool, self.user2.sql_has_access(
       invite.notebook_id,
       invite.read_write,
       invite.owner,
@@ -2228,14 +2195,14 @@ class Test_users( Test_controller ):
     assert access is True
 
     notebook = self.database.load( Notebook, invite.notebook_id )
-    access = self.database.select_one( bool, self.user.sql_has_access(
+    access = self.database.select_one( bool, self.user2.sql_has_access(
       notebook.trash_id,
       invite.read_write,
       invite.owner,
     ) )
     assert access is True
 
-    assert invite.redeemed_user_id == self.user.object_id
+    assert invite.redeemed_user_id == self.user2.object_id
 
   @raises( Invite_error )
   def test_convert_invite_with_unknown_user( self ):

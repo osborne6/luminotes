@@ -764,8 +764,8 @@ class Users( object ):
         self.__database.save( similar, commit = False )
 
         # if the invite is already redeemed, then update the relevant entry in the user_notebook
-        # access table as well. prevent the user from updating their own access
-        if similar.redeemed_user_id is not None and similar.redeemed_user_id != user_id:
+        # access table as well
+        if similar.redeemed_user_id is not None:
           redeemed_user = self.__database.load( User, similar.redeemed_user_id )
           if redeemed_user:
             self.__database.execute( redeemed_user.sql_update_access( notebook_id, read_write, owner ) )
@@ -838,7 +838,7 @@ class Users( object ):
       raise Access_error()
 
     self.__database.execute(
-      User.sql_revoke_invite_access( notebook_id, notebook.trash_id, invite.email_address, user_id ),
+      User.sql_revoke_invite_access( notebook_id, notebook.trash_id, invite.email_address ),
       commit = False,
     )
     self.__database.execute( invite.sql_revoke_invites(), commit = False )
@@ -927,6 +927,10 @@ class Users( object ):
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @raise Invite_error: an error occured when redeeming the invite
     """
+    # prevent a user from redeeming their own invite
+    if invite.from_user_id == user_id:
+      return
+
     user = self.__database.load( User, user_id )
     notebook = self.__database.load( Notebook, invite.notebook_id )
     if not user or not notebook:
