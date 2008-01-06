@@ -1362,8 +1362,9 @@ Wiki.prototype.display_invites = function ( invite_area ) {
   for ( var i in this.invites ) {
     var invite = this.invites[ i ];
 
-    // only display the first invite for a given email address
-    if ( addresses[ invite.email_address ] == true )
+    // if there are multiple invites for a given email address, only display those that are
+    // redeemed
+    if ( addresses[ invite.email_address ] == true && !invite.redeemed_user_id )
       continue;
 
     var revoke_button = createDOM( "input", {
