@@ -97,10 +97,15 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
     assert result.get( u"notes" ) == []
@@ -115,6 +120,194 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_default_as_preview_viewer( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=viewer" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == False
+    assert result.get( u"notebooks" )[ 0 ].owner == False
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).owner == False
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_default_as_preview_collaborator( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=collaborator" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == False
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == False
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_default_as_preview_owner( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=owner" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == True
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_default_as_preview_viewer_with_viewer_access( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=viewer" % self.anon_notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == False
+    assert result.get( u"notebooks" )[ 0 ].owner == False
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.anon_notebook.object_id
+    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).owner == False
+    assert len( result.get( u"startup_notes" ) ) == 0
+    assert result[ "total_notes_count" ] == 0
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result[ "invites" ] ) == 0
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_default_as_preview_collaborator_with_viewer_access( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=collaborator" % self.anon_notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    # even though a collaborator preview is being requested, this user only has preview-level
+    # access. so read_write should be False on the returned notebook
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == False
+    assert result.get( u"notebooks" )[ 0 ].owner == False
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.anon_notebook.object_id
+    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).owner == False
+    assert len( result.get( u"startup_notes" ) ) == 0
+    assert result[ "total_notes_count" ] == 0
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result[ "invites" ] ) == 0
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_default_as_preview_owner_with_viewer_access( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=owner" % self.anon_notebook.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.anon_notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == False
+    assert result.get( u"notebooks" )[ 2 ].owner == False
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.anon_notebook.object_id
+    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).owner == False
+    assert len( result.get( u"startup_notes" ) ) == 0
+    assert result[ "total_notes_count" ] == 0
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result[ "invites" ] ) == 0
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_default_with_note( self ):
     self.login()
 
@@ -125,10 +318,15 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
 
@@ -160,10 +358,15 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
 
@@ -193,10 +396,15 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
     assert result.get( u"notes" ) == []
@@ -230,6 +438,56 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
     assert notebook.owner == True
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ].object_id == self.note.object_id
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_contents_with_read_write_false( self ):
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      read_write = False,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
+    assert result[ "notes" ] == []
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    assert notebook.object_id == self.notebook.object_id
+    assert notebook.read_write == False
+    assert notebook.owner == True
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ].object_id == self.note.object_id
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_contents_with_owner_false( self ):
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      owner = False,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
+    assert result[ "notes" ] == []
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    assert notebook.object_id == self.notebook.object_id
+    assert notebook.read_write == True
+    assert notebook.owner == False
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
     user = self.database.load( User, self.user.object_id )

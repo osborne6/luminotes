@@ -61,10 +61,11 @@ class Notebooks( object ):
     revision = Valid_revision(),
     rename = Valid_bool(),
     deleted_id = Valid_id(),
+    preview = Valid_string(),
     user_id = Valid_id( none_okay = True ),
   )
   def default( self, notebook_id, note_id = None, parent_id = None, revision = None, rename = False,
-               deleted_id = None, user_id = None ):
+               deleted_id = None, preview = None, user_id = None ):
     """
     Provide the information necessary to display the page for a particular notebook. If a
     particular note id is given without a revision, then the most recent version of that note is
@@ -82,13 +83,39 @@ class Notebooks( object ):
     @param rename: whether this is a new notebook and should be renamed (optional, defaults to False)
     @type deleted_id: unicode or NoneType
     @param deleted_id: id of the notebook that was just deleted, if any (optional)
+    @type preview: unicode
+    @param preview: type of access with which to preview this notebook, either "collaborator",
+                    "viewer", "owner", or "default" (optional, defaults to "default"). access must
+                    be equal to or lower than user's own access level to this notebook
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: unicode
     @return: rendered HTML page
     """
     result = self.__users.current( user_id )
-    result.update( self.contents( notebook_id, note_id, revision, user_id ) )
+
+    if preview == u"collaborator":
+      read_write = True
+      owner = False
+      result[ u"notebooks" ] = [
+        notebook for notebook in result[ "notebooks" ] if notebook.object_id == notebook_id
+      ]
+      result[ u"notebooks" ][ 0 ].owner = False
+    elif preview == u"viewer":
+      read_write = False
+      owner = False
+      result[ u"notebooks" ] = [
+        notebook for notebook in result[ "notebooks" ] if notebook.object_id == notebook_id
+      ]
+      result[ u"notebooks" ][ 0 ].read_write = False
+      result[ u"notebooks" ][ 0 ].owner = False
+    elif preview in ( u"owner", u"default", None ):
+      read_write = True
+      owner = True
+    else:
+      raise Access_error()
+
+    result.update( self.contents( notebook_id, note_id, revision, read_write, owner, user_id ) )
     result[ "parent_id" ] = parent_id
     if revision:
       result[ "note_read_write" ] = False
@@ -96,7 +123,7 @@ class Notebooks( object ):
     # if the user doesn't have any storage bytes yet, they're a new user, so see what type of
     # conversion this is (demo or signup)
     if result[ "user" ].storage_bytes == 0:
-      if u"demo" in [ note.title for note in result[ "startup_notes" ] ]:
+      if u"this is a demo" in [ note.title for note in result[ "startup_notes" ] ]:
         result[ "conversion" ] = u"demo"
       else:
         result[ "conversion" ] = u"signup"
@@ -105,7 +132,7 @@ class Notebooks( object ):
 
     return result
 
-  def contents( self, notebook_id, note_id = None, revision = None, user_id = None ):
+  def contents( self, notebook_id, note_id = None, revision = None, read_write = True, owner = True, user_id = None ):
     """
     Return the startup notes for the given notebook. Optionally include a single requested note as
     well.
@@ -116,6 +143,10 @@ class Notebooks( object ):
     @param note_id: id of single note in this notebook to return (optional)
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
+    @type read_write: bool or NoneType
+    @param read_write: whether the notebook should be returned as read-write (optional, defaults to True)
+    @type owner: bool or NoneType
+    @param owner: whether the notebook should be returned as owner-level access (optional, defaults to True)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: dict
@@ -136,10 +167,14 @@ class Notebooks( object ):
     if notebook is None:
       raise Access_error()
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if read_write is False:
+      notebook.read_write = False
+    elif not self.__users.check_access( user_id, notebook_id, read_write = True ):
       notebook.read_write = False
 
-    if not self.__users.check_access( user_id, notebook_id, owner = True ):
+    if owner is False:
+      notebook.owner = False
+    elif not self.__users.check_access( user_id, notebook_id, owner = True ):
       notebook.owner = False
 
     if note_id:

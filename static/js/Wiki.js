@@ -1330,7 +1330,19 @@ Wiki.prototype.share_notebook = function () {
         )
       ),
       invite_area
-    )
+    ),
+    createDOM( "div", {},
+      createDOM(
+        "a", { "href": "/notebooks/" + this.notebook_id + "?preview=viewer", "target": "_new" },
+        "Preview this notebook as a viewer."
+      )
+    ),
+    this.rate_plan.notebook_collaboration ? createDOM( "div", {},
+      createDOM(
+        "a", { "href": "/notebooks/" + this.notebook_id + "?preview=collaborator", "target": "_new" },
+        "Preview this notebook as a collaborator."
+      )
+    ) : null
   );
 
   this.create_editor( "share_notebook", "<h3>share this notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );

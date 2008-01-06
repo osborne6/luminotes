@@ -1,5 +1,7 @@
 1.1.0: January ??, 2007
  * Ability to invite people to your notebook as a collaborator or owner.
+ * Feature to preview a notebook as a viewer would see it.
+ * Note revisions list now include username of the user who made that revision.
  * Fixed bug where passwords with special characters broke password hashing.
  * Fixed bug where link info box summaries sometimes contained HTML tags.
 
