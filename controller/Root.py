@@ -133,12 +133,22 @@ class Root( object ):
     Provide the information necessary to display the web site's front page, potentially performing
     a redirect to the https version of the page.
     """
-    # if the user is logged in and not using https, then redirect to the https version of the page (if available)
     https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
     https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
     
-    if cherrypy.session.get( "user_id" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
-      return dict( redirect = https_url )
+    if user_id:
+      # if the user is logged in and the HTTP request has no referrer, then redirect to the user's first notebook
+      referer = cherrypy.request.headerMap.get( u"Referer" )
+      if not referer:
+        user = self.__database.load( User, user_id )
+        if user:
+          first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+          if first_notebook:
+            return dict( redirect = "%s/notebooks/%s" % ( https_url, first_notebook.object_id ) )
+      
+      # if the user is logged in and not using https, then redirect to the https version of the page (if available)
+      if https_url and cherrypy.request.remote_addr != https_proxy_ip:
+        return dict( redirect = https_url )
 
     result = self.__users.current( user_id )
     main_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes" ]

@@ -948,3 +948,5 @@ class Users( object ):
     self.__database.save( invite, commit = False )
 
     self.__database.commit()
+
+#  def paypal_notify( self, **data ):
