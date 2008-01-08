@@ -375,13 +375,6 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, pos
         note_title = pulldown_title;
     }
 
-    // if the title looks like a URL, then make it a link to an external site
-    if ( /^\w+:\/\//.test( note_title ) ) {
-      link.target = "_new";
-      link.href = note_title;
-      window.open( link.href );
-      return
-    }
     if ( link.target )
       link.removeAttribute( "target" );
   }
@@ -468,12 +461,11 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, pos
 
 Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   // if the title looks like a URL, then make it a link to an external site
-  if ( /^\w+:\/\//.test( note_title ) ) {
-    link.target = "_new";
-    link.href = note_title;
-    if ( callback ) callback( "web link" );
-    return;
-  }
+  if ( /^\w+:\/\//.test( note_title ) )
+    var title_looks_like_url = true;
+  else
+    var title_looks_like_url = false;
+
   if ( link && link.target )
     link.removeAttribute( "target" );
 
@@ -523,6 +515,11 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
       function ( result ) {
         if ( result && result.note ) {
           link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note.object_id;
+        } else if ( title_looks_like_url ) {
+          link.target = "_new";
+          link.href = note_title;
+          callback( "web link" );
+          return;
         } else {
           link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
             [ "title", "note_id" ],
@@ -544,6 +541,9 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
     function ( result ) {
       if ( result && result.note_id ) {
         link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note_id;
+      } else if ( title_looks_like_url ) {
+        link.target = "_new";
+        link.href = note_title;
       } else {
         link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
           [ "title", "note_id" ],
@@ -580,6 +580,14 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var note_text = result.note.contents;
     var deleted_from_id = result.note.deleted;
   } else {
+    // if the title looks like a URL, then make it a link to an external site
+    if ( /^\w+:\/\//.test( note_title ) ) {
+      link.target = "_new";
+      link.href = note_title;
+      window.open( link.href );
+      return;
+    }
+
     var id = null;
     var note_text = "<h3>" + note_title;
     var deleted_from_id = null;
