@@ -9,11 +9,8 @@ class Upgrade_note( Span ):
       self,
       H3( u"upgrade your wiki" ),
       P(
-        u"When you",
-        A( u"sign up", href = https_url + u"/sign_up", target = u"_top" ),
         """
-        for a free Luminotes account, you get a full-featured
-        personal wiki available wherever you go. And if you upgrade your
+        Use of your personal wiki is completely free. But if you upgrade your
         Luminotes account, you'll also get powerful notebook sharing features
         so that you and your friends can all collaborate on your wiki notebook.
         """,
