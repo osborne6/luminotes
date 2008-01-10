@@ -331,8 +331,9 @@ class Users( object ):
     password = Valid_string( min = 1, max = 30 ),
     login_button = unicode,
     invite_id = Valid_id( none_okay = True ),
+    after_login = Valid_string( min = 0, max = 100 ),
   )
-  def login( self, username, password, login_button, invite_id = None ):
+  def login( self, username, password, login_button, invite_id = None, after_login = None ):
     """
     Attempt to authenticate the user. If successful, associate the given user with the current
     session.
@@ -343,6 +344,8 @@ class Users( object ):
     @param password: the user's password
     @type invite_id: unicode
     @param invite_id: id of invite to redeem upon login (optional)
+    @type after_login: unicode
+    @param after_login: URL to redirect to after login (optional, must start with "/")
     @rtype: json dict
     @return: { 'redirect': url, 'authenticated': userdict }
     @raise Authentication_error: invalid username or password
@@ -363,6 +366,9 @@ class Users( object ):
 
       self.convert_invite_to_access( invite, user.object_id )
       redirect = u"/notebooks/%s" % invite.notebook_id
+    # if there's an after_login URL, redirect to it
+    elif after_login and after_login.startswith( "/" ):
+      redirect = after_login
     # otherwise, just redirect to the user's first notebook (if any)
     elif first_notebook:
       redirect = u"/notebooks/%s" % first_notebook.object_id

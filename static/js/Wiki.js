@@ -13,7 +13,8 @@ function Wiki( invoker ) {
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
   this.storage_usage_high = false;
   this.invites = evalJSON( getElement( "invites" ).value );
-  this.invite_id = getElement( "invite_id" ).value ;
+  this.invite_id = getElement( "invite_id" ).value;
+  this.after_login = getElement( "after_login" ).value;
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -652,8 +653,11 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   connect( editor, "invites_updated", function ( invites ) { self.invites = invites; self.share_notebook(); } );
   connect( editor, "submit_form", function ( url, form, callback ) {
     var args = {}
-    if ( url == "/users/signup" || url == "/users/login" )
+    if ( url == "/users/signup" || url == "/users/login" ) {
       args[ "invite_id" ] = self.invite_id;
+      if ( url == "/users/login" )
+        args[ "after_login" ] = self.after_login;
+    }
 
     self.invoker.invoke( url, "POST", args, callback, form );
   } );

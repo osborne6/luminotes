@@ -31,6 +31,7 @@ class Main_page( Page ):
     deleted_id = None,
     invites = None,
     invite_id = None,
+    after_login = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -102,6 +103,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"deleted_id", id = u"deleted_id", value = deleted_id ),
       Input( type = u"hidden", name = u"invites", id = u"invites", value = json( invites ) ),
       Input( type = u"hidden", name = u"invite_id", id = u"invite_id", value = invite_id ),
+      Input( type = u"hidden", name = u"after_login", id = u"after_login", value = after_login ),
       Div(
         id = u"status_area",
       ),

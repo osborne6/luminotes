@@ -457,6 +457,30 @@ class Test_users( Test_controller ):
     assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
     assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
+  def test_current_after_login_with_after_login( self ):
+    after_login = u"/foo/bar"
+
+    result = self.http_post( "/users/login", dict(
+      username = self.username2,
+      password = self.password2,
+      after_login = after_login,
+      login_button = u"login",
+    ) )
+
+    assert result[ u"redirect" ] == after_login
+
+  def test_current_after_login_with_after_login_with_full_url( self ):
+    after_login = u"http://this_url/does/not/start/with/a/slash"
+
+    result = self.http_post( "/users/login", dict(
+      username = self.username2,
+      password = self.password2,
+      after_login = after_login,
+      login_button = u"login",
+    ) )
+
+    assert result[ u"redirect" ] == u"/"
+
   def test_update_storage( self ):
     previous_revision = self.user.revision
 

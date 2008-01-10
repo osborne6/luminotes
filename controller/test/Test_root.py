@@ -117,6 +117,36 @@ class Test_root( Test_controller ):
     assert result[ u"invite_id" ] == u"whee"
     assert result[ u"user" ].object_id == self.anonymous.object_id
 
+  def test_default_with_after_login( self ):
+    after_login = "/foo/bar"
+
+    result = self.http_get(
+      "/my_note?after_login=%s" % after_login,
+    )
+
+    assert result
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].object_id == self.anon_note.object_id
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert result[ u"after_login" ] == after_login
+    assert result[ u"user" ].object_id == self.anonymous.object_id
+
+  def test_default_with_after_login_with_full_url( self ):
+    after_login = "http://example.com/foo/bar"
+
+    result = self.http_get(
+      "/my_note?after_login=%s" % after_login,
+    )
+
+    assert result
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].object_id == self.anon_note.object_id
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert result.get( u"after_login" ) is None
+    assert result[ u"user" ].object_id == self.anonymous.object_id
+
   def test_default_after_login( self ):
     self.login()
 
@@ -204,6 +234,72 @@ class Test_root( Test_controller ):
     assert result
     assert u"error" not in result
     assert result[ u"notebook" ].object_id == self.privacy_notebook.object_id
+
+  def test_upgrade( self ):
+    result = self.http_get( "/upgrade" )
+
+    assert result[ u"user" ].username == u"anonymous"
+    assert len( result[ u"notebooks" ] ) == 4
+    assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
+    assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 0 ].owner == False
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 0
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"upgrade your wiki"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+
+    contents = result[ u"notes" ][ 0 ].contents
+    assert u"upgrade" in contents
+    assert u"Super" in contents
+    assert u"Extra super" in contents
+
+    # since the user is not logged in, no subscription buttons should be shown
+    assert u"button" not in contents
+
+  def test_upgrade_after_login( self ):
+    self.login()
+
+    result = self.http_get( "/upgrade", session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebook.object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebook.name
+    assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 0 ].owner == False
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 0
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"upgrade your wiki"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+
+    contents = result[ u"notes" ][ 0 ].contents
+    assert u"upgrade" in contents
+    assert u"Super" in contents
+    assert u"Extra super" in contents
+
+    # since the user is logged in, subscription buttons should be shown
+    assert u"button" in contents
 
   def test_next_id( self ):
     result = self.http_get( "/next_id" )

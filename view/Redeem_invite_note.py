@@ -3,8 +3,6 @@ from Tags import Span, H3, P, A
 
 class Redeem_invite_note( Span ):
   def __init__( self, invite, notebook ):
-    title = None
-
     Span.__init__(
       self,
       H3( notebook.name ),

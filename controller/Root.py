@@ -2,7 +2,7 @@ import cherrypy
 
 from Expose import expose
 from Expire import strongly_expire
-from Validate import validate, Valid_int
+from Validate import validate, Valid_int, Valid_string
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Database import Valid_id
@@ -11,6 +11,7 @@ from model.Notebook import Notebook
 from model.User import User
 from view.Main_page import Main_page
 from view.Notebook_rss import Notebook_rss
+from view.Upgrade_note import Upgrade_note
 from view.Json import Json
 from view.Error_page import Error_page
 from view.Not_found_page import Not_found_page
@@ -47,9 +48,10 @@ class Root( object ):
   @validate(
     note_title = unicode,
     invite_id = Valid_id( none_okay = True ),
+    after_login = Valid_string( min = 0, max = 100 ),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, note_title, invite_id = None, user_id = None ):
+  def default( self, note_title, invite_id = None, after_login = None, user_id = None ):
     """
     Convenience method for accessing a note in the main notebook by name rather than by note id.
 
@@ -57,6 +59,8 @@ class Root( object ):
     @param note_title: title of the note to return
     @type invite_id: unicode
     @param invite_id: id of the invite used to get to this note (optional)
+    @type after_login: unicode
+    @param after_login: URL to redirect to after login (optional, must start with "/")
     @rtype: unicode
     @return: rendered HTML page
     """
@@ -85,6 +89,8 @@ class Root( object ):
     result.update( self.__notebooks.contents( main_notebook.object_id, user_id = user_id, note_id = note.object_id ) )
     if invite_id:
       result[ "invite_id" ] = invite_id
+    if after_login and after_login.startswith( u"/" ):
+      result[ "after_login" ] = after_login
 
     return result
 
@@ -144,7 +150,7 @@ class Root( object ):
         if user:
           first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
           if first_notebook:
-            return dict( redirect = "%s/notebooks/%s" % ( https_url, first_notebook.object_id ) )
+            return dict( redirect = u"%s/notebooks/%s" % ( https_url, first_notebook.object_id ) )
       
       # if the user is logged in and not using https, then redirect to the https version of the page (if available)
       if https_url and cherrypy.request.remote_addr != https_proxy_ip:
@@ -228,6 +234,40 @@ class Root( object ):
     privacy_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes privacy policy" ]
 
     result.update( self.__notebooks.contents( privacy_notebooks[ 0 ].object_id, user_id = user_id ) )
+
+    return result
+
+  @expose( view = Main_page )
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def upgrade( self, user_id = None ):
+    """
+    Provide the information necessary to display the Luminotes upgrade page.
+    """
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    if anonymous:
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
+    else:
+      main_notebook = None
+
+    https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
+    result = self.__users.current( user_id )
+    result[ "notebook" ] = main_notebook
+    result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
+    result[ "note_read_write" ] = False
+    result[ "notes" ] = [ Note.create(
+      object_id = u"upgrade",
+      contents = unicode( Upgrade_note(
+        self.__settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
+        https_url,
+        user_id,
+      ) ),
+      notebook_id = main_notebook.object_id,
+    ) ]
+    result[ "invites" ] = []
 
     return result
 

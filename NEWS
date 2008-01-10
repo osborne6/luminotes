@@ -3,6 +3,8 @@
  * Feature to preview a notebook as a viewer would see it.
  * Note revisions list now include username of the user who made that
    revision.
+ * If you go to luminotes.com when you're logged in, you'll be automatically
+   redirected to your first notebook.
  * Fixed bug where passwords with special characters broke password hashing.
  * Fixed bug that prevented you from opening a note with a title that looked
    like an external URL.

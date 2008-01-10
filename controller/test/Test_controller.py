@@ -314,10 +314,16 @@ class Test_controller( object ):
           {
             u"name": u"super",
             u"storage_quota_bytes": 1337,
+            u"notebook_collaboration": True,
+            u"fee": 1.99,
+            u"button": u"[subscribe here user %s!] button",
           },
           {
             u"name": "extra super",
             u"storage_quota_bytes": 31337,
+            u"notebook_collaboration": True,
+            u"fee": 199.99,
+            u"button": u"[or here user %s!] button",
           },
         ],
       },

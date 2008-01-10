@@ -138,9 +138,30 @@ ol li {
   padding-right: 1em;
 }
 
+#upgrade_table_area {
+  text-align: center;
+}
+
+#upgrade_login_text {
+  font-weight: bold;
+  text-align: center;
+}
+
 #upgrade_table {
   border-collapse: collapse;
   border: 1px solid #999999;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#upgrade_table th {
+  padding: 0.5em;
+}
+
+#upgrade_table td {
+  text-align: center;
+  background-color: #fafafa;
+  padding: 0.5em;
 }
 
 #upgrade_table .plan_name {
@@ -155,19 +176,41 @@ ol li {
   background-color: #fafafa;
 }
 
-#upgrade_table .price_text {
+#upgrade_table_small {
+  border-collapse: collapse;
+  border: 1px solid #999999;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#upgrade_table_small th {
+  padding: 0.5em;
+}
+
+#upgrade_table_small td {
+  text-align: center;
+  background-color: #fafafa;
+  padding: 0.5em;
+}
+
+#upgrade_table_small .plan_name {
+  width: 33%;
+  text-align: center;
+  background-color: #d0e0f0;
+}
+
+.price_text {
   color: #ff6600;
 }
 
-#upgrade_table .month_text {
+.month_text {
   padding-top: 0.5em;
   font-size: 75%;
 }
 
-#upgrade_table td {
-  text-align: center;
-  background-color: #fafafa;
-  padding: 0.5em;
+.subscribe_form {
+  margin-top: 0.5em;
+  margin-bottom: 0;
 }
 
 .thumbnail_left {

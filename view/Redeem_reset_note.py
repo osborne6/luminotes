@@ -3,8 +3,6 @@ from Tags import Span, H3, P, Form, P, Div, Strong, Br, Input
 
 class Redeem_reset_note( Span ):
   def __init__( self, password_reset_id, users ):
-    title = None
-
     Span.__init__(
       self,
       H3( u"complete your password reset" ),

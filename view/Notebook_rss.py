@@ -25,6 +25,7 @@ class Notebook_rss( Rss_channel ):
     deleted_id = None,
     invites = None,
     invite_id = None,
+    after_login = None,
   ):
     if notebook.name == u"Luminotes":
       notebook_path = u"/"

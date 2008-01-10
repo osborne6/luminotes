@@ -28,22 +28,32 @@ settings = {
         "name": "free",
         "storage_quota_bytes": 30 * MEGABYTE,
         "notebook_collaboration": False,
+        "fee": None,
       },
       {
         "name": "basic",
         "storage_quota_bytes": 250 * MEGABYTE,
         "notebook_collaboration": True,
+        "fee": 5,
+        "button":
+          """
+          """,
       },
       {
         "name": "standard",
         "storage_quota_bytes": 500 * MEGABYTE,
         "notebook_collaboration": True,
+        "fee": 9,
+        "button":
+          """
+          """,
       },
-      {
-        "name": "premium",
-        "storage_quota_bytes": 2000 * MEGABYTE,
-        "notebook_collaboration": True,
-      },
+#      {
+#        "name": "premium",
+#        "storage_quota_bytes": 2000 * MEGABYTE,
+#        "notebook_collaboration": True,
+#        "fee": 19,
+#      },
     ],
   },
 }
