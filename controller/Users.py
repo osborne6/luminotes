@@ -1,4 +1,6 @@
 import re
+import urllib
+import urllib2
 import cherrypy
 from pytz import utc
 from datetime import datetime, timedelta
@@ -88,6 +90,17 @@ class Access_error( Exception ):
     if message is None:
       message = u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user."
 
+    Exception.__init__( self, message )
+    self.__message = message
+
+  def to_dict( self ):
+    return dict(
+      error = self.__message
+    )
+
+
+class Payment_error( Exception ):
+  def __init__( self, message ):
     Exception.__init__( self, message )
     self.__message = message
 
@@ -955,4 +968,29 @@ class Users( object ):
 
     self.__database.commit()
 
-#  def paypal_notify( self, **data ):
+  @expose()
+  def paypal_notify( self, **params ):
+    PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
+    #PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
+
+    print params
+    params[ u"cmd" ] = u"_notify-validate"
+    params = urllib.urlencode( params )
+    
+    response = urllib2.Request( PAYPAL_URL )
+    response.add_header( u"Content-type", u"application/x-www-form-urlencoded" )
+    response_file = urllib2.urlopen( PAYPAL_URL, params )
+    result = response_file.read()
+
+    if result != u"VERIFIED":
+      raise Payment_error( result )
+
+    print "VERIFIED"
+
+    # TODO: update the database
+
+    return dict()
+
+  @expose()
+  def thanks( self ):
+    pass # TODO

@@ -267,6 +267,7 @@ class Root( object ):
       object_id = u"upgrade",
       contents = unicode( Upgrade_note(
         self.__settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
+        self.__settings[ u"global" ].get( u"luminotes.unsubscribe_button" ),
         https_url,
         user,
       ) ),

@@ -55,5 +55,8 @@ settings = {
 #        "fee": 19,
 #      },
     ],
+    "luminotes.unsubscribe_button":
+      """
+      """,
   },
 }

@@ -2,7 +2,7 @@ from Tags import Div, Span, H3, P, A, Table, Tr, Th, Td, Br, Img
 
 
 class Upgrade_note( Span ):
-  def __init__( self, rate_plans, https_url, user ):
+  def __init__( self, rate_plans, unsubscribe_button, https_url, user ):
     MEGABYTE = 1024 * 1024
 
     Span.__init__(
@@ -65,6 +65,7 @@ class Upgrade_note( Span ):
       user and user.rate_plan > 0 and P(
         u"You're currently subscribed to Luminotes %s." % 
         rate_plans[ user.rate_plan ][ u"name" ].capitalize(),
+        unsubscribe_button,
       ) or None,
 
       H3( u"share your notebook" ),
