@@ -252,6 +252,11 @@ class Root( object ):
     else:
       main_notebook = None
 
+    if user_id:
+      user = self.__database.load( User, user_id )
+    else:
+      user = None
+
     https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
     result = self.__users.current( user_id )
     result[ "notebook" ] = main_notebook
@@ -263,7 +268,7 @@ class Root( object ):
       contents = unicode( Upgrade_note(
         self.__settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
         https_url,
-        user_id,
+        user,
       ) ),
       notebook_id = main_notebook.object_id,
     ) ]

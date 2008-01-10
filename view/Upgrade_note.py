@@ -2,7 +2,7 @@ from Tags import Div, Span, H3, P, A, Table, Tr, Th, Td, Br, Img
 
 
 class Upgrade_note( Span ):
-  def __init__( self, rate_plans, https_url, user_id ):
+  def __init__( self, rate_plans, https_url, user ):
     MEGABYTE = 1024 * 1024
 
     Span.__init__(
@@ -17,7 +17,7 @@ class Upgrade_note( Span ):
       ),
       P(
         Table(
-          self.fee_row( rate_plans, user_id ),
+          self.fee_row( rate_plans, user ),
           Tr(
             Td( u"included storage space", class_ = u"feature_name" ),
             [ Td(
@@ -53,7 +53,7 @@ class Upgrade_note( Span ):
           border = u"1",
           id = u"upgrade_table",
         ),
-        ( not user_id ) and P(
+        ( not user ) and P(
           u"To upgrade your Luminotes account, please",
           A( u"login", href = https_url + u"/login?after_login=/upgrade", target = u"_top" ),
           u"first!",
@@ -61,6 +61,11 @@ class Upgrade_note( Span ):
         ) or None,
         id = u"upgrade_table_area",
       ),
+
+      user and user.rate_plan > 0 and P(
+        u"You're currently subscribed to Luminotes %s." % 
+        rate_plans[ user.rate_plan ][ u"name" ].capitalize(),
+      ) or None,
 
       H3( u"share your notebook" ),
       P(
@@ -143,7 +148,7 @@ class Upgrade_note( Span ):
       ),
       P(
         Table(
-          self.fee_row( rate_plans, user_id, include_blank = False ),
+          self.fee_row( rate_plans, user, include_blank = False ),
           Tr(
             [ Td(
               plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
@@ -152,7 +157,7 @@ class Upgrade_note( Span ):
           border = u"1",
           id = u"upgrade_table_small",
         ),
-        ( not user_id ) and P(
+        ( not user ) and P(
           u"Please",
           A( u"login", href = https_url + u"/login?after_login=/upgrade", target = u"_top" ),
           u"to upgrade your wiki!",
@@ -162,7 +167,7 @@ class Upgrade_note( Span ):
       ),
     )
 
-  def fee_row( self, rate_plans, user_id, include_blank = True ):
+  def fee_row( self, rate_plans, user, include_blank = True ):
     return Tr(
       include_blank and Th( u"&nbsp;" ) or None,
       [ Th(
@@ -174,8 +179,8 @@ class Upgrade_note( Span ):
             class_ = u"price_text",
             separator = u"",
           ),
-          user_id and plan.get( u"button" ) % user_id or None,
+          user and user.rate_plan != index and plan.get( u"button" ) % user.object_id or None,
         ) or None,
         class_ = u"plan_name",
-      ) for plan in rate_plans ],
+      ) for ( index, plan ) in enumerate( rate_plans ) ],
     )
