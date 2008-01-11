@@ -1,6 +1,7 @@
 # prevent bots from signing up for demo accounts
 User-agent: *
 Disallow: /users/demo
+Disallow: /users/thanks
 Disallow: /notebooks/download_html/
 
 # this crawler is completely broken and requests many invalid URLs

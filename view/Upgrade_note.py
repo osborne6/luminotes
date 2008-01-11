@@ -62,10 +62,10 @@ class Upgrade_note( Span ):
         id = u"upgrade_table_area",
       ),
 
-      user and user.rate_plan > 0 and P(
+      user and P(
         u"You're currently subscribed to Luminotes %s." % 
         rate_plans[ user.rate_plan ][ u"name" ].capitalize(),
-        unsubscribe_button,
+        ( user.rate_plan > 0 ) and unsubscribe_button or None,
       ) or None,
 
       H3( u"share your notebook" ),

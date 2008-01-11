@@ -18,6 +18,9 @@ from view.Main_page import Main_page
 from view.Redeem_reset_note import Redeem_reset_note
 from view.Redeem_invite_note import Redeem_invite_note
 from view.Blank_page import Blank_page
+from view.Thanks_note import Thanks_note
+from view.Thanks_error_note import Thanks_error_note
+from view.Processing_note import Processing_note
 
 
 USERNAME_PATTERN = re.compile( "^[a-zA-Z0-9]+$" )
@@ -978,8 +981,6 @@ class Users( object ):
     PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
     #PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
 
-    print params
-
     # check that payment_status is Completed
     payment_status = params.get( u"payment_status" )
     if payment_status and payment_status != u"Completed":
@@ -1067,6 +1068,52 @@ class Users( object ):
 
     return dict()
 
-  @expose()
-  def thanks( self ):
-    pass # TODO
+  @expose( view = Main_page )
+  @grab_user_id
+  def thanks( self, **params ):
+    """
+    Provide the information necessary to display the subscription thanks page.
+    """
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    if anonymous:
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
+    else:
+      main_notebook = None
+
+    result = self.current( params.get( u"user_id" ) )
+
+    rate_plan = params.get( u"item_number", "" )
+    try:
+      rate_plan = int( rate_plan )
+    except ValueError:
+      rate_plan = None
+
+    retry_count = params.get( u"retry_count", "" )
+    try:
+      retry_count = int( retry_count )
+    except ValueError:
+      retry_count = None
+
+    # if there's no rate plan or we've retried too many times, give up and display an error
+    RETRY_TIMEOUT = 30
+    if rate_plan is None or retry_count > RETRY_TIMEOUT:
+      note = Thanks_error_note()
+    # if the rate plan of the subscription matches the user's current rate plan, success
+    elif rate_plan == result[ u"user" ].rate_plan:
+      note = Thanks_note( self.__rate_plans[ rate_plan ][ u"name" ].capitalize() )
+    # otherwise, display an auto-reloading "processing..." page
+    else:
+      note = Processing_note( rate_plan, retry_count )
+
+    result[ "notebook" ] = main_notebook
+    result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
+    result[ "note_read_write" ] = False
+    result[ "notes" ] = [ Note.create(
+      object_id = u"thanks",
+      contents = unicode( note ),
+      notebook_id = main_notebook.object_id,
+    ) ]
+    result[ "invites" ] = []
+
+    return result
