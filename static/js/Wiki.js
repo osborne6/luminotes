@@ -129,7 +129,12 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   if ( usage_percent > 90 ) {
     var storage_usage_class = "storage_usage_high";
     if ( this.storage_usage_high == false )
-      this.display_message( "You are currently using " + usage_percent + "% of your available storage space. Please delete some notes, empty the trash, or upgrade your account." );
+      this.display_message(
+        "You are currently using " +
+        usage_percent +
+        "% of your available storage space. Please delete some notes, empty the trash, or",
+        [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
+      );
     this.storage_usage_high = true;
   } else if ( usage_percent > 75 ) {
     var storage_usage_class = "storage_usage_medium";
