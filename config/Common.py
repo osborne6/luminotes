@@ -23,6 +23,7 @@ settings = {
     "luminotes.http_proxy_ip": "127.0.0.1",
     "luminotes.https_proxy_ip": "127.0.0.2",
     "luminotes.support_email": "",
+    "luminotes.payment_email": "",
     "luminotes.rate_plans": [
       {
         "name": "free",
@@ -53,6 +54,9 @@ settings = {
 #        "storage_quota_bytes": 2000 * MEGABYTE,
 #        "notebook_collaboration": True,
 #        "fee": 19,
+#        "button":
+#          """
+#          """,
 #      },
     ],
     "luminotes.unsubscribe_button":
