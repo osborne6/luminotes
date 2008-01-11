@@ -17,6 +17,7 @@ from view.Json import Json
 from view.Main_page import Main_page
 from view.Redeem_reset_note import Redeem_reset_note
 from view.Redeem_invite_note import Redeem_invite_note
+from view.Blank_page import Blank_page
 
 
 USERNAME_PATTERN = re.compile( "^[a-zA-Z0-9]+$" )
@@ -100,7 +101,8 @@ class Access_error( Exception ):
 
 
 class Payment_error( Exception ):
-  def __init__( self, message ):
+  def __init__( self, message, params ):
+    message += "\n" + unicode( params )
     Exception.__init__( self, message )
     self.__message = message
 
@@ -163,7 +165,7 @@ class Users( object ):
   """
   Controller for dealing with users, corresponding to the "/users" URL.
   """
-  def __init__( self, database, http_url, https_url, support_email, rate_plans ):
+  def __init__( self, database, http_url, https_url, support_email, payment_email, rate_plans ):
     """
     Create a new Users object.
 
@@ -175,6 +177,8 @@ class Users( object ):
     @param https_url: base URL to use for SSL http requests, or an empty string
     @type support_email: unicode
     @param support_email: email address for support requests
+    @type payment_email: unicode
+    @param payment_email: email address for payment
     @type rate_plans: [ { "name": unicode, "storage_quota_bytes": int } ]
     @param rate_plans: list of configured rate plans
     @rtype: Users
@@ -184,6 +188,7 @@ class Users( object ):
     self.__http_url = http_url
     self.__https_url = https_url
     self.__support_email = support_email
+    self.__payment_email = payment_email
     self.__rate_plans = rate_plans
 
   @expose( view = Json )
@@ -968,26 +973,97 @@ class Users( object ):
 
     self.__database.commit()
 
-  @expose()
+  @expose( view = Blank_page )
   def paypal_notify( self, **params ):
     PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
     #PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
 
     print params
+
+    # check that payment_status is Completed
+    payment_status = params.get( u"payment_status" )
+    if payment_status and payment_status != u"Completed":
+      raise Payment_error( u"payment_status is not Completed", params )
+
+    # TODO: check that txn_id is not a duplicate
+
+    # check that receiver_email is mine
+    if params.get( u"receiver_email" ) != self.__payment_email:
+      raise Payment_error( u"incorrect receiver_email", params )
+
+    # verify mc_currency
+    if params.get( u"mc_currency" ) != u"USD":
+      raise Payment_error( u"unsupported mc_currency", params )
+
+    # verify item_number
+    plan_index = params.get( u"item_number" )
+    try:
+      plan_index = int( plan_index )
+    except ValueError:
+      raise Payment_error( u"invalid item_number", params )
+    if plan_index == 0 or plan_index >= len( self.__rate_plans ):
+      raise Payment_error( u"invalid item_number", params )
+
+    # verify mc_gross
+    rate_plan = self.__rate_plans[ plan_index ]
+    fee = u"%0.2f" % rate_plan[ u"fee" ]
+    mc_gross = params.get( u"mc_gross" )
+    if mc_gross and mc_gross != fee:
+      raise Payment_error( u"invalid mc_gross", params )
+
+    # verify mc_amount3
+    mc_amount3 = params.get( u"mc_amount3" )
+    if mc_amount3 and mc_amount3 != fee:
+      raise Payment_error( u"invalid mc_amount3", params )
+
+    # verify item_name
+    item_name = params.get( u"item_name" )
+    if item_name and item_name.lower() != u"luminotes " + rate_plan[ u"name" ].lower():
+      raise Payment_error( u"invalid item_name", params )
+
+    # verify period1 and period2 (should not be present)
+    if params.get( u"period1" ) or params.get( u"period2" ):
+      raise Payment_error( u"invalid period", params )
+
+    # verify period3
+    period3 = params.get( u"period3" )
+    if period3 and period3 != u"1 M": # one-month subscription
+      raise Payment_error( u"invalid period3", params )
+
     params[ u"cmd" ] = u"_notify-validate"
-    params = urllib.urlencode( params )
+    encoded_params = urllib.urlencode( params )
     
-    response = urllib2.Request( PAYPAL_URL )
-    response.add_header( u"Content-type", u"application/x-www-form-urlencoded" )
-    response_file = urllib2.urlopen( PAYPAL_URL, params )
-    result = response_file.read()
+    # ask paypal to verify the request
+    request = urllib2.Request( PAYPAL_URL )
+    request.add_header( u"Content-type", u"application/x-www-form-urlencoded" )
+    request_file = urllib2.urlopen( PAYPAL_URL, encoded_params )
+    result = request_file.read()
 
     if result != u"VERIFIED":
-      raise Payment_error( result )
+      raise Payment_error( result, params )
 
-    print "VERIFIED"
+    # update the database based on the type of transaction
+    txn_type = params.get( u"txn_type" )
+    user_id = params.get( u"custom" )
+    try:
+      user_id = Valid_id()( user_id )
+    except ValueError():
+      raise Payment_error( u"invalid custom", params )
 
-    # TODO: update the database
+    user = self.__database.load( User, user_id )
+    if not user:
+      raise Payment_error( u"unknown custom", params )
+
+    if txn_type in ( u"subscr_signup", u"subcr_modify" ):
+      user.rate_plan = plan_index
+      self.__database.save( user )
+    elif txn_type == u"subscr_cancel":
+      user.rate_plan = 0 # return the user to the free account level
+      self.__database.save( user )
+    elif txn_type in ( u"subscr_payment", u"subscr_failed" ):
+      pass # for now, ignore payments and let paypal handle them
+    else:
+      raise Payment_error( "unknown txn_type", params )
 
     return dict()
 

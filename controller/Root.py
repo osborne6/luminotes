@@ -39,6 +39,7 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.http_url", u"" ),
       settings[ u"global" ].get( u"luminotes.https_url", u"" ),
       settings[ u"global" ].get( u"luminotes.support_email", u"" ),
+      settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
     self.__notebooks = Notebooks( database, self.__users )
