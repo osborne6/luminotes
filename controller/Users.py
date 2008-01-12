@@ -978,11 +978,20 @@ class Users( object ):
 
   @expose( view = Blank_page )
   def paypal_notify( self, **params ):
+    """
+    Notify Luminotes of payments, subscriptions, cancellations, refunds, etc.
+    This method is responsible for validating the request, POSTing back to
+    PayPal to make sure the request is valid, and then updating the user's
+    record in the database with their new rate plan. paypal_notify() is
+    invoked by PayPal itself.
+    """
     PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
     #PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
 
     # check that payment_status is Completed
     payment_status = params.get( u"payment_status" )
+    if payment_status == u"Refunded":
+      return dict() # for now, ignore refunds and let paypal handle them
     if payment_status and payment_status != u"Completed":
       raise Payment_error( u"payment_status is not Completed", params )
 
@@ -1095,7 +1104,7 @@ class Users( object ):
       retry_count = None
 
     # if there's no rate plan or we've retried too many times, give up and display an error
-    RETRY_TIMEOUT = 30
+    RETRY_TIMEOUT = 15
     if rate_plan is None or retry_count > RETRY_TIMEOUT:
       note = Thanks_error_note()
     # if the rate plan of the subscription matches the user's current rate plan, success
