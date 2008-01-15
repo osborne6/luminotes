@@ -239,6 +239,7 @@ class Root( object ):
     return result
 
   @expose( view = Main_page )
+  @strongly_expire
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
