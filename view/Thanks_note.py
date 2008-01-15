@@ -13,15 +13,14 @@ class Thanks_note( Span ):
       ),
       P(
         u"""
-        Your account has been upgraded to Luminotes %s. Please click on
-        one of your notebooks to the right to get started with your newly
-        upgraded wiki.
+        You are now subscribed to Luminotes %s. Please click on one of your
+        notebooks to the right to get started with your newly upgraded wiki.
         """ % rate_plan_name,
       ),
       P(
         u"""
-        If you have any questions about your upgraded wiki, or anything else,
-        please
+        If you have any questions about your upgraded wiki or your Luminotes
+        account, please
         """,
         A( u"contact support", href = u"/contact_info", target = "_top" ),
         u"""

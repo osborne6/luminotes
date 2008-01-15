@@ -1,17 +1,20 @@
 import re
 import cherrypy
 import smtplib
+import urllib
 from pytz import utc
 from nose.tools import raises
 from datetime import datetime, timedelta
 from Test_controller import Test_controller
 from Stub_smtp import Stub_smtp
+import Stub_urllib2
 from model.User import User
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
 from model.Invite import Invite
-from controller.Users import Invite_error
+from controller.Users import Invite_error, Payment_error
+import controller.Users as Users
 
 
 class Test_users( Test_controller ):
@@ -20,6 +23,7 @@ class Test_users( Test_controller ):
 
   def setUp( self ):
     Test_controller.setUp( self )
+    Users.urllib2 = Stub_urllib2
 
     self.username = u"mulder"
     self.password = u"trustno1"
@@ -2252,6 +2256,1163 @@ class Test_users( Test_controller ):
     
     invite = self.database.load( Invite, invite_id )
     cherrypy.root.users.convert_invite_to_access( invite, u"unknown_user_id" )
+
+  PAYMENT_DATA = {
+    u"last_name": u"User",
+    u"txn_id": u"txn",
+    u"receiver_email": u"unittest@luminotes.com",
+    u"payment_status": u"Completed",
+    u"payment_gross": u"9.00",
+    u"residence_country": u"US",
+    u"payer_status": u"verified",
+    u"txn_type": u"subscr_payment",
+    u"payment_date": u"15:38:18 Jan 10 2008 PST",
+    u"first_name": u"Test",
+    u"item_name": u"Luminotes extra super",
+    u"charset": u"windows-1252",
+    u"notify_version": u"2.4",
+    u"item_number": u"1",
+    u"receiver_id": u"rcv",
+    u"business": u"unittest@luminotes.com",
+    u"payer_id": u"pyr",
+    u"verify_sign": u"vfy",
+    u"subscr_id": u"sub",
+    u"payment_fee": u"0.56",
+    u"mc_fee": u"0.56",
+    u"mc_currency": u"USD",
+    u"payer_email": u"buyer@luminotes.com",
+    u"payment_type": u"instant",
+    u"mc_gross": u"9.00",
+  }
+
+  def test_paypal_notify_payment( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    # being notified of a mere payment should not change the user's rate plan
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_payment_invalid( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    Stub_urllib2.result = u"INVALID"
+    try:
+      result = self.http_post( "/users/paypal_notify", data );
+    finally:
+      Stub_urllib2.result = u"VERIFIED"
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_not_complete( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"payment_status" ] = u"NotEvenRemotelyCompleted"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_incorrect_receiver_email( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"receiver_email" ] = u"someoneelse@luminotes.com"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_incorrect_currency( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_currency" ] = u"EUR"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_invalid_item_number( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_number" ] = u"2"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_incorrect_gross( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_gross" ] = u"8.75"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_incorrect_amount( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount3" ] = u"1.99"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_incorrect_item_name( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_name" ] = u"super professional"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_invalid_period1( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period1" ] = u"5 Y"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_invalid_period1( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period2" ] = u"7 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_invalid_period3( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period3" ] = u"2 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_missing_custom( self ):
+    data = dict( self.PAYMENT_DATA )
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_invalid_custom( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = u"(&^(*&"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_unknown_custom( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = u"1337"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    # being notified of a mere failure should not change the user's rate plan
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_failed_invalid( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    Stub_urllib2.result = u"INVALID"
+    try:
+      result = self.http_post( "/users/paypal_notify", data );
+    finally:
+      Stub_urllib2.result = u"VERIFIED"
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_incorrect_receiver_email( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"receiver_email" ] = u"someoneelse@luminotes.com"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_incorrect_currency( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_currency" ] = u"EUR"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_invalid_item_number( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_number" ] = u"2"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_incorrect_gross( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_gross" ] = u"8.75"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_incorrect_amount( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount3" ] = u"1.99"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_incorrect_item_name( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_name" ] = u"super professional"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_invalid_period1( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period1" ] = u"5 Y"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_invalid_period1( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period2" ] = u"7 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_invalid_period3( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period3" ] = u"2 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_missing_custom( self ):
+    data = dict( self.PAYMENT_DATA )
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_invalid_custom( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = u"(&^(*&"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_failed_unknown_custom( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"txn_type" ] = u"subscr_failed"
+    data[ u"custom" ] = u"1337"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  SUBSCRIPTION_DATA = {
+    u"last_name": u"User",
+    u"receiver_email": u"unittest@luminotes.com",
+    u"residence_country": u"US",
+    u"payer_status": u"verified",
+    u"txn_type": u"subscr_signup",
+    u"first_name": u"Test",
+    u"item_name": u"Luminotes extra super",
+    u"charset": u"windows-1252",
+    u"notify_version": u"2.4",
+    u"recurring": u"1",
+    u"item_number": u"1",
+    u"payer_id": u"pyr",
+    u"period3": u"1 M",
+    u"verify_sign": u"vfy",
+    u"subscr_id": u"sub",
+    u"amount3": u"9.00",
+    u"mc_amount3": u"9.00",
+    u"mc_currency": u"USD",
+    u"subscr_date": u"15:38:16 Jan 10 2008 PST",
+    u"payer_email": u"buyer@luminotes.com",
+    u"reattempt": u"1",
+  }
+
+  def test_paypal_notify_signup( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_signup_invalid( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    Stub_urllib2.result = u"INVALID"
+    try:
+      result = self.http_post( "/users/paypal_notify", data );
+    finally:
+      Stub_urllib2.result = u"VERIFIED"
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_incorrect_receiver_email( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"receiver_email" ] = u"someoneelse@luminotes.com"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_incorrect_currency( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_currency" ] = u"EUR"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_invalid_item_number( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_number" ] = u"2"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_incorrect_gross( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_gross" ] = u"8.75"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_incorrect_amount( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount3" ] = u"1.99"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_incorrect_item_name( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_name" ] = u"super professional"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_invalid_period1( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period1" ] = u"5 Y"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_invalid_period1( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period2" ] = u"7 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_invalid_period3( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period3" ] = u"2 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_missing_custom( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_invalid_custom( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = u"(&^(*&"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_unknown_custom( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = u"1337"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_missing_recurring( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    del( data[ u"recurring" ] )
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_invalid_recurring( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"recurring" ] = u"0"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_modify( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_modify_invalid( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    Stub_urllib2.result = u"INVALID"
+    try:
+      result = self.http_post( "/users/paypal_notify", data );
+    finally:
+      Stub_urllib2.result = u"VERIFIED"
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_incorrect_receiver_email( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"receiver_email" ] = u"someoneelse@luminotes.com"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_incorrect_currency( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_currency" ] = u"EUR"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_invalid_item_number( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_number" ] = u"2"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_incorrect_gross( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_gross" ] = u"8.75"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_incorrect_amount( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount3" ] = u"1.99"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_incorrect_item_name( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_name" ] = u"super professional"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_invalid_period1( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period1" ] = u"5 Y"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_invalid_period1( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period2" ] = u"7 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_invalid_period3( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period3" ] = u"2 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_missing_custom( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_invalid_custom( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = u"(&^(*&"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_unknown_custom( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = u"1337"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_missing_recurring( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    del( data[ u"recurring" ] )
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_modify_invalid_recurring( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"recurring" ] = u"0"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 2
+
+  def test_paypal_notify_cancel( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_cancel_invalid( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    Stub_urllib2.result = u"INVALID"
+    try:
+      result = self.http_post( "/users/paypal_notify", data );
+    finally:
+      Stub_urllib2.result = u"VERIFIED"
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_incorrect_receiver_email( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"receiver_email" ] = u"someoneelse@luminotes.com"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_incorrect_currency( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_currency" ] = u"EUR"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_invalid_item_number( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_number" ] = u"2"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_incorrect_gross( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_gross" ] = u"8.75"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_incorrect_amount( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount3" ] = u"1.99"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_incorrect_item_name( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_name" ] = u"super professional"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_invalid_period1( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period1" ] = u"5 Y"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_invalid_period1( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period2" ] = u"7 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_invalid_period3( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period3" ] = u"2 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_missing_custom( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_invalid_custom( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = u"(&^(*&"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_unknown_custom( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = u"1337"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_missing_recurring( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    del( data[ u"recurring" ] )
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_cancel_invalid_recurring( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"recurring" ] = u"0"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  REFUND_DATA = {
+    u"last_name": u"User",
+    u"txn_id": u"txn",
+    u"receiver_email": u"unittest@luminotes.com",
+    u"payment_status": u"Refunded",
+    u"payment_gross": u"-5.00",
+    u"reason_code": u"refund",
+    u"residence_country": u"US",
+    u"payment_date": u"20:31:40 Jan 11 2008 PST",
+    u"first_name": u"Test",
+    u"charset": u"windows-1252",
+    u"parent_txn_id": u"parent_txn",
+    u"notify_version": u"2.4",
+    u"item_number": u"1",
+    u"receiver_id": u"rcv",
+    u"business": u"unittest@luminotes.com",
+    u"payer_id": u"pyr",
+    u"verify_sign": u"vfy",
+    u"subscr_id": u"sub",
+    u"payment_fee": u"-0.45",
+    u"mc_fee": u"-0.45",
+    u"mc_currency": u"USD",
+    u"payer_email": u"buyer@luminotes.com",
+    u"payment_type": u"instant",
+    u"mc_gross": u"-5.00",
+  }
+
+  def test_paypal_notify_refund( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.REFUND_DATA )
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+
+    # being notified of a mere refund should not change the user's rate plan
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_thanks( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    self.login()
+
+    result = self.http_post( "/users/thanks", dict(
+      item_number = u"1",
+    ), session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].owner == True
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"extra super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 31337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"Luminotes Extra super" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" not in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_not_yet_upgraded( self ):
+    self.login()
+
+    result = self.http_post( "/users/thanks", dict(
+      item_number = u"1",
+    ), session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].owner == True
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert u"processing" in result[ u"notes" ][ 0 ].title
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"being processed" in result[ u"notes" ][ 0 ].contents
+    assert u"retry_count=1" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_not_yet_upgraded_with_retry( self ):
+    self.login()
+
+    result = self.http_post( "/users/thanks", dict(
+      item_number = u"1",
+      retry_count = u"5",
+    ), session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].owner == True
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert u"processing" in result[ u"notes" ][ 0 ].title
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"being processed" in result[ u"notes" ][ 0 ].contents
+    assert u"retry_count=6" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_with_retry_timeout( self ):
+    self.login()
+
+    result = self.http_post( "/users/thanks", dict(
+      item_number = u"1",
+      retry_count = u"16",
+    ), session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].owner == True
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_without_item_number( self ):
+    self.login()
+
+    result = self.http_post( "/users/thanks", dict(
+    ), session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].owner == True
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" in result[ u"notes" ][ 0 ].contents
 
   def login( self ):
     result = self.http_post( "/users/login", dict(

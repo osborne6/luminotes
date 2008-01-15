@@ -310,6 +310,7 @@ class Test_controller( object ):
         u"luminotes.http_proxy_ip" : u"127.0.0.1",
         u"luminotes.https_proxy_ip" : u"127.0.0.2",
         u"luminotes.support_email": "unittest@luminotes.com",
+        u"luminotes.payment_email": "unittest@luminotes.com",
         u"luminotes.rate_plans": [
           {
             u"name": u"super",
@@ -322,7 +323,7 @@ class Test_controller( object ):
             u"name": "extra super",
             u"storage_quota_bytes": 31337,
             u"notebook_collaboration": True,
-            u"fee": 199.99,
+            u"fee": 9.00,
             u"button": u"[or here user %s!] button",
           },
         ],

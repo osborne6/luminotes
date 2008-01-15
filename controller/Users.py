@@ -985,8 +985,8 @@ class Users( object ):
     record in the database with their new rate plan. paypal_notify() is
     invoked by PayPal itself.
     """
-    PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
-    #PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
+    #PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
+    PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
 
     # check that payment_status is Completed
     payment_status = params.get( u"payment_status" )
@@ -1054,17 +1054,19 @@ class Users( object ):
 
     # update the database based on the type of transaction
     txn_type = params.get( u"txn_type" )
-    user_id = params.get( u"custom" )
+    user_id = params.get( u"custom", u"" )
     try:
       user_id = Valid_id()( user_id )
-    except ValueError():
+    except ValueError:
       raise Payment_error( u"invalid custom", params )
 
     user = self.__database.load( User, user_id )
     if not user:
       raise Payment_error( u"unknown custom", params )
 
-    if txn_type in ( u"subscr_signup", u"subcr_modify" ):
+    if txn_type in ( u"subscr_signup", u"subscr_modify" ):
+      if params.get( u"recurring" ) != u"1":
+        raise Payment_error( u"invalid recurring", params )
       user.rate_plan = plan_index
       self.__database.save( user )
     elif txn_type == u"subscr_cancel":
