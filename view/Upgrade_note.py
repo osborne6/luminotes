@@ -89,7 +89,7 @@ class Upgrade_note( Span ):
         u"""
         With an upgraded Luminotes account, you'll be able to invite specific people
         to collaborate on your wiki simply by entering their email addresses. You can
-        even give them full editing capbilities, so several people can contribute.
+        even give them full editing capabilities, so several people can contribute.
         And you can invite as many people as you want to collaborate on your wiki.
         They only need to sign up for a free Luminotes account to particpate.
         """
