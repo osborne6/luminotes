@@ -1132,7 +1132,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) ) {
+  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed ) {
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook_id,
       "note_id": editor.id,
