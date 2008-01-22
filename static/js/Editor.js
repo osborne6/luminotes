@@ -5,8 +5,9 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.deleted_from_id = deleted_from_id || null;
   this.revision = revision;
   this.user_revisions = new Array(); // cache for this note's list of revisions, loaded from the server on-demand
-  this.read_write = read_write;
-  this.startup = startup || false; // whether this Editor is for a startup note
+  this.read_write = read_write;      // whether the user has read-write access to this Editor
+  this.edit_enabled = read_write && !deleted_from_id; // whether editing is actually enabled for this Editor
+  this.startup = startup || false;   // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
   this.init_focus = focus || false;
   this.closed = false;
@@ -109,14 +110,14 @@ Editor.prototype.init_document = function () {
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
     this.document = this.iframe.contentDocument;
 
-    if ( this.read_write )
+    if ( this.edit_enabled )
       this.document.designMode = "On";    
 
     setTimeout( function () { self.finish_init(); }, 1 );
   } else { // browsers such as IE
     this.document = this.iframe.contentWindow.document;
 
-    if ( this.read_write ) {
+    if ( this.edit_enabled ) {
       this.document.designMode = "On";   
       // work-around for IE bug: reget the document after designMode is turned on
       this.document = this.iframe.contentWindow.document;
@@ -133,7 +134,7 @@ Editor.prototype.finish_init = function () {
   this.insert_html( this.initial_text );
 
   var self = this; // necessary so that the member functions of this editor object are used
-  if ( this.read_write ) {
+  if ( this.edit_enabled ) {
     connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
     connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
   }
@@ -234,7 +235,7 @@ Editor.prototype.finish_init = function () {
   } );
 
   // browsers such as Firefox, but not Opera
-  if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.read_write )
+  if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.edit_enabled )
     this.exec_command( "styleWithCSS", false );
 
   this.resize();
@@ -292,7 +293,7 @@ Editor.prototype.exec_command = function ( command, parameter ) {
 Editor.prototype.insert_html = function ( html ) {
   if ( html.length == 0 ) return;
 
-  if ( !this.read_write || /Safari/.test( navigator.userAgent ) ) {
+  if ( !this.edit_enabled || /Safari/.test( navigator.userAgent ) ) {
     this.document.body.innerHTML = html;
     return;
   }
@@ -347,7 +348,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
   this.link_started = null;
 
   // update the state no matter what, in case the cursor has moved
-  if ( this.read_write )
+  if ( this.edit_enabled )
     signal( this, "state_changed", this );
 
   // we only want to deal with left mouse button clicks
@@ -366,7 +367,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
   // links with targets are considered to be external links pointing outside of this wiki
   if ( link.target ) {
     // if this is a read-only editor, bail and let the browser handle the link normally
-    if ( !this.read_write ) return;
+    if ( !this.edit_enabled ) return;
     
     // otherwise, this is a read-write editor, so we've got to launch the external link ourselves.
     // note that this ignores what the link target actually contains and assumes it's "_new"
@@ -393,7 +394,7 @@ Editor.prototype.scrape_title = function () {
     var title = "";
 
   // issue a signal that the title has changed and save off the new title
-  if ( this.read_write )
+  if ( this.edit_enabled )
     signal( this, "title_changed", this, this.title, title );
   this.title = title;
 }
@@ -553,7 +554,7 @@ Editor.prototype.contents = function () {
 // return true if the given state_name is currently enabled, optionally using a given list of node
 // names
 Editor.prototype.state_enabled = function ( state_name, node_names ) {
-  if ( !this.read_write )
+  if ( !this.edit_enabled )
     return false;
 
   state_name = state_name.toLowerCase();
@@ -573,7 +574,7 @@ Editor.prototype.state_enabled = function ( state_name, node_names ) {
 Editor.prototype.current_node_names = function () {
   var node_names = new Array();
 
-  if ( !this.read_write )
+  if ( !this.edit_enabled )
     return node_names;
 
   // to determine whether the specified state is enabled, see whether the current selection is

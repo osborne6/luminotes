@@ -3254,6 +3254,7 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"extra super"
     assert rate_plan[ u"storage_quota_bytes" ] == 31337
 
+    assert result[ u"conversion" ] == u"subscribe_1"
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 1
     assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
@@ -3277,6 +3278,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
+    assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
@@ -3314,6 +3316,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
+    assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
@@ -3351,6 +3354,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
+    assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
@@ -3386,6 +3390,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
+    assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name

@@ -1112,6 +1112,7 @@ class Users( object ):
     # if the rate plan of the subscription matches the user's current rate plan, success
     elif rate_plan == result[ u"user" ].rate_plan:
       note = Thanks_note( self.__rate_plans[ rate_plan ][ u"name" ].capitalize() )
+      result[ "conversion" ] = "subscribe_%s" % rate_plan
     # otherwise, display an auto-reloading "processing..." page
     else:
       note = Processing_note( rate_plan, retry_count )

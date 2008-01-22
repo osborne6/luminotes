@@ -110,7 +110,7 @@ class Main_page( Page ):
       Div(
         Div(
           Br(),
-          Toolbar( hide_toolbar = not notebook.read_write ),
+          Toolbar( hide_toolbar = parent_id or not notebook.read_write ),
           id = u"toolbar_area",
         ),
         Link_area( notebooks, notebook, total_notes_count, parent_id, notebook_path, user ),
