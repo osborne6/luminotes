@@ -179,7 +179,7 @@ class Upgrade_note( Span ):
             class_ = u"price_text",
             separator = u"",
           ),
-          user and user.rate_plan != index and plan.get( u"button" ) % user.object_id or None,
+          user and user.rate_plan != index and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None,
         ) or None,
         class_ = u"plan_name",
       ) for ( index, plan ) in enumerate( rate_plans ) ],
