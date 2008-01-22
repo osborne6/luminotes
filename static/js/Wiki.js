@@ -79,8 +79,9 @@ function Wiki( invoker ) {
   var logout_link = getElement( "logout_link" );
   if ( logout_link ) {
     connect( "logout_link", "onclick", function ( event ) {
-      self.save_editor( null, true );
-      self.invoker.invoke( "/users/logout", "POST" );
+      self.save_editor( null, false, function () {
+        self.invoker.invoke( "/users/logout", "POST" );
+      } );
       event.stop();
     } );
   }
@@ -999,24 +1000,27 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     this.focused_editor = null;
   }
 
-  if ( editor ) {
-    if ( this.startup_notes[ editor.id ] )
-      delete this.startup_notes[ editor.id ];
+  if ( !editor ) {
+    event.stop();
+    return;
+  }
 
-    this.save_editor( editor, true );
+  if ( this.startup_notes[ editor.id ] )
+    delete this.startup_notes[ editor.id ];
 
-    var self = this;
-    if ( this.notebook.read_write && editor.read_write ) {
-      this.invoker.invoke( "/notebooks/delete_note", "POST", { 
-        "notebook_id": this.notebook_id,
+  var self = this;
+  this.save_editor( editor, false, function () {
+    if ( self.notebook.read_write && editor.read_write ) {
+      self.invoker.invoke( "/notebooks/delete_note", "POST", { 
+        "notebook_id": self.notebook_id,
         "note_id": editor.id
       }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
     }
 
-    if ( editor == this.focused_editor )
-      this.focused_editor = null;
+    if ( editor == self.focused_editor )
+      self.focused_editor = null;
 
-    if ( this.notebook.trash_id && !( editor.id == this.blank_editor_id && editor.empty() ) ) {
+    if ( self.notebook.trash_id && !( editor.id == self.blank_editor_id && editor.empty() ) ) {
       var undo_button = createDOM( "input", {
         "type": "button",
         "class": "message_button",
@@ -1024,19 +1028,18 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
         "title": "undo deletion"
       } );
       var trash_link = createDOM( "a", {
-        "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
+        "href": "/notebooks/" + self.notebook.trash_id + "?parent_id=" + self.notebook.object_id
       }, "trash" );
-      var message_div = this.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ], editor.iframe );
-      var self = this;
+      var message_div = self.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ], editor.iframe );
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor, message_div ); } );
     }
 
-    this.remove_all_notes_link( editor.id );
+    self.remove_all_notes_link( editor.id );
 
     editor.shutdown();
-    this.decrement_total_notes_count();
-    this.display_empty_message();
-  }
+    self.decrement_total_notes_count();
+    self.display_empty_message();
+  } );
 
   event.stop();
 }
@@ -1053,8 +1056,6 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
   if ( editor ) {
     if ( this.startup_notes[ editor.id ] )
       delete this.startup_notes[ editor.id ];
-
-    this.save_editor( editor, true );
 
     if ( this.notebook.read_write && editor.read_write ) {
       var self = this;
@@ -1127,7 +1128,7 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.load_editor( editor.title, editor.id, null, null, editor.closed ? null : editor.iframe );
 }
 
-Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
+Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback ) {
   if ( !editor )
     editor = this.focused_editor;
 
@@ -1142,7 +1143,12 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget ) {
     }, function ( result ) {
       self.update_editor_revisions( result, editor );
       self.display_storage_usage( result.storage_bytes );
+      if ( callback )
+        callback();
     }, null, fire_and_forget );
+  } else {
+    if ( callback )
+      callback();
   }
 }
 
@@ -1156,7 +1162,7 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
 
   // if the server's idea of the previous revision doesn't match the client's, then someone has
   // gone behind our back and saved the editor's note from another window
-  if ( result.previous_revision.revision != client_previous_revision ) {
+  if ( result.previous_revision && result.previous_revision.revision != client_previous_revision ) {
     var compare_button = createDOM( "input", {
       "type": "button",
       "class": "message_button",
@@ -1782,8 +1788,15 @@ Wiki.prototype.end_notebook_rename = function () {
 }
 
 Wiki.prototype.delete_notebook = function () {
-  if ( this.focused_editor )
-    this.save_editor( this.focused_editor, true );
+  if ( this.focused_editor ) {
+    var self = this;
+    this.save_editor( this.focused_editor, false, function () {
+      self.invoker.invoke( "/notebooks/delete", "POST", {
+        "notebook_id": self.notebook_id
+      } );
+    } )
+    return;
+  }
 
   this.invoker.invoke( "/notebooks/delete", "POST", {
     "notebook_id": this.notebook_id

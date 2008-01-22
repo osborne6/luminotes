@@ -1,5 +1,8 @@
 1.1.2: January ??, 2008
  * You can no longer edit notes in the trash. You have to undelete them first.
+ * Fixed several race conditions between save_note() and other note-mutating
+   controller methods by serializing their calls in the client. This fixes
+   a bug that prevented note undeletion from working consistently.
 
 1.1.1: January 17, 2008
  * Beefed up the tour and added some screenshots.
