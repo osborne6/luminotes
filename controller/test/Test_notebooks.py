@@ -2417,7 +2417,7 @@ class Test_notebooks( Test_controller ):
     assert notebook.trash_id
     assert notebook.user_id == self.user.object_id
 
-  def test_delete_with_multiple_notebooks( self ):
+  def test_delete_with_remaining_notebook( self ):
     # create a second notebook, which we should be redirected to after the first notebook is deleted
     trash = Notebook.create( self.database.next_id( Notebook ), u"trash" )
     self.database.save( trash, commit = False )
@@ -2439,6 +2439,37 @@ class Test_notebooks( Test_controller ):
     remaining_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
     assert remaining_notebook_id
     assert remaining_notebook_id == notebook.object_id
+
+  def test_delete_with_remaining_read_only_notebook( self ):
+    # create a second read-only notebook, which we should NOT be redirected to after the first
+    # notebook is deleted
+    trash = Notebook.create( self.database.next_id( Notebook ), u"trash" )
+    self.database.save( trash, commit = False )
+    notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", trash.object_id )
+    self.database.save( notebook, commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = False, owner = False ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = False, owner = False ) )
+    self.database.commit()
+
+    self.login()
+
+    result = self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    # assert that we're redirected to a newly created notebook
+    remaining_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
+    notebook = self.database.last_saved_obj
+
+    assert isinstance( notebook, Notebook )
+    assert notebook.object_id == remaining_notebook_id
+    assert notebook.name == u"my notebook"
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.trash_id
+    assert notebook.user_id == self.user.object_id
 
   def test_contents_after_delete( self ):
     self.login()

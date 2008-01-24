@@ -1,3 +1,7 @@
+1.1.3: January ??, 2008
+ * Now, if you delete a notebook and the only remaining notebook is read-only,
+   then a new read-write notebook is created for you automatically.
+
 1.1.2: January 22, 2008
  * You can no longer edit notes in the trash. You have to undelete them first.
  * Fixed several race conditions between save_note() and other note-mutating

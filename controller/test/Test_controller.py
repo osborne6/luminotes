@@ -37,27 +37,29 @@ class Test_controller( object ):
     User.sql_remove_notebook = lambda self, notebook_id: \
       lambda database: sql_remove_notebook( self, notebook_id, database )
 
-    def sql_load_notebooks( self, parents_only, undeleted_only, database ):
+    def sql_load_notebooks( self, parents_only, undeleted_only, read_write, database ):
       notebooks = []
       notebook_infos = database.user_notebook.get( self.object_id )
 
       if not notebook_infos: return []
 
       for notebook_info in notebook_infos:
-        ( notebook_id, read_write, owner ) = notebook_info
+        ( notebook_id, notebook_read_write, owner ) = notebook_info
         notebook = database.objects.get( notebook_id )[ -1 ]
-        notebook.read_write = read_write
+        notebook.read_write = notebook_read_write
         notebook.owner = owner
         if parents_only and notebook.trash_id is None:
           continue
         if undeleted_only and notebook.deleted is True:
           continue
+        if read_write and notebook_read_write is False:
+          continue
         notebooks.append( notebook )
 
       return notebooks
 
-    User.sql_load_notebooks = lambda self, parents_only = False, undeleted_only = False: \
-      lambda database: sql_load_notebooks( self, parents_only, undeleted_only, database )
+    User.sql_load_notebooks = lambda self, parents_only = False, undeleted_only = False, read_write = False: \
+      lambda database: sql_load_notebooks( self, parents_only, undeleted_only, read_write, database )
 
     def sql_load_by_username( username, database ):
       users = []

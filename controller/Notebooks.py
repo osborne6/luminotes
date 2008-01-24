@@ -932,7 +932,8 @@ class Notebooks( object ):
   )
   def delete( self, notebook_id, user_id ):
     """
-    Delete the given notebook and redirect to a remaining notebook. If there is none, create one.
+    Delete the given notebook and redirect to a remaining read-write notebook. If there is none,
+    create one.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to delete
@@ -965,8 +966,10 @@ class Notebooks( object ):
 
     self.__database.save( notebook, commit = False )
 
-    # redirect to a remaining undeleted notebook, or if there isn't one, create an empty notebook
-    remaining_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+    # redirect to a remaining undeleted read-write notebook, or if there isn't one, create an empty notebook
+    remaining_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks(
+      parents_only = True, undeleted_only = True, read_write = True,
+    ) )
     if remaining_notebook is None:
       remaining_notebook = self.__create_notebook( u"my notebook", user, commit = False )
 
