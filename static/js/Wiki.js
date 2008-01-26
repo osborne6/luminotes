@@ -332,7 +332,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
-  if ( !hasElementClass( event.target(), "pulldown_checkbox" ) )
+  if ( !hasElementClass( event.target(), "pulldown_checkbox" ) && !hasElementClass( event.target(), "pulldown_label" ) )
     this.clear_pulldowns();
 }
 
@@ -1937,26 +1937,23 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
 
   this.invoker = invoker;
   this.editor = editor;
-  this.startup_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox" } );
-  this.startup_toggle = createDOM( "a", { "href": "#", "class": "pulldown_link", "title": "Display this note whenever the notebook is loaded." },
+  this.startup_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox", "id": "startup_checkbox" } );
+  this.startup_label = createDOM( "label", { "for": "startup_checkbox", "class": "pulldown_label", "title": "Display this note whenever the notebook is loaded." },
     "show on startup"
   );
 
   appendChildNodes( this.div, this.startup_checkbox );
-  appendChildNodes( this.div, this.startup_toggle );
+  appendChildNodes( this.div, this.startup_label );
   this.startup_checkbox.checked = editor.startup;
 
   var self = this;
   connect( this.startup_checkbox, "onclick", function ( event ) { self.startup_clicked( event ); } );
-  connect( this.startup_toggle, "onclick", function ( event ) { self.startup_clicked( event ); event.stop(); } );
 }
 
 Options_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Options_pulldown.prototype.constructor = Options_pulldown;
 
 Options_pulldown.prototype.startup_clicked = function ( event ) {
-  if ( event.target() != this.startup_checkbox )
-    this.startup_checkbox.checked = this.startup_checkbox.checked ? false : true;
   this.editor.startup = this.startup_checkbox.checked;
 
   // save this note along with its toggled startup state
@@ -1967,7 +1964,6 @@ Options_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
 
   disconnectAll( this.startup_checkbox );
-  disconnectAll( this.startup_toggle );
 }
 
 

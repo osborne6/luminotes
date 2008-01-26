@@ -411,6 +411,15 @@ img {
   text-decoration: none;
 }
 
+.pulldown_label {
+  color: #000000;
+}
+
+.pulldown_label:hover {
+  color: #ff6600;
+  cursor: pointer;
+}
+
 .message {
   padding: 0.5em;
   margin-bottom: 0.5em;
