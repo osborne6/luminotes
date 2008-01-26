@@ -120,14 +120,13 @@ ol li {
   font-size: 90%;
 }
 
-.radio_link {
+.radio_label {
   color: #000000;
-  text-decoration: none;
 }
 
-.radio_link:hover {
+.radio_label:hover {
   color: #ff6600;
-  text-decoration: none;
+  cursor: pointer;
 }
 
 .invite {

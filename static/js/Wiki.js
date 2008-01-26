@@ -1286,16 +1286,16 @@ Wiki.prototype.share_notebook = function () {
   if ( share_notebook_frame )
     share_notebook_frame.editor.shutdown();
 
-  var collaborators_link = createDOM( "a",
-    { "href": "#", "id": "collaborators_link", "class": "radio_link", "title": "Collaborators may view and edit this notebook." },
+  var collaborators_label = createDOM( "label",
+    { "for": "collaborators_radio", "class": "radio_label", "title": "Collaborators may view and edit this notebook." },
     "collaborators"
   );
-  var viewers_link = createDOM( "a",
-    { "href": "#", "id": "viewers_link", "class": "radio_link", "title": "Viewers may only view this notebook." },
+  var viewers_label = createDOM( "label",
+    { "for": "viewers_radio", "class": "radio_label", "title": "Viewers may only view this notebook." },
     "viewers"
   );
-  var owners_link = createDOM( "a",
-    { "href": "#", "id": "owners_link", "class": "radio_link", "title": "Owners may view, edit, rename, delete, and invite people to this notebook." },
+  var owners_label = createDOM( "label",
+    { "for": "owners_radio", "class": "radio_label", "title": "Owners may view, edit, rename, delete, and invite people to this notebook." },
     "owners"
   );
 
@@ -1314,9 +1314,9 @@ Wiki.prototype.share_notebook = function () {
       createDOM( "p", {}, "Invite these people as:" ),
       createDOM( "table" , { "id": "access_table" },
         createDOM( "tr", {},
-          createDOM( "td", {}, collaborators_radio, collaborators_link ),
-          createDOM( "td", {}, viewers_radio, viewers_link ),
-          createDOM( "td", {}, owners_radio, owners_link )
+          createDOM( "td", {}, collaborators_radio, collaborators_label ),
+          createDOM( "td", {}, viewers_radio, viewers_label ),
+          createDOM( "td", {}, owners_radio, owners_label )
         )
       )
     );
