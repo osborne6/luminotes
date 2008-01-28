@@ -12,6 +12,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.init_focus = focus || false;
   this.closed = false;
   this.link_started = null;
+  this.gecko = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.userAgent );
   var iframe_id = "note_" + id;
 
   var self = this;
@@ -280,13 +281,6 @@ Editor.prototype.insert_html = function ( html ) {
 
   try { // browsers supporting insertHTML command, such as Firefox
     this.document.execCommand( "insertHTML", false, html );
-
-    // for some reason, appending an empty span improves formatting
-    spans = getElementsByTagAndClassName( "span", null, parent = this.document );
-    if ( spans.length == 0 ) {
-      var span = this.document.createElement( "span" );
-      this.document.body.appendChild( span );
-    }
   } catch ( e ) { // browsers that don't support insertHTML, such as IE
     this.document.body.innerHTML = html;
   }
@@ -321,7 +315,35 @@ Editor.prototype.key_released = function ( event ) {
   if ( event.modifier().ctrl || code == CTRL )
     return;
 
+  this.cleanup_html();
+
   signal( this, "state_changed", this );
+}
+
+Editor.prototype.cleanup_html = function () {
+  // this only applies to Firefox and other Gecko-based browsers
+  if ( !this.gecko )
+    return;
+
+  // if you're typing the text of an <h3> title and you hit enter, the text cursor will skip a line
+  // and then move back up a line when you start typing again. to prevent this behavior, remove an
+  // extra <br> tag when this situation is detected before the current node: <h3><br>
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) {
+    var selection = this.iframe.contentWindow.getSelection();
+    var range = selection.getRangeAt( 0 );
+    var startOffset = range.startOffset;
+
+    var node = range.startContainer.childNodes[ startOffset ];
+    if ( node && node.previousSibling && node.previousSibling.previousSibling &&
+         node.previousSibling.nodeName == "BR" &&
+         node.previousSibling.previousSibling.nodeName == "H3" ) {
+      removeElement( node.previousSibling );
+      if ( node.nodeName != "BR" )
+        insertSiblingNodesBefore( node, createDOM( "br" ) );
+      else
+        this.resize();
+    }
+  }
 }
 
 Editor.prototype.mouse_clicked = function ( event ) {
