@@ -71,6 +71,12 @@ img {
   background-image: url(/static/images/link_button_hover.png);
 }
 
+#attach_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/attach_button_hover.png);
+}
+
 #bold_button_hover_preload {
   height: 0;
   overflow: hidden;
@@ -119,6 +125,12 @@ img {
   background-image: url(/static/images/link_button_down_hover.png);
 }
 
+#attach_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/attach_button_down_hover.png);
+}
+
 #bold_button_down_hover_preload {
   height: 0;
   overflow: hidden;
@@ -165,6 +177,12 @@ img {
   height: 0;
   overflow: hidden;
   background-image: url(/static/images/link_button_down.png);
+}
+
+#attach_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/attach_button_down.png);
 }
 
 #bold_button_down_preload {
@@ -398,7 +416,7 @@ img {
   overflow: auto;
   padding: 0.5em;
   border: 1px solid #000000;
-  background: #ffff99;
+  background-color: #ffff99;
 }
 
 .pulldown_link {
@@ -595,4 +613,11 @@ img {
   font-size: 90%;
   font-weight: bold;
   color: #ff6600;
+}
+
+#upload_frame {
+  padding: 0;
+  margin: 0;
+  width: 40em;
+  height: 4em;
 }

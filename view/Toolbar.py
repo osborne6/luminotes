@@ -21,6 +21,13 @@ class Toolbar( Div ):
             width = u"40", height = u"40",
             class_ = "image_button",
           ) ),
+          Div( Input(
+            type = u"image",
+            id = u"attachFile", title = u"attach file",
+            src = u"/static/images/attach_button.png",
+            width = u"40", height = u"40",
+            class_ = "image_button",
+          ) ),
         ),
         P(
           Div( Input(
@@ -73,6 +80,7 @@ class Toolbar( Div ):
 
       Span( id = "new_note_button_hover_preload" ),
       Span( id = "link_button_hover_preload" ),
+      Span( id = "attach_button_hover_preload" ),
       Span( id = "bold_button_hover_preload" ),
       Span( id = "italic_button_hover_preload" ),
       Span( id = "underline_button_hover_preload" ),
@@ -82,6 +90,7 @@ class Toolbar( Div ):
 
       Span( id = "new_note_button_down_hover_preload" ),
       Span( id = "link_button_down_hover_preload" ),
+      Span( id = "attach_button_down_hover_preload" ),
       Span( id = "bold_button_down_hover_preload" ),
       Span( id = "italic_button_down_hover_preload" ),
       Span( id = "underline_button_down_hover_preload" ),
@@ -91,6 +100,7 @@ class Toolbar( Div ):
 
       Span( id = "new_note_button_down_preload" ),
       Span( id = "link_button_down_preload" ),
+      Span( id = "attach_button_down_preload" ),
       Span( id = "bold_button_down_preload" ),
       Span( id = "italic_button_down_preload" ),
       Span( id = "underline_button_down_preload" ),

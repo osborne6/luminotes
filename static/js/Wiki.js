@@ -253,6 +253,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "newNote", "onclick", this, "create_blank_editor" );
     connect( "createLink", "onclick", this, "toggle_link_button" );
+    connect( "attachFile", "onclick", this, "toggle_attach_button" );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
@@ -262,6 +263,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
     this.make_image_button( "newNote", "new_note", true );
     this.make_image_button( "createLink", "link" );
+    this.make_image_button( "attachFile", "attach" );
     this.make_image_button( "bold" );
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
@@ -953,6 +955,27 @@ Wiki.prototype.toggle_link_button = function ( event ) {
     } else {
       this.display_link_pulldown( this.focused_editor );
     }
+  }
+
+  event.stop();
+}
+
+Wiki.prototype.toggle_attach_button = function ( event ) {
+  if ( this.focused_editor && this.focused_editor.read_write ) {
+    this.focused_editor.focus();
+
+    // if the pulldown is already open, then just close it
+    var pulldown_id = "upload_" + this.focused_editor.id;
+    var existing_div = getElement( pulldown_id );
+    if ( existing_div ) {
+      existing_div.pulldown.shutdown();
+      return;
+    }
+
+    this.clear_messages();
+    this.clear_pulldowns();
+
+    new Upload_pulldown( this, this.notebook_id, this.invoker, this.focused_editor, this.focused_editor.node_at_cursor() );
   }
 
   event.stop();
@@ -2186,3 +2209,58 @@ Link_pulldown.prototype.shutdown = function () {
   if ( this.link )
     this.link.pulldown = null;
 }
+
+function Upload_pulldown( wiki, notebook_id, invoker, editor, anchor ) {
+  this.anchor = anchor;
+
+  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, anchor, editor.iframe );
+  wiki.down_image_button( "attachFile" );
+
+  this.invoker = invoker;
+  this.editor = editor;
+  this.iframe = createDOM( "iframe", {
+    "src": "/notebooks/upload_page?notebook_id=" + notebook_id + "&note_id=" + editor.id,
+    "frameBorder": "0",
+    "scrolling": "no",
+    "id": "upload_frame",
+    "name": "upload_frame"
+  } );
+
+  var self = this;
+  connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
+
+  appendChildNodes( this.div, this.iframe );
+}
+
+Upload_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Upload_pulldown.prototype.constructor = Upload_pulldown;
+
+Upload_pulldown.prototype.init_frame = function () {
+  var self = this;
+
+  withDocument( this.iframe.contentDocument, function () {
+    connect( "upload_button", "onclick", function ( event ) {
+      withDocument( self.iframe.contentDocument, function () {
+        self.upload_started( getElement( "file" ).value );
+      } );
+    } );
+  } );
+}
+
+Upload_pulldown.prototype.upload_started = function ( filename ) {
+  // get the basename of the file
+  var pieces = filename.split( "/" );
+  filename = pieces[ pieces.length - 1 ];
+  pieces = filename.split( "\\" );
+  filename = pieces[ pieces.length - 1 ];
+
+  this.editor.insert_file_link( filename );
+}
+
+Upload_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+  this.wiki.up_image_button( "attachFile" );
+
+  disconnectAll( this.file_input );
+}
+

@@ -492,6 +492,46 @@ Editor.prototype.end_link = function () {
   return link;
 }
 
+Editor.prototype.insert_file_link = function ( filename, file_id ) {
+  // get the current selection, which is the link title
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+
+    // if no text is selected, then insert a link with the filename as the link title
+    if ( selection.toString().length == 0 ) {
+      this.insert_html( '<span id="placeholder_title">' + filename + '</span>' );
+      var placeholder = withDocument( this.document, function () { return getElement( "placeholder_title" ); } );
+      selection.selectAllChildren( placeholder );
+
+      this.exec_command( "createLink", "/files/" + file_id );
+      selection.collapseToEnd();
+
+      // replace the placeholder title span with just the filename, yielding an unselected link
+      var link = placeholder.parentNode;
+      link.innerHTML = filename;
+      link.target = "_new";
+    // otherwise, just create a link with the selected text as the link title
+    } else {
+      this.exec_command( "createLink", "/files/" + file_id );
+      var link = this.find_link_at_cursor();
+      link.target = "_new";
+    }
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+
+    // if no text is selected, then insert a link with the filename as the link title
+    if ( range.text.length == 0 ) {
+      range.text = filename;
+      range.moveStart( "character", -1 * filename.length );
+      range.select();
+    }
+
+    this.exec_command( "createLink", "/files/" + file_id );
+    var link = this.find_link_at_cursor();
+    link.target = "_new";
+  }
+}
+
 Editor.prototype.find_link_at_cursor = function () {
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
@@ -539,6 +579,18 @@ Editor.prototype.find_link_at_cursor = function () {
   }
 
   this.link_started = null;
+  return null;
+}
+
+Editor.prototype.node_at_cursor = function () {
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    return selection.anchorNode;
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    return range.parentElement();
+  }
+
   return null;
 }
 

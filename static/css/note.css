@@ -10,6 +10,12 @@
   background-image: url(/static/images/link_button.png);
 }
 
+#attach_button_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/attach_button.png);
+}
+
 #bold_button_preload {
   height: 0;
   overflow: hidden;

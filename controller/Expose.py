@@ -63,6 +63,10 @@ def expose( view = None, rss = None ):
           cherrypy.root.report_traceback()
           result = dict( error = u"An error occurred when processing your request. Please try again or contact support." )
 
+      # if the result is a generator, it's streaming data, so just let CherryPy handle it
+      if hasattr( result, "gi_running" ):
+        return result
+
       redirect = result.get( u"redirect", None )
 
       # try using the supplied view to render the result

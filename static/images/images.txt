@@ -2,7 +2,8 @@ Button dimensions are 40x40 pixels.
 
 Button fonts are Bitstream Vera Sans (regular, bold, and mono oblique). Most
 buttons are at 22 pt. The link button is at 12 pt. The list buttons are at 10
-pt with a -4 pixel line spacing.
+pt with a -4 pixel line spacing. Down (pressed) buttons have their text offset
+two pixels down and two pixels to the right.
 
 To make the white glowing effect (which isn't present on any buttons
 currently), start with black text on a transparent background in the Gimp.
