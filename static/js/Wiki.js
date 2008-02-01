@@ -2240,6 +2240,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
     "id": "upload_frame",
     "name": "upload_frame"
   } );
+  this.iframe.pulldown = this;
 
   var self = this;
   connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
@@ -2279,6 +2280,9 @@ Upload_pulldown.prototype.upload_started = function ( filename ) {
 Upload_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
   this.wiki.up_image_button( "attachFile" );
+
+  var self = this;
+  withDocument( this.editor.document, function () { removeElement( self.link ); } );
 
   disconnectAll( this.file_input );
 }

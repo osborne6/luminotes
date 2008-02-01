@@ -18,6 +18,10 @@ div {
   font-weight: bold;
 }
 
+.text_field {
+  border: #999999 1px solid;
+}
+
 .button {
   border-style: outset;
   border-width: 0px;

@@ -174,6 +174,8 @@ class Files( object ):
         </div></td>
         <td></td>
         <td><span id="status"></span></td>
+        <td></td>
+        <td><input type="submit" id="cancel_button" class="button" value="cancel" onclick="withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.shutdown(); } );" /></td>
         </tr></table>
         <script type="text/javascript">
         function tick( fraction ) {
@@ -181,7 +183,7 @@ class Files( object ):
             "progress_bar",
             { "w": %s * fraction }, "em"
           );
-          if ( fraction == 1.0 )
+          if ( fraction >= 1.0 )
             replaceChildNodes( "status", "100%%" );
           else
             replaceChildNodes( "status", Math.floor( fraction * 100.0 ) + "%%" );
@@ -189,7 +191,6 @@ class Files( object ):
         </script>
         """ % ( cgi.escape( base_filename ), progress_bar, progress_width_em )
 
-      import time
       while True:
         chunk = upload.file.read( CHUNK_SIZE )
         if not chunk: break
@@ -197,9 +198,10 @@ class Files( object ):
         fraction_done = float( progress_bytes ) / float( file_size )
 
         if fraction_done > fraction_reported + tick_increment:
-          yield '<script type="text/javascript">tick(%s)</script>;' % fraction_reported
+          yield '<script type="text/javascript">tick(%s);</script>' % fraction_reported
           fraction_reported += tick_increment
-          time.sleep(0.025) # TODO: removeme
+          import time
+          time.sleep(0.05) # TODO: removeme
 
         # TODO: write to the database
 
@@ -209,11 +211,10 @@ class Files( object ):
 
       # the file finished uploading, so fill out the progress meter to 100%
       if fraction_reported < 1.0:
-        yield '<script type="text/javascript">tick(1.0)</script>;'
+        yield '<script type="text/javascript">tick(1.0);</script>'
 
       yield \
         u"""
-        </script>
         </body>
         </html>
         """

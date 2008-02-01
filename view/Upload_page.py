@@ -12,7 +12,7 @@ class Upload_page( Html ):
       Body(
         Form(
           Span( u"attach file: ", class_ = u"field_label" ),
-          Input( type = u"file", id = u"file", name = u"file", size = u"30" ),
+          Input( type = u"file", id = u"file", name = u"file", class_ = "text_field", size = u"30" ),
           Input( type = u"submit", id = u"upload_button", class_ = u"button", value = u"upload" ),
           Input( type = u"hidden", id = u"notebook_id", name = u"notebook_id", value = notebook_id ),
           Input( type = u"hidden", id = u"note_id", name = u"note_id", value = note_id ),
