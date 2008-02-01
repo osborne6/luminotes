@@ -5,6 +5,7 @@ from Expire import strongly_expire
 from Validate import validate, Valid_int, Valid_string
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
+from Files import Files
 from Database import Valid_id
 from model.Note import Note
 from model.Notebook import Notebook
@@ -43,6 +44,7 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
     self.__notebooks = Notebooks( database, self.__users )
+    self.__files = Files( database, self.__users )
 
   @expose( Main_page )
   @grab_user_id
@@ -353,3 +355,4 @@ class Root( object ):
   database = property( lambda self: self.__database )
   notebooks = property( lambda self: self.__notebooks )
   users = property( lambda self: self.__users )
+  files = property( lambda self: self.__files )

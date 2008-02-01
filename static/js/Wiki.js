@@ -932,7 +932,21 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "title", "h3", node_names );
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
-  this.update_button( "createLink", "a", node_names );
+
+  var link = this.focused_editor.find_link_at_cursor();
+  if ( link ) {
+    // determine whether the link is a note link or a file link
+    if ( link.target || !/\/files\//.test( link.href ) ) {
+      this.down_image_button( "createLink" );
+      this.up_image_button( "attachFile" );
+    } else {
+      this.up_image_button( "createLink" );
+      this.down_image_button( "attachFile" );
+    }
+  } else {
+    this.up_image_button( "createLink" );
+    this.up_image_button( "attachFile" );
+  }
 }
 
 Wiki.prototype.toggle_link_button = function ( event ) {
@@ -975,7 +989,7 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_messages();
     this.clear_pulldowns();
 
-    new Upload_pulldown( this, this.notebook_id, this.invoker, this.focused_editor, this.focused_editor.node_at_cursor() );
+    new Upload_pulldown( this, this.notebook_id, this.invoker, this.focused_editor );
   }
 
   event.stop();
@@ -2210,16 +2224,17 @@ Link_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
-function Upload_pulldown( wiki, notebook_id, invoker, editor, anchor ) {
-  this.anchor = anchor;
+function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
+  editor.start_file_link();
+  this.link = editor.find_link_at_cursor();
 
-  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, anchor, editor.iframe );
+  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe );
   wiki.down_image_button( "attachFile" );
 
   this.invoker = invoker;
   this.editor = editor;
   this.iframe = createDOM( "iframe", {
-    "src": "/notebooks/upload_page?notebook_id=" + notebook_id + "&note_id=" + editor.id,
+    "src": "/files/upload_page?notebook_id=" + notebook_id + "&note_id=" + editor.id,
     "frameBorder": "0",
     "scrolling": "no",
     "id": "upload_frame",
@@ -2237,10 +2252,11 @@ Upload_pulldown.prototype.constructor = Upload_pulldown;
 
 Upload_pulldown.prototype.init_frame = function () {
   var self = this;
+  var doc = this.iframe.contentDocument || this.iframe.contentWindow.document;
 
-  withDocument( this.iframe.contentDocument, function () {
+  withDocument( doc, function () {
     connect( "upload_button", "onclick", function ( event ) {
-      withDocument( self.iframe.contentDocument, function () {
+      withDocument( doc, function () {
         self.upload_started( getElement( "file" ).value );
       } );
     } );
@@ -2254,7 +2270,10 @@ Upload_pulldown.prototype.upload_started = function ( filename ) {
   pieces = filename.split( "\\" );
   filename = pieces[ pieces.length - 1 ];
 
-  this.editor.insert_file_link( filename );
+  // the current title is blank, replace the title with the upload's filename
+  if ( link_title( this.link ) == "" )
+    replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
+  // TODO: set the link's href to the file
 }
 
 Upload_pulldown.prototype.shutdown = function () {

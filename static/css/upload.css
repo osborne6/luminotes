@@ -39,6 +39,10 @@ div {
   height: 1em;
 }
 
+td {
+  vertical-align: top;
+}
+
 #tick_preload {
   height: 0;
   overflow: hidden;
