@@ -63,7 +63,7 @@ settings = {
       """
       """,
   },
-  "/notebooks/upload_file": {
+  "/files/upload_file": {
     "stream_response": True
   },
 }
