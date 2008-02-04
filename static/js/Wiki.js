@@ -2258,7 +2258,7 @@ Upload_pulldown.prototype.init_frame = function () {
   withDocument( doc, function () {
     connect( "upload_button", "onclick", function ( event ) {
       withDocument( doc, function () {
-        self.upload_started( getElement( "file" ).value );
+        self.upload_started( getElement( "upload" ).value );
       } );
     } );
   } );

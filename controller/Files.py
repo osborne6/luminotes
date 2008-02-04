@@ -1,6 +1,5 @@
 import cgi
 import cherrypy
-from cherrypy.filters import basefilter
 from Expose import expose
 from Validate import validate
 from Database import Valid_id
@@ -37,21 +36,7 @@ class Upload_error( Exception ):
     )
 
 
-class File_upload_filter( basefilter.BaseFilter ):
-  def before_request_body( self ):
-    if cherrypy.request.path != "/files/upload_file":
-      return
-
-    if cherrypy.request.method != "POST":
-      raise Upload_error()
-
-    # tell CherryPy not to parse the POST data itself for this URL
-    cherrypy.request.processRequestBody = False
-
-
 class Files( object ):
-  _cpFilterList = [ File_upload_filter() ]
-
   """
   Controller for dealing with uploaded files, corresponding to the "/files" URL.
   """
@@ -94,20 +79,31 @@ class Files( object ):
   @strongly_expire
   @grab_user_id
   @validate(
+    upload = (),
+    notebook_id = Valid_id(),
+    note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def upload_file( self, user_id ):
+  def upload_file( self, upload, notebook_id, note_id, user_id ):
     """
     Upload a file from the client for attachment to a particular note.
 
+    @type upload: cgi.FieldStorage
+    @param upload: file handle to uploaded file
     @type notebook_id: unicode
     @param notebook_id: id of the notebook that the upload is to
     @type note_id: unicode
     @param note_id: id of the note that the upload is to
     @raise Access_error: the current user doesn't have access to the given notebook or note
+    @raise Upload_error: an error occurred when processing the uploaded file
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
     @rtype: unicode
     @return: rendered HTML page
     """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
     cherrypy.server.max_request_body_size = 0 # remove file size limit of 100 MB
     cherrypy.response.timeout = 3600    # increase upload timeout to one hour (default is 5 min)
     cherrypy.server.socket_timeout = 60 # increase socket timeout to one minute (default is 10 sec)
@@ -125,14 +121,7 @@ class Files( object ):
     if file_size <= 0:
       raise Upload_error()
 
-    parsed_form = cgi.FieldStorage( fp = cherrypy.request.rfile, headers = headers, environ = { "REQUEST_METHOD": "POST" }, keep_blank_values = 1)
-    upload = parsed_form[ u"file" ]
-    notebook_id = parsed_form.getvalue( u"notebook_id" )
-    note_id = parsed_form.getvalue( u"note_id" )
     filename = upload.filename.strip()
-
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
 
     def process_upload():
       """
@@ -221,5 +210,9 @@ class Files( object ):
 
       upload.file.close()
       cherrypy.request.rfile.close()
+
+    # release the session lock before beginning the upload, because if the upload is cancelled
+    # before it's done, the lock won't be released
+    cherrypy.session.release_lock()
 
     return process_upload()

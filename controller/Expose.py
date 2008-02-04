@@ -1,4 +1,5 @@
 import cherrypy
+import types
 
 # module-level variable that, when set to a view, overrides the view for all exposed methods. used
 # by unit tests
@@ -64,7 +65,7 @@ def expose( view = None, rss = None ):
           result = dict( error = u"An error occurred when processing your request. Please try again or contact support." )
 
       # if the result is a generator, it's streaming data, so just let CherryPy handle it
-      if hasattr( result, "gi_running" ):
+      if isinstance( result, types.GeneratorType ):
         return result
 
       redirect = result.get( u"redirect", None )
