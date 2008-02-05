@@ -111,16 +111,20 @@ Wiki.prototype.update_next_id = function ( result ) {
   this.next_id = result.next_id;
 }
 
+var KILOBYTE = 1024;
+var MEGABYTE = 1024 * KILOBYTE;
+function bytes_to_megabytes( bytes, or_kilobytes ) {
+  if ( or_kilobytes && bytes < MEGABYTE )
+    return Math.round( bytes / KILOBYTE ) + " KB";
+
+  return Math.round( bytes / MEGABYTE ) + " MB";
+}
+
 Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   if ( !storage_bytes )
     return;
 
   // display the user's current storage usage
-  var MEGABYTE = 1024 * 1024;
-  function bytes_to_megabytes( storage_bytes ) {
-    return Math.round( storage_bytes / MEGABYTE );
-  }
-
   var quota_bytes = this.rate_plan.storage_quota_bytes;
   if ( !quota_bytes )
     return;
@@ -148,7 +152,7 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
   replaceChildNodes(
     "storage_usage_area",
     createDOM( "div", { "class": storage_usage_class },
-    bytes_to_megabytes( storage_bytes ) + " MB (" + usage_percent + "%) of " + bytes_to_megabytes( quota_bytes ) + " MB" )
+    bytes_to_megabytes( storage_bytes ) + " (" + usage_percent + "%) of " + bytes_to_megabytes( quota_bytes ) )
   );
 }
 
@@ -727,7 +731,11 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
   if ( link_title( link ).length > 0 ) {
     if ( !pulldown ) {
       this.clear_pulldowns();
-      new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+      // display a different pulldown dependong on whether the link is a note link or a file link
+      if ( link.target || !/\/files\//.test( link.href ) )
+        new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+      else
+        new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link );
     }
   }
 }
@@ -2190,11 +2198,11 @@ Link_pulldown.prototype.title_field_focused = function ( event ) {
 
 Link_pulldown.prototype.title_field_changed = function ( event ) {
   // if the title is actually unchanged, then bail
-  if ( this.title_field.value == this.previous_title )
+  var title = strip( this.title_field.value );
+  if ( title == this.previous_title )
     return;
 
   replaceChildNodes( this.note_summary, "" );
-  var title = strip( this.title_field.value );
   this.previous_title = title;
 
   var self = this;
@@ -2277,13 +2285,103 @@ Upload_pulldown.prototype.upload_started = function ( filename ) {
   // TODO: set the link's href to the file
 }
 
+Upload_pulldown.prototype.upload_complete = function () {
+  new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
+  this.shutdown();
+}
+
 Upload_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
   this.wiki.up_image_button( "attachFile" );
 
-  var self = this;
-  withDocument( this.editor.document, function () { removeElement( self.link ); } );
-
   disconnectAll( this.file_input );
+}
+
+function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
+  link.pulldown = this;
+  this.link = link;
+
+  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe );
+
+  this.invoker = invoker;
+  this.editor = editor;
+  this.filename_field = createDOM( "input", { "class": "text_field", "size": "30", "maxlength": "256" } );
+  this.file_size = createDOM( "span", {} );
+  this.previous_filename = "";
+
+  var self = this;
+  connect( this.filename_field, "onclick", function ( event ) { self.filename_field_clicked( event ); } );
+  connect( this.filename_field, "onfocus", function ( event ) { self.filename_field_focused( event ); } );
+  connect( this.filename_field, "onchange", function ( event ) { self.filename_field_changed( event ); } );
+  connect( this.filename_field, "onblur", function ( event ) { self.filename_field_changed( event ); } );
+  connect( this.filename_field, "onkeydown", function ( event ) { self.filename_field_key_pressed( event ); } );
+
+  appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "filename: " ) );
+  appendChildNodes( this.div, this.filename_field );
+  appendChildNodes( this.div, this.file_size );
+
+  var query = parse_query( link );
+  var file_id = query.file_id;
+
+  // get the file's name and size from the server
+  this.invoker.invoke(
+    "/files/stats", "GET", {
+      "file_id": file_id
+    },
+    function ( result ) {
+      // if the user has already started typing something, don't overwrite it
+      if ( self.filename_field.value.length == 0 )
+        self.filename_field.value = result.filename;
+      replaceChildNodes( self.file_size, bytes_to_megabytes( result.size_bytes, true ) );
+    }
+  );
+}
+
+File_link_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+File_link_pulldown.prototype.constructor = File_link_pulldown;
+
+File_link_pulldown.prototype.filename_field_clicked = function ( event ) {
+  event.stop();
+}
+
+File_link_pulldown.prototype.filename_field_focused = function ( event ) {
+  this.filename_field.select();
+}
+
+File_link_pulldown.prototype.filename_field_changed = function ( event ) {
+  // if the filename is actually unchanged, then bail
+  var filename = strip( this.filename_field.value );
+  if ( filename == this.previous_filename )
+    return;
+
+  this.previous_filename = filename;
+
+  this.invoker.invoke(
+    "/files/rename", "GET", {
+      "file_id": file_id,
+      "filename": filename
+    }
+  );
+}
+
+File_link_pulldown.prototype.filename_field_key_pressed = function ( event ) {
+  // if enter is pressed, consider the title field altered. this is necessary because IE neglects
+  // to issue an onchange event when enter is pressed in an input field
+  if ( event.key().code == 13 ) {
+    this.filename_field_changed();
+    event.stop();
+  }
+}
+
+File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {
+  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+}
+
+File_link_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
+  disconnectAll( this.filename_field );
+  if ( this.link )
+    this.link.pulldown = null;
 }
 

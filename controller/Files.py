@@ -142,7 +142,7 @@ class Files( object ):
           <script type="text/javascript" src="/static/js/MochiKit.js"></script>
           <meta content="text/html; charset=UTF-8" http_equiv="content-type" />
         </head>
-        <body>
+        <body onload="withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.upload_complete(); } );">
         """
 
       if not filename:
