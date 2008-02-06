@@ -307,6 +307,8 @@ class Test_controller( object ):
     self.database = Stub_database()
     self.settings = {
       u"global": {
+        u"session_filter.on": True,
+        u"session_filter.storage_type": u"ram",
         u"luminotes.http_url" : u"http://luminotes.com",
         u"luminotes.https_url" : u"https://luminotes.com",
         u"luminotes.http_proxy_ip" : u"127.0.0.1",
@@ -330,9 +332,12 @@ class Test_controller( object ):
           },
         ],
       },
+      u"/files/upload": {
+        u"stream_response": True
+      },
     }
 
-    cherrypy.root = Root( self.database, self.settings )
+    cherrypy.root = Root( self.database, self.settings, suppress_exceptions = True )
     cherrypy.config.update( Common.settings )
     cherrypy.config.update( { u"server.log_to_screen": False } )
     cherrypy.server.start( init_only = True, server_class = None )
@@ -369,6 +374,7 @@ class Test_controller( object ):
     try:
       if Stub_view.result is not None:
         result = Stub_view.result
+        Stub_view.result = None
       else:
         result = dict(
           status = response.status,
@@ -408,6 +414,61 @@ class Test_controller( object ):
     try:
       if Stub_view.result is not None:
         result = Stub_view.result
+        Stub_view.result = None
+      else:
+        result = dict(
+          status = response.status,
+          headers = response.headers,
+          body = response.body,
+        )
+
+      result[ u"session_id" ] = session_id
+      return result
+    finally:
+      request.close()
+
+  def http_upload( self, http_path, form_args, filename, file_data, headers = None, session_id = None ):
+    """
+    Perform an HTTP POST with the given path on the test server, sending the provided form_args
+    and file_data as a multipart form file upload. Return the result dict as returned by the
+    invoked method.
+    """
+    boundary = "boundarygoeshere"
+    post_data = [ "--%s\n" % boundary ]
+
+    for ( name, value ) in form_args.items():
+      post_data.append( 'Content-Disposition: form-data; name="%s"\n\n%s\n--%s\n' % (
+        name, value, boundary
+      ) )
+
+    post_data.append( 'Content-Disposition: form-data; name="upload"; filename="%s"\n' % (
+      filename
+    ) )
+    post_data.append( "Content-Type: image/png\n\n%s\n--%s--\n" % (
+      file_data, boundary
+    ) )
+
+    if headers is None:
+      headers = []
+
+    post_data = str( "".join( post_data ) )
+    headers.extend( [
+      ( "Content-Type", "multipart/form-data; boundary=%s" % boundary ),
+      ( "Content-Length", str( len( post_data ) ) ),
+    ] )
+
+    if session_id:
+      headers.append( ( u"Cookie", "session_id=%s" % session_id ) ) # will break if unicode is used for the value
+
+    request = cherrypy.server.request( ( u"127.0.0.1", 1234 ), u"127.0.0.5" )
+    response = request.run( "POST %s HTTP/1.0" % str( http_path ), headers = headers, rfile = StringIO( post_data ) )
+    session_id = response.simple_cookie.get( u"session_id" )
+    if session_id: session_id = session_id.value
+
+    try:
+      if Stub_view.result is not None:
+        result = Stub_view.result
+        Stub_view.result = None
       else:
         result = dict(
           status = response.status,

@@ -22,7 +22,7 @@ class Root( object ):
   """
   The root of the controller hierarchy, corresponding to the "/" URL.
   """
-  def __init__( self, database, settings ):
+  def __init__( self, database, settings, suppress_exceptions = False ):
     """
     Create a new Root object with the given settings.
 
@@ -45,6 +45,7 @@ class Root( object ):
     )
     self.__notebooks = Notebooks( database, self.__users )
     self.__files = Files( database, self.__users )
+    self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )
   @grab_user_id
@@ -310,7 +311,8 @@ class Root( object ):
       return
 
     import traceback
-    traceback.print_exc()
+    if not self.__suppress_exceptions:
+      traceback.print_exc()
     self.report_traceback()
 
     import sys

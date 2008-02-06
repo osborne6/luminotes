@@ -84,7 +84,7 @@ class Files( object ):
     note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def upload_file( self, upload, notebook_id, note_id, user_id ):
+  def upload( self, upload, notebook_id, note_id, user_id ):
     """
     Upload a file from the client for attachment to a particular note.
 
@@ -107,8 +107,7 @@ class Files( object ):
     cherrypy.server.max_request_body_size = 0 # remove file size limit of 100 MB
     cherrypy.response.timeout = 3600    # increase upload timeout to one hour (default is 5 min)
     cherrypy.server.socket_timeout = 60 # increase socket timeout to one minute (default is 10 sec)
-    # TODO: increase to 8k
-    CHUNK_SIZE = 1#8 * 1024 # 8 Kb
+    CHUNK_SIZE = 8 * 1024 # 8 Kb
 
     headers = {}
     for key, val in cherrypy.request.headers.iteritems():
@@ -142,7 +141,7 @@ class Files( object ):
           <script type="text/javascript" src="/static/js/MochiKit.js"></script>
           <meta content="text/html; charset=UTF-8" http_equiv="content-type" />
         </head>
-        <body onload="withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.upload_complete(); } );">
+        <body>
         """
 
       if not filename:
@@ -150,6 +149,7 @@ class Files( object ):
           u"""
           <div class="field_label">upload error: </div>
           Please check that the filename is valid.
+          </body></html>
           """
         return
 
@@ -188,31 +188,38 @@ class Files( object ):
 
         if fraction_done > fraction_reported + tick_increment:
           yield '<script type="text/javascript">tick(%s);</script>' % fraction_reported
-          fraction_reported += tick_increment
-          import time
-          time.sleep(0.05) # TODO: removeme
+          fraction_reported = fraction_done
 
         # TODO: write to the database
 
       if fraction_reported == 0:
-        yield "An error occurred when uploading the file."
+        yield "An error occurred when uploading the file.</body></html>"
         return
 
       # the file finished uploading, so fill out the progress meter to 100%
       if fraction_reported < 1.0:
         yield '<script type="text/javascript">tick(1.0);</script>'
 
+      # the setTimeout() below ensures that the 100% progress bar is displayed for at least a moment
       yield \
         u"""
+        <script type="text/javascript">
+        setTimeout( 'withDocument( window.parent.document, function () { getElement( "upload_frame" ).pulldown.upload_complete(); } );', 10 );
+        </script>
         </body>
         </html>
         """
 
       upload.file.close()
-      cherrypy.request.rfile.close()
 
     # release the session lock before beginning the upload, because if the upload is cancelled
     # before it's done, the lock won't be released
     cherrypy.session.release_lock()
 
     return process_upload()
+
+  def stats( file_id ):
+    pass
+
+  def rename( file_id, filename ):
+    pass

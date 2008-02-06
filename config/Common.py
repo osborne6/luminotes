@@ -63,7 +63,7 @@ settings = {
       """
       """,
   },
-  "/files/upload_file": {
+  "/files/upload": {
     "stream_response": True
   },
 }

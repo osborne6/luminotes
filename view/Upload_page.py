@@ -16,7 +16,7 @@ class Upload_page( Html ):
           Input( type = u"submit", id = u"upload_button", class_ = u"button", value = u"upload" ),
           Input( type = u"hidden", id = u"notebook_id", name = u"notebook_id", value = notebook_id ),
           Input( type = u"hidden", id = u"note_id", name = u"note_id", value = note_id ),
-          action = u"/files/upload_file",
+          action = u"/files/upload",
           method = u"post",
           enctype = u"multipart/form-data",
         ),
