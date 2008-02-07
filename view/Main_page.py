@@ -125,7 +125,7 @@ class Main_page( Page ):
               id = u"search_and_user_area",
             ),
             Div(
-              A( Img( src = "/static/images/luminotes_title.png" ), href = "/", title = "Luminotes personal wiki notebook" ),
+              A( Img( src = u"/static/images/luminotes_title.png", width = u"206", height = u"69" ), href = u"/", title = u"Luminotes personal wiki notebook" ),
               id = u"title_area",
             ),
             id = u"top_area",
