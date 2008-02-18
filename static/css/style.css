@@ -615,7 +615,7 @@ img {
   color: #ff6600;
 }
 
-#upload_frame {
+.upload_frame {
   padding: 0;
   margin: 0;
   width: 40em;

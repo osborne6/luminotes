@@ -113,9 +113,13 @@ Wiki.prototype.update_next_id = function ( result ) {
 
 var KILOBYTE = 1024;
 var MEGABYTE = 1024 * KILOBYTE;
-function bytes_to_megabytes( bytes, or_kilobytes ) {
-  if ( or_kilobytes && bytes < MEGABYTE )
-    return Math.round( bytes / KILOBYTE ) + " KB";
+function bytes_to_megabytes( bytes, choose_units ) {
+  if ( choose_units ) {
+    if ( bytes < KILOBYTE )
+      return bytes + " bytes";
+    if ( bytes < MEGABYTE )
+      return Math.round( bytes / KILOBYTE ) + " KB";
+  }
 
   return Math.round( bytes / MEGABYTE ) + " MB";
 }
@@ -731,7 +735,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
   if ( link_title( link ).length > 0 ) {
     if ( !pulldown ) {
       this.clear_pulldowns();
-      // display a different pulldown dependong on whether the link is a note link or a file link
+      // display a different pulldown depending on whether the link is a note link or a file link
       if ( link.target || !/\/files\//.test( link.href ) )
         new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
       else
@@ -2246,9 +2250,11 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
     "frameBorder": "0",
     "scrolling": "no",
     "id": "upload_frame",
-    "name": "upload_frame"
+    "name": "upload_frame",
+    "class": "upload_frame"
   } );
   this.iframe.pulldown = this;
+  this.file_id = null;
 
   var self = this;
   connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
@@ -2266,26 +2272,47 @@ Upload_pulldown.prototype.init_frame = function () {
   withDocument( doc, function () {
     connect( "upload_button", "onclick", function ( event ) {
       withDocument( doc, function () {
-        self.upload_started( getElement( "upload" ).value );
+        self.upload_started( getElement( "file_id" ).value, getElement( "upload" ).value );
       } );
     } );
   } );
 }
 
-Upload_pulldown.prototype.upload_started = function ( filename ) {
+Upload_pulldown.prototype.upload_started = function ( file_id, filename ) {
+  this.file_id = file_id;
+
+  // make the upload iframe invisible but still present so that the upload continues
+  addElementClass( this.iframe, "invisible" );
+  setElementDimensions( this.iframe, { "h": "0" } );
+
   // get the basename of the file
   var pieces = filename.split( "/" );
   filename = pieces[ pieces.length - 1 ];
   pieces = filename.split( "\\" );
   filename = pieces[ pieces.length - 1 ];
 
-  // the current title is blank, replace the title with the upload's filename
+  // if the current title is blank, replace the title with the upload's filename
   if ( link_title( this.link ) == "" )
     replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
-  // TODO: set the link's href to the file
+
+  // FIXME: this call might occur before upload() is even called
+  var progress_iframe = createDOM( "iframe", {
+    "src": "/files/progress?file_id=" + file_id + "&filename=" + escape( filename ),
+    "frameBorder": "0",
+    "scrolling": "no",
+    "id": "progress_frame",
+    "name": "progress_frame",
+    "class": "upload_frame"
+  } );
+
+  appendChildNodes( this.div, progress_iframe );
 }
 
 Upload_pulldown.prototype.upload_complete = function () {
+  // now that the upload is done, the file link should point to the uploaded file
+  this.link.href = "/files/download?file_id=" + this.file_id
+
+// FIXME: the upload pulldown is sometimes being closed here before the upload is complete, thereby truncating the upload
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
   this.shutdown();
 }

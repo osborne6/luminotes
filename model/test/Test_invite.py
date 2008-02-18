@@ -1,6 +1,5 @@
 from pytz import utc
 from datetime import datetime, timedelta
-from model.User import User
 from model.Invite import Invite
 
 

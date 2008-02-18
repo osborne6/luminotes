@@ -125,7 +125,8 @@ def grab_user_id( function ):
     arg_names = list( function.func_code.co_varnames )
     if "user_id" in arg_names:
       arg_index = arg_names.index( "user_id" )
-      args[ arg_index ] = cherrypy.session.get( "user_id" )
+      args = list( args )
+      args[ arg_index - 1 ] = cherrypy.session.get( "user_id" )
     else:
       kwargs[ "user_id" ] = cherrypy.session.get( "user_id" )
 

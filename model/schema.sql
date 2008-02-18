@@ -32,6 +32,22 @@ CREATE FUNCTION drop_html_tags(text) RETURNS text
 ALTER FUNCTION public.drop_html_tags(text) OWNER TO luminotes;
 
 --
+-- Name: file; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE TABLE file (
+    id text NOT NULL,
+    revision timestamp with time zone,
+    notebook_id text,
+    note_id text,
+    filename text,
+    size_bytes integer
+);
+
+
+ALTER TABLE public.file OWNER TO luminotes;
+
+--
 -- Name: invite; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
 
@@ -160,6 +176,14 @@ CREATE TABLE user_notebook (
 
 
 ALTER TABLE public.user_notebook OWNER TO luminotes;
+
+
+-- Name: file_pkey; Type: CONSTRAINT; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+ALTER TABLE ONLY file
+    ADD CONSTRAINT file_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: invite_pkey; Type: CONSTRAINT; Schema: public; Owner: luminotes; Tablespace: 

@@ -146,10 +146,12 @@ class Valid_int( object ):
   def __call__( self, value ):
     value = int( value )
 
-    if self.min is not None and value < min:
+    if self.min is not None and value < self.min:
       self.message = "is too small"
-    if self.max is not None and value > max:
+      raise ValueError()
+    if self.max is not None and value > self.max:
       self.message = "is too large"
+      raise ValueError()
 
     return value
 

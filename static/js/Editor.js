@@ -378,6 +378,12 @@ Editor.prototype.mouse_clicked = function ( event ) {
     return;
   }
 
+  // special case for links to uploaded files
+  if ( !link.target && /\/files\//.test( link.href ) ) {
+    location.href = link.href;
+    return;
+  }
+
   event.stop();
 
   // load the note corresponding to the clicked link

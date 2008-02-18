@@ -1,4 +1,3 @@
-from model.User import User
 from model.Password_reset import Password_reset
 
 

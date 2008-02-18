@@ -68,7 +68,7 @@ class Test_files( Test_controller ):
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"note_id" ) == self.note.object_id
 
-  def test_upload_file( self ):
+  def test_upload( self ):
     self.login()
 
     result = self.http_upload(
@@ -101,12 +101,12 @@ class Test_files( Test_controller ):
         raise exc
 
     # assert that the progress bar is moving, and then completes
-    assert tick_count >= 3
+    assert tick_count >= 2
     assert tick_done
 
     # TODO: assert that the uploaded file actually got stored somewhere
 
-  def test_upload_file_without_login( self ):
+  def test_upload_without_login( self ):
     result = self.http_upload(
       "/files/upload",
       dict(
@@ -120,7 +120,7 @@ class Test_files( Test_controller ):
 
     assert u"access" in result.get( u"body" )[ 0 ]
 
-  def test_upload_file_without_access( self ):
+  def test_upload_without_access( self ):
     self.login2()
 
     result = self.http_upload(
@@ -136,7 +136,7 @@ class Test_files( Test_controller ):
 
     assert u"access" in result.get( u"body" )[ 0 ]
 
-  def assert_inline_error( self, result ):
+  def assert_streaming_error( self, result ):
     gen = result[ u"body" ]
     assert isinstance( gen, types.GeneratorType )
 
@@ -152,7 +152,7 @@ class Test_files( Test_controller ):
 
     assert found_error
 
-  def test_upload_file_unnamed( self ):
+  def test_upload_unnamed( self ):
     self.login()
 
     result = self.http_upload(
@@ -166,9 +166,9 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    self.assert_inline_error( result )
+    self.assert_streaming_error( result )
 
-  def test_upload_file_empty( self ):
+  def test_upload_empty( self ):
     self.login()
 
     result = self.http_upload(
@@ -182,12 +182,43 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    self.assert_inline_error( result )
+    self.assert_streaming_error( result )
 
-  def test_upload_file_cancel( self ):
-    raise NotImplementError()
+  def test_upload_invalid_content_length( self ):
+    self.login()
 
-  def test_upload_file_over_quota( self ):
+    result = self.http_upload(
+      "/files/upload",
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      headers = [ ( "Content-Length", "-10" ) ],
+      session_id = self.session_id,
+    )
+
+    assert "invalid" in result[ "body" ][ 0 ]
+
+  def test_upload_cancel( self ):
+    self.login()
+
+    result = self.http_upload(
+      "/files/upload",
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      simulate_cancel = True,
+      session_id = self.session_id,
+    )
+
+    self.assert_streaming_error( result )
+
+  def test_upload_over_quota( self ):
     raise NotImplementError()
 
   def login( self ):

@@ -7,6 +7,19 @@ from StringIO import StringIO
 from copy import copy
 
 
+class Truncated_StringIO( StringIO ):
+  """
+  A wrapper for StringIO that forcibly closes the file when only some of it has been read. Used
+  for simulating an upload that is canceled part of the way through.
+  """
+  def readline( self, size = None ):
+    if self.tell() >= len( self.getvalue() ) * 0.25:
+      self.close()
+      return ""
+
+    return StringIO.readline( self, 256 )
+
+
 class Test_controller( object ):
   def __init__( self ):
     from model.User import User
@@ -427,7 +440,7 @@ class Test_controller( object ):
     finally:
       request.close()
 
-  def http_upload( self, http_path, form_args, filename, file_data, headers = None, session_id = None ):
+  def http_upload( self, http_path, form_args, filename, file_data, simulate_cancel = False, headers = None, session_id = None ):
     """
     Perform an HTTP POST with the given path on the test server, sending the provided form_args
     and file_data as a multipart form file upload. Return the result dict as returned by the
@@ -452,16 +465,21 @@ class Test_controller( object ):
       headers = []
 
     post_data = str( "".join( post_data ) )
-    headers.extend( [
-      ( "Content-Type", "multipart/form-data; boundary=%s" % boundary ),
-      ( "Content-Length", str( len( post_data ) ) ),
-    ] )
+    headers.append( ( "Content-Type", "multipart/form-data; boundary=%s" % boundary ) )
+
+    if "Content-Length" not in [ name for ( name, value ) in headers ]:
+      headers.append( ( "Content-Length", str( len( post_data ) ) ) )
 
     if session_id:
       headers.append( ( u"Cookie", "session_id=%s" % session_id ) ) # will break if unicode is used for the value
 
+    if simulate_cancel:
+      file_wrapper = Truncated_StringIO( post_data )
+    else:
+      file_wrapper = StringIO( post_data )
+
     request = cherrypy.server.request( ( u"127.0.0.1", 1234 ), u"127.0.0.5" )
-    response = request.run( "POST %s HTTP/1.0" % str( http_path ), headers = headers, rfile = StringIO( post_data ) )
+    response = request.run( "POST %s HTTP/1.0" % str( http_path ), headers = headers, rfile = file_wrapper )
     session_id = response.simple_cookie.get( u"session_id" )
     if session_id: session_id = session_id.value
 

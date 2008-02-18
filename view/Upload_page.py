@@ -2,7 +2,7 @@ from Tags import Html, Head, Link, Meta, Body, P, Form, Span, Input
 
 
 class Upload_page( Html ):
-  def __init__( self, notebook_id, note_id ):
+  def __init__( self, notebook_id, note_id, file_id ):
     Html.__init__(
       self,
       Head(
@@ -12,15 +12,16 @@ class Upload_page( Html ):
       Body(
         Form(
           Span( u"attach file: ", class_ = u"field_label" ),
-          Input( type = u"file", id = u"upload", name = u"upload", class_ = "text_field", size = u"30" ),
-          Input( type = u"submit", id = u"upload_button", class_ = u"button", value = u"upload" ),
           Input( type = u"hidden", id = u"notebook_id", name = u"notebook_id", value = notebook_id ),
           Input( type = u"hidden", id = u"note_id", name = u"note_id", value = note_id ),
-          action = u"/files/upload",
+          Input( type = u"file", id = u"upload", name = u"upload", class_ = "text_field", size = u"30" ),
+          Input( type = u"submit", id = u"upload_button", class_ = u"button", value = u"upload" ),
+          action = u"/files/upload?file_id=%s" % file_id,
           method = u"post",
           enctype = u"multipart/form-data",
         ),
         P( u"Please select a file to upload." ),
         Span( id = u"tick_preload" ),
+        Input( type = u"hidden", id = u"file_id", value = file_id ),
       ),
     )

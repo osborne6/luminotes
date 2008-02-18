@@ -63,7 +63,11 @@ settings = {
       """
       """,
   },
-  "/files/upload": {
+  "/files/download": {
+    "stream_response": True,
+    "encoding_filter.on": False,
+  },
+  "/files/progress": {
     "stream_response": True
   },
 }

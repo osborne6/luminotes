@@ -66,7 +66,7 @@ class Invite( Persistent ):
 
   @staticmethod
   def sql_load( object_id, revision = None ):
-    # password resets don't store old revisions
+    # invites don't store old revisions
     if revision:
       raise NotImplementedError()
 
