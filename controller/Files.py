@@ -234,8 +234,7 @@ class Files( object ):
 
     cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=%s" % db_file.filename
     cherrypy.response.headerMap[ u"Content-Length" ] = db_file.size_bytes
-# TODO: send content type
-#    cherrypy.response.headerMap[ u"Content-Type" ] = u"image/png"
+    cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
 
     def stream():
       CHUNK_SIZE = 8192
@@ -323,12 +322,11 @@ class Files( object ):
     if not uploaded_file:
       raise Upload_error()
 
-# TODO: grab content type and store it
-    #print upload.headers.get( "content-type", "MISSING" )
+    content_type = upload.headers.get( "content-type" )
 
 # TODO: somehow detect when upload is canceled and abort
 
-    db_file = File.create( file_id, notebook_id, note_id, uploaded_file.filename, uploaded_file.file_received_bytes )
+    db_file = File.create( file_id, notebook_id, note_id, uploaded_file.filename, uploaded_file.file_received_bytes, content_type )
     self.__database.save( db_file )
     uploaded_file.close()
 

@@ -10,7 +10,7 @@ class File( Persistent ):
   psycopg2 I'm using doesn't have large object support.)
   """
   def __init__( self, object_id, revision = None, notebook_id = None, note_id = None,
-                filename = None, size_bytes = None ):
+                filename = None, size_bytes = None, content_type = None ):
     """
     Create a File with the given id.
 
@@ -26,6 +26,8 @@ class File( Persistent ):
     @param filename: name of the file on the client
     @type size_bytes: int
     @param size_bytes: length of the file data in bytes
+    @type content_type: unicode
+    @param content_type: value of the Content-Type HTTP header for this file
     @rtype: File
     @return: newly constructed File
     """
@@ -34,9 +36,10 @@ class File( Persistent ):
     self.__note_id = note_id
     self.__filename = filename
     self.__size_bytes = size_bytes
+    self.__content_type = content_type
 
   @staticmethod
-  def create( object_id, notebook_id = None, note_id = None, filename = None, size_bytes = None ):
+  def create( object_id, notebook_id = None, note_id = None, filename = None, size_bytes = None, content_type = None ):
     """
     Convenience constructor for creating a new File.
 
@@ -50,11 +53,13 @@ class File( Persistent ):
     @param filename: name of the file on the client
     @type size_bytes: int
     @param size_bytes: length of the file data in bytes
+    @type content_type: unicode
+    @param content_type: value of the Content-Type HTTP header for this file
     @rtype: File
     @return: newly constructed File
     """
     return File( object_id, notebook_id = notebook_id, note_id = note_id, filename = filename,
-                 size_bytes = size_bytes )
+                 size_bytes = size_bytes, content_type = content_type )
 
   @staticmethod
   def sql_load( object_id, revision = None ):
@@ -65,7 +70,7 @@ class File( Persistent ):
     return \
       """
       select
-        file.id, file.revision, file.notebook_id, file.note_id, file.filename, size_bytes
+        file.id, file.revision, file.notebook_id, file.note_id, file.filename, file.size_bytes, file.content_type
       from
         file
       where
@@ -83,14 +88,14 @@ class File( Persistent ):
     return File.sql_id_exists( self.object_id )
 
   def sql_create( self ):
-    return "insert into file ( id, revision, notebook_id, note_id, filename, size_bytes ) values ( %s, %s, %s, %s, %s, %s );" % \
+    return "insert into file ( id, revision, notebook_id, note_id, filename, size_bytes, content_type ) values ( %s, %s, %s, %s, %s, %s, %s );" % \
     ( quote( self.object_id ), quote( self.revision ), quote( self.__notebook_id ), quote( self.__note_id ),
-      quote( self.__filename ), self.__size_bytes or 'null' )
+      quote( self.__filename ), self.__size_bytes or 'null', quote( self.__content_type ) )
 
   def sql_update( self ):
-    return "update file set revision = %s, notebook_id = %s, note_id = %s, filename = %s, size_bytes = %s where id = %s;" % \
+    return "update file set revision = %s, notebook_id = %s, note_id = %s, filename = %s, size_bytes = %s, content_type = %s where id = %s;" % \
     ( quote( self.revision ), quote( self.__notebook_id ), quote( self.__note_id ), quote( self.__filename ),
-      self.__size_bytes or 'null', quote( self.object_id ) )
+      self.__size_bytes or 'null', quote( self.__content_type ), quote( self.object_id ) )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )
@@ -99,6 +104,7 @@ class File( Persistent ):
       note_id = self.__note_id,
       filename = self.__filename,
       size_bytes = self.__size_bytes,
+      content_type = self.__content_type,
     ) )
 
     return d
@@ -107,3 +113,4 @@ class File( Persistent ):
   note_id = property( lambda self: self.__note_id )
   filename = property( lambda self: self.__filename )
   size_bytes = property( lambda self: self.__size_bytes )
+  content_type = property( lambda self: self.__content_type )
