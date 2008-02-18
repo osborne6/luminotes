@@ -1,6 +1,4 @@
 from Persistent import Persistent, quote
-from psycopg2 import Binary
-from StringIO import StringIO
 
 
 class File( Persistent ):

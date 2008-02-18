@@ -2260,6 +2260,17 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
   connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
 
   appendChildNodes( this.div, this.iframe );
+
+  this.progress_iframe = createDOM( "iframe", {
+    "frameBorder": "0",
+    "scrolling": "no",
+    "id": "progress_frame",
+    "name": "progress_frame",
+    "class": "upload_frame"
+  } );
+  addElementClass( this.progress_iframe, "undisplayed" );
+
+  appendChildNodes( this.div, this.progress_iframe );
 }
 
 Upload_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
@@ -2282,7 +2293,6 @@ Upload_pulldown.prototype.upload_started = function ( file_id, filename ) {
   this.file_id = file_id;
 
   // make the upload iframe invisible but still present so that the upload continues
-  addElementClass( this.iframe, "invisible" );
   setElementDimensions( this.iframe, { "h": "0" } );
 
   // get the basename of the file
@@ -2295,24 +2305,15 @@ Upload_pulldown.prototype.upload_started = function ( file_id, filename ) {
   if ( link_title( this.link ) == "" )
     replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
 
-  // FIXME: this call might occur before upload() is even called
-  var progress_iframe = createDOM( "iframe", {
-    "src": "/files/progress?file_id=" + file_id + "&filename=" + escape( filename ),
-    "frameBorder": "0",
-    "scrolling": "no",
-    "id": "progress_frame",
-    "name": "progress_frame",
-    "class": "upload_frame"
-  } );
-
-  appendChildNodes( this.div, progress_iframe );
+  removeElementClass( this.progress_iframe, "undisplayed" );
+  frames[ "progress_frame" ].location.href = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
 }
 
 Upload_pulldown.prototype.upload_complete = function () {
   // now that the upload is done, the file link should point to the uploaded file
+  // FIXME: this may kill the text cursor in IE 7
   this.link.href = "/files/download?file_id=" + this.file_id
 
-// FIXME: the upload pulldown is sometimes being closed here before the upload is complete, thereby truncating the upload
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
   this.shutdown();
 }
