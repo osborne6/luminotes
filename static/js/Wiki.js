@@ -2303,15 +2303,20 @@ Upload_pulldown.prototype.upload_started = function ( file_id, filename ) {
 
   // if the current title is blank, replace the title with the upload's filename
   if ( link_title( this.link ) == "" )
+    // FIXME: this may (sometimes) kill the text cursor in IE 6 and 7
     replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
 
   removeElementClass( this.progress_iframe, "undisplayed" );
-  frames[ "progress_frame" ].location.href = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
+  var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
+
+  if ( frames[ "progress_frames" ] )
+    frames[ "progress_frame" ].location.href = progress_url;
+  else
+    this.progress_iframe.src = progress_url;
 }
 
 Upload_pulldown.prototype.upload_complete = function () {
   // now that the upload is done, the file link should point to the uploaded file
-  // FIXME: this may kill the text cursor in IE 7
   this.link.href = "/files/download?file_id=" + this.file_id
 
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
@@ -2321,8 +2326,6 @@ Upload_pulldown.prototype.upload_complete = function () {
 Upload_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
   this.wiki.up_image_button( "attachFile" );
-
-  disconnectAll( this.file_input );
 }
 
 function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
@@ -2363,6 +2366,9 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
       replaceChildNodes( self.file_size, bytes_to_megabytes( result.size_bytes, true ) );
     }
   );
+
+  // FIXME: when this is called, the text cursor moves to an unexpected location
+  editor.focus();
 }
 
 File_link_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
