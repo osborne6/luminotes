@@ -425,7 +425,7 @@ class Files( object ):
         <td></td>
         <td><span id="status"></span></td>
         <td></td>
-        <td><input type="submit" id="cancel_button" class="button" value="cancel" onclick="withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.shutdown(); } );" /></td>
+        <td><input type="submit" id="cancel_button" class="button" value="cancel" onclick="withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.shutdown( true ); } );" /></td>
         </tr></table>
         <script type="text/javascript">
         function tick( fraction ) {

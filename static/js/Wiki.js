@@ -2340,14 +2340,19 @@ Upload_pulldown.prototype.upload_complete = function () {
   this.link.href = "/files/download?file_id=" + this.file_id
 
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
-  this.shutdown();
+  this.shutdown( true );
 }
 
 Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
   Pulldown.prototype.update_position.call( this, anchor, relative_to );
 }
 
-Upload_pulldown.prototype.shutdown = function () {
+Upload_pulldown.prototype.shutdown = function ( force ) {
+  // if there's a file id set, then an upload is in progress. so if the force flag is not set, bail
+  // without performing a shutdown
+  if ( this.file_id && !force )
+    return;
+
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
     this.link.pulldown = null;
