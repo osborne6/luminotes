@@ -1,3 +1,4 @@
+import os
 import cgi
 import time
 import tempfile
@@ -87,6 +88,10 @@ class Upload_file( object ):
   def close( self ):
     self.__file.close()
     self.__complete.set()
+
+  def delete( self ):
+    self.__file.close()
+    os.remove( self.make_server_filename( self.__file_id ) )
 
   def wait_for_complete( self ):
     self.__complete.wait( timeout = cherrypy.server.socket_timeout )
@@ -316,18 +321,20 @@ class Files( object ):
     """
     global current_uploads, current_uploads_lock
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      raise Access_error()
-
     # write the file to the database
     uploaded_file = current_uploads.get( file_id )
     if not uploaded_file:
       raise Upload_error()
 
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      uploaded_file.delete()
+      raise Access_error()
+
     content_type = upload.headers.get( "content-type" )
 
     # if we didn't receive all of the expected data, abort
     if uploaded_file.total_received_bytes < uploaded_file.content_length:
+      uploaded_file.delete()
       raise Upload_error( "The upload did not complete." )
 
     # record metadata on the upload in the database

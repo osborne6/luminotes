@@ -2251,6 +2251,7 @@ Link_pulldown.prototype.shutdown = function () {
 
 function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
   this.link = editor.find_link_at_cursor();
+  this.link.pulldown = this;
 
   Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe );
   wiki.down_image_button( "attachFile" );
@@ -2342,9 +2343,14 @@ Upload_pulldown.prototype.upload_complete = function () {
   this.shutdown();
 }
 
+Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
+  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+}
+
 Upload_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
-  this.wiki.up_image_button( "attachFile" );
+  if ( this.link )
+    this.link.pulldown = null;
 }
 
 function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
