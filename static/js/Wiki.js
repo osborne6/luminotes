@@ -712,6 +712,8 @@ Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) 
 }
 
 Wiki.prototype.display_link_pulldown = function ( editor, link ) {
+  this.clear_messages();
+
   if ( !editor.read_write ) {
     this.clear_pulldowns();
     return;
@@ -2268,6 +2270,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
   } );
   this.iframe.pulldown = this;
   this.file_id = null;
+  this.uploading = false;
 
   var self = this;
   connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
@@ -2315,6 +2318,7 @@ Upload_pulldown.prototype.base_filename = function () {
 
 Upload_pulldown.prototype.upload_started = function ( file_id ) {
   this.file_id = file_id;
+  this.uploading = true;
   var filename = this.base_filename();
 
   // make the upload iframe invisible but still present so that the upload continues
@@ -2337,6 +2341,7 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
 
 Upload_pulldown.prototype.upload_complete = function () {
   // now that the upload is done, the file link should point to the uploaded file
+  this.uploading = false;
   this.link.href = "/files/download?file_id=" + this.file_id
 
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
@@ -2348,10 +2353,14 @@ Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
 }
 
 Upload_pulldown.prototype.shutdown = function ( force ) {
-  // if there's a file id set, then an upload is in progress. so if the force flag is not set, bail
-  // without performing a shutdown
-  if ( this.file_id && !force )
-    return;
+  // if there's an upload in progress and the force flag is not set, then bail without performing a
+  // shutdown
+  if ( this.uploading ) {
+    if ( force )
+      this.wiki.display_message( "The file upload has been cancelled." )
+    else
+      return;
+  }
 
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
