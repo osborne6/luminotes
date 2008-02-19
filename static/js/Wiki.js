@@ -738,8 +738,12 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
       // display a different pulldown depending on whether the link is a note link or a file link
       if ( link.target || !/\/files\//.test( link.href ) )
         new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
-      else
-        new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+      else {
+        if ( /\/files\/new$/.test( link.href ) )
+          new Upload_pulldown( this, this.notebook_id, this.invoker, editor );
+        else
+          new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+      }
     }
   }
 }
@@ -989,10 +993,19 @@ Wiki.prototype.toggle_link_button = function ( event ) {
 Wiki.prototype.toggle_attach_button = function ( event ) {
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
+    if ( this.toggle_image_button( "attachFile" ) )
+      this.focused_editor.start_file_link();
+    else
+      this.focused_editor.end_link();
 
-    // if the pulldown is already open, then just close it
+    // if a pulldown is already open, then just close it
     var pulldown_id = "upload_" + this.focused_editor.id;
     var existing_div = getElement( pulldown_id );
+    if ( !existing_div ) {
+      pulldown_id = "file_link_" + this.focused_editor.id;
+      existing_div = getElement( pulldown_id );
+    }
+
     if ( existing_div ) {
       existing_div.pulldown.shutdown();
       return;
@@ -2237,7 +2250,6 @@ Link_pulldown.prototype.shutdown = function () {
 }
 
 function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
-  editor.start_file_link();
   this.link = editor.find_link_at_cursor();
 
   Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe );
@@ -2283,26 +2295,33 @@ Upload_pulldown.prototype.init_frame = function () {
   withDocument( doc, function () {
     connect( "upload_button", "onclick", function ( event ) {
       withDocument( doc, function () {
-        self.upload_started( getElement( "file_id" ).value, getElement( "upload" ).value );
+        self.upload_started( getElement( "file_id" ).value );
       } );
     } );
   } );
 }
 
-Upload_pulldown.prototype.upload_started = function ( file_id, filename ) {
-  this.file_id = file_id;
-
-  // make the upload iframe invisible but still present so that the upload continues
-  setElementDimensions( this.iframe, { "h": "0" } );
-
+Upload_pulldown.prototype.base_filename = function () {
   // get the basename of the file
+  var filename = getElement( "upload" ).value;
   var pieces = filename.split( "/" );
   filename = pieces[ pieces.length - 1 ];
   pieces = filename.split( "\\" );
   filename = pieces[ pieces.length - 1 ];
 
+  return filename;
+}
+
+Upload_pulldown.prototype.upload_started = function ( file_id ) {
+  this.file_id = file_id;
+  var filename = this.base_filename();
+
+  // make the upload iframe invisible but still present so that the upload continues
+  setElementDimensions( this.iframe, { "h": "0" } );
+
   // if the current title is blank, replace the title with the upload's filename
-  if ( link_title( this.link ) == "" )
+  var title = link_title( this.link );
+  if ( title == "" )
     // FIXME: this may (sometimes) kill the text cursor in IE 6 and 7
     replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
 
@@ -2332,7 +2351,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe );
+  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.iframe );
 
   this.invoker = invoker;
   this.editor = editor;

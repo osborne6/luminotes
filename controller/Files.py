@@ -326,8 +326,11 @@ class Files( object ):
 
     content_type = upload.headers.get( "content-type" )
 
-# TODO: somehow detect when upload is canceled and abort
+    # if we didn't receive all of the expected data, abort
+    if uploaded_file.total_received_bytes < uploaded_file.content_length:
+      raise Upload_error( "The upload did not complete." )
 
+    # record metadata on the upload in the database
     db_file = File.create( file_id, notebook_id, note_id, uploaded_file.filename, uploaded_file.file_received_bytes, content_type )
     self.__database.save( db_file )
     uploaded_file.close()
