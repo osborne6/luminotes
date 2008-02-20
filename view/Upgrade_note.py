@@ -11,8 +11,9 @@ class Upgrade_note( Span ):
       P(
         """
         Use of your personal wiki is completely free. But if you upgrade your
-        Luminotes account, you'll also get powerful notebook sharing features
-        so that you and your friends can all collaborate on your wiki notebook.
+        Luminotes account, you'll also get more storage space and powerful
+        notebook sharing features so that you and your friends can all
+        collaborate on your wiki notebook.
         """,
       ),
       P(
@@ -126,7 +127,7 @@ class Upgrade_note( Span ):
         u"""
         An upgraded Luminotes account gets you more than just notebook sharing
         features. You'll also be treated to way more room for your personal wiki. That
-        means you'll have more space for your notes and ideas, and you won't have to
+        means you'll have more space for your notes and files, and you won't have to
         worry about running out of room anytime soon.
         """,
       ),
