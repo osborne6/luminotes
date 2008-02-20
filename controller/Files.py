@@ -14,7 +14,7 @@ from model.User import User
 from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
 from view.Json import Json
-from view.Progress_bar import stream_progress
+from view.Progress_bar import stream_progress, stream_quota_error, stop_upload_script
 
 
 class Access_error( Exception ):
@@ -126,14 +126,12 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
 
   @type binary: NoneType
   @param binary: ignored
-  @type user_id: unicode or NoneType
-  @param user_id: id of current logged-in user (if any)
   @rtype: Upload_file
   @return: wrapped temporary file used to store the upload
   @raise Upload_error: the provided file_id value is invalid, or the filename or Content-Length is
                        missing
   """
-  def make_file( self, binary = None, user_id = None ):
+  def make_file( self, binary = None ):
     global current_uploads, current_uploads_lock
 
     cherrypy.server.max_request_body_size = 0 # remove CherryPy default file size limit of 100 MB
@@ -256,7 +254,6 @@ class Files( object ):
 
     return stream()
 
-
   @expose( view = Upload_page )
   @strongly_expire
   @grab_user_id
@@ -327,6 +324,12 @@ class Files( object ):
     if not uploaded_file:
       raise Upload_error()
 
+    current_uploads_lock.acquire()
+    try:
+      del( current_uploads[ file_id ] )
+    finally:
+      current_uploads_lock.release()
+
     if not self.__users.check_access( user_id, notebook_id, read_write = True ):
       uploaded_file.delete()
       raise Access_error()
@@ -336,7 +339,18 @@ class Files( object ):
     # if we didn't receive all of the expected data, abort
     if uploaded_file.total_received_bytes < uploaded_file.content_length:
       uploaded_file.delete()
-      raise Upload_error( "The upload did not complete." )
+      raise Upload_error( u"The file did not complete uploading." )
+
+    user = self.__database.load( User, user_id )
+    if not user:
+      uploaded_file.delete()
+      raise Access_error()
+
+    # if the uploaded file's size would put the user over quota, bail and inform the user
+    rate_plan = self.__users.rate_plan( user.rate_plan )
+    if user.storage_bytes + uploaded_file.total_received_bytes > rate_plan.get( u"storage_quota_bytes", 0 ):
+      uploaded_file.delete()
+      return dict( script = stop_upload_script )
 
     # record metadata on the upload in the database
     db_file = File.create( file_id, notebook_id, note_id, uploaded_file.filename, uploaded_file.file_received_bytes, content_type )
@@ -345,21 +359,17 @@ class Files( object ):
     self.__database.commit()
     uploaded_file.close()
 
-    current_uploads_lock.acquire()
-    try:
-      del( current_uploads[ file_id ] )
-    finally:
-      current_uploads_lock.release()
-
     return dict()
 
   @expose()
   @strongly_expire
+  @grab_user_id
   @validate(
     file_id = Valid_id(),
     filename = unicode,
+    user_id = Valid_id( none_okay = True ),
   )
-  def progress( self, file_id, filename ):
+  def progress( self, file_id, filename, user_id = None ):
     """
     Stream information on a file that is in the process of being uploaded. This method does not
     perform any access checks, but the only information streamed is a progress bar and upload
@@ -369,6 +379,8 @@ class Files( object ):
     @param file_id: id of a currently uploading file
     @type filename: unicode
     @param filename: name of the file to report on
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
     @rtype: unicode
     @return: streaming HTML progress bar
     """
@@ -394,6 +406,19 @@ class Files( object ):
         continue
       fraction_reported = 1.0
       break
+
+    # if the uploaded file's size would put the user over quota, bail and inform the user
+    if uploading_file:
+      SOFT_QUOTA_FACTOR = 1.05 # fudge factor since content_length isn't really the file's actual size
+
+      user = self.__database.load( User, user_id )
+      if not user:
+        raise Access_error()
+
+      rate_plan = self.__users.rate_plan( user.rate_plan )
+
+      if user.storage_bytes + uploading_file.content_length > rate_plan.get( u"storage_quota_bytes", 0 ) * SOFT_QUOTA_FACTOR:
+        return stream_quota_error()
 
     return stream_progress( uploading_file, filename, fraction_reported )
 
@@ -427,6 +452,8 @@ class Files( object ):
       raise Access_error()
 
     user = self.__database.load( User, user_id )
+    if not user:
+      raise Access_error()
 
     return dict(
       filename = db_file.filename,
@@ -434,5 +461,8 @@ class Files( object ):
       storage_bytes = user.storage_bytes,
     )
 
-  def rename( file_id, filename ):
+  def delete( self, file_id ):
+    pass # TODO
+
+  def rename( self, file_id, filename ):
     pass # TODO

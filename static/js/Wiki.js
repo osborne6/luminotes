@@ -141,7 +141,7 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
       this.display_message(
         "You are currently using " +
         usage_percent +
-        "% of your available storage space. Please delete some notes, empty the trash, or",
+        "% of your available storage space. Please delete some notes or files, empty the trash, or",
         [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
       );
     this.storage_usage_high = true;
@@ -2352,19 +2352,28 @@ Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
   Pulldown.prototype.update_position.call( this, anchor, relative_to );
 }
 
-Upload_pulldown.prototype.shutdown = function ( force ) {
+Upload_pulldown.prototype.shutdown = function ( force, display_quota_error ) {
   // if there's an upload in progress and the force flag is not set, then bail without performing a
   // shutdown
   if ( this.uploading ) {
-    if ( force )
-      this.wiki.display_message( "The file upload has been cancelled." )
-    else
+    if ( force ) {
+      if ( !display_quota_error )
+        this.wiki.display_message( "The file upload has been cancelled." )
+    } else {
       return;
+    }
   }
 
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
     this.link.pulldown = null;
+
+  if ( display_quota_error ) {
+    this.wiki.display_message(
+      "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
+      [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
+    );
+  }
 }
 
 function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {

@@ -1130,3 +1130,6 @@ class Users( object ):
     result[ "invites" ] = []
 
     return result
+
+  def rate_plan( self, plan_index ):
+    return self.__rate_plans[ plan_index ]

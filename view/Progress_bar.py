@@ -73,3 +73,27 @@ def stream_progress( uploading_file, filename, fraction_reported ):
     </body>
     </html>
     """
+
+
+stop_upload_script = \
+  """
+  withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.shutdown( true, true ); } );
+  """
+
+
+def stream_quota_error():
+  yield \
+    u"""
+    <html>
+    <head>
+      <link href="/static/css/upload.css" type="text/css" rel="stylesheet" />
+      <script type="text/javascript" src="/static/js/MochiKit.js"></script>
+      <meta content="text/html; charset=UTF-8" http_equiv="content-type" />
+    </head>
+    <body>
+    <script type="text/javascript">
+    %s
+    </script>
+    </body>
+    </html>
+    """ % stop_upload_script
