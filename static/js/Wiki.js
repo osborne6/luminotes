@@ -2395,26 +2395,39 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   connect( this.filename_field, "onblur", function ( event ) { self.filename_field_changed( event ); } );
   connect( this.filename_field, "onkeydown", function ( event ) { self.filename_field_key_pressed( event ); } );
 
+  var delete_button = createDOM( "input", {
+    "type": "button",
+    "class": "button",
+    "value": "delete",
+    "title": "delete file"
+  } );
+
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "filename: " ) );
   appendChildNodes( this.div, this.filename_field );
   appendChildNodes( this.div, this.file_size );
+  appendChildNodes( this.div, " " );
+  appendChildNodes( this.div, delete_button );
 
   var query = parse_query( link );
-  var file_id = query.file_id;
+  this.file_id = query.file_id;
 
   // get the file's name and size from the server
   this.invoker.invoke(
     "/files/stats", "GET", {
-      "file_id": file_id
+      "file_id": this.file_id
     },
     function ( result ) {
       // if the user has already started typing something, don't overwrite it
-      if ( self.filename_field.value.length == 0 )
+      if ( self.filename_field.value.length == 0 ) {
         self.filename_field.value = result.filename;
+        self.previous_filename = result.filename;
+      }
       replaceChildNodes( self.file_size, bytes_to_megabytes( result.size_bytes, true ) );
       self.wiki.display_storage_usage( result.storage_bytes );
     }
   );
+
+  connect( delete_button, "onclick", function ( event ) { self.delete_button_clicked( event ); } );
 
   // FIXME: when this is called, the text cursor moves to an unexpected location
   editor.focus();
@@ -2437,11 +2450,15 @@ File_link_pulldown.prototype.filename_field_changed = function ( event ) {
   if ( filename == this.previous_filename )
     return;
 
+  var title = link_title( this.link );
+  if ( title == this.previous_filename )
+    replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
+
   this.previous_filename = filename;
 
   this.invoker.invoke(
-    "/files/rename", "GET", {
-      "file_id": file_id,
+    "/files/rename", "POST", {
+      "file_id": this.file_id,
       "filename": filename
     }
   );
@@ -2454,6 +2471,17 @@ File_link_pulldown.prototype.filename_field_key_pressed = function ( event ) {
     this.filename_field_changed();
     event.stop();
   }
+}
+
+File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
+  var self = this;
+
+  this.invoker.invoke(
+    "/files/delete", "POST", {
+      "file_id": this.file_id
+    },
+    function ( result ) { self.wiki.display_storage_usage( result.storage_bytes ); }
+  );
 }
 
 File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {

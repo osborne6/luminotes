@@ -95,6 +95,9 @@ class File( Persistent ):
     ( quote( self.revision ), quote( self.__notebook_id ), quote( self.__note_id ), quote( self.__filename ),
       self.__size_bytes or 'null', quote( self.__content_type ), quote( self.object_id ) )
 
+  def sql_delete( self ):
+    return "delete from file where file_id = %s;" % quote( self.object_id )
+
   def to_dict( self ):
     d = Persistent.to_dict( self )
     d.update( dict(
@@ -107,8 +110,11 @@ class File( Persistent ):
 
     return d
 
+  def __set_filename( self, filename ):
+    self.__filename = filename
+
   notebook_id = property( lambda self: self.__notebook_id )
   note_id = property( lambda self: self.__note_id )
-  filename = property( lambda self: self.__filename )
+  filename = property( lambda self: self.__filename, __set_filename )
   size_bytes = property( lambda self: self.__size_bytes )
   content_type = property( lambda self: self.__content_type )

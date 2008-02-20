@@ -232,6 +232,10 @@ class Files( object ):
     @return: file data
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
+    # release the session lock before beginning to stream the download. otherwise, if the
+    # upload is cancelled before it's done, the lock won't be released
+    cherrypy.session.release_lock()
+
     db_file = self.__database.load( File, file_id )
 
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
@@ -431,8 +435,8 @@ class Files( object ):
   )
   def stats( self, file_id, user_id = None ):
     """
-    Return information on a file that has been completely uploaded and is stored in the database.
-    Also return the user's current storage utilization in bytes.
+    Return information on a file that has been completely uploaded with its metadata stored in the
+    database. Also return the user's current storage utilization in bytes.
 
     @type file_id: unicode
     @param file_id: id of the file to report on
@@ -442,7 +446,7 @@ class Files( object ):
     @return: {
       'filename': filename,
       'size_bytes': filesize,
-      'storage_bytes': current sturage usage by user
+      'storage_bytes': current storage usage by user
     }
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
@@ -461,8 +465,70 @@ class Files( object ):
       storage_bytes = user.storage_bytes,
     )
 
-  def delete( self, file_id ):
-    pass # TODO
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def delete( self, file_id, user_id = None ):
+    """
+    Delete a file that has been completely uploaded, removing both its metadata from the database
+    and its data from the filesystem. Return the user's current storage utilization in bytes.
 
-  def rename( self, file_id, filename ):
-    pass # TODO
+    @type file_id: unicode
+    @param file_id: id of the file to delete
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: {
+      'storage_bytes': current storage usage by user
+    }
+    @raise Access_error: the current user doesn't have access to the notebook that the file is in
+    """
+    db_file = self.__database.load( File, file_id )
+
+    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id, read_write = True ):
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+    if not user:
+      raise Access_error()
+
+    self.__database.execute( db_file.sql_delete() )
+    os.remove( Upload_file.make_server_filename( file_id ) )
+
+    return dict(
+      storage_bytes = user.storage_bytes,
+    )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    filename = unicode,
+    user_id = Valid_id( none_okay = True ),
+  )
+  def rename( self, file_id, filename, user_id = None ):
+    """
+    Rename a file that has been completely uploaded.
+
+    @type file_id: unicode
+    @param file_id: id of the file to delete
+    @type filename: unicode
+    @param filename: new name for the file
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: {}
+    @raise Access_error: the current user doesn't have access to the notebook that the file is in
+    """
+    db_file = self.__database.load( File, file_id )
+
+    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id, read_write = True ):
+      raise Access_error()
+
+    db_file.filename = filename
+    self.__database.save( db_file )
+
+    return dict()
