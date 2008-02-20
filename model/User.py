@@ -220,21 +220,33 @@ class User( Persistent ):
 
   def sql_calculate_storage( self ):
     """
-    Return a SQL string to calculate the total bytes of storage usage by this user. Note that this
-    only includes storage for all the user's notes and past revisions in notebooks that they own. It
-    doesn't include storage for the notebooks themselves.
+    Return a SQL string to calculate the total bytes of storage usage by this user. This includes
+    storage for all the user's notes (including past revisions) and their uploaded files. It does
+    not include storage for the notebooks themselves.
     """
     return \
       """
-      select
-        coalesce( sum( pg_column_size( note.* ) ), 0 )
-      from
-        user_notebook, note
-      where
-        user_notebook.user_id = %s and
-        user_notebook.owner = 't' and
-        note.notebook_id = user_notebook.notebook_id;
-      """ % quote( self.object_id )
+      select * from (
+        select
+          coalesce( sum( pg_column_size( note.* ) ), 0 )
+        from
+          user_notebook, note
+        where
+          user_notebook.user_id = %s and
+          user_notebook.owner = 't' and
+          note.notebook_id = user_notebook.notebook_id
+      ) as note_storage,
+      (
+        select
+          coalesce( sum( file.size_bytes ), 0 )
+        from
+          user_notebook, file
+        where
+          user_notebook.user_id = %s and
+          user_notebook.owner = 't' and
+          file.notebook_id = user_notebook.notebook_id
+      ) as file_storage;
+      """ % ( quote( self.object_id ), quote( self.object_id ) )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )

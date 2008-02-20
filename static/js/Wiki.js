@@ -2403,6 +2403,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
       if ( self.filename_field.value.length == 0 )
         self.filename_field.value = result.filename;
       replaceChildNodes( self.file_size, bytes_to_megabytes( result.size_bytes, true ) );
+      self.wiki.display_storage_usage( result.storage_bytes );
     }
   );
 

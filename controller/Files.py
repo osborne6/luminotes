@@ -10,6 +10,7 @@ from Database import Valid_id
 from Users import grab_user_id
 from Expire import strongly_expire
 from model.File import File
+from model.User import User
 from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
 from view.Json import Json
@@ -322,7 +323,6 @@ class Files( object ):
     """
     global current_uploads, current_uploads_lock
 
-    # write the file to the database
     uploaded_file = current_uploads.get( file_id )
     if not uploaded_file:
       raise Upload_error()
@@ -340,7 +340,9 @@ class Files( object ):
 
     # record metadata on the upload in the database
     db_file = File.create( file_id, notebook_id, note_id, uploaded_file.filename, uploaded_file.file_received_bytes, content_type )
-    self.__database.save( db_file )
+    self.__database.save( db_file, commit = False )
+    self.__users.update_storage( user_id, commit = False )
+    self.__database.commit()
     uploaded_file.close()
 
     current_uploads_lock.acquire()
@@ -405,6 +407,7 @@ class Files( object ):
   def stats( self, file_id, user_id = None ):
     """
     Return information on a file that has been completely uploaded and is stored in the database.
+    Also return the user's current storage utilization in bytes.
 
     @type file_id: unicode
     @param file_id: id of the file to report on
@@ -414,6 +417,7 @@ class Files( object ):
     @return: {
       'filename': filename,
       'size_bytes': filesize,
+      'storage_bytes': current sturage usage by user
     }
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
@@ -422,9 +426,12 @@ class Files( object ):
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
       raise Access_error()
 
+    user = self.__database.load( User, user_id )
+
     return dict(
       filename = db_file.filename,
       size_bytes = db_file.size_bytes,
+      storage_bytes = user.storage_bytes,
     )
 
   def rename( file_id, filename ):
