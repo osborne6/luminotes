@@ -2482,6 +2482,9 @@ File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
     },
     function ( result ) { self.wiki.display_storage_usage( result.storage_bytes ); }
   );
+
+  this.link.href = "/files/new";
+  this.editor.focus();
 }
 
 File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {

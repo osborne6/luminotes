@@ -96,7 +96,7 @@ class File( Persistent ):
       self.__size_bytes or 'null', quote( self.__content_type ), quote( self.object_id ) )
 
   def sql_delete( self ):
-    return "delete from file where file_id = %s;" % quote( self.object_id )
+    return "delete from file where id = %s;" % quote( self.object_id )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )
