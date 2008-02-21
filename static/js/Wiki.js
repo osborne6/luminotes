@@ -2352,26 +2352,32 @@ Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
   Pulldown.prototype.update_position.call( this, anchor, relative_to );
 }
 
-Upload_pulldown.prototype.shutdown = function ( force, display_quota_error ) {
-  // if there's an upload in progress and the force flag is not set, then bail without performing a
-  // shutdown
-  if ( this.uploading ) {
-    if ( !force )
-      return;
-    if ( !display_quota_error )
-      this.wiki.display_message( "The file upload has been cancelled." )
-  }
+Upload_pulldown.prototype.cancel_due_to_click = function () {
+  this.wiki.display_message( "The file upload has been cancelled." )
+  this.shutdown( true );
+}
+
+Upload_pulldown.prototype.cancel_due_to_quota = function () {
+  this.wiki.display_error(
+    "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
+    [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
+  );
+
+  this.shutdown( true );
+}
+
+Upload_pulldown.prototype.cancel_due_to_error = function ( message ) {
+  this.wiki.display_error( message )
+  this.shutdown( true );
+}
+
+Upload_pulldown.prototype.shutdown = function ( force ) {
+  if ( this.uploading && !force )
+    return;
 
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
     this.link.pulldown = null;
-
-  if ( display_quota_error ) {
-    this.wiki.display_message(
-      "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
-      [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
-    );
-  }
 }
 
 function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {

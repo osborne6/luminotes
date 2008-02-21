@@ -14,7 +14,7 @@ from model.User import User
 from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
 from view.Json import Json
-from view.Progress_bar import stream_progress, stream_quota_error, stop_upload_script
+from view.Progress_bar import stream_progress, stream_quota_error, quota_error_script, general_error_script
 
 
 class Access_error( Exception ):
@@ -326,7 +326,7 @@ class Files( object ):
 
     uploaded_file = current_uploads.get( file_id )
     if not uploaded_file:
-      raise Upload_error()
+      return dict( script = general_error_script % u"Please select a file to upload." )
 
     current_uploads_lock.acquire()
     try:
@@ -334,27 +334,23 @@ class Files( object ):
     finally:
       current_uploads_lock.release()
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    user = self.__database.load( User, user_id )
+    if not user or not self.__users.check_access( user_id, notebook_id, read_write = True ):
       uploaded_file.delete()
-      raise Access_error()
+      return dict( script = general_error_script % u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user." )
 
     content_type = upload.headers.get( "content-type" )
 
     # if we didn't receive all of the expected data, abort
     if uploaded_file.total_received_bytes < uploaded_file.content_length:
       uploaded_file.delete()
-      raise Upload_error( u"The file did not complete uploading." )
-
-    user = self.__database.load( User, user_id )
-    if not user:
-      uploaded_file.delete()
-      raise Access_error()
+      return dict() # hopefully, the call to progress() will report this to the user
 
     # if the uploaded file's size would put the user over quota, bail and inform the user
     rate_plan = self.__users.rate_plan( user.rate_plan )
     if user.storage_bytes + uploaded_file.total_received_bytes > rate_plan.get( u"storage_quota_bytes", 0 ):
       uploaded_file.delete()
-      return dict( script = stop_upload_script )
+      return dict( script = quota_error_script )
 
     # record metadata on the upload in the database
     db_file = File.create( file_id, notebook_id, note_id, uploaded_file.filename, uploaded_file.file_received_bytes, content_type )
