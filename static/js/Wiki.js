@@ -2356,12 +2356,10 @@ Upload_pulldown.prototype.shutdown = function ( force, display_quota_error ) {
   // if there's an upload in progress and the force flag is not set, then bail without performing a
   // shutdown
   if ( this.uploading ) {
-    if ( force ) {
-      if ( !display_quota_error )
-        this.wiki.display_message( "The file upload has been cancelled." )
-    } else {
+    if ( !force )
       return;
-    }
+    if ( !display_quota_error )
+      this.wiki.display_message( "The file upload has been cancelled." )
   }
 
   Pulldown.prototype.shutdown.call( this );

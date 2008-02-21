@@ -491,11 +491,10 @@ class Files( object ):
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id, read_write = True ):
       raise Access_error()
 
-    user = self.__database.load( User, user_id )
-    if not user:
-      raise Access_error()
+    self.__database.execute( db_file.sql_delete(), commit = False )
+    user = self.__users.update_storage( user_id, commit = False )
+    self.__database.commit()
 
-    self.__database.execute( db_file.sql_delete() )
     os.remove( Upload_file.make_server_filename( file_id ) )
 
     return dict(
