@@ -98,6 +98,18 @@ class File( Persistent ):
   def sql_delete( self ):
     return "delete from file where id = %s;" % quote( self.object_id )
 
+  @staticmethod
+  def sql_load_note_files( note_id ):
+    return \
+      """
+      select
+        file.id, file.revision, file.notebook_id, file.note_id, file.filename, file.size_bytes, file.content_type
+      from
+        file
+      where
+        file.note_id = %s;
+      """ % quote( note_id )
+
   def to_dict( self ):
     d = Persistent.to_dict( self )
     d.update( dict(

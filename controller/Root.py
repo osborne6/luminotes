@@ -43,8 +43,8 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
-    self.__notebooks = Notebooks( database, self.__users )
     self.__files = Files( database, self.__users )
+    self.__notebooks = Notebooks( database, self.__users, self.__files )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )

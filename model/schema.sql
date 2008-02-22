@@ -235,6 +235,13 @@ ALTER TABLE ONLY user_notebook
 
 
 --
+-- Name: file_note_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX file_note_id_index ON file USING btree (note_id);
+
+
+--
 -- Name: luminotes_user_email_address_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
 --
 

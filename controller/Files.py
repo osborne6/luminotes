@@ -1,4 +1,5 @@
 import os
+import re
 import cgi
 import time
 import tempfile
@@ -197,6 +198,8 @@ cherrypy._cpcgifs.FieldStorage = FieldStorage
 
 
 class Files( object ):
+  FILE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*/files/download\?file_id=([^"]+)">', re.IGNORECASE )
+
   """
   Controller for dealing with uploaded files, corresponding to the "/files" URL.
   """
@@ -527,3 +530,29 @@ class Files( object ):
     self.__database.save( db_file )
 
     return dict()
+
+  def purge_unused( self, note ):
+    """
+    Delete files that were linked from the given note but no longer are.
+
+    @type note: model.Note
+    @param note: note to search for file links
+    """
+    # load metadata for all files with the given note's note_id 
+    files = self.__database.select_many( File, File.sql_load_note_files( note.object_id ) )
+    files_to_delete = dict( [ ( db_file.object_id, db_file ) for db_file in files ] )
+
+    # search through the note's contents for current links to files
+    for match in self.FILE_LINK_PATTERN.finditer( note.contents ):
+      file_id = match.groups( 0 )[ 0 ]
+
+      # we've found a link for file_id, so don't delete that file
+      files_to_delete.pop( file_id, None )
+
+    # for each file to delete, delete its metadata from the database and its data from the
+    # filesystem
+    for ( file_id, db_file ) in files_to_delete.items():
+      self.__database.execute( db_file.sql_delete(), commit = False )
+      os.remove( Upload_file.make_server_filename( file_id ) )
+
+    self.__database.commit()

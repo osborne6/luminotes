@@ -8,3 +8,4 @@ create table file (
   content_type text
 );
 alter table file add primary key ( id );
+create index file_note_id_index on file using btree ( note_id );

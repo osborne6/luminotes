@@ -36,7 +36,7 @@ class Notebooks( object ):
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
   """
-  def __init__( self, database, users ):
+  def __init__( self, database, users, files ):
     """
     Create a new Notebooks object.
 
@@ -44,11 +44,14 @@ class Notebooks( object ):
     @param database: database that notebooks are stored in
     @type users: controller.Users
     @param users: controller for all users, used here for updating storage utilization
-    @rtype: Notebooks
+    @type files: controller.Files
+    @param files: controller for all uploaded files, used here for deleting files that are no longer
+                  referenced within saved notes
     @return: newly constructed Notebooks
     """
     self.__database = database
     self.__users = users
+    self.__files = files
 
   @expose( view = Main_page )
   @strongly_expire
@@ -508,6 +511,8 @@ class Notebooks( object ):
         note.user_id = user.object_id
 
         new_revision = User_revision( note.revision, note.user_id, user.username )
+
+        self.__files.purge_unused( note )
 
       return new_revision
 
