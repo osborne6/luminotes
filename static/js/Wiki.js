@@ -742,7 +742,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
         new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
       else {
         if ( /\/files\/new$/.test( link.href ) )
-          new Upload_pulldown( this, this.notebook_id, this.invoker, editor );
+          new Upload_pulldown( this, this.notebook_id, this.invoker, editor, link );
         else
           new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link );
       }
@@ -996,9 +996,9 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
     if ( this.toggle_image_button( "attachFile" ) )
-      this.focused_editor.start_file_link();
+      var link = this.focused_editor.start_file_link();
     else
-      this.focused_editor.end_link();
+      var link = this.focused_editor.end_link();
 
     // if a pulldown is already open, then just close it
     var pulldown_id = "upload_" + this.focused_editor.id;
@@ -1016,7 +1016,7 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_messages();
     this.clear_pulldowns();
 
-    new Upload_pulldown( this, this.notebook_id, this.invoker, this.focused_editor );
+    new Upload_pulldown( this, this.notebook_id, this.invoker, this.focused_editor, link );
   }
 
   event.stop();
@@ -2251,8 +2251,8 @@ Link_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
-function Upload_pulldown( wiki, notebook_id, invoker, editor ) {
-  this.link = editor.find_link_at_cursor();
+function Upload_pulldown( wiki, notebook_id, invoker, editor, link ) {
+  this.link = link || editor.find_link_at_cursor();
   this.link.pulldown = this;
 
   Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe );
@@ -2327,8 +2327,7 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
   // if the current title is blank, replace the title with the upload's filename
   var title = link_title( this.link );
   if ( title == "" )
-    // FIXME: this may (sometimes) kill the text cursor in IE 6 and 7
-    replaceChildNodes( this.link, this.editor.document.createTextNode( filename ) );
+    this.link.innerHTML = filename;
 
   removeElementClass( this.progress_iframe, "undisplayed" );
   var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );

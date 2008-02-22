@@ -167,7 +167,6 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
     # file size is the entire content length of the POST, minus the size of the other form
     # parameters and boundaries. note: this assumes that the uploaded file is sent as the last
     # form parameter in the POST
-    # TODO: verify that the uploaded file is always sent as the last parameter
     existing_file = current_uploads.get( file_id )
     if existing_file:
       existing_file.close()
