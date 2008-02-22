@@ -2489,6 +2489,8 @@ File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
 
   this.link.href = "/files/new";
   this.editor.focus();
+
+  this.wiki.display_message( 'The file "' + strip( this.filename_field.value ) + '" has been deleted.' );
 }
 
 File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {

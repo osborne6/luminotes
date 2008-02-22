@@ -531,23 +531,26 @@ class Files( object ):
 
     return dict()
 
-  def purge_unused( self, note ):
+  def purge_unused( self, note, purge_all_links = False ):
     """
     Delete files that were linked from the given note but no longer are.
 
     @type note: model.Note
     @param note: note to search for file links
+    @type ignore_file_links: bool
+    @param ignore_file_links: if True, delete all files that are/were linked from this note
     """
     # load metadata for all files with the given note's note_id 
     files = self.__database.select_many( File, File.sql_load_note_files( note.object_id ) )
     files_to_delete = dict( [ ( db_file.object_id, db_file ) for db_file in files ] )
 
     # search through the note's contents for current links to files
-    for match in self.FILE_LINK_PATTERN.finditer( note.contents ):
-      file_id = match.groups( 0 )[ 0 ]
+    if purge_all_links is False:
+      for match in self.FILE_LINK_PATTERN.finditer( note.contents ):
+        file_id = match.groups( 0 )[ 0 ]
 
-      # we've found a link for file_id, so don't delete that file
-      files_to_delete.pop( file_id, None )
+        # we've found a link for file_id, so don't delete that file
+        files_to_delete.pop( file_id, None )
 
     # for each file to delete, delete its metadata from the database and its data from the
     # filesystem

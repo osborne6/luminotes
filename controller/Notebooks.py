@@ -599,6 +599,7 @@ class Notebooks( object ):
         note.notebook_id = notebook.trash_id
         note.startup = True
       else:
+        self.__files.purge_unused( note, purge_all_links = True )
         note.notebook_id = None
       note.user_id = user_id
 
@@ -702,6 +703,7 @@ class Notebooks( object ):
         note.notebook_id = notebook.trash_id
         note.startup = True
       else:
+        self.__files.purge_unused( note, purge_all_links = True )
         note.notebook_id = None
       note.user_id = user_id
 
