@@ -2,7 +2,6 @@ import cherrypy
 from model.Note import Note
 from model.Notebook import Notebook
 from model.User import User
-from controller.Scheduler import Scheduler
 from Test_controller import Test_controller
 
 
@@ -248,7 +247,7 @@ class Test_root( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 0
@@ -282,7 +281,7 @@ class Test_root( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 0

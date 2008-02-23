@@ -36,6 +36,7 @@ class Test_files( Test_controller ):
     self.file_data = "foobar\x07`-=[]\;',./~!@#$%^&*()_+{}|:\"<>?" * 100
     self.weird_filename = self.file_data + ".png"
     self.content_type = "image/png"
+    self.upload_thread = None
 
     # make Upload_file deal in fake files rather than actually using the filesystem
     Upload_file.fake_files = {} # map of file_id to fake file object
@@ -111,8 +112,103 @@ class Test_files( Test_controller ):
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
 
+  def tearDown( self ):
+    if self.upload_thread:
+      self.upload_thread.join()
+
   def test_download( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/download?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert headers[ u"Content-Disposition" ] == u"attachment; filename=%s" % self.filename
+
+    gen = result[ u"body" ]
+    assert isinstance( gen, types.GeneratorType )
+    pieces = []
+
+    try:
+      for piece in gen:
+        pieces.append( piece )
+    except AttributeError, exc:
+      if u"session_storage" not in str( exc ):
+        raise exc
+
+    file_data = "".join( pieces )
+    assert file_data == self.file_data
+
+  def test_download_without_login( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/download?file_id=%s" % self.file_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
+
+  def test_download_without_access( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.login2()
+
+    result = self.http_get(
+      "/files/download?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
+
+  def test_download_with_unknown_file_id( self ):
+    self.login()
+
+    result = self.http_get(
+      "/files/download?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_upload_page( self ):
     self.login()
@@ -354,7 +450,8 @@ class Test_files( Test_controller ):
         session_id = self.session_id,
       )
 
-    Thread( target = upload ).start()
+    self.upload_thread = Thread( target = upload )
+    self.upload_thread.start()
 
     # report on that file's upload progress
     result = self.http_get(
@@ -409,14 +506,15 @@ class Test_files( Test_controller ):
         session_id = self.session_id,
       )
 
-    Thread( target = upload ).start()
+    self.upload_thread = Thread( target = upload )
+    self.upload_thread.start()
 
     # report on that file's upload progress
     result = self.http_get(
       "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
     )
 
-    print u"access" in result[ u"body" ][ 0 ]
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_progress_for_completed_upload( self ):
     self.login()
@@ -488,7 +586,8 @@ class Test_files( Test_controller ):
         session_id = self.session_id,
       )
 
-    Thread( target = upload ).start()
+    self.upload_thread = Thread( target = upload )
+    self.upload_thread.start()
 
     result = self.http_get(
       "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
