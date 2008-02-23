@@ -31,7 +31,9 @@ class Test_files( Test_controller ):
     self.session_id = None
     self.file_id = "22"
     self.filename = "file.png"
+    self.new_filename = "newfile.png"
     self.file_data = "foobar\x07`-=[]\;',./~!@#$%^&*()_+{}|:\"<>?" * 100
+    self.weird_filename = self.file_data + ".png"
     self.content_type = "image/png"
 
     # make Upload_file deal in fake files rather than actually using the filesystem
@@ -674,7 +676,145 @@ class Test_files( Test_controller ):
     assert u"access" in result[ u"error" ]
 
   def test_rename( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post(
+      "/files/rename",
+      dict(
+        file_id = self.file_id,
+        filename = self.new_filename,
+      ),
+      session_id = self.session_id,
+    )
+
+    assert u"error" not in result
+    assert u"body" not in result
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.filename == self.new_filename
+    assert Upload_file.exists( self.file_id )
+
+  def test_rename_with_weird_filename( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post(
+      "/files/rename",
+      dict(
+        file_id = self.file_id,
+        filename = self.weird_filename,
+      ),
+      session_id = self.session_id,
+    )
+
+    assert u"error" not in result
+    assert u"body" not in result
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.filename == self.weird_filename
+    assert Upload_file.exists( self.file_id )
+
+  def test_rename_without_login( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post(
+      "/files/rename",
+      dict(
+        file_id = self.file_id,
+        filename = self.new_filename,
+      ),
+    )
+
+    assert u"access" in result[ u"error" ]
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.filename == self.filename
+    assert Upload_file.exists( self.file_id )
+
+  def test_rename_without_access( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.login2()
+
+    result = self.http_post(
+      "/files/rename",
+      dict(
+        file_id = self.file_id,
+        filename = self.new_filename,
+      ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"error" ]
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.filename == self.filename
+    assert Upload_file.exists( self.file_id )
+
+  def test_rename_with_unknown_file_id( self ):
+    self.login()
+
+    result = self.http_post(
+      "/files/rename",
+      dict(
+        file_id = self.file_id,
+        filename = self.new_filename,
+      ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"error" ]
 
   def test_purge_unused( self ):
     raise NotImplementedError()
