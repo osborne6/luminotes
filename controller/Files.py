@@ -560,8 +560,8 @@ class Files( object ):
 
     @type note: model.Note
     @param note: note to search for file links
-    @type ignore_file_links: bool
-    @param ignore_file_links: if True, delete all files that are/were linked from this note
+    @type purge_all_links: bool
+    @param purge_all_links: if True, delete all files that are/were linked from this note
     """
     # load metadata for all files with the given note's note_id 
     files = self.__database.select_many( File, File.sql_load_note_files( note.object_id ) )
