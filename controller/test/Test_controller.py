@@ -7,17 +7,25 @@ from StringIO import StringIO
 from copy import copy
 
 
-class Truncated_StringIO( StringIO ):
+class Wrapped_StringIO( StringIO ):
   """
-  A wrapper for StringIO that forcibly closes the file when only some of it has been read. Used
-  for simulating an upload that is canceled part of the way through.
+  A wrapper for StringIO that includes a bytes_read property, needed to work with
+  controller.Files.Upload_file.
+  """
+  bytes_read = property( lambda self: self.tell() )
+
+
+class Truncated_StringIO( Wrapped_StringIO ):
+  """
+  A wrapper for Wrapped_StringIO that forcibly closes the file when only some of it has been read.
+  Used for simulating an upload that is canceled part of the way through.
   """
   def readline( self, size = None ):
     if self.tell() >= len( self.getvalue() ) * 0.25:
       self.close()
       return ""
 
-    return StringIO.readline( self, 256 )
+    return Wrapped_StringIO.readline( self, 256 )
 
 
 class Test_controller( object ):
@@ -27,6 +35,7 @@ class Test_controller( object ):
     from model.Note import Note
     from model.Invite import Invite
     from model.User_revision import User_revision
+    from model.File import File
 
     # Since Stub_database isn't a real database and doesn't know SQL, replace some of the
     # SQL-returning methods in User, Note, and Notebook to return functions that manipulate data in
@@ -313,6 +322,19 @@ class Test_controller( object ):
     Invite.sql_revoke_invites = lambda self: \
       lambda database: sql_revoke_invites( self, database )
 
+    def sql_load_note_files( note_id, database ):
+      files = []
+
+      for ( object_id, obj_list ) in database.objects.items():
+        obj = obj_list[ -1 ]
+        if isinstance( obj, File ) and obj.note_id == note_id:
+          files.append( obj )
+
+      return files
+
+    File.sql_load_note_files = staticmethod( lambda note_id:
+      lambda database: sql_load_note_files( note_id, database ) )
+
 
   def setUp( self ):
     from controller.Root import Root
@@ -331,22 +353,26 @@ class Test_controller( object ):
         u"luminotes.rate_plans": [
           {
             u"name": u"super",
-            u"storage_quota_bytes": 1337,
+            u"storage_quota_bytes": 1337 * 10,
             u"notebook_collaboration": True,
             u"fee": 1.99,
             u"button": u"[subscribe here user %s!] button",
           },
           {
             u"name": "extra super",
-            u"storage_quota_bytes": 31337,
+            u"storage_quota_bytes": 31337 * 10,
             u"notebook_collaboration": True,
             u"fee": 9.00,
             u"button": u"[or here user %s!] button",
           },
         ],
       },
-      u"/files/upload": {
-        u"stream_response": True
+      u"/files/download": {
+        u"stream_response": True,
+        u"encoding_filter.on": False,
+      },
+      u"/files/progress": {
+        u"stream_response": True,
       },
     }
 
@@ -440,7 +466,7 @@ class Test_controller( object ):
     finally:
       request.close()
 
-  def http_upload( self, http_path, form_args, filename, file_data, simulate_cancel = False, headers = None, session_id = None ):
+  def http_upload( self, http_path, form_args, filename, file_data, content_type, simulate_cancel = False, headers = None, session_id = None ):
     """
     Perform an HTTP POST with the given path on the test server, sending the provided form_args
     and file_data as a multipart form file upload. Return the result dict as returned by the
@@ -457,8 +483,8 @@ class Test_controller( object ):
     post_data.append( 'Content-Disposition: form-data; name="upload"; filename="%s"\n' % (
       filename
     ) )
-    post_data.append( "Content-Type: image/png\n\n%s\n--%s--\n" % (
-      file_data, boundary
+    post_data.append( "Content-Type: %s\n\n%s\n--%s--\n" % (
+      content_type, file_data, boundary
     ) )
 
     if headers is None:
@@ -476,7 +502,7 @@ class Test_controller( object ):
     if simulate_cancel:
       file_wrapper = Truncated_StringIO( post_data )
     else:
-      file_wrapper = StringIO( post_data )
+      file_wrapper = Wrapped_StringIO( post_data )
 
     request = cherrypy.server.request( ( u"127.0.0.1", 1234 ), u"127.0.0.5" )
     response = request.run( "POST %s HTTP/1.0" % str( http_path ), headers = headers, rfile = file_wrapper )

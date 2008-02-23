@@ -3419,6 +3419,13 @@ class Test_users( Test_controller ):
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
     assert u"confirmation" in result[ u"notes" ][ 0 ].contents
 
+  def test_rate_plan( self ):
+    plan_index = 1
+    rate_plan = cherrypy.root.users.rate_plan( plan_index )
+
+    assert rate_plan
+    assert rate_plan == self.settings[ u"global" ][ u"luminotes.rate_plans" ][ plan_index ]
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,

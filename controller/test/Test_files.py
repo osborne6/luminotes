@@ -1,11 +1,14 @@
 import types
 import cherrypy
+from StringIO import StringIO
 from Test_controller import Test_controller
 from model.Notebook import Notebook
 from model.Note import Note
 from model.User import User
 from model.Invite import Invite
+from model.File import File
 from controller.Notebooks import Access_error
+from controller.Files import Upload_file
 
 
 class Test_files( Test_controller ):
@@ -26,6 +29,37 @@ class Test_files( Test_controller ):
     self.session_id = None
     self.filename = "file.png"
     self.file_data = "foobar\x07`-=[]\;',./~!@#$%^&*()_+{}|:\"<>?" * 100
+    self.content_type = "image/png"
+
+    # make Upload_file deal in fake files rather than actually using the filesystem
+    Upload_file.fake_files = {} # map of filename to fake file object
+
+    @staticmethod
+    def open_file( file_id, mode = None ):
+      fake_file = Upload_file.fake_files.get( Upload_file.make_server_filename( file_id ) )
+
+      if fake_file:
+        return fake_file
+
+      if mode not in ( "w", "w+" ):
+        raise IOError()
+
+      fake_file = StringIO()
+      Upload_file.fake_files[ file_id ] = fake_file
+      return fake_file
+
+    @staticmethod
+    def delete_file( file_id ):
+      fake_file = Upload_file.fake_files.get( Upload_file.make_server_filename( file_id ) )
+
+      if fake_file is None:
+        raise IOError()
+
+      del( fake_file[ file_id ] )
+
+    Upload_file.open_file = open_file
+    Upload_file.delete_file = delete_file
+    Upload_file.close = lambda self: None
 
     self.make_users()
     self.make_notebooks()
@@ -60,51 +94,58 @@ class Test_files( Test_controller ):
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
 
+  def test_download( self ):
+    raise NotImplementedError()
+
   def test_upload_page( self ):
+    self.login()
+
     result = self.http_get(
       "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+      session_id = self.session_id,
     )
 
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"note_id" ) == self.note.object_id
+    assert result.get( u"file_id" )
+
+  def test_upload_page_without_login( self ):
+    result = self.http_get(
+      "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+    )
+
+    assert u"access" in result.get( u"error" )
 
   def test_upload( self ):
     self.login()
+    file_id = "22"
 
     result = self.http_upload(
-      "/files/upload",
+      "/files/upload?file_id=%s" % file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
       ),
       filename = self.filename,
       file_data = self.file_data,
+      content_type = self.content_type,
       session_id = self.session_id,
     )
 
-    gen = result[ u"body" ]
-    assert isinstance( gen, types.GeneratorType )
+    assert u"error" not in result
+    assert u"script" not in result
 
-    tick_count = 0
-    tick_done = False
+    # assert that the file metadata was actually stored in the database
+    db_file = self.database.load( File, file_id )
+    assert db_file
+    assert db_file.notebook_id == self.notebook.object_id
+    assert db_file.note_id == self.note.object_id
+    assert db_file.filename == self.filename
+    assert db_file.size_bytes == len( self.file_data )
+    assert db_file.content_type == self.content_type
 
-    try:
-      for piece in gen:
-        if u"tick(" in piece:
-          tick_count += 1
-        if u"tick(1.0)" in piece:
-          tick_done = True
-    # during this unit test, full session info isn't available, so swallow an expected
-    # exception about session_storage
-    except AttributeError, exc:
-      if u"session_storage" not in str( exc ):
-        raise exc
-
-    # assert that the progress bar is moving, and then completes
-    assert tick_count >= 2
-    assert tick_done
-
-    # TODO: assert that the uploaded file actually got stored somewhere
+    # assert that the file data was actually stored
+    assert Upload_file.open_file( file_id ).read() == self.file_data
 
   def test_upload_without_login( self ):
     result = self.http_upload(
@@ -219,7 +260,57 @@ class Test_files( Test_controller ):
     self.assert_streaming_error( result )
 
   def test_upload_over_quota( self ):
-    raise NotImplementError()
+    raise NotImplementedError()
+
+  def test_progress( self ):
+    raise NotImplementedError()
+
+    self.login()
+
+    result = self.http_upload(
+      "/files/progress",
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      session_id = self.session_id,
+    )
+
+    gen = result[ u"body" ]
+    assert isinstance( gen, types.GeneratorType )
+
+    tick_count = 0
+    tick_done = False
+
+    try:
+      for piece in gen:
+        if u"tick(" in piece:
+          tick_count += 1
+        if u"tick(1.0)" in piece:
+          tick_done = True
+    # during this unit test, full session info isn't available, so swallow an expected
+    # exception about session_storage
+    except AttributeError, exc:
+      if u"session_storage" not in str( exc ):
+        raise exc
+
+    # assert that the progress bar is moving, and then completes
+    assert tick_count >= 2
+    assert tick_done
+
+  def test_stats( self ):
+    raise NotImplementedError()
+
+  def test_delete( self ):
+    raise NotImplementedError()
+
+  def test_rename( self ):
+    raise NotImplementedError()
+
+  def test_purge_unused( self ):
+    raise NotImplementedError()
 
   def login( self ):
     result = self.http_post( "/users/login", dict(

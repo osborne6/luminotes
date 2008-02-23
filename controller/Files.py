@@ -56,7 +56,7 @@ class Upload_file( object ):
   File-like object for storing file uploads.
   """
   def __init__( self, file_id, filename, content_length ):
-    self.__file = file( self.make_server_filename( file_id ), "w+" )
+    self.__file = self.open_file( file_id, "w+" )
     self.__file_id = file_id
     self.__filename = filename
     self.__content_length = content_length
@@ -94,7 +94,7 @@ class Upload_file( object ):
 
   def delete( self ):
     self.__file.close()
-    os.remove( self.make_server_filename( self.__file_id ) )
+    self.delete_file( self.__file_id )
 
   def wait_for_complete( self ):
     self.__complete.wait( timeout = cherrypy.server.socket_timeout )
@@ -102,6 +102,16 @@ class Upload_file( object ):
   @staticmethod
   def make_server_filename( file_id ):
     return u"files/%s" % file_id
+
+  @staticmethod
+  def open_file( file_id, mode = None ):
+    if mode:
+      return file( Upload_file.make_server_filename( file_id ), mode )
+    return file( Upload_file.make_server_filename( file_id ) )
+
+  @staticmethod
+  def delete_file( file_id ):
+    return os.remove( Upload_file.make_server_filename( file_id ) )
 
   filename = property( lambda self: self.__filename )
 
@@ -251,7 +261,7 @@ class Files( object ):
 
     def stream():
       CHUNK_SIZE = 8192
-      local_file = file( Upload_file.make_server_filename( file_id ) )
+      local_file = Upload_file.open_file( file_id )
 
       while True:
         data = local_file.read( CHUNK_SIZE )
@@ -493,7 +503,7 @@ class Files( object ):
     user = self.__users.update_storage( user_id, commit = False )
     self.__database.commit()
 
-    os.remove( Upload_file.make_server_filename( file_id ) )
+    Upload_file.delete_file( file_id )
 
     return dict(
       storage_bytes = user.storage_bytes,
@@ -555,6 +565,6 @@ class Files( object ):
     # filesystem
     for ( file_id, db_file ) in files_to_delete.items():
       self.__database.execute( db_file.sql_delete(), commit = False )
-      os.remove( Upload_file.make_server_filename( file_id ) )
+      Upload_file.delete_file( file_id )
 
     self.__database.commit()
