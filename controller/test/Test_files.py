@@ -1,5 +1,4 @@
 import types
-import cherrypy
 from StringIO import StringIO
 from Test_controller import Test_controller
 from model.Notebook import Notebook
@@ -27,16 +26,17 @@ class Test_files( Test_controller ):
     self.user2 = None
     self.anonymous = None
     self.session_id = None
+    self.file_id = "22"
     self.filename = "file.png"
     self.file_data = "foobar\x07`-=[]\;',./~!@#$%^&*()_+{}|:\"<>?" * 100
     self.content_type = "image/png"
 
     # make Upload_file deal in fake files rather than actually using the filesystem
-    Upload_file.fake_files = {} # map of filename to fake file object
+    Upload_file.fake_files = {} # map of file_id to fake file object
 
     @staticmethod
     def open_file( file_id, mode = None ):
-      fake_file = Upload_file.fake_files.get( Upload_file.make_server_filename( file_id ) )
+      fake_file = Upload_file.fake_files.get( file_id )
 
       if fake_file:
         return fake_file
@@ -50,12 +50,12 @@ class Test_files( Test_controller ):
 
     @staticmethod
     def delete_file( file_id ):
-      fake_file = Upload_file.fake_files.get( Upload_file.make_server_filename( file_id ) )
+      fake_file = Upload_file.fake_files.get( file_id )
 
       if fake_file is None:
         raise IOError()
 
-      del( fake_file[ file_id ] )
+      del( Upload_file.fake_files[ file_id ] )
 
     Upload_file.open_file = open_file
     Upload_file.delete_file = delete_file
@@ -118,10 +118,9 @@ class Test_files( Test_controller ):
 
   def test_upload( self ):
     self.login()
-    file_id = "22"
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % file_id,
+      "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -136,7 +135,7 @@ class Test_files( Test_controller ):
     assert u"script" not in result
 
     # assert that the file metadata was actually stored in the database
-    db_file = self.database.load( File, file_id )
+    db_file = self.database.load( File, self.file_id )
     assert db_file
     assert db_file.notebook_id == self.notebook.object_id
     assert db_file.note_id == self.note.object_id
@@ -145,37 +144,38 @@ class Test_files( Test_controller ):
     assert db_file.content_type == self.content_type
 
     # assert that the file data was actually stored
-    assert Upload_file.open_file( file_id ).read() == self.file_data
+    assert Upload_file.open_file( self.file_id ).read() == self.file_data
 
   def test_upload_without_login( self ):
     result = self.http_upload(
-      "/files/upload",
+      "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
       ),
       filename = self.filename,
       file_data = self.file_data,
-      session_id = self.session_id,
+      content_type = self.content_type,
     )
 
-    assert u"access" in result.get( u"body" )[ 0 ]
+    assert u"access" in result.get( u"script" )
 
   def test_upload_without_access( self ):
     self.login2()
 
     result = self.http_upload(
-      "/files/upload",
+      "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
       ),
       filename = self.filename,
       file_data = self.file_data,
-      session_id = self.session_id,
+      content_type = self.content_type,
+      session_id = self.session_id
     )
 
-    assert u"access" in result.get( u"body" )[ 0 ]
+    assert u"access" in result.get( u"script" )
 
   def assert_streaming_error( self, result ):
     gen = result[ u"body" ]

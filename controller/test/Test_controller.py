@@ -342,8 +342,15 @@ class Test_controller( object ):
     self.database = Stub_database()
     self.settings = {
       u"global": {
+        u"server.environment": "production",
         u"session_filter.on": True,
         u"session_filter.storage_type": u"ram",
+        u"session_filter.locking": "implicit",
+        u"encoding_filter.on": True,
+        u"encoding_filter.encoding": "utf-8",
+        u"decoding_filter.on": True,
+        u"decoding_filter.encoding": "utf-8",
+        u"server.log_to_screen": False,
         u"luminotes.http_url" : u"http://luminotes.com",
         u"luminotes.https_url" : u"https://luminotes.com",
         u"luminotes.http_proxy_ip" : u"127.0.0.1",
@@ -377,8 +384,7 @@ class Test_controller( object ):
     }
 
     cherrypy.root = Root( self.database, self.settings, suppress_exceptions = True )
-    cherrypy.config.update( Common.settings )
-    cherrypy.config.update( { u"server.log_to_screen": False } )
+    cherrypy.config.update( self.settings )
     cherrypy.server.start( init_only = True, server_class = None )
 
     # since we only want to test the controller, use the stub view for all exposed methods

@@ -152,7 +152,10 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
 
     # release the cherrypy session lock so that the user can issue other commands while the file is
     # uploading
-    cherrypy.session.release_lock()
+    try:
+      cherrypy.session.release_lock()
+    except KeyError:
+      pass
 
     # pluck the file id out of the query string. it would be preferable to grab it out of parsed
     # form variables instead, but at this point in the processing, all the form variables might not
@@ -246,7 +249,10 @@ class Files( object ):
     """
     # release the session lock before beginning to stream the download. otherwise, if the
     # upload is cancelled before it's done, the lock won't be released
-    cherrypy.session.release_lock()
+    try:
+      cherrypy.session.release_lock()
+    except KeyError:
+      pass
 
     db_file = self.__database.load( File, file_id )
 
@@ -398,7 +404,10 @@ class Files( object ):
     """
     # release the session lock before beginning to stream the upload report. otherwise, if the
     # upload is cancelled before it's done, the lock won't be released
-    cherrypy.session.release_lock()
+    try:
+      cherrypy.session.release_lock()
+    except KeyError:
+      pass
 
     # poll until the file is uploading (as determined by current_uploads) or completely uploaded (in
     # the database with a filename)

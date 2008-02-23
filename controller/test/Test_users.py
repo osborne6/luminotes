@@ -165,7 +165,7 @@ class Test_users( Test_controller ):
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
   def test_current_after_signup_with_invite_id( self ):
     # trick send_invites() into using a fake SMTP server
@@ -242,7 +242,7 @@ class Test_users( Test_controller ):
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
   def test_signup_with_different_passwords( self ):
     result = self.http_post( "/users/signup", dict(
@@ -305,7 +305,7 @@ class Test_users( Test_controller ):
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
   def test_current_after_demo_twice( self ):
     result = self.http_post( "/users/demo", dict() )
@@ -401,7 +401,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
   def test_current_anonymous( self ):
     result = cherrypy.root.users.current( self.anonymous.object_id )
@@ -424,7 +424,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
   def test_current_after_login_with_invite_id( self ):
     # trick send_invites() into using a fake SMTP server
@@ -613,7 +613,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 1
@@ -3252,7 +3252,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"extra super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 31337
+    assert rate_plan[ u"storage_quota_bytes" ] == 31337 * 10
 
     assert result[ u"conversion" ] == u"subscribe_1"
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
@@ -3291,7 +3291,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 1
@@ -3329,7 +3329,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 1
@@ -3367,7 +3367,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 1
@@ -3403,7 +3403,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 1337
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
     assert len( result[ u"startup_notes" ] ) == 1
