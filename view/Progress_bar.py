@@ -55,6 +55,8 @@ def stream_progress( uploading_file, filename, fraction_reported ):
       received_bytes = uploading_file.wait_for_total_received_bytes()
       fraction_done = float( received_bytes ) / float( uploading_file.content_length )
 
+      if fraction_done > 1.0: fraction_done = 1.0
+
       if fraction_done == 1.0 or fraction_done > fraction_reported + tick_increment:
         fraction_reported = fraction_done
         yield '<script type="text/javascript">tick(%s);</script>' % fraction_reported

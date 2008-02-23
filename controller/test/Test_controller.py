@@ -335,6 +335,12 @@ class Test_controller( object ):
     File.sql_load_note_files = staticmethod( lambda note_id:
       lambda database: sql_load_note_files( note_id, database ) )
 
+    def sql_delete( self, database ):
+      del( database.objects[ self.object_id ] )
+
+    File.sql_delete = lambda self: \
+      lambda database: sql_delete( self, database )
+
 
   def setUp( self ):
     from controller.Root import Root
@@ -367,7 +373,7 @@ class Test_controller( object ):
           },
           {
             u"name": "extra super",
-            u"storage_quota_bytes": 31337 * 10,
+            u"storage_quota_bytes": 31337 * 1000,
             u"notebook_collaboration": True,
             u"fee": 9.00,
             u"button": u"[or here user %s!] button",

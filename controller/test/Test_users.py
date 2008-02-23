@@ -3252,7 +3252,7 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
     assert rate_plan[ u"name" ] == u"extra super"
-    assert rate_plan[ u"storage_quota_bytes" ] == 31337 * 10
+    assert rate_plan[ u"storage_quota_bytes" ] == 31337 * 1000
 
     assert result[ u"conversion" ] == u"subscribe_1"
     assert result[ u"notebook" ].object_id == self.anon_notebook.object_id

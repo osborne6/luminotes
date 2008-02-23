@@ -90,6 +90,9 @@ class Upload_file( object ):
 
   def close( self ):
     self.__file.close()
+    self.complete()
+
+  def complete( self ):
     self.__complete.set()
 
   def delete( self ):
@@ -342,12 +345,12 @@ class Files( object ):
     """
     global current_uploads, current_uploads_lock
 
-    uploaded_file = current_uploads.get( file_id )
-    if not uploaded_file:
-      return dict( script = general_error_script % u"Please select a file to upload." )
-
     current_uploads_lock.acquire()
     try:
+      uploaded_file = current_uploads.get( file_id )
+      if not uploaded_file:
+        return dict( script = general_error_script % u"Please select a file to upload." )
+
       del( current_uploads[ file_id ] )
     finally:
       current_uploads_lock.release()
@@ -402,6 +405,8 @@ class Files( object ):
     @rtype: unicode
     @return: streaming HTML progress bar
     """
+    global current_uploads
+
     # release the session lock before beginning to stream the upload report. otherwise, if the
     # upload is cancelled before it's done, the lock won't be released
     try:
