@@ -33,7 +33,7 @@ class Test_files( Test_controller ):
     self.file_id = "22"
     self.filename = "file.png"
     self.new_filename = "newfile.png"
-    self.file_data = "foobar\x07`-=[]\;',./~!@#$%^&*()_+{}|:\"<>?" * 100
+    self.file_data = "foobar\x07`-=[]\;',./ ~!@#$%^&*()_+{}|:\"<>?" * 100
     self.weird_filename = self.file_data + ".png"
     self.content_type = "image/png"
     self.upload_thread = None
@@ -139,7 +139,7 @@ class Test_files( Test_controller ):
     headers = result[ u"headers" ]
     assert headers
     assert headers[ u"Content-Type" ] == self.content_type
-    assert headers[ u"Content-Disposition" ] == u"attachment; filename=%s" % self.filename
+    assert headers[ u"Content-Disposition" ] == u'attachment; filename="%s"' % self.filename
 
     gen = result[ u"body" ]
     assert isinstance( gen, types.GeneratorType )

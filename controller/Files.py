@@ -264,7 +264,7 @@ class Files( object ):
     db_file = self.__database.load( File, file_id )
 
     cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
-    cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=%s" % db_file.filename
+    cherrypy.response.headerMap[ u"Content-Disposition" ] = u'attachment; filename="%s"' % db_file.filename.replace( '"', r"\"" )
     cherrypy.response.headerMap[ u"Content-Length" ] = db_file.size_bytes
 
     def stream():
