@@ -67,6 +67,9 @@ settings = {
     "stream_response": True,
     "encoding_filter.on": False,
   },
+  "/files/upload": {
+    "server.max_request_body_size": 505 * MEGABYTE, # maximum upload size
+  },
   "/files/progress": {
     "stream_response": True
   },

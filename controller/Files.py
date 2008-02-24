@@ -148,7 +148,6 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
   def make_file( self, binary = None ):
     global current_uploads, current_uploads_lock
 
-    cherrypy.server.max_request_body_size = 0 # remove CherryPy default file size limit of 100 MB
     cherrypy.response.timeout = 3600 * 2 # increase upload timeout to 2 hours (default is 5 min)
     cherrypy.server.socket_timeout = 60 # increase socket timeout to one minute (default is 10 sec)
     DASHES_AND_NEWLINES = 6 # four dashes and two newlines
