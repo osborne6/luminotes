@@ -74,7 +74,7 @@ def stream_progress( uploading_file, filename, fraction_reported ):
   yield \
     u"""
     <script type="text/javascript">
-    withDocument( window.parent.document, function () { getElement( "upload_frame" ).pulldown.upload_complete(); } );
+    withDocument( window.parent.document, function () { var frame = getElement( 'upload_frame' ); if ( frame && frame.pulldown ) frame.pulldown.upload_complete(); } );
     </script>
     </body>
     </html>
@@ -83,7 +83,7 @@ def stream_progress( uploading_file, filename, fraction_reported ):
 
 general_error_script = \
   """
-  withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.cancel_due_to_error( "%s" ); } );
+  withDocument( window.parent.document, function () { var frame = getElement( 'upload_frame' ); if ( frame && frame.pulldown ) frame.pulldown.cancel_due_to_error( "%s" ); } );
   """
 
 
