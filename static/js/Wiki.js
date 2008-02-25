@@ -2344,7 +2344,7 @@ Upload_pulldown.prototype.upload_complete = function () {
   this.link.href = "/files/download?file_id=" + this.file_id
 
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
-  this.shutdown( true );
+  this.shutdown();
 }
 
 Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
@@ -2352,27 +2352,36 @@ Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
 }
 
 Upload_pulldown.prototype.cancel_due_to_click = function () {
+  this.uploading = false;
   this.wiki.display_message( "The file upload has been cancelled." )
-  this.shutdown( true );
+  this.shutdown();
 }
 
 Upload_pulldown.prototype.cancel_due_to_quota = function () {
+  this.uploading = false;
+  this.shutdown();
+
   this.wiki.display_error(
     "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
     [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
   );
-
-  this.shutdown( true );
 }
 
 Upload_pulldown.prototype.cancel_due_to_error = function ( message ) {
+  this.uploading = false;
   this.wiki.display_error( message )
-  this.shutdown( true );
+  this.shutdown();
 }
 
-Upload_pulldown.prototype.shutdown = function ( force ) {
-  if ( this.uploading && !force )
+Upload_pulldown.prototype.shutdown = function () {
+  if ( this.uploading )
     return;
+
+  // in Internet Explorer, the upload won't actually cancel without an explicit Stop command
+  if ( !this.iframe.contentDocument && this.iframe.contentWindow ) {
+    this.iframe.contentWindow.document.execCommand( 'Stop' );
+    this.progress_iframe.contentWindow.document.execCommand( 'Stop' );
+  }
 
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
@@ -2450,7 +2459,7 @@ File_link_pulldown.prototype.filename_field_focused = function ( event ) {
 File_link_pulldown.prototype.filename_field_changed = function ( event ) {
   // if the filename is actually unchanged, then bail
   var filename = strip( this.filename_field.value );
-  if ( filename == this.previous_filename )
+  if ( filename == "" || filename == this.previous_filename )
     return;
 
   var title = link_title( this.link );

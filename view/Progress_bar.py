@@ -35,7 +35,7 @@ def stream_progress( uploading_file, filename, fraction_reported ):
     %s
     </div></td>
     <td></td>
-    <td><span id="status"></span></td>
+    <td><span id="status">0%%</span></td>
     <td></td>
     <td><input type="submit" id="cancel_button" class="button" value="cancel" onclick="withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.cancel_due_to_click(); } );" /></td>
     </tr></table>
