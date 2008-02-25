@@ -22,7 +22,11 @@ def stream_progress( uploading_file, filename, fraction_reported ):
     <body>
     """
 
+  FILENAME_TRUNCATION_WIDTH = 40
   base_filename = filename.split( u"/" )[ -1 ].split( u"\\" )[ -1 ]
+  if len( base_filename ) > FILENAME_TRUNCATION_WIDTH:
+    base_filename = base_filename[ : FILENAME_TRUNCATION_WIDTH ] + u"..."
+
   yield \
     u"""
     <div class="field_label">uploading %s: </div>
