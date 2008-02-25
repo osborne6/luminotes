@@ -89,7 +89,7 @@ general_error_script = \
 
 quota_error_script = \
   """
-  withDocument( window.parent.document, function () { getElement( 'upload_frame' ).pulldown.cancel_due_to_quota(); } );
+  withDocument( window.parent.document, function () { var frame = getElement( 'upload_frame' ); if ( frame && frame.pulldown ) frame.pulldown.cancel_due_to_quota(); } );
   """
 
 
