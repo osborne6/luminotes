@@ -134,17 +134,26 @@ class Upgrade_note( Span ):
       H3( u"no questions asked money-back guarantee" ),
       P(
         u"""
-        If you upgrade your Luminotes account and find that it's not meeting your
-        needs, then simply request a refund within 30 days and your money will be
-        returned in full without any questions.
-        """
+        If you upgrade your Luminotes account and later find that it's not meeting
+        your needs, you can cancel online anytime. You won't have to send email or
+        talk to anyone in a call center. If you do cancel, you keep all of your wiki
+        notebooks and simply return to a free account.
+        """,
       ),
       P(
         u"""
-        And no matter how long you've been using an upgraded Luminotes account, you
-        can cancel online anytime. You won't have to send email or talk to anyone in a
-        call center. If you do cancel, you keep all of your wiki notebooks and simply
-        return to a free account.
+        Additionally, if you are unsatisfied for any reason, you have the option of
+        requesting a refund within 60 days of upgrading your account. You money will
+        be returned in full without any questions.
+        """
+      ),
+      H3( u"absolutely no lock-in" ),
+      P(
+        u"""
+        You can download the entire contents of your wiki at any time with a single
+        click, so you can rest assured that your notes won't be locked away within
+        Luminotes if you ever decide to cancel. You can take all of your data and
+        import it into any program that reads HTML. After all, it's your wiki.
         """,
       ),
       P(
