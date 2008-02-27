@@ -54,7 +54,7 @@ class Upgrade_note( Span ):
           border = u"1",
           id = u"upgrade_table",
         ),
-        ( not user ) and P(
+        ( not user or not user.username ) and P(
           u"To upgrade your Luminotes account, please",
           A( u"login", href = https_url + u"/login?after_login=/upgrade", target = u"_top" ),
           u"first!",
@@ -63,7 +63,7 @@ class Upgrade_note( Span ):
         id = u"upgrade_table_area",
       ),
 
-      user and P(
+      user and user.username and P(
         u"You're currently subscribed to Luminotes %s." % 
         rate_plans[ user.rate_plan ][ u"name" ].capitalize(),
         ( user.rate_plan > 0 ) and unsubscribe_button or None,
@@ -180,7 +180,7 @@ class Upgrade_note( Span ):
             class_ = u"price_text",
             separator = u"",
           ),
-          user and user.rate_plan != index and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None,
+          user and user.username and user.rate_plan != index and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None,
         ) or None,
         class_ = u"plan_name",
       ) for ( index, plan ) in enumerate( rate_plans ) ],
