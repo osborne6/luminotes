@@ -151,7 +151,7 @@ class Root( object ):
       referer = cherrypy.request.headerMap.get( u"Referer" )
       if not referer:
         user = self.__database.load( User, user_id )
-        if user:
+        if user and user.username:
           first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
           if first_notebook:
             return dict( redirect = u"%s/notebooks/%s" % ( https_url, first_notebook.object_id ) )
