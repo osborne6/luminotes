@@ -143,7 +143,7 @@ class Upgrade_note( Span ):
       P(
         u"""
         Additionally, if you are unsatisfied for any reason, you have the option of
-        requesting a refund within 60 days of upgrading your account. You money will
+        requesting a refund within 60 days of upgrading your account. Your money will
         be returned in full without any questions.
         """
       ),
