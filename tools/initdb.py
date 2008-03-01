@@ -12,9 +12,6 @@ from model.User import User
 class Initializer( object ):
   HTML_PATH = u"static/html"
   NOTE_FILES = [ # the second element of the tuple is whether to show the note on startup
-    ( u"navigation.html", True ),
-    ( u"about.html", True ),
-    ( u"features.html", True ),
     ( u"sign up.html", False ),
     ( u"faq.html", False ),
     ( u"meet the team.html", False ),

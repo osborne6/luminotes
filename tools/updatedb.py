@@ -13,8 +13,6 @@ from tools.initdb import fix_note_contents
 class Updater( object ):
   HTML_PATH = u"static/html"
   NOTE_FILES = [ # the second element of the tuple is whether to show the note on startup
-    ( u"about.html", True ),
-    ( u"features.html", True ),
     ( u"sign up.html", False ),
     ( u"faq.html", False ),
     ( u"meet the team.html", False ),
@@ -27,9 +25,8 @@ class Updater( object ):
     ( u"take a tour.html", False ),
   ]
 
-  def __init__( self, database, navigation_note_id = None ):
+  def __init__( self, database ):
     self.database = database
-    self.navigation_note_id = navigation_note_id
 
     self.update_main_notebook()
     self.database.commit()
@@ -46,11 +43,6 @@ class Updater( object ):
 
       if note is not None:
         note_ids[ filename ] = note.object_id
-
-    # update the navigation note if its id was given
-    if self.navigation_note_id:
-      note = self.database.load( Note, self.navigation_note_id )
-      self.update_note( "navigation.html", True, main_notebook, note_ids, note )
 
     # update all of the notes in the main notebook
     for ( filename, startup ) in self.NOTE_FILES:
@@ -79,7 +71,7 @@ class Updater( object ):
 
 def main( args ):
   database = Database()
-  initializer = Updater( database, args and args[ 0 ] or None )
+  initializer = Updater( database )
 
 
 if __name__ == "__main__":
