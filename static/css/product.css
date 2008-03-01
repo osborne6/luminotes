@@ -1,0 +1,135 @@
+.header {
+  background-color: #b0d0ff;
+  height: 60px;
+  margin-left: 0;
+  margin-right: 0;
+  border-bottom: 1px solid #999999;
+}
+
+.luminotes_title {
+  float: left;
+}
+
+.header_links {
+  text-align: right;
+  font-size: 85%;
+  padding-top: 5px;
+}
+
+.header_user_links {
+  text-align: right;
+  font-size: 85%;
+  padding-top: 10px;
+}
+
+.hook_area {
+  padding-top: 1.5em;
+  padding-bottom: 1.5em;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 1px solid #cccccc;
+}
+
+.wide_center_area {
+  width: 840px;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.center_area {
+  width: 30em;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.explanation {
+  width: 400px;
+  min-height: 300px;
+  text-align: center;
+  margin-right: 20px;
+}
+
+.hook_bullet_list {
+  list-style-type: none;
+}
+
+.hook_action_area {
+  background-color: #ffff99;
+  font-weight: bold;
+  padding: 1em;
+}
+
+.hook_action {
+  font-size: 105%;
+}
+
+.hook_action_or {
+  font-size: 85%;
+}
+
+.screenshot {
+  float: right;
+  width: 400px;
+  height: 300px;
+  text-align: center;
+  margin-left: 20px;
+}
+
+.heading {
+  padding: 0.5em;
+  margin-top: 0.5em;
+  text-align: center;
+}
+
+.bold_link {
+  font-weight: bold;
+}
+
+.what_is_luminotes_area {
+  float: right;
+  width: 400px;
+  margin-left: 20px;
+}
+
+.what_is_luminotes_text {
+  text-align: left;
+}
+
+.quotes_area {
+  width: 400px;
+}
+
+.quote {
+  text-align: left; 
+  margin-bottom: 2em;
+}
+
+.quote_title {
+  font-size: 120%;
+  margin-bottom: 0em;
+}
+
+.quote_text {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.quote_signature {
+  font-size: 85%;
+  font-style: italic;
+  margin-top: 0em;
+  color: #444444;
+}
+
+.footer {
+  background-color: #b0d0ff;
+  height: 2em;
+  margin-left: 0;
+  margin-right: 0;
+  border-top: 1px solid #999999;
+}
+
+.footer_links {
+  font-size: 85%;
+  padding-top: 0.5em;
+}

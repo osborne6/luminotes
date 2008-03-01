@@ -91,6 +91,10 @@ class Main_page( Page ):
     Page.__init__(
       self,
       title,
+      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ) or None,
       Input( type = u"hidden", name = u"storage_bytes", id = u"storage_bytes", value = user.storage_bytes ),
       Input( type = u"hidden", name = u"rate_plan", id = u"rate_plan", value = json( rate_plan ) ),
       Input( type = u"hidden", name = u"notebooks", id = u"notebooks", value = json( notebooks ) ),
@@ -125,7 +129,7 @@ class Main_page( Page ):
               id = u"search_and_user_area",
             ),
             Div(
-              A( Img( src = u"/static/images/luminotes_title.png", width = u"206", height = u"69" ), href = u"/", title = u"Luminotes personal wiki notebook" ),
+              A( Img( src = u"/static/images/luminotes_title_full.png", width = u"206", height = u"69" ), href = u"/", title = u"Luminotes personal wiki notebook" ),
               id = u"title_area",
             ),
             id = u"top_area",

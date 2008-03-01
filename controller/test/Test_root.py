@@ -9,7 +9,7 @@ class Test_root( Test_controller ):
   def setUp( self ):
     Test_controller.setUp( self )
 
-    self.notebook = Notebook.create( self.database.next_id( Notebook ), u"my notebook" )
+    self.notebook = Notebook.create( self.database.next_id( Notebook ), u"my notebook", trash_id = u"foo" )
     self.database.save( self.notebook )
 
     self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes" )
@@ -19,6 +19,12 @@ class Test_root( Test_controller ):
       notebook_id = self.anon_notebook.object_id,
     )
     self.database.save( self.anon_note )
+
+    self.login_note = Note.create(
+      self.database.next_id( Note ), u"<h3>login</h3>",
+      notebook_id = self.anon_notebook.object_id,
+    )
+    self.database.save( self.login_note )
 
     self.blog_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes blog" )
     self.database.save( self.blog_notebook )
@@ -65,9 +71,17 @@ class Test_root( Test_controller ):
     result = self.http_get( "/" )
 
     assert result
-    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert result.get( u"redirect" ) is None
+    assert result[ u"user" ].username == u"anonymous"
+    assert len( result[ u"notebooks" ] ) == 4
+    assert result[ u"first_notebook" ] == None
+    assert result[ u"login_url" ] == u"https://luminotes.com/notebooks/%s?note_id=%s" % (
+      self.anon_notebook.object_id, self.login_note.object_id,
+    )
+    assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
+    assert result[ u"rate_plan" ]
 
-  def test_index_after_login( self ):
+  def test_index_after_login_without_referer( self ):
     self.login()
 
     result = self.http_get(
@@ -75,10 +89,22 @@ class Test_root( Test_controller ):
       session_id = self.session_id,
     )
 
-    assert result.get( u"redirect" )
-    assert result.get( u"redirect" ).startswith( self.settings[ u"global" ][ u"luminotes.https_url" ] )
+    assert result
+    assert result.get( u"redirect" ) == u"https://luminotes.com/notebooks/%s" % self.notebook.object_id
 
-  def test_index_with_https_after_login( self ):
+  def test_index_after_login_with_referer( self ):
+    self.login()
+
+    result = self.http_get(
+      "/",
+      headers = [ ( u"Referer", "http://whee" ) ],
+      session_id = self.session_id,
+    )
+
+    assert result
+    assert result.get( u"redirect" ) == u"https://luminotes.com/"
+
+  def test_index_with_https_after_login_without_referer( self ):
     self.login()
 
     result = self.http_get(
@@ -88,8 +114,26 @@ class Test_root( Test_controller ):
     )
 
     assert result
+    assert result.get( u"redirect" ) == u"https://luminotes.com/notebooks/%s" % self.notebook.object_id
+
+  def test_index_with_https_after_login_with_referer( self ):
+    self.login()
+
+    result = self.http_get(
+      "/",
+      session_id = self.session_id,
+      headers = [ ( u"Referer", "http://whee" ) ],
+      pretend_https = True,
+    )
+
+    assert result
     assert result.get( u"redirect" ) is None
-    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"first_notebook" ].object_id == self.notebook.object_id
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
+    assert result[ u"rate_plan" ]
 
   def test_default( self ):
     result = self.http_get(

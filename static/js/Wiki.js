@@ -76,11 +76,12 @@ function Wiki( invoker ) {
   }
 
   var self = this;
+  var top_window = window;
   var logout_link = getElement( "logout_link" );
   if ( logout_link ) {
     connect( "logout_link", "onclick", function ( event ) {
       self.save_editor( null, false, function () {
-        self.invoker.invoke( "/users/logout", "POST" );
+        top_window.location = "/users/logout";
       } );
       event.stop();
     } );

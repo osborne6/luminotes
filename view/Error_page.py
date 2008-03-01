@@ -5,7 +5,7 @@ from Tags import Div, H2, P, A, Ul, Li, Strong, Noscript, Img
 class Error_page( Page ):
   def __init__( self, support_email, message = None ):
     header_image = Div(
-      A( Img( src = u"/static/images/luminotes_title.png", width = u"206", height = u"69" ), href = u"/", title = u"Luminotes personal wiki notebook" ),
+      A( Img( src = u"/static/images/luminotes_title_full.png", width = u"206", height = u"69" ), href = u"/", alt = u"Luminotes personal wiki notebook" ),
       class_ = u"error_header",
     )
 
@@ -20,7 +20,6 @@ class Error_page( Page ):
           P( message ),
           class_ = u"error_box",
         ),
-        include_js = False,
       )
       return
 
@@ -57,5 +56,4 @@ class Error_page( Page ):
         ),
         class_ = u"error_box",
       ),
-      include_js = False,
     )

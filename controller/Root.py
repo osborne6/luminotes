@@ -11,6 +11,7 @@ from model.Note import Note
 from model.Notebook import Notebook
 from model.User import User
 from view.Main_page import Main_page
+from view.Product_page import Product_page
 from view.Notebook_rss import Notebook_rss
 from view.Upgrade_note import Upgrade_note
 from view.Json import Json
@@ -132,7 +133,7 @@ class Root( object ):
       redirect = u"/users/redeem_invite/%s" % invite_id,
     )
 
-  @expose( view = Main_page )
+  @expose( view = Product_page )
   @strongly_expire
   @grab_user_id
   @validate(
@@ -158,12 +159,14 @@ class Root( object ):
       
       # if the user is logged in and not using https, then redirect to the https version of the page (if available)
       if https_url and cherrypy.request.remote_addr != https_proxy_ip:
-        return dict( redirect = https_url )
+        return dict( redirect = u"%s/" % https_url )
 
     result = self.__users.current( user_id )
-    main_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes" ]
-
-    result.update( self.__notebooks.contents( main_notebooks[ 0 ].object_id, user_id = user_id ) )
+    parents = [ notebook for notebook in result[ u"notebooks" ] if notebook.trash_id and not notebook.deleted ]
+    if len( parents ) > 0:
+      result[ "first_notebook" ] = parents[ 0 ]
+    else:
+      result[ "first_notebook" ] = None
 
     return result
 

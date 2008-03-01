@@ -402,13 +402,13 @@ class Users( object ):
       authenticated = user,
     )
 
-  @expose( view = Json )
+  @expose()
   @update_auth
   def logout( self ):
     """
     Deauthenticate the user and log them out of their current session.
 
-    @rtype: json dict
+    @rtype: dict
     @return: { 'redirect': url, 'deauthenticated': True }
     """
     return dict(
@@ -463,7 +463,7 @@ class Users( object ):
       user = user,
       notebooks = notebooks + anon_notebooks,
       login_url = login_url,
-      logout_url = self.__https_url + u"/",
+      logout_url = self.__https_url + u"/users/logout",
       rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},
     )
 

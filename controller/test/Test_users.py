@@ -161,7 +161,7 @@ class Test_users( Test_controller ):
     assert notebook.owner == False
 
     assert result.get( u"login_url" ) is None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
@@ -238,7 +238,7 @@ class Test_users( Test_controller ):
     assert notebook.owner == False
 
     assert result.get( u"login_url" ) is None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
@@ -301,7 +301,7 @@ class Test_users( Test_controller ):
     assert notebook.owner == False
 
     assert result.get( u"login_url" ) is None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
@@ -396,7 +396,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 4 ].read_write == False
     assert result[ u"notebooks" ][ 4 ].owner == False
     assert result[ u"login_url" ] is None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -419,7 +419,7 @@ class Test_users( Test_controller ):
       self.anon_notebook.object_id,
       login_note.object_id,
     )
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -608,7 +608,7 @@ class Test_users( Test_controller ):
       self.anon_notebook.object_id,
       login_note.object_id,
     )
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -3247,7 +3247,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].owner == True
 
     assert result[ u"login_url" ] == None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -3286,7 +3286,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].owner == True
 
     assert result[ u"login_url" ] == None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -3324,7 +3324,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].owner == True
 
     assert result[ u"login_url" ] == None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -3362,7 +3362,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].owner == True
 
     assert result[ u"login_url" ] == None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
@@ -3398,7 +3398,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].owner == True
 
     assert result[ u"login_url" ] == None
-    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/"
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan
