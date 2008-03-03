@@ -1534,6 +1534,8 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   else
     appendChildNodes( "notes", div );
 
+  new ScrollTo( div );
+
   return div;
 }
 
@@ -1571,6 +1573,8 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
     insertSiblingNodesAfter( this.focused_editor.iframe, div )
   else
     appendChildNodes( "notes", div );
+
+  new ScrollTo( div );
 
   return div;
 }
