@@ -196,6 +196,26 @@ class Product_page( Page ):
             Div(
               u'"',
               Span(
+                u"Marvelous! Simply marvelous!",
+                class_ = u"quote_title",
+              ),
+              u"""
+              Very simple to use, and I can access it from any computer. Great idea!"
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"-Lydia Newkirk",
+              class_ = u"quote_signature",
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
                 u"I just wanted to thank you for the great work with Luminotes!",
                 class_ = u"quote_title",
               ),
