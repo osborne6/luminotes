@@ -1,3 +1,8 @@
+1.2.2: March ?, 2008
+ * Wrote a database reaper script to delete unused notes, notebooks, etc.
+ * Added some database indices to improve select performance.
+ * Now scrolling the page vertically to show opened errors and messages.
+
 1.2.1: February 29, 2008
  * Updated the front page of the site to look nicer and better explain things.
 
