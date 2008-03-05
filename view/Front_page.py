@@ -10,6 +10,7 @@ class Front_page( Product_page ):
       first_notebook,
       login_url,
       logout_url,
+      u"home", # note title
 
       Div(
         Div(

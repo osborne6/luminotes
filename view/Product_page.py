@@ -3,7 +3,12 @@ from Tags import Link, Div, Img, A, Span
 
 
 class Product_page( Page ):
-  def __init__( self, user, first_notebook, login_url, logout_url, *nodes ):
+  def __init__( self, user, first_notebook, login_url, logout_url, note_title, *nodes ):
+    title_image = Img(
+      src ="/static/images/luminotes_title.png",
+      class_ = u"luminotes_title", width = u"193", height = u"60",
+      alt = u"Luminotes",
+    )
     Page.__init__(
       self,
       None, # use the default title
@@ -11,11 +16,7 @@ class Product_page( Page ):
 
       Div(
         Div(
-          Img(
-            src ="/static/images/luminotes_title.png",
-            class_ = u"luminotes_title", width = u"193", height = u"60",
-            alt = u"Luminotes",
-          ),
+          ( note_title == u"home" ) and title_image or A( title_image, href = u"/" ),   
           ( login_url and user.username == u"anonymous" ) and Div(
             A( u"sign up", href = u"/sign_up", class_ = u"bold_link" ), u" | ",
             A(
@@ -60,16 +61,16 @@ class Product_page( Page ):
             class_ = u"header_user_links",
           ),
           Div(
-            Span( u"home", class_ = u"bold_link" ), u" | ",
-            A( u"tour", href = u"/take_a_tour" ), u" | ",
-            A( u"demo", href = u"/users/demo" ), u" | ",
-            A( u"pricing", href = u"/upgrade" ), u" | ",
-            A( u"faq", href = u"/faq" ), u" | ",
-            A( u"help", href = u"/guide" ), u" | ",
-            A( u"contact", href = u"/contact_info" ), u" | ",
-            A( u"team", href = u"/meet_the_team" ), u" | ",
-            A( u"blog", href = u"/blog" ), u" | ",
-            A( u"privacy", href = u"/privacy" ),
+            ( note_title == u"home" ) and Span( u"home", class_ = u"bold_link" ) or A( u"home", href = u"/" ), u" | ",
+            ( note_title == u"tour" ) and Span( u"tour", class_ = u"bold_link" ) or A( u"tour", href = u"/take_a_tour" ), u" | ",
+            ( note_title == u"demo" ) and Span( u"demo", class_ = u"bold_link" ) or A( u"demo", href = u"/users/demo" ), u" | ",
+            ( note_title == u"upgrade" ) and Span( u"upgrade", class_ = u"bold_link" ) or A( u"pricing", href = u"/upgrade" ), u" | ",
+            ( note_title == u"faq" ) and Span( u"faq", class_ = u"bold_link" ) or A( u"faq", href = u"/faq" ), u" | ",
+            ( note_title == u"guide" ) and Span( u"guide", class_ = u"bold_link" ) or A( u"help", href = u"/guide" ), u" | ",
+            ( note_title == u"contact" ) and Span( u"contact", class_ = u"bold_link" ) or A( u"contact", href = u"/contact_info" ), u" | ",
+            ( note_title == u"team" ) and Span( u"team", class_ = u"bold_link" ) or A( u"team", href = u"/meet_the_team" ), u" | ",
+            ( note_title == u"blog" ) and Span( u"blog", class_ = u"bold_link" ) or A( u"blog", href = u"/blog" ), u" | ",
+            ( note_title == u"privacy" ) and Span( u"privacy", class_ = u"bold_link" ) or A( u"privacy", href = u"/privacy" ),
             class_ = u"header_links",
           ),
           class_ = u"wide_center_area",
