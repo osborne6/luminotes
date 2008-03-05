@@ -11,7 +11,7 @@ from model.Note import Note
 from model.Notebook import Notebook
 from model.User import User
 from view.Main_page import Main_page
-from view.Product_page import Product_page
+from view.Front_page import Front_page
 from view.Notebook_rss import Notebook_rss
 from view.Upgrade_note import Upgrade_note
 from view.Json import Json
@@ -133,7 +133,7 @@ class Root( object ):
       redirect = u"/users/redeem_invite/%s" % invite_id,
     )
 
-  @expose( view = Product_page )
+  @expose( view = Front_page )
   @strongly_expire
   @grab_user_id
   @validate(
