@@ -235,6 +235,13 @@ CREATE INDEX file_note_id_index ON file USING btree (note_id);
 
 
 --
+-- Name: file_notebook_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX file_notebook_id_index ON file USING btree (notebook_id);
+
+
+--
 -- Name: luminotes_user_email_address_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
 --
 
@@ -246,6 +253,13 @@ CREATE INDEX luminotes_user_email_address_index ON luminotes_user USING btree (e
 --
 
 CREATE INDEX luminotes_user_username_index ON luminotes_user USING btree (username);
+
+
+--
+-- Name: note_notebook_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX note_notebook_id_index ON note USING btree (notebook_id);
 
 
 --
