@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, Img, A, P, Table, Td, Li, Span, I
+from Tags import Div, Img, A, P, Table, Tr, Td, Li, Span, I
 
 
 class Front_page( Product_page ):
@@ -63,40 +63,7 @@ class Front_page( Product_page ):
 
       Div(
         Div(
-          Img(
-            src = u"/static/images/what_is_luminotes.png",
-            class_ = u"heading", width = u"214", height = u"29",
-            alt = u"What is Luminotes?",
-          ),
           Div(
-            P(
-              u"""
-              Luminotes is a personal wiki notebook for organizing your notes and ideas.
-              You don't have to use any special markup codes or install any software. You
-              simply start typing.
-              """,
-            ),
-            P(
-              u"""
-              With Luminotes, you deal with several notes all at once on the same web page,
-              so you get a big-picture view of what you're working on and can easily make
-              links from one concept to another.
-              """,
-              A( u"Read more.", href = u"/take_a_tour" ),
-            ),
-            P(
-              u"""
-              Luminotes is open source / free software and licensed under the terms of the
-              GNU GPL.
-              """,
-            ),
-            class_ = u"what_is_luminotes_text",
-          ),
-          class_ = u"what_is_luminotes_area",
-        ),
-
-        Div(
-          P(
             Img(
               src = u"/static/images/quotes.png",
               class_ = u"heading", width = u"253", height = u"31",
@@ -170,6 +137,79 @@ class Front_page( Product_page ):
 
           class_ = u"quotes_area",
         ),
+
+        Div(
+          Img(
+            src = u"/static/images/what_is_luminotes.png",
+            class_ = u"heading", width = u"214", height = u"29",
+            alt = u"What is Luminotes?",
+          ),
+          Div(
+            P(
+              u"""
+              Luminotes is a personal wiki notebook for organizing your notes and ideas.
+              You don't have to use any special markup codes or install any software. You
+              simply start typing.
+              """,
+            ),
+            Table(
+              Tr(
+                Td(
+                  A(
+                    Img( src = u"/static/images/wysiwyg_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
+                    href = u"/static/images/wysiwyg.png",
+                    target = u"_new",
+                  ),
+                  Div( u"Create a wiki visually", class_ = u"thumbnail_caption" ),
+                  Div( u"Make a wiki as easily as writing a document.", class_ = u"thumbnail_caption_detail" ),
+                  class_ = u"thumbnail_cell",
+                ),
+                Td(
+                  A(
+                    Img( src = u"/static/images/big_picture_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
+                    href = u"/static/images/big_picture.png",
+                    target = u"_new",
+                  ),
+                  Div( u"Link your notes together", class_ = u"thumbnail_caption" ),
+                  Div( u"Connect your thoughts with links between notes.", class_ = u"thumbnail_caption_detail" ),
+                  class_ = u"thumbnail_cell",
+                ),
+              ),
+              Tr(
+                Td(
+                  A(
+                    Img( src = u"/static/images/download_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
+                    href = u"/static/images/screenshot.png",
+                    target = u"_new",
+                  ),
+                  Div( u"Take your wiki to go", class_ = u"thumbnail_caption" ),
+                  Div( u"Download your entire wiki with a single click.", class_ = u"thumbnail_caption_detail" ),
+                  class_ = u"thumbnail_cell",
+                ),
+                Td(
+                  A(
+                    Img( src = u"/static/images/share_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
+                    href = u"/static/images/share.png",
+                    target = u"_new",
+                  ),
+                  Div( u"Share your thoughts", class_ = u"thumbnail_caption" ),
+                  Div( u"Invite friends and colleagues to collaborate.", class_ = u"thumbnail_caption_detail" ),
+                  class_ = u"thumbnail_cell",
+                ),
+              ),
+              class_ = u"thumbnail_area",
+            ),
+            P(
+              u"""
+              Luminotes is open source / free software and licensed under the terms of the
+              GNU GPL.
+              """,
+            ),
+            class_ = u"what_is_luminotes_text",
+          ),
+          class_ = u"what_is_luminotes_area",
+        ),
+
         class_ = u"wide_center_area",
       ),
 

@@ -131,7 +131,7 @@
 
 .heading {
   padding: 0.5em;
-  margin-top: 0.5em;
+  margin-top: 1em;
   text-align: center;
 }
 
@@ -140,17 +140,44 @@
 }
 
 .what_is_luminotes_area {
-  float: right;
   width: 400px;
-  margin-left: 20px;
+  margin-bottom: 1em;
 }
 
 .what_is_luminotes_text {
   text-align: left;
 }
 
+.thumbnail {
+  border: 1px solid #999999;
+}
+
+.thumbnail_caption {
+  font-size: 75%;
+  font-weight: bold;
+  margin-top: 0.5em;
+}
+
+.thumbnail_caption_detail {
+  font-size: 75%;
+  margin-top: 0.25em;
+}
+
+.thumbnail_cell {
+  text-align: center;
+  padding: 0.75em 0.5em 0.25em 0.5em;
+  width: 175px;
+}
+
+.thumbnail_area {
+  background-color: #fffece;
+  padding-bottom: 0.5em;
+}
+
 .quotes_area {
+  float: right;
   width: 400px;
+  margin-left: 20px;
 }
 
 .quote {
