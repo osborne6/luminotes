@@ -1,20 +1,24 @@
 import re
 import os
+import sha
 import psycopg2 as psycopg
 from psycopg2.pool import PersistentConnectionPool
 import random
+from model.Persistent import Persistent
 
 
 class Database( object ):
   ID_BITS = 128 # number of bits within an id
   ID_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
-  def __init__( self, connection = None ):
+  def __init__( self, connection = None, cache = None ):
     """
     Create a new database and return it.
 
     @type connection: existing connection object with cursor()/close()/commit() methods, or NoneType
     @param connection: database connection to use (optional, defaults to making a connection pool)
+    @type cache: cmemcache.Client or something with a similar API, or NoneType
+    @param cache: existing memory cache to use (optional, defaults to making a cache)
     @rtype: Database
     @return: newly constructed Database
     """
@@ -32,6 +36,15 @@ class Database( object ):
         50, # maximum connections
         "dbname=luminotes user=luminotes password=%s" % os.getenv( "PGPASSWORD", "dev" ),
       )
+
+    self.__cache = cache
+    if not cache:
+      try:
+        import cmemcache
+        self.__cache = cmemcache.Client( [ "127.0.0.1:11211" ], debug = 0 )
+        print "using memcached"
+      except ImportError:
+        pass
 
   def __get_connection( self ):
     if self.__connection:
@@ -59,6 +72,8 @@ class Database( object ):
 
     if commit:
       connection.commit()
+      if self.__cache:
+        self.__cache.set( obj.cache_key, obj )
 
   def commit( self ):
     self.__get_connection().commit()
@@ -78,9 +93,18 @@ class Database( object ):
     @rtype: Object_type or NoneType
     @return: loaded object, or None if no match
     """
-    return self.select_one( Object_type, Object_type.sql_load( object_id, revision ) )
+    if revision is None and self.__cache: # don't bother caching old revisions
+      obj = self.__cache.get( Persistent.make_cache_key( Object_type, object_id ) )
+      if obj:
+        return obj
 
-  def select_one( self, Object_type, sql_command ):
+    obj = self.select_one( Object_type, Object_type.sql_load( object_id, revision ) )
+    if obj and revision is None and self.__cache:
+      self.__cache.set( obj.cache_key, obj )
+
+    return obj
+
+  def select_one( self, Object_type, sql_command, use_cache = False ):
     """
     Execute the given sql_command and return its results in the form of an object of Object_type,
     or None if there was no match.
@@ -89,9 +113,17 @@ class Database( object ):
     @param Object_type: class of the object to load 
     @type sql_command: unicode
     @param sql_command: SQL command to execute
+    @type use_cache: bool
+    @param use_cache: whether to look for and store objects in the cache
     @rtype: Object_type or NoneType
     @return: loaded object, or None if no match
     """
+    if use_cache and self.__cache:
+      cache_key = sha.new( sql_command ).hexdigest()
+      obj = self.__cache.get( cache_key )
+      if obj:
+        return obj
+
     connection = self.__get_connection()
     cursor = connection.cursor()
 
@@ -102,9 +134,14 @@ class Database( object ):
       return None
 
     if Object_type in ( tuple, list ):
-      return Object_type( row )
+      obj = Object_type( row )
     else:
-      return Object_type( *row )
+      obj = Object_type( *row )
+
+    if obj and use_cache and self.__cache:
+      self.__cache.set( cache_key, obj )
+
+    return obj
 
   def select_many( self, Object_type, sql_command ):
     """
@@ -159,6 +196,12 @@ class Database( object ):
 
     if commit:
       connection.commit()
+
+  def uncache_command( self, sql_command ):
+    if not self.__cache: return
+
+    cache_key = sha.new( sql_command ).hexdigest()
+    self.__cache.delete( cache_key )
 
   @staticmethod
   def generate_id():

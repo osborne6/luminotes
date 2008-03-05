@@ -190,7 +190,7 @@ class Notebooks( object ):
       note = None
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
-    total_notes_count = self.__database.select_one( int, notebook.sql_count_notes() )
+    total_notes_count = self.__database.select_one( int, notebook.sql_count_notes(), use_cache = True )
 
     if self.__users.check_access( user_id, notebook_id, owner = True ):
       invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
@@ -549,6 +549,7 @@ class Notebooks( object ):
     if new_revision:
       self.__database.save( note, commit = False )
       user = self.__users.update_storage( user_id, commit = False )
+      self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
       self.__database.commit()
     else:
       user = None
@@ -605,6 +606,7 @@ class Notebooks( object ):
 
       self.__database.save( note, commit = False )
       user = self.__users.update_storage( user_id, commit = False )
+      self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
       self.__database.commit()
 
       return dict( storage_bytes = user.storage_bytes )
@@ -660,6 +662,7 @@ class Notebooks( object ):
 
       self.__database.save( note, commit = False )
       user = self.__users.update_storage( user_id, commit = False )
+      self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
       self.__database.commit()
 
       return dict( storage_bytes = user.storage_bytes )
@@ -710,6 +713,7 @@ class Notebooks( object ):
       self.__database.save( note, commit = False )
 
     user = self.__users.update_storage( user_id, commit = False )
+    self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
     self.__database.commit()
 
     return dict(

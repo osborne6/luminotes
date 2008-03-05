@@ -435,7 +435,7 @@ class Users( object ):
     @raise Access_error: user_id or anonymous user unknown
     """
     # if there's no logged-in user, default to the anonymous user
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     if user_id:
       user = self.__database.load( User, user_id )
     else:
@@ -513,7 +513,7 @@ class Users( object ):
     @rtype: bool
     @return: True if the user has access
     """
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
 
     if self.__database.select_one( bool, anonymous.sql_has_access( notebook_id, read_write, owner ) ):
       return True
@@ -600,7 +600,7 @@ class Users( object ):
     @raise Password_reset_error: an error occured when redeeming the password reset, such as an expired link
     @raise Validation_error: one of the arguments is invalid
     """
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     if anonymous:
       main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
 
@@ -624,7 +624,7 @@ class Users( object ):
     result = self.current( anonymous.object_id )
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
-    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes(), use_cache = True )
     result[ "note_read_write" ] = False
     result[ "notes" ] = [ Note.create(
       object_id = u"password_reset",
@@ -921,7 +921,7 @@ class Users( object ):
     if not notebook:
       raise Invite_error( "That notebook you've been invited to is unknown." )
 
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     if anonymous:
       main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
       invite_notebook = self.__database.load( Notebook, invite.notebook_id )
@@ -933,7 +933,7 @@ class Users( object ):
     result = self.current( anonymous.object_id )
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
-    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes(), use_cache = True )
     result[ "note_read_write" ] = False
     result[ "notes" ] = [ Note.create(
       object_id = u"redeem_invite",
@@ -1086,7 +1086,7 @@ class Users( object ):
     """
     Provide the information necessary to display the subscription thanks page.
     """
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     if anonymous:
       main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
     else:
@@ -1120,7 +1120,7 @@ class Users( object ):
 
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
-    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes(), use_cache = True )
     result[ "note_read_write" ] = False
     result[ "notes" ] = [ Note.create(
       object_id = u"thanks",

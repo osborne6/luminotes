@@ -70,8 +70,13 @@ class Persistent( object ):
   def update_revision( self ):
     self.__revision = datetime.now( tz = utc )
 
+  @staticmethod
+  def make_cache_key( Object_type, object_id ):
+    return "%s_%s" % ( object_id, Object_type.__name__ )
+
   object_id = property( lambda self: self.__object_id )
   revision = property( lambda self: self.__revision )
+  cache_key = property( lambda self: Persistent.make_cache_key( type( self ), self.object_id ) )
 
 
 def quote( value ):

@@ -143,6 +143,38 @@ shows up in various error messages and other places for a support contact
 address.
 
 
+memcached
+---------
+
+For improved performance, it is recommended that you install and use memcached
+for production servers.
+
+First, install the prerequisites:
+
+ * python-dev 2.4
+ * libmemcache-dev 1.4
+ * memcached 1.4
+ * cmemcache 0.91
+
+In Debian GNU/Linux, you can issue the following command to install these
+packages:
+
+  apt-get install python2.4-dev libmemcache-dev memcached
+
+The cmemcache package is not currently included with Debian Etch, so you'll
+have to build and install it manually. Download and untar the package from:
+
+  http://gijsbert.org/cmemcache/
+
+From the untarred cmemcache directory, issue the following command as root:
+
+  python2.4 setup.py install
+
+This should build and install the cmemcache module. Once installed, Luminotes
+will use the module automatically. When Luminotes starts up, you should see a
+"using memcached" message.
+
+
 Python unit tests
 -----------------
 

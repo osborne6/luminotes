@@ -1,4 +1,5 @@
-1.2.2: March ?, 2008
+1.2.2: March 4, 2008
+ * Introduced database object caching to improve performance.
  * Wrote a database reaper script to delete unused notes, notebooks, etc.
  * Added some database indices to improve select performance.
  * Now scrolling the page vertically to show opened errors and messages.

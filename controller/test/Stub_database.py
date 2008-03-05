@@ -42,7 +42,7 @@ class Stub_database( object ):
 
     return None
 
-  def select_one( self, Object_type, sql_command ):
+  def select_one( self, Object_type, sql_command, use_cache = False ):
     if callable( sql_command ):
       result = sql_command( self )
       if isinstance( result, list ):
@@ -66,6 +66,9 @@ class Stub_database( object ):
       return sql_command( self )
 
     raise NotImplementedError( sql_command )
+
+  def uncache_command( self, sql_command ):
+    pass
 
   def next_id( self, Object_type, commit = True ):
     self.__next_id += 1
