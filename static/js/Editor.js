@@ -688,6 +688,17 @@ Editor.prototype.summarize = function () {
   return summary;
 }
 
+Editor.prototype.dirty = function () {
+  if ( this.document.body.innerHTML == this.initial_text )
+    return false;
+
+  return true;
+}
+
+Editor.prototype.mark_clean = function () {
+  this.initial_text = this.document.body.innerHTML;
+}
+
 // convenience function for parsing a link that has an href URL containing a query string
 function parse_query( link ) {
   if ( !link || !link.href )

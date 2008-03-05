@@ -1,3 +1,7 @@
+1.2.3: March 4, 2008
+ * Client-side JavaScript code now only calls save_note() on the server when
+   necessary.
+
 1.2.2: March 4, 2008
  * Introduced database object caching to improve performance.
  * Wrote a database reaper script to delete unused notes, notebooks, etc.

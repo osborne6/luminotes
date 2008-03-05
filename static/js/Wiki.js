@@ -1198,7 +1198,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback ) {
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed ) {
+  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed && editor.dirty() ) {
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook_id,
       "note_id": editor.id,
@@ -1208,6 +1208,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback ) {
     }, function ( result ) {
       self.update_editor_revisions( result, editor );
       self.display_storage_usage( result.storage_bytes );
+      editor.mark_clean();
       if ( callback )
         callback();
     }, null, fire_and_forget );
