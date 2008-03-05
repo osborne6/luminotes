@@ -17,7 +17,8 @@ class Front_page( Product_page ):
           Div(
             A(
               Img( src = u"/static/images/screenshot_small.png", width = u"400", height = u"291" ),
-              href = u"/take_a_tour",
+              href = u"/static/images/screenshot.png",
+              target = u"_new",
             ),
             class_ = u"screenshot",
           ),
