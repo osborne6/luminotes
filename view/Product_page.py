@@ -248,7 +248,16 @@ class Product_page( Page ):
         ),
         class_ = u"center_area",
       ),
-      P(),
+      P(
+        Span( id = u"new_note_button_preload" ),
+        Span( id = u"link_button_preload" ),
+        Span( id = u"bold_button_preload" ),
+        Span( id = u"italic_button_preload" ),
+        Span( id = u"underline_button_preload" ),
+        Span( id = u"title_button_preload" ),
+        Span( id = u"bullet_list_button_preload" ),
+        Span( id = u"numbered_list_button_preload" ),
+      ),
 
       Div(
         Div(
