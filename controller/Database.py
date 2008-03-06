@@ -72,8 +72,12 @@ class Database( object ):
 
     if commit:
       connection.commit()
-      if self.__cache:
-        self.__cache.set( obj.cache_key, obj )
+
+    # FIXME: we shouldn't touch the cache unless there's actually a commit.
+    # the problem is that in self.commit() below, we don't know which objects
+    # to actually save into the cache
+    if self.__cache:
+      self.__cache.set( obj.cache_key, obj )
 
   def commit( self ):
     self.__get_connection().commit()
