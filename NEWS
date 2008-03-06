@@ -1,3 +1,10 @@
+1.2.4: March 6, 2008
+ * New product tour and new screenshots.
+ * Added a work-around for a database cache bug that prevented the file upload
+   progress bar from showing.
+ * Added a work-around for a UI bug that prevented a note from being saved if
+   only its startup flag changed.
+
 1.2.3: March 4, 2008
  * Client-side JavaScript code now only calls save_note() on the server when
    necessary.
