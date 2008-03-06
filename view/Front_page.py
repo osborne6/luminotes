@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, Img, A, P, Table, Tr, Td, Li, Span, I
+from Tags import Div, Img, A, P, Table, Tr, Td, Li, Span, I, Br
 
 
 class Front_page( Product_page ):
@@ -16,11 +16,11 @@ class Front_page( Product_page ):
         Div(
           Div(
             A(
-              Img( src = u"/static/images/screenshot_small.png", width = u"400", height = u"291" ),
+              Img( src = u"/static/images/screenshot_small.png", width = u"400", height = u"308" ),
               href = u"/static/images/screenshot.png",
               target = u"_new",
             ),
-            class_ = u"screenshot",
+            class_ = u"front_screenshot",
           ),
           Div(
             Div(
@@ -47,7 +47,7 @@ class Front_page( Product_page ):
               align = u"center",
             ),
             P(
-              A( u"Take a tour", href = u"/take_a_tour", class_ = u"hook_action" ), u", ",
+              A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
               A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
               Span( u" or ", class_ = u"hook_action_or" ),
               A( u"Sign up", href = u"/sign_up", class_ = u"hook_action"  ),
@@ -147,7 +147,7 @@ class Front_page( Product_page ):
           Div(
             P(
               u"""
-              Luminotes is a personal wiki notebook for organizing your notes and ideas.
+              Luminotes is a WYSIWYG personal wiki notebook for organizing your notes and ideas.
               You don't have to use any special markup codes or install any software. You
               simply start typing.
               """,
@@ -215,7 +215,8 @@ class Front_page( Product_page ):
 
       Div(
         P(
-          A( u"Take a tour", href = u"/take_a_tour", class_ = u"hook_action" ), u", ",
+          Span( u"Sound interesting?", class_ = u"hook_action_question" ), Br(),
+          A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
           A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
           Span( u" or ", class_ = u"hook_action_or" ),
           A( u"Sign up", href = u"/sign_up", class_ = u"hook_action"  ),

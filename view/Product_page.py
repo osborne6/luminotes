@@ -62,7 +62,7 @@ class Product_page( Page ):
           ),
           Div(
             ( note_title == u"home" ) and Span( u"home", class_ = u"bold_link" ) or A( u"home", href = u"/" ), u" | ",
-            ( note_title == u"tour" ) and Span( u"tour", class_ = u"bold_link" ) or A( u"tour", href = u"/take_a_tour" ), u" | ",
+            ( note_title == u"tour" ) and Span( u"tour", class_ = u"bold_link" ) or A( u"tour", href = u"/tour" ), u" | ",
             ( note_title == u"demo" ) and Span( u"demo", class_ = u"bold_link" ) or A( u"demo", href = u"/users/demo" ), u" | ",
             ( note_title == u"upgrade" ) and Span( u"upgrade", class_ = u"bold_link" ) or A( u"pricing", href = u"/upgrade" ), u" | ",
             ( note_title == u"faq" ) and Span( u"faq", class_ = u"bold_link" ) or A( u"faq", href = u"/faq" ), u" | ",

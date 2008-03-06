@@ -12,6 +12,7 @@ from model.Notebook import Notebook
 from model.User import User
 from view.Main_page import Main_page
 from view.Front_page import Front_page
+from view.Tour_page import Tour_page
 from view.Notebook_rss import Notebook_rss
 from view.Upgrade_note import Upgrade_note
 from view.Json import Json
@@ -169,6 +170,25 @@ class Root( object ):
       result[ "first_notebook" ] = None
 
     return result
+
+  @expose( view = Tour_page )
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def tour( self, user_id ):
+    result = self.__users.current( user_id )
+    parents = [ notebook for notebook in result[ u"notebooks" ] if notebook.trash_id and not notebook.deleted ]
+    if len( parents ) > 0:
+      result[ "first_notebook" ] = parents[ 0 ]
+    else:
+      result[ "first_notebook" ] = None
+
+    return result
+
+#  @expose()
+  def take_a_tour( self ):
+    return dict( redirect = u"/tour" )
 
   @expose( view = Main_page, rss = Notebook_rss )
   @grab_user_id
