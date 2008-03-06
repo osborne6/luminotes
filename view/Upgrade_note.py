@@ -75,8 +75,8 @@ class Upgrade_note( Span ):
           Img(
             src = u"/static/images/share_thumb.png",
             class_ = u"thumbnail_right",
-            width = u"200",
-            height = u"200",
+            width = u"175",
+            height = u"100",
           ),
           href = u"/static/images/share.png",
           target = u"_new",
@@ -101,8 +101,8 @@ class Upgrade_note( Span ):
           Img(
             src = u"/static/images/access_thumb.png",
             class_ = u"thumbnail_left",
-            width = u"200",
-            height = u"200",
+            width = u"175",
+            height = u"100",
           ),
           href = u"/static/images/access.png",
           target = u"_new",
