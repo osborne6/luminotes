@@ -21,13 +21,13 @@ class Tour_page( Product_page ):
           ),
         ),
         Div(
-          Img( src = u"/static/images/tour_screenshot1.png", width = u"725", height = u"558", class_ = u"tour_screenshot" ),
+          Img( src = u"/static/images/tour_screenshot1.png", width = u"725", height = u"560", class_ = u"tour_screenshot" ),
           Div(
             Div(
               Ol(
                 Li( u"Format your wiki with this convenient toolbar" ),
                 Li( u"Just start typing &mdash; everything is saved automatically" ),
-                Li( u"Search everything in your wiki" ),
+                Li( u"Search through your entire wiki" ),
                 Li( u"Make as many notebooks as you want" ),
                 class_ = u"tour_list",
               ),
@@ -36,14 +36,14 @@ class Tour_page( Product_page ):
           ),
         ),
         Div(
-          Img( src = u"/static/images/screenshot.png", width = u"725", height = u"558", class_ = u"tour_screenshot" ),
+          Img( src = u"/static/images/tour_screenshot2.png", width = u"725", height = u"558", class_ = u"tour_screenshot" ),
           Div(
             Div(
               Ol(
                 Li( u"Connect your thoughts with links between notes" ),
-                Li( u"Download your entire wiki with a single click" ),
-                Li( u"Attach files to your wiki and download them anytime" ),
                 Li( u"Track past revisions and make updates without worry" ),
+                Li( u"Download your complete wiki with a single click" ),
+                Li( u"Attach files to your wiki and download them anytime" ),
                 class_ = u"tour_list",
               ),
               class_ = u"tour_text",
@@ -51,7 +51,7 @@ class Tour_page( Product_page ):
           ),
         ),
         Div(
-          Img( src = u"/static/images/screenshot.png", width = u"725", height = u"558", class_ = u"tour_screenshot" ),
+          Img( src = u"/static/images/tour_screenshot3.png", width = u"725", height = u"558", class_ = u"tour_screenshot" ),
           Div(
             Div(
               Ol(

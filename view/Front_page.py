@@ -17,8 +17,7 @@ class Front_page( Product_page ):
           Div(
             A(
               Img( src = u"/static/images/screenshot_small.png", width = u"400", height = u"308" ),
-              href = u"/static/images/screenshot.png",
-              target = u"_new",
+              href = u"/tour",
             ),
             class_ = u"front_screenshot",
           ),
@@ -157,8 +156,7 @@ class Front_page( Product_page ):
                 Td(
                   A(
                     Img( src = u"/static/images/wysiwyg_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
-                    href = u"/static/images/wysiwyg.png",
-                    target = u"_new",
+                    href = u"/tour",
                   ),
                   Div( u"Create a wiki visually", class_ = u"thumbnail_caption" ),
                   Div( u"Make a wiki as easily as writing a document.", class_ = u"thumbnail_caption_detail" ),
@@ -166,9 +164,8 @@ class Front_page( Product_page ):
                 ),
                 Td(
                   A(
-                    Img( src = u"/static/images/big_picture_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
-                    href = u"/static/images/big_picture.png",
-                    target = u"_new",
+                    Img( src = u"/static/images/connect_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
+                    href = u"/tour",
                   ),
                   Div( u"Link your notes together", class_ = u"thumbnail_caption" ),
                   Div( u"Connect your thoughts with links between notes.", class_ = u"thumbnail_caption_detail" ),
@@ -179,8 +176,7 @@ class Front_page( Product_page ):
                 Td(
                   A(
                     Img( src = u"/static/images/download_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
-                    href = u"/static/images/screenshot.png",
-                    target = u"_new",
+                    href = u"/tour",
                   ),
                   Div( u"Take your wiki to go", class_ = u"thumbnail_caption" ),
                   Div( u"Download your entire wiki with a single click.", class_ = u"thumbnail_caption_detail" ),
@@ -189,8 +185,7 @@ class Front_page( Product_page ):
                 Td(
                   A(
                     Img( src = u"/static/images/share_thumb.png", width = u"175", height = "100", class_ = u"thumbnail" ),
-                    href = u"/static/images/share.png",
-                    target = u"_new",
+                    href = u"/tour",
                   ),
                   Div( u"Share your thoughts", class_ = u"thumbnail_caption" ),
                   Div( u"Invite friends and colleagues to collaborate.", class_ = u"thumbnail_caption_detail" ),
