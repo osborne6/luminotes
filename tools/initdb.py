@@ -21,7 +21,6 @@ class Initializer( object ):
     ( u"password reset.html", False ),
     ( u"advanced browser features.html", False ),
     ( u"supported browsers.html", False ),
-    ( u"take a tour.html", False ),
   ]
 
   def __init__( self, database, nuke = False ):
