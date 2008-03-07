@@ -101,8 +101,9 @@ class Database( object ):
     connection.commit()
 
     # save any pending saves to the cache
-    for obj in connection.pending_saves:
-      self.__cache.set( obj.cache_key, obj )
+    if self.__cache:
+      for obj in connection.pending_saves:
+        self.__cache.set( obj.cache_key, obj )
 
     connection.pending_saves = []
 
