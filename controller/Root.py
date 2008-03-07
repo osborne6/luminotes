@@ -186,7 +186,7 @@ class Root( object ):
 
     return result
 
-#  @expose()
+  @expose()
   def take_a_tour( self ):
     return dict( redirect = u"/tour" )
 
