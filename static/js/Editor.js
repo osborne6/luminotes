@@ -699,6 +699,10 @@ Editor.prototype.mark_clean = function () {
   this.initial_text = this.document.body.innerHTML;
 }
 
+Editor.prototype.mark_dirty = function () {
+  this.initial_text = null;
+}
+
 // convenience function for parsing a link that has an href URL containing a query string
 function parse_query( link ) {
   if ( !link || !link.href )

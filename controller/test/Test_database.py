@@ -3,13 +3,13 @@ from pysqlite2 import dbapi2 as sqlite
 from datetime import datetime
 from Stub_object import Stub_object
 from Stub_cache import Stub_cache
-from controller.Database import Database
+from controller.Database import Database, Connection_wrapper
 
 
 class Test_database( object ):
   def setUp( self ):
     # make an in-memory sqlite database to use in place of PostgreSQL during testing
-    self.connection = sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES | sqlite.PARSE_COLNAMES )
+    self.connection = Connection_wrapper( sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES | sqlite.PARSE_COLNAMES ) )
     self.cache = Stub_cache()
     cursor = self.connection.cursor()
     cursor.execute( Stub_object.sql_create_table() )

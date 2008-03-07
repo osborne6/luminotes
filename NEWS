@@ -1,3 +1,8 @@
+1.2.5: March 7, 2008
+ * Fixed a database bug that could have caused a cache save before a commit.
+ * Client code now only calls save_note() on the server when necessary, and
+   takes startup flag into account.
+
 1.2.4: March 6, 2008
  * New product tour and new screenshots.
  * Added a work-around for a database cache bug that prevented the file upload

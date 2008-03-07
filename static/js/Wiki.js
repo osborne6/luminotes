@@ -1198,8 +1198,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback ) {
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed ) {
-//  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed && editor.dirty() ) {
+  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed && editor.dirty() ) {
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook_id,
       "note_id": editor.id,
@@ -2026,6 +2025,7 @@ Options_pulldown.prototype.constructor = Options_pulldown;
 
 Options_pulldown.prototype.startup_clicked = function ( event ) {
   this.editor.startup = this.startup_checkbox.checked;
+  this.editor.mark_dirty();
 
   // save this note along with its toggled startup state
   this.wiki.save_editor( this.editor );
