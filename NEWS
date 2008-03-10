@@ -1,4 +1,4 @@
-1.2.7: March ??, 2008
+1.2.7: March 10, 2008
  * Fixed a bug where, after you highlighted a link and clicked the link button
    to unlink it, the link info box popped up.
  * Actually checking in cache changes that were supposed to be in previous
