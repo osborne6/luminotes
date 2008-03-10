@@ -980,7 +980,7 @@ Wiki.prototype.toggle_link_button = function ( event ) {
     else
       link = this.focused_editor.end_link();
 
-    if ( link ) {
+    if ( link && link.parentNode != null ) {
       var self = this;
       this.resolve_link( link_title( link ), link, function ( summary ) {
         self.display_link_pulldown( self.focused_editor, link );

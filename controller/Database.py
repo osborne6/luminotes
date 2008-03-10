@@ -56,19 +56,28 @@ class Database( object ):
       )
 
     self.__cache = cache
-    if not cache:
-      try:
-        import cmemcache
-        self.__cache = cmemcache.Client( [ "127.0.0.1:11211" ], debug = 0 )
-        print "using memcached"
-      except ImportError:
-        pass
+
+    try:
+      import cmemcache
+      print "using memcached"
+    except ImportError:
+      return None
 
   def __get_connection( self ):
     if self.__connection:
       return self.__connection
     else:
       return self.__pool.getconn()
+
+  def __get_cache_connection( self ):
+    if self.__cache is not None:
+      return self.__cache
+
+    try:
+      import cmemcache
+      return cmemcache.Client( [ "127.0.0.1:11211" ], debug = 0 )
+    except ImportError:
+      return None
 
   def save( self, obj, commit = True ):
     """
@@ -88,11 +97,13 @@ class Database( object ):
     else:
       cursor.execute( obj.sql_create() )
 
+    cache = self.__get_cache_connection()
+
     if commit:
       connection.commit()
-      if self.__cache:
-        self.__cache.set( obj.cache_key, obj )
-    else:
+      if cache:
+        cache.set( obj.cache_key, obj )
+    elif cache:
       # no commit yet, so don't touch the cache
       connection.pending_saves.append( obj )
 
@@ -101,11 +112,13 @@ class Database( object ):
     connection.commit()
 
     # save any pending saves to the cache
-    if self.__cache:
-      for obj in connection.pending_saves:
-        self.__cache.set( obj.cache_key, obj )
+    cache = self.__get_cache_connection()
 
-    connection.pending_saves = []
+    if cache:
+      for obj in connection.pending_saves:
+        cache.set( obj.cache_key, obj )
+
+      connection.pending_saves = []
 
   def load( self, Object_type, object_id, revision = None ):
     """
@@ -122,14 +135,19 @@ class Database( object ):
     @rtype: Object_type or NoneType
     @return: loaded object, or None if no match
     """
-    if revision is None and self.__cache: # don't bother caching old revisions
-      obj = self.__cache.get( Persistent.make_cache_key( Object_type, object_id ) )
+    if revision is None:
+      cache = self.__get_cache_connection()
+    else:
+      cache = None
+
+    if cache: # don't bother caching old revisions
+      obj = cache.get( Persistent.make_cache_key( Object_type, object_id ) )
       if obj:
         return obj
 
     obj = self.select_one( Object_type, Object_type.sql_load( object_id, revision ) )
-    if obj and revision is None and self.__cache:
-      self.__cache.set( obj.cache_key, obj )
+    if obj and cache:
+      cache.set( obj.cache_key, obj )
 
     return obj
 
@@ -147,9 +165,14 @@ class Database( object ):
     @rtype: Object_type or NoneType
     @return: loaded object, or None if no match
     """
-    if use_cache and self.__cache:
+    if use_cache:
+      cache = self.__get_cache_connection()
+    else:
+      cache = None
+
+    if cache:
       cache_key = sha.new( sql_command ).hexdigest()
-      obj = self.__cache.get( cache_key )
+      obj = cache.get( cache_key )
       if obj:
         return obj
 
@@ -167,8 +190,8 @@ class Database( object ):
     else:
       obj = Object_type( *row )
 
-    if obj and use_cache and self.__cache:
-      self.__cache.set( cache_key, obj )
+    if obj and cache:
+      cache.set( cache_key, obj )
 
     return obj
 
@@ -227,10 +250,11 @@ class Database( object ):
       connection.commit()
 
   def uncache_command( self, sql_command ):
-    if not self.__cache: return
+    cache = self.__get_cache_connection()
+    if not cache: return
 
     cache_key = sha.new( sql_command ).hexdigest()
-    self.__cache.delete( cache_key )
+    cache.delete( cache_key )
 
   @staticmethod
   def generate_id():

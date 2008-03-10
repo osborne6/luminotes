@@ -1,3 +1,9 @@
+1.2.7: March ??, 2008
+ * Fixed a bug where, after you highlighted a link and clicked the link button
+   to unlink it, the link info box popped up.
+ * Actually checking in cache changes that were supposed to be in previous
+   release.
+
 1.2.6: March 10, 2008
  * Now creating a new cache connection for each usage of the cache. This will
    prevent crashes that arose when multiple threads tried to share a single
