@@ -53,6 +53,7 @@
 }
 
 .header {
+  background-color: #afcfff;
   background-image: url(/static/images/header.png);
   background-repeat: repeat-x;
   height: 60px;
