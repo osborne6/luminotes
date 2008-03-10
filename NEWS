@@ -1,3 +1,8 @@
+1.2.6: March 10, 2008
+ * Now creating a new cache connection for each usage of the cache. This will
+   prevent crashes that arose when multiple threads tried to share a single
+   connection. 
+
 1.2.5: March 7, 2008
  * Fixed a database bug that could have caused a cache save before a commit.
  * Client code now only calls save_note() on the server when necessary, and
