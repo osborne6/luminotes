@@ -1,3 +1,6 @@
+1.2.12: March 11, 2008
+ * Resizing browser text now causes wiki notes to resize accordingly.
+
 1.2.11: March 11, 2008
  * Added a Debian init script to run the Luminotes server from
    /etc/init.d/luminotes.

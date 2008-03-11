@@ -15,6 +15,7 @@ function Wiki( invoker ) {
   this.invites = evalJSON( getElement( "invites" ).value );
   this.invite_id = getElement( "invite_id" ).value;
   this.after_login = getElement( "after_login" ).value;
+  this.font_size = null;
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -61,6 +62,7 @@ function Wiki( invoker ) {
   connect( "html", "onclick", this, "background_clicked" );
   connect( "html", "onkeydown", this, "key_pressed" );
   connect( window, "onresize", this, "resize_editors" );
+  connect( document, "onmouseover", this, "detect_font_resize" );
 
   var blank_note_stub = getElement( "blank_note_stub" );
   if ( blank_note_stub ) {
@@ -696,6 +698,19 @@ Wiki.prototype.resize_editors = function () {
     var editor = iframes[ i ].editor;
     editor.resize();
   }
+}
+
+Wiki.prototype.detect_font_resize = function () {
+  if ( !window.getComputedStyle ) return;
+
+  var style = window.getComputedStyle( getElement( "content" ), null );
+  if ( !style ) return;
+
+  if ( style.fontSize == this.font_size )
+    return;
+
+  this.font_size = style.fontSize;
+  this.resize_editors();
 }
 
 Wiki.prototype.editor_state_changed = function ( editor, link_clicked ) {
