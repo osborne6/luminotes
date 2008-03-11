@@ -1,3 +1,6 @@
+1.2.10: March 11, 2008
+ * More intelligent scrolling when displaying messages and errors.
+
 1.2.9: March 10, 2008
  * Show list of all notes on startup if there are no startup notes and the
    notebook isn't empty.

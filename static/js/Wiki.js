@@ -1540,7 +1540,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   else
     appendChildNodes( "notes", div );
 
-  new ScrollTo( div );
+  this.scroll_to( div );
 
   return div;
 }
@@ -1580,9 +1580,17 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
   else
     appendChildNodes( "notes", div );
 
-  new ScrollTo( div );
+  this.scroll_to( div );
 
   return div;
+}
+
+Wiki.prototype.scroll_to = function ( node ) {
+  // if the message is already completely on-screen, then there's no need to scroll
+  var viewport_position = getViewportPosition();
+  if ( getElementPosition( node ).y < viewport_position.y ||
+       getElementPosition( node ).y + getElementDimensions( node ).h > viewport_position.y + getViewportDimensions().h )
+    new ScrollTo( node );
 }
 
 Wiki.prototype.clear_messages = function () {
