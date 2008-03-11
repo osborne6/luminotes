@@ -130,6 +130,12 @@ Then to actually start the production mode server, run:
 You should be able to connect to the site at whatever domain you've configured
 Apache to serve.
 
+Optionally, you can copy tools/luminotes_debian_initscript to
+/etc/init.d/luminotes and use the following command to start the Luminotes
+server instead:
+
+  /etc/init.d/luminotes start
+
 
 sending email
 -------------

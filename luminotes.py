@@ -1,3 +1,5 @@
+#!/usr/bin/python2.4
+
 import cherrypy
 from controller.Database import Database
 from controller.Root import Root

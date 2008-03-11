@@ -6,7 +6,7 @@ settings = {
   "global": {
     "server.thread_pool": 10,
     "autoreload.on": True,
-    "static_filter.root": os.path.abspath( "." ),
+    "static_filter.root": os.getcwd(),
   },
   "/static": {
     "static_filter.on": True,
