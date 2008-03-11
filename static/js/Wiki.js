@@ -1328,8 +1328,11 @@ Wiki.prototype.display_all_notes_list = function ( result ) {
 
   // build up a list of all notes in this notebook, one link per note
   var list = createDOM( "ul", { "id": "notes_list" } );
-  if ( this.focused_editor )
-    appendChildNodes( list, this.create_all_notes_link( this.focused_editor.id, this.focused_editor.title || "untitled note" ) );
+  if ( this.focused_editor ) {
+    var focused_title = this.focused_editor.title;
+    if ( focused_title != "all notes" && focused_title != "search results" && focused_title != "share this notebook" )
+      appendChildNodes( list, this.create_all_notes_link( this.focused_editor.id, this.focused_editor.title || "untitled note" ) );
+  }
 
   for ( var i in result.notes ) {
     var note_tuple = result.notes[ i ]
@@ -1672,6 +1675,15 @@ Wiki.prototype.display_empty_message = function ( replace_messages ) {
       this.display_message( "There are no notes in the trash." )
     else
       this.display_message( "This notebook is empty." );
+    return true;
+  }
+
+  if ( !replace_messages ) {
+    var self = this;
+    this.invoker.invoke(
+      "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
+      function( result ) { self.display_all_notes_list( result ); }
+    );
     return true;
   }
 
