@@ -317,7 +317,7 @@ Editor.prototype.key_released = function ( event ) {
 
   this.cleanup_html();
 
-  signal( this, "state_changed", this );
+  signal( this, "state_changed", this, false );
 }
 
 Editor.prototype.cleanup_html = function () {
@@ -348,50 +348,57 @@ Editor.prototype.cleanup_html = function () {
 
 Editor.prototype.mouse_clicked = function ( event ) {
   this.link_started = null;
+  var self = this;
 
-  // update the state no matter what, in case the cursor has moved
-  if ( this.edit_enabled )
-    signal( this, "state_changed", this );
+  function handle_click( event ) {
+    // we only want to deal with left mouse button clicks
+    if ( event.mouse().button.middle || event.mouse().button.right )
+      return false;
 
-  // we only want to deal with left mouse button clicks
-  if ( event.mouse().button.middle || event.mouse().button.right )
-    return;
+    // search through the tree of elements containing the clicked target. if a link isn't found, bail
+    var link = event.target()
+    while ( link.nodeName != "A" ) {
+      link = link.parentNode;
+      if ( !link )
+        return false;
+    }
+    if ( !link.href ) return false;
 
-  // search through the tree of elements containing the clicked target. if a link isn't found, bail
-  var link = event.target()
-  while ( link.nodeName != "A" ) {
-    link = link.parentNode;
-    if ( !link )
-      return;
-  }
-  if ( !link.href ) return;
+    // links with targets are considered to be external links pointing outside of this wiki
+    if ( link.target ) {
+      // if this is a read-only editor, bail and let the browser handle the link normally
+      if ( !self.edit_enabled ) return true;
+      
+      // otherwise, this is a read-write editor, so we've got to launch the external link ourselves.
+      // note that this ignores what the link target actually contains and assumes it's "_new"
+      window.open( link.href );
+      event.stop();
+      return true;
+    }
 
-  // links with targets are considered to be external links pointing outside of this wiki
-  if ( link.target ) {
-    // if this is a read-only editor, bail and let the browser handle the link normally
-    if ( !this.edit_enabled ) return;
-    
-    // otherwise, this is a read-write editor, so we've got to launch the external link ourselves.
-    // note that this ignores what the link target actually contains and assumes it's "_new"
-    window.open( link.href );
+    // special case for links to uploaded files
+    if ( !link.target && /\/files\//.test( link.href ) ) {
+      if ( !/\/files\/new$/.test( link.href ) )
+        location.href = link.href;
+      return false;
+    }
+
     event.stop();
-    return;
+
+    // load the note corresponding to the clicked link
+    var query = parse_query( link );
+    var title = link_title( link, query );
+    var id = query.note_id;
+    signal( self, "load_editor", title, id, null, link, self.iframe );
+    return true;
   }
 
-  // special case for links to uploaded files
-  if ( !link.target && /\/files\//.test( link.href ) ) {
-    if ( !/\/files\/new$/.test( link.href ) )
-      location.href = link.href;
-    return;
-  }
+  var link_clicked = handle_click( event );
 
-  event.stop();
+  // in case the cursor has moved, update the state
+  if ( this.edit_enabled )
+    signal( this, "state_changed", this, link_clicked );
 
-  // load the note corresponding to the clicked link
-  var query = parse_query( link );
-  var title = link_title( link, query );
-  var id = query.note_id;
-  signal( this, "load_editor", title, id, null, link, this.iframe );
 }
 
 Editor.prototype.scrape_title = function () {

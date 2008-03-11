@@ -698,9 +698,11 @@ Wiki.prototype.resize_editors = function () {
   }
 }
 
-Wiki.prototype.editor_state_changed = function ( editor ) {
+Wiki.prototype.editor_state_changed = function ( editor, link_clicked ) {
   this.update_toolbar();
-  this.display_link_pulldown( editor );
+
+  if ( !link_clicked )
+    this.display_link_pulldown( editor );
 }
 
 Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) {

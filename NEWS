@@ -1,3 +1,6 @@
+1.2.8: March 10, 2008
+ * No longer popping up a link info box when clicking on a note link.
+
 1.2.7: March 10, 2008
  * Fixed a bug where, after you highlighted a link and clicked the link button
    to unlink it, the link info box popped up.
