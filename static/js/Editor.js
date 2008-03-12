@@ -288,12 +288,13 @@ Editor.prototype.insert_html = function ( html ) {
 
 // resize the editor's frame to fit the dimensions of its content
 Editor.prototype.resize = function () {
+  if ( !this.document ) return;
+
   var dimensions;
   // TODO: find a better way to determine which dimensions to use than just checking for contentDocument
   if ( this.iframe.contentDocument ) { // Firefox
     dimensions = { "h": elementDimensions( this.document.documentElement ).h };
   } else { // IE
-    if ( !this.document ) return;
     dimensions = { "h": this.document.body.scrollHeight };
   }
 
