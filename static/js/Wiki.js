@@ -1053,6 +1053,8 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
   }
 
   if ( editor ) {
+    var id = editor.id;
+
     // if the editor to hide is completely empty, then simply remove it
     if ( editor.id == this.blank_editor_id && editor.empty() ) {
       this.remove_all_notes_link( editor.id );
@@ -1067,7 +1069,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
       Highlight( "all_notes_link" );
     }
 
-    this.display_empty_message();
+    this.display_empty_message( id == "all_notes" );
   }
 
   event.stop();
