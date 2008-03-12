@@ -1,3 +1,7 @@
+1.2.13: March 11, 2008
+ * When the "all notes" note is the only note open, it now actually hides when
+   the "hide" button is clicked.
+
 1.2.12: March 11, 2008
  * Resizing browser text now causes wiki notes to resize accordingly.
 
