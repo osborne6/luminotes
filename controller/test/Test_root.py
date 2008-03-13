@@ -135,6 +135,54 @@ class Test_root( Test_controller ):
     assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
     assert result[ u"rate_plan" ]
 
+  def test_tour( self ):
+    result = self.http_get( u"/tour" )
+
+    assert result
+    assert result.get( u"redirect" ) is None
+    assert result[ u"user" ].username == u"anonymous"
+    assert len( result[ u"notebooks" ] ) == 4
+    assert result[ u"first_notebook" ] == None
+    assert result[ u"login_url" ] == u"https://luminotes.com/notebooks/%s?note_id=%s" % (
+      self.anon_notebook.object_id, self.login_note.object_id,
+    )
+    assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
+    assert result[ u"rate_plan" ]
+
+  def test_take_a_tour( self ):
+    result = self.http_get( u"/take_a_tour" )
+
+    assert result
+    assert result.get( u"redirect" ) == u"/tour"
+
+  def test_tour_after_login( self ):
+    self.login()
+
+    result = self.http_get(
+      u"/tour",
+      session_id = self.session_id,
+    )
+
+    assert result
+    assert result.get( u"redirect" ) is None
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"first_notebook" ].object_id == self.notebook.object_id
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
+    assert result[ u"rate_plan" ]
+
+  def test_take_a_tour_after_login( self ):
+    self.login()
+
+    result = self.http_get(
+      u"/take_a_tour",
+      session_id = self.session_id,
+    )
+
+    assert result
+    assert result.get( u"redirect" ) == u"/tour"
+
   def test_default( self ):
     result = self.http_get(
       "/my_note",
