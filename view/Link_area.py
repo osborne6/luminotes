@@ -1,4 +1,4 @@
-from Tags import Div, Span, H4, A, Strong
+from Tags import Div, Span, H4, A, Strong, Img
 from Rounded_div import Rounded_div
 
 
@@ -115,7 +115,7 @@ class Link_area( Div ):
       ),
 
       Div(
-        ( len( linked_notebooks ) > 0 ) and H4( u"notebooks" ) or None,
+        ( len( linked_notebooks ) > 0 ) and H4( u"notebooks", id = u"notebooks_area_title" ) or None,
         [ ( nb.object_id == notebook.object_id ) and Rounded_div(
           u"current_notebook",
           A(
@@ -123,6 +123,12 @@ class Link_area( Div ):
             href = u"/notebooks/%s" % nb.object_id,
             id = u"notebook_%s" % nb.object_id,
           ),
+          ( len( linked_notebooks ) > 1 ) and Span(
+            Img( src = u"/static/images/up_arrow.png", width = u"20", height = u"17", id = u"current_notebook_up" ),
+            Img( src = u"/static/images/down_arrow.png", width = u"20", height = u"17", id = u"current_notebook_down" ),
+            Span( id = "current_notebook_up_hover_preload" ),
+            Span( id = "current_notebook_down_hover_preload" ),
+          ) or None,
           class_ = u"link_area_item",
         ) or
         Div(

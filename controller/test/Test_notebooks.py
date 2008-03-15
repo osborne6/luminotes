@@ -54,12 +54,12 @@ class Test_notebooks( Test_controller ):
     self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"anon_notebook", user_id = user_id )
     self.database.save( self.anon_notebook, commit = False )
 
-    self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True, owner = True ) )
-    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True, owner = True, rank = 0 ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True, rank = 0 ) )
     self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
-    self.database.execute( self.user2.sql_save_notebook( self.notebook.object_id, read_write = True, owner = False ) )
-    self.database.execute( self.user2.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = False ) )
+    self.database.execute( self.user2.sql_save_notebook( self.notebook.object_id, read_write = True, owner = False, rank = 0 ) )
+    self.database.execute( self.user2.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = False, rank = 0 ) )
 
   def make_users( self ):
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
@@ -2299,6 +2299,11 @@ class Test_notebooks( Test_controller ):
     assert notebook.owner == True
     assert notebook.trash_id
 
+    self.user.sql_load_notebooks()
+    notebooks = self.database.select_many( Notebook, self.user.sql_load_notebooks() )
+    new_notebook = [ notebook for notebook in notebooks if notebook.object_id == new_notebook_id ][ 0 ]
+    assert new_notebook.rank == 1
+
   def test_contents_after_create( self ):
     self.login()
 
@@ -2423,8 +2428,8 @@ class Test_notebooks( Test_controller ):
     self.database.save( trash, commit = False )
     notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", trash.object_id )
     self.database.save( notebook, commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = True, owner = True ) )
-    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = True, owner = True, rank = 1 ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = True, owner = True, rank = 1 ) )
     self.database.commit()
 
     self.login()
@@ -2447,8 +2452,8 @@ class Test_notebooks( Test_controller ):
     self.database.save( trash, commit = False )
     notebook = Notebook.create( self.database.next_id( Notebook ), u"notebook", trash.object_id )
     self.database.save( notebook, commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = False, owner = False ) )
-    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = False, owner = False ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.object_id, read_write = False, owner = False, rank = 1 ) )
+    self.database.execute( self.user.sql_save_notebook( notebook.trash_id, read_write = False, owner = False, rank = 1 ) )
     self.database.commit()
 
     self.login()

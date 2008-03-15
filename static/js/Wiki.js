@@ -1,3 +1,5 @@
+IMAGE_DIR = "/static/images/";
+
 function Wiki( invoker ) {
   this.next_id = null;
   this.focused_editor = null;
@@ -105,8 +107,27 @@ function Wiki( invoker ) {
       "href": "/notebooks/" + this.notebook.trash_id + "?parent_id=" + this.notebook.object_id
     }, "trash" );
     var message_div = this.display_message( "The notebook has been moved to the", [ trash_link, ". ", undo_button ], "notes_top" );
-    var self = this;
     connect( undo_button, "onclick", function ( event ) { self.undelete_notebook( event, deleted_id ); } );
+  }
+
+  var current_notebook_up = getElement( "current_notebook_up" );
+  if ( current_notebook_up ) {
+    connect( current_notebook_up, "onmouseover", function ( event ) { current_notebook_up.src = IMAGE_DIR + "up_arrow_hover.png"; } );
+    connect( current_notebook_up, "onmouseout", function ( event ) { current_notebook_up.src = IMAGE_DIR + "up_arrow.png"; } );
+    connect( current_notebook_up, "onclick", function ( event ) {
+      current_notebook_up.src = IMAGE_DIR + "up_arrow.png";
+      self.move_current_notebook_up( event );
+    } );
+  }
+
+  var current_notebook_down = getElement( "current_notebook_down" );
+  if ( current_notebook_down ) {
+    connect( current_notebook_down, "onmouseover", function ( event ) { current_notebook_down.src = IMAGE_DIR + "down_arrow_hover.png"; } );
+    connect( current_notebook_down, "onmouseout", function ( event ) { current_notebook_down.src = IMAGE_DIR + "down_arrow.png"; } );
+    connect( current_notebook_down, "onclick", function ( event ) {
+      current_notebook_down.src = IMAGE_DIR + "down_arrow.png";
+      self.move_current_notebook_down( event );
+    } );
   }
 }
 
@@ -851,8 +872,6 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   }
 }
 
-IMAGE_DIR = "/static/images/";
-
 Wiki.prototype.make_image_button = function ( name, filename_prefix, handle_mouse_up_and_down ) {
   var button = getElement( name );
 
@@ -1528,6 +1547,56 @@ Wiki.prototype.display_invites = function ( invite_area ) {
   }
 
   replaceChildNodes( invite_area, div );
+}
+
+Wiki.prototype.move_current_notebook_up = function ( event ) {
+  var current_notebook = getElement( "current_notebook_wrapper" );
+  var sibling_notebook = current_notebook;
+
+  // find the previous sibling notebook node
+  do {
+    var sibling_notebook = sibling_notebook.previousSibling;
+  } while ( sibling_notebook && sibling_notebook.className != "link_area_item" );
+
+  removeElement( current_notebook );
+  if ( sibling_notebook )
+    // move the current notebook up before the previous notebook node
+    insertSiblingNodesBefore( sibling_notebook, current_notebook );
+    // if the current notebook is the first one, wrap it around to the bottom of the list
+  else {
+    var notebooks_area = getElement( "notebooks_area" );
+    appendChildNodes( notebooks_area, current_notebook );
+  }
+
+  var self = this;
+  this.invoker.invoke( "/notebooks/move_up", "POST", { 
+    "notebook_id": this.notebook_id
+  } );
+}
+
+Wiki.prototype.move_current_notebook_down = function ( event ) {
+  var current_notebook = getElement( "current_notebook_wrapper" );
+  var sibling_notebook = current_notebook;
+
+  // find the next sibling notebook node
+  do {
+    var sibling_notebook = sibling_notebook.nextSibling;
+  } while ( sibling_notebook && sibling_notebook.className != "link_area_item" );
+
+  removeElement( current_notebook );
+  if ( sibling_notebook )
+    // move the current notebook down after the previous notebook node
+    insertSiblingNodesAfter( sibling_notebook, current_notebook );
+    // if the current notebook is the last one, wrap it around to the top of the list
+  else {
+    var notebooks_area_title = getElement( "notebooks_area_title" );
+    insertSiblingNodesAfter( notebooks_area_title, current_notebook );
+  }
+
+  var self = this;
+  this.invoker.invoke( "/notebooks/move_down", "POST", { 
+    "notebook_id": this.notebook_id
+  } );
 }
 
 Wiki.prototype.display_message = function ( text, nodes, position_after ) {

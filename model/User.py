@@ -149,18 +149,27 @@ class User( Persistent ):
       read_write_clause = ""
 
     return \
-      "select notebook_current.*, user_notebook.read_write, user_notebook.owner from user_notebook, notebook_current " + \
-      "where user_notebook.user_id = %s%s%s%s and user_notebook.notebook_id = notebook_current.id order by revision;" % \
-      ( quote( self.object_id ), parents_only_clause, undeleted_only_clause, read_write_clause )
+      """
+      select
+        notebook_current.*, user_notebook.read_write, user_notebook.owner, user_notebook.rank
+      from
+        user_notebook, notebook_current
+      where
+        user_notebook.user_id = %s%s%s%s and
+        user_notebook.notebook_id = notebook_current.id
+      order by user_notebook.rank;
+      """ % ( quote( self.object_id ), parents_only_clause, undeleted_only_clause, read_write_clause )
 
-  def sql_save_notebook( self, notebook_id, read_write = True, owner = True ):
+  def sql_save_notebook( self, notebook_id, read_write = True, owner = True, rank = None ):
     """
     Return a SQL string to save the id of a notebook to which this user has access.
     """
+    if rank is None: rank = quote( None )
+
     return \
-      "insert into user_notebook ( user_id, notebook_id, read_write, owner ) values " + \
+      "insert into user_notebook ( user_id, notebook_id, read_write, owner, rank ) values " + \
       "( %s, %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ),
-                                quote( owner and 't' or 'f' ) )
+                                quote( owner and 't' or 'f' ), rank )
 
   def sql_remove_notebook( self, notebook_id ):
     """
@@ -198,6 +207,20 @@ class User( Persistent ):
       "update user_notebook set read_write = %s, owner = %s where user_id = %s and notebook_id = %s;" % \
       ( quote( read_write and 't' or 'f' ), quote( owner and 't' or 'f' ), quote( self.object_id ),
         quote( notebook_id ) )
+
+  def sql_update_notebook_rank( self, notebook_id, rank ):
+    """
+    Return a SQL string to update the user's rank for the given notebook.
+    """
+    return \
+      "update user_notebook set rank = %s where user_id = %s and notebook_id = %s;" % \
+      ( quote( rank ), quote( self.object_id ), quote( notebook_id ) )
+
+  def sql_highest_notebook_rank( self ):
+    """
+    Return a SQL string to determine the highest numbered rank of all notebooks the user has access to."
+    """
+    return "select coalesce( max( rank ), -1 ) from user_notebook where user_id = %s;" % quote( self.object_id )
 
   @staticmethod
   def sql_revoke_invite_access( notebook_id, trash_id, email_address ):

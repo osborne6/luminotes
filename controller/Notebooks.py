@@ -505,7 +505,7 @@ class Notebooks( object ):
         note.startup = startup
         if startup:
           if note.rank is None:
-            note.rank = self.__database.select_one( float, notebook.sql_highest_rank() ) + 1
+            note.rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
         else:
           note.rank = None
         note.user_id = user.object_id
@@ -538,7 +538,7 @@ class Notebooks( object ):
     # otherwise, create a new note
     else:
       if startup:
-        rank = self.__database.select_one( float, notebook.sql_highest_rank() ) + 1
+        rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
       else:
         rank = None
   
@@ -875,7 +875,8 @@ class Notebooks( object ):
     self.__database.save( notebook, commit = False )
 
     # record the fact that the user has access to their new notebook
-    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True ), commit = False )
+    rank = self.__database.select_one( float, user.sql_highest_notebook_rank() ) + 1
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True, rank = rank ), commit = False )
     self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
 
     if commit:
@@ -1070,6 +1071,149 @@ class Notebooks( object ):
     return dict(
       redirect = u"/notebooks/%s" % notebook.object_id,
     )
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def move_up( self, notebook_id, user_id ):
+    """
+    Reorder the user's notebooks by moving the given notebook up by one. If the notebook is already
+    first, then wrap it around to be the last notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to move up
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype json dict
+    @return {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+    if not user:
+      raise Access_error()
+
+    # load the notebooks to which this user has access
+    notebooks = self.__database.select_many(
+      Notebook,
+      user.sql_load_notebooks( parents_only = True, undeleted_only = True ),
+    )
+    if not notebooks:
+      raise Access_error()
+
+    # find the given notebook and the one previous to it
+    previous_notebook = None
+    current_notebook = None
+
+    for notebook in notebooks:
+      if notebook.object_id == notebook_id:
+        current_notebook = notebook
+        break
+      previous_notebook = notebook
+
+    if current_notebook is None:
+      raise Access_error()
+
+    # if there is no previous notebook, then the current notebook is first. so, move it after the
+    # last notebook
+    if previous_notebook is None:
+      last_notebook = notebooks[ -1 ]
+      self.__database.execute(
+        user.sql_update_notebook_rank( current_notebook.object_id, last_notebook.rank + 1 ),
+        commit = False,
+      )
+    # otherwise, save the current and previous notebooks back to the database with swapped ranks
+    else:
+      self.__database.execute(
+        user.sql_update_notebook_rank( current_notebook.object_id, previous_notebook.rank ),
+        commit = False,
+      )
+      self.__database.execute(
+        user.sql_update_notebook_rank( previous_notebook.object_id, current_notebook.rank ),
+        commit = False,
+      )
+
+    self.__database.commit()
+
+    return dict()
+
+  @expose( view = Json )
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def move_down( self, notebook_id, user_id ):
+    """
+    Reorder the user's notebooks by moving the given notebook down by one. If the notebook is
+    already last, then wrap it around to be the first notebook.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to move down
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype json dict
+    @return {}
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+    if not user:
+      raise Access_error()
+
+    # load the notebooks to which this user has access
+    notebooks = self.__database.select_many(
+      Notebook,
+      user.sql_load_notebooks( parents_only = True, undeleted_only = True ),
+    )
+    if not notebooks:
+      raise Access_error()
+
+    # find the given notebook and the one after it
+    current_notebook = None
+    next_notebook = None
+
+    for notebook in notebooks:
+      if notebook.object_id == notebook_id:
+        current_notebook = notebook
+      elif current_notebook:
+        next_notebook = notebook
+        break
+
+    if current_notebook is None:
+      raise Access_error()
+
+    # if there is no next notebook, then the current notebook is last. so, move it before the
+    # first notebook
+    if next_notebook is None:
+      first_notebook = notebooks[ 0 ]
+      self.__database.execute(
+        user.sql_update_notebook_rank( current_notebook.object_id, first_notebook.rank - 1 ),
+        commit = False,
+      )
+    # otherwise, save the current and next notebooks back to the database with swapped ranks
+    else:
+      self.__database.execute(
+        user.sql_update_notebook_rank( current_notebook.object_id, next_notebook.rank ),
+        commit = False,
+      )
+      self.__database.execute(
+        user.sql_update_notebook_rank( next_notebook.object_id, current_notebook.rank ),
+        commit = False,
+      )
+
+    self.__database.commit()
+
+    return dict()
 
   def load_recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
     """

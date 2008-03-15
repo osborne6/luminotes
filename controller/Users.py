@@ -262,7 +262,7 @@ class Users( object ):
     self.__database.save( user, commit = False )
 
     # record the fact that the new user has access to their new notebook
-    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True, rank = 0 ), commit = False )
     self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
     self.__database.commit()
 
@@ -335,7 +335,7 @@ class Users( object ):
     self.__database.save( user, commit = False )
 
     # record the fact that the new user has access to their new notebook
-    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True ), commit = False )
+    self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True, rank = 0 ), commit = False )
     self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
     self.__database.commit()
 
@@ -966,7 +966,8 @@ class Users( object ):
 
     # if the user doesn't already have access to this notebook, then grant access
     if not self.__database.select_one( bool, user.sql_has_access( notebook.object_id ) ):
-      self.__database.execute( user.sql_save_notebook( notebook.object_id, invite.read_write, invite.owner ), commit = False )
+      rank = self.__database.select_one( float, user.sql_highest_notebook_rank() ) + 1
+      self.__database.execute( user.sql_save_notebook( notebook.object_id, invite.read_write, invite.owner, rank = rank ), commit = False )
 
     # the same goes for the trash notebook
     if not self.__database.select_one( bool, user.sql_has_access( notebook.trash_id ) ):

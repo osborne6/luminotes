@@ -68,9 +68,9 @@ class Test_users( Test_controller ):
 
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user, commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True, owner = True ), commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True, owner = True, rank = 0 ), commit = False )
     self.database.execute( self.user.sql_save_notebook( trash_id1, read_write = True, owner = True ), commit = False )
-    self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True, owner = True ), commit = False )
+    self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True, owner = True, rank = 1 ), commit = False )
     self.database.execute( self.user.sql_save_notebook( trash_id2, read_write = True, owner = True ), commit = False )
 
     self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2 )
@@ -143,6 +143,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id
     assert notebook.read_write == True
     assert notebook.owner == True
+    assert notebook.rank == 0
 
     notebook = notebooks[ 1 ]
     assert notebook.object_id == notebooks[ 0 ].trash_id
@@ -151,6 +152,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == True
     assert notebook.owner == True
+    assert notebook.rank == None
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -159,6 +161,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == False
     assert notebook.owner == False
+    assert notebook.rank == None
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -222,6 +225,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id
     assert notebook.read_write == False
     assert notebook.owner == False
+    assert notebook.rank == 1
 
     notebook = notebooks.get( self.notebooks[ 0 ].trash_id )
     assert notebook.revision
@@ -229,6 +233,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == False
     assert notebook.owner == False
+    assert notebook.rank == None
 
     notebook = notebooks.get( self.anon_notebook.object_id )
     assert notebook.revision == self.anon_notebook.revision
@@ -236,6 +241,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == False
     assert notebook.owner == False
+    assert notebook.rank == None
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -283,6 +289,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id
     assert notebook.read_write == True
     assert notebook.owner == True
+    assert notebook.rank == 0
 
     notebook = notebooks[ 1 ]
     assert notebook.object_id == notebooks[ 0 ].trash_id
@@ -291,6 +298,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == True
     assert notebook.owner == True
+    assert notebook.rank == None
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -299,6 +307,7 @@ class Test_users( Test_controller ):
     assert notebook.trash_id == None
     assert notebook.read_write == False
     assert notebook.owner == False
+    assert notebook.rank == None
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -379,22 +388,27 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == 0
     assert result[ u"notebooks" ][ 1 ].object_id
     assert result[ u"notebooks" ][ 1 ].name == u"trash"
     assert result[ u"notebooks" ][ 1 ].read_write == True
     assert result[ u"notebooks" ][ 1 ].owner == True
+    assert result[ u"notebooks" ][ 1 ].rank == None
     assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 1 ].object_id
     assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 1 ].name
     assert result[ u"notebooks" ][ 2 ].read_write == True
     assert result[ u"notebooks" ][ 2 ].owner == True
+    assert result[ u"notebooks" ][ 2 ].rank == 1
     assert result[ u"notebooks" ][ 3 ].object_id
     assert result[ u"notebooks" ][ 3 ].name == u"trash"
     assert result[ u"notebooks" ][ 3 ].read_write == True
     assert result[ u"notebooks" ][ 3 ].owner == True
+    assert result[ u"notebooks" ][ 3 ].rank == None
     assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 4 ].read_write == False
     assert result[ u"notebooks" ][ 4 ].owner == False
+    assert result[ u"notebooks" ][ 4 ].rank == None
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
@@ -412,6 +426,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 0 ].read_write == False
     assert result[ u"notebooks" ][ 0 ].owner == False
+    assert result[ u"notebooks" ][ 0 ].rank == None
 
     login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
     assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
@@ -426,7 +441,7 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
-  def test_current_after_login_with_invite_id( self ):
+  def test_login_with_invite_id( self ):
     # trick send_invites() into using a fake SMTP server
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp
@@ -461,7 +476,7 @@ class Test_users( Test_controller ):
     assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
     assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
-  def test_current_after_login_with_after_login( self ):
+  def test_login_with_after_login( self ):
     after_login = u"/foo/bar"
 
     result = self.http_post( "/users/login", dict(
@@ -473,7 +488,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ] == after_login
 
-  def test_current_after_login_with_after_login_with_full_url( self ):
+  def test_login_with_after_login_with_full_url( self ):
     after_login = u"http://this_url/does/not/start/with/a/slash"
 
     result = self.http_post( "/users/login", dict(
@@ -601,6 +616,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 0 ].read_write == False
     assert result[ u"notebooks" ][ 0 ].owner == False
+    assert result[ u"notebooks" ][ 0 ].rank == None
 
     login_note = self.database.select_one( Note, self.anon_notebook.sql_load_note_by_title( u"login" ) )
     assert result[ u"login_url" ] == u"%s/notebooks/%s?note_id=%s" % (
@@ -2104,6 +2120,9 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
 
   def test_convert_invite_to_access( self ):
+    # start the invitee out with access to one notebook
+    self.database.execute( self.user2.sql_save_notebook( self.notebooks[ 1 ].object_id, read_write = True, owner = False, rank = 7 ), commit = False )
+
     # trick send_invites() into using a fake SMTP server
     Stub_smtp.reset()
     smtplib.SMTP = Stub_smtp
@@ -2143,6 +2162,12 @@ class Test_users( Test_controller ):
       invite.owner,
     ) )
     assert access is True
+
+    self.user.sql_load_notebooks()
+    notebooks = self.database.select_many( Notebook, self.user2.sql_load_notebooks() )
+    new_notebook = [ notebook for notebook in notebooks if notebook.object_id == invite.notebook_id ][ 0 ]
+    print new_notebook.rank
+    assert new_notebook.rank == 8 # one higher than the other notebook this user has access to
 
     assert invite.redeemed_user_id == self.user2.object_id
 
@@ -3245,6 +3270,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -3284,6 +3310,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -3322,6 +3349,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -3360,6 +3388,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -3396,6 +3425,7 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"

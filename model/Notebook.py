@@ -12,7 +12,8 @@ class Notebook( Persistent ):
   WHITESPACE_PATTERN = re.compile( r"\s+" )
   SEARCH_OPERATORS = re.compile( r"[&|!()'\\:]" )
 
-  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True ):
+  def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False,
+                user_id = None, read_write = True, owner = True, rank = None ):
     """
     Create a new notebook with the given id and name.
 
@@ -32,6 +33,8 @@ class Notebook( Persistent ):
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
     @type owner: bool or NoneType
     @param owner: whether this view of the notebook currently has owner-level access (optional, defaults to True)
+    @type rank: float or NoneType
+    @param rank: indicates numeric ordering of this note in relation to other notebooks
     @rtype: Notebook
     @return: newly constructed notebook
     """
@@ -42,9 +45,10 @@ class Notebook( Persistent ):
     self.__user_id = user_id
     self.__read_write = read_write
     self.__owner = owner
+    self.__rank = rank
 
   @staticmethod
-  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True ):
+  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True, rank = None ):
     """
     Convenience constructor for creating a new notebook.
 
@@ -62,10 +66,12 @@ class Notebook( Persistent ):
     @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
     @type owner: bool or NoneType
     @param owner: whether this view of the notebook currently has owner-level access (optional, defaults to True)
+    @type rank: float or NoneType
+    @param rank: indicates numeric ordering of this note in relation to other notebooks
     @rtype: Notebook
     @return: newly constructed notebook
     """
-    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner )
+    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner, rank = rank )
 
   @staticmethod
   def sql_load( object_id, revision = None ):
@@ -182,7 +188,7 @@ class Notebook( Persistent ):
       ) as sub;
       """ % ( quote( search_text ), quote( self.object_id ) )
 
-  def sql_highest_rank( self ):
+  def sql_highest_note_rank( self ):
     """
     Return a SQL string to determine the highest numbered rank of all notes in this notebook."
     """
@@ -232,9 +238,15 @@ class Notebook( Persistent ):
     self.__user_id = user_id
     self.update_revision()
 
+  def __set_rank( self, rank ):
+    # The rank member isn't actually saved to the database, so setting it doesn't need to
+    # call update_revision().
+    self.__rank = rank
+
   name = property( lambda self: self.__name, __set_name )
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
   owner = property( lambda self: self.__owner, __set_owner )
   deleted = property( lambda self: self.__deleted, __set_deleted )
   user_id = property( lambda self: self.__user_id, __set_user_id )
+  rank = property( lambda self: self.__rank, __set_rank )

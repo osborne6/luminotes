@@ -165,7 +165,8 @@ CREATE TABLE user_notebook (
     user_id text NOT NULL,
     notebook_id text NOT NULL,
     read_write boolean DEFAULT false,
-    "owner" boolean DEFAULT false
+    "owner" boolean DEFAULT false,
+    rank numeric
 );
 
 

@@ -41,14 +41,14 @@ class Test_controller( object ):
     # SQL-returning methods in User, Note, and Notebook to return functions that manipulate data in
     # Stub_database directly instead. This is all a little fragile, but it's better than relying on
     # the presence of a real database for unit tests.
-    def sql_save_notebook( self, notebook_id, read_write, owner, database ):
+    def sql_save_notebook( self, notebook_id, read_write, owner, rank, database ):
       if self.object_id in database.user_notebook:
-        database.user_notebook[ self.object_id ].append( ( notebook_id, read_write, owner ) )
+        database.user_notebook[ self.object_id ].append( ( notebook_id, read_write, owner, rank ) )
       else:
-        database.user_notebook[ self.object_id ] = [ ( notebook_id, read_write, owner ) ]
+        database.user_notebook[ self.object_id ] = [ ( notebook_id, read_write, owner, rank ) ]
 
-    User.sql_save_notebook = lambda self, notebook_id, read_write = False, owner = False: \
-      lambda database: sql_save_notebook( self, notebook_id, read_write, owner, database )
+    User.sql_save_notebook = lambda self, notebook_id, read_write = False, owner = False, rank = None: \
+      lambda database: sql_save_notebook( self, notebook_id, read_write, owner, rank, database )
 
     def sql_remove_notebook( self, notebook_id, database ):
       if self.object_id in database.user_notebook:
@@ -66,10 +66,11 @@ class Test_controller( object ):
       if not notebook_infos: return []
 
       for notebook_info in notebook_infos:
-        ( notebook_id, notebook_read_write, owner ) = notebook_info
+        ( notebook_id, notebook_read_write, owner, rank ) = notebook_info
         notebook = database.objects.get( notebook_id )[ -1 ]
         notebook.read_write = notebook_read_write
         notebook.owner = owner
+        notebook.rank = rank
         if parents_only and notebook.trash_id is None:
           continue
         if undeleted_only and notebook.deleted is True:
@@ -118,7 +119,7 @@ class Test_controller( object ):
     def sql_has_access( self, notebook_id, read_write, owner, database ):
       for ( user_id, notebook_infos ) in database.user_notebook.items():
         for notebook_info in notebook_infos:
-          ( db_notebook_id, db_read_write, db_owner ) = notebook_info
+          ( db_notebook_id, db_read_write, db_owner, rank ) = notebook_info
 
           if self.object_id == user_id and notebook_id == db_notebook_id:
             if read_write is True and db_read_write is False:
@@ -135,23 +136,53 @@ class Test_controller( object ):
     def sql_update_access( self, notebook_id, read_write, owner, database ):
       for ( user_id, notebook_infos ) in database.user_notebook.items():
         for notebook_info in notebook_infos:
-          ( db_notebook_id, db_read_write, db_owner ) = notebook_info
+          ( db_notebook_id, db_read_write, db_owner, rank ) = notebook_info
 
           if self.object_id == user_id and notebook_id == db_notebook_id:
             notebook_infos_copy = list( notebook_infos )
             notebook_infos_copy.remove( notebook_info )
-            notebook_infos_copy.append( ( notebook_id, read_write, owner ) )
+            notebook_infos_copy.append( ( notebook_id, read_write, owner, rank ) )
             database.user_notebook[ user_id ] = notebook_infos_copy
 
     User.sql_update_access = lambda self, notebook_id, read_write = False, owner = False: \
       lambda database: sql_update_access( self, notebook_id, read_write, owner, database )
+
+    def sql_update_notebook_rank( self, notebook_id, rank, database ):
+      max_rank = -1
+
+      for ( user_id, notebook_infos ) in database.user_notebook.items():
+        for notebook_info in notebook_infos:
+          ( db_notebook_id, db_read_write, db_owner, db_rank ) = notebook_info
+
+          if self.object_id == user_id and notebook_id == db_notebook_id:
+            notebook_infos_copy = list( notebook_infos )
+            notebook_infos_copy.remove( notebook_info )
+            notebook_infos_copy.append( ( db_notebook_id, db_read_write, db_owner, rank ) )
+            database.user_notebook[ user_id ] = notebook_infos_copy
+
+    User.sql_update_notebook_rank = lambda self, notebook_id, rank: \
+      lambda database: sql_update_notebook_rank( self, notebook_id, rank, database )
+
+    def sql_highest_notebook_rank( self, database ):
+      max_rank = -1
+
+      for ( user_id, notebook_infos ) in database.user_notebook.items():
+        for notebook_info in notebook_infos:
+          ( db_notebook_id, db_read_write, db_owner, db_rank ) = notebook_info
+          if self.object_id == user_id and db_rank > max_rank:
+            max_rank = db_rank
+
+      return max_rank
+
+    User.sql_highest_notebook_rank = lambda self: \
+      lambda database: sql_highest_notebook_rank( self, database )
 
     def sql_revoke_invite_access( notebook_id, trash_id, email_address, database ):
       invites = []
 
       for ( user_id, notebook_infos ) in database.user_notebook.items():
         for notebook_info in list( notebook_infos ):
-          ( db_notebook_id, read_write, owner ) = notebook_info
+          ( db_notebook_id, read_write, owner, rank ) = notebook_info
           if db_notebook_id not in ( notebook_id, trash_id ): continue
           for ( object_id, obj_list ) in database.objects.items():
             obj = obj_list[ -1 ]
@@ -255,7 +286,7 @@ class Test_controller( object ):
     Notebook.sql_search_notes = lambda self, search_text: \
       lambda database: sql_search_notes( self, search_text, database )
 
-    def sql_highest_rank( self, database ):
+    def sql_highest_note_rank( self, database ):
       max_rank = -1
 
       for ( object_id, obj_list ) in database.objects.items():
@@ -265,8 +296,8 @@ class Test_controller( object ):
 
       return max_rank
 
-    Notebook.sql_highest_rank = lambda self: \
-      lambda database: sql_highest_rank( self, database )
+    Notebook.sql_highest_note_rank = lambda self: \
+      lambda database: sql_highest_note_rank( self, database )
 
     def sql_count_notes( self, database ):
       count = 0

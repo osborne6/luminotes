@@ -221,6 +221,18 @@ img {
   background-image: url(/static/images/numbered_list_button_down.png);
 }
 
+#current_notebook_up_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/arrow_up_hover.png);
+}
+
+#current_notebook_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/arrow_down_hover.png);
+}
+
 #link_area {
   float: right;
   text-align: left;
@@ -562,6 +574,16 @@ img {
 
 .current_notebook_inner_tl {
   background: url(/static/images/current_notebook_inner_tl.png) no-repeat top left;
+}
+
+#current_notebook_up {
+  cursor: pointer;
+  padding-top: 1px;
+}
+
+#current_notebook_down {
+  cursor: pointer;
+  padding-top: 1px;
 }
 
 .trash_notebook_color {
