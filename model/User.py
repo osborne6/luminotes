@@ -168,7 +168,7 @@ class User( Persistent ):
 
     return \
       "insert into user_notebook ( user_id, notebook_id, read_write, owner, rank ) values " + \
-      "( %s, %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ),
+      "( %s, %s, %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ),
                                 quote( owner and 't' or 'f' ), rank )
 
   def sql_remove_notebook( self, notebook_id ):

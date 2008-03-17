@@ -1,4 +1,4 @@
-1.2.14: March ??, 2008
+1.2.14: March 17, 2008
  * Added ability to reorder notebooks on the right side of the page.
  * Fixed database transaction leak that was wasting memory.
 
