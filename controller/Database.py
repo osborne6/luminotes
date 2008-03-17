@@ -123,10 +123,7 @@ class Database( object ):
 
   def rollback( self ):
     connection = self.__get_connection()
-
-    # if a transaction has begun but not completed, then rollback the current transaction
-    if connection.get_transaction_status() > 0:
-      connection.rollback()
+    connection.rollback()
 
   def load( self, Object_type, object_id, revision = None ):
     """
