@@ -75,7 +75,7 @@ def expose( view = None, rss = None ):
         if view_override is None:
           if rss and use_rss:
             cherrypy.response.headers[ u"Content-Type" ] = u"application/xml"
-            return unicode( rss( **result ) )
+            return unicode( rss( **result ) ).encode( "utf8" )
           elif view:
             return unicode( view( **result ) )
         else:
