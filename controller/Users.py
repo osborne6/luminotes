@@ -11,7 +11,7 @@ from model.Password_reset import Password_reset
 from model.Invite import Invite
 from Expose import expose
 from Validate import validate, Valid_string, Valid_bool, Validation_error
-from Database import Valid_id
+from Database import Valid_id, end_transaction
 from Expire import strongly_expire
 from view.Json import Json
 from view.Main_page import Main_page
@@ -196,6 +196,7 @@ class Users( object ):
     self.__rate_plans = rate_plans
 
   @expose( view = Json )
+  @end_transaction
   @update_auth
   @validate(
     username = ( Valid_string( min = 1, max = 30 ), valid_username ),
@@ -284,6 +285,7 @@ class Users( object ):
     )
 
   @expose()
+  @end_transaction
   @grab_user_id
   @update_auth
   def demo( self, user_id = None ):
@@ -347,6 +349,7 @@ class Users( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @update_auth
   @validate(
     username = ( Valid_string( min = 1, max = 30 ), valid_username ),
@@ -403,6 +406,7 @@ class Users( object ):
     )
 
   @expose()
+  @end_transaction
   @update_auth
   def logout( self ):
     """
@@ -528,6 +532,7 @@ class Users( object ):
     return False
 
   @expose( view = Json )
+  @end_transaction
   @validate(
     email_address = ( Valid_string( min = 1, max = 60 ), valid_email_address ),
     send_reset_button = unicode,
@@ -585,6 +590,7 @@ class Users( object ):
 
   @expose( view = Main_page )
   @strongly_expire
+  @end_transaction
   @validate(
     password_reset_id = Valid_id(),
   )
@@ -636,6 +642,7 @@ class Users( object ):
     return result
 
   @expose( view = Json )
+  @end_transaction
   def reset_password( self, password_reset_id, reset_button, **new_passwords ):
     """
     Reset all the users with the provided passwords.
@@ -705,6 +712,7 @@ class Users( object ):
     return dict( redirect = u"/" )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -836,6 +844,7 @@ class Users( object ):
       )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -880,6 +889,7 @@ class Users( object ):
     )
 
   @expose( view = Main_page )
+  @end_transaction
   @grab_user_id
   @validate(
     invite_id = Valid_id(),
@@ -979,6 +989,7 @@ class Users( object ):
     self.__database.commit()
 
   @expose( view = Blank_page )
+  @end_transaction
   def paypal_notify( self, **params ):
     """
     Notify Luminotes of payments, subscriptions, cancellations, refunds, etc.
@@ -1082,6 +1093,7 @@ class Users( object ):
     return dict()
 
   @expose( view = Main_page )
+  @end_transaction
   @grab_user_id
   def thanks( self, **params ):
     """

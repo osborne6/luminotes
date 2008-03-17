@@ -1,5 +1,6 @@
 1.2.14: March ??, 2008
  * Added ability to reorder notebooks on the right side of the page.
+ * Fixed database transaction leak that was wasting memory.
 
 1.2.13: March 11, 2008
  * When the "all notes" note is the only note open, it now actually hides when

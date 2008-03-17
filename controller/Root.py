@@ -6,7 +6,7 @@ from Validate import validate, Valid_int, Valid_string
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Files import Files
-from Database import Valid_id
+from Database import Valid_id, end_transaction
 from model.Note import Note
 from model.Notebook import Notebook
 from model.User import User
@@ -50,6 +50,7 @@ class Root( object ):
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )
+  @end_transaction
   @grab_user_id
   @validate(
     note_title = unicode,
@@ -136,6 +137,7 @@ class Root( object ):
 
   @expose( view = Front_page )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
@@ -172,6 +174,7 @@ class Root( object ):
     return result
 
   @expose( view = Tour_page )
+  @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
@@ -191,6 +194,7 @@ class Root( object ):
     return dict( redirect = u"/tour" )
 
   @expose( view = Main_page, rss = Notebook_rss )
+  @end_transaction
   @grab_user_id
   @validate(
     start = Valid_int( min = 0 ),
@@ -225,6 +229,7 @@ class Root( object ):
     return result
 
   @expose( view = Main_page )
+  @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
@@ -245,6 +250,7 @@ class Root( object ):
     return result
 
   @expose( view = Main_page )
+  @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
@@ -266,6 +272,7 @@ class Root( object ):
 
   @expose( view = Main_page )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
@@ -307,6 +314,7 @@ class Root( object ):
 
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )
+  @end_transaction
   def next_id( self ):
     """
     Return the next available database object id for a new note. This id is guaranteed to be unique

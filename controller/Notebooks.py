@@ -3,7 +3,7 @@ import cherrypy
 from datetime import datetime
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool
-from Database import Valid_id, Valid_revision
+from Database import Valid_id, Valid_revision, end_transaction
 from Users import grab_user_id
 from Expire import strongly_expire
 from Html_nuker import Html_nuker
@@ -55,6 +55,7 @@ class Notebooks( object ):
 
   @expose( view = Main_page )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -207,6 +208,7 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -267,6 +269,7 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -358,6 +361,7 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -395,6 +399,7 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -445,6 +450,7 @@ class Notebooks( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -561,6 +567,7 @@ class Notebooks( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -614,6 +621,7 @@ class Notebooks( object ):
       return dict( storage_bytes = 0 )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -670,6 +678,7 @@ class Notebooks( object ):
       return dict( storage_bytes = 0 )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -722,6 +731,7 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -770,6 +780,7 @@ class Notebooks( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -804,6 +815,7 @@ class Notebooks( object ):
 
   @expose( view = Html_file )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -839,6 +851,7 @@ class Notebooks( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
@@ -885,6 +898,7 @@ class Notebooks( object ):
     return notebook
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -936,6 +950,7 @@ class Notebooks( object ):
     return dict()
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -991,6 +1006,7 @@ class Notebooks( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -1033,6 +1049,7 @@ class Notebooks( object ):
     return dict( storage_bytes = user.storage_bytes )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -1073,6 +1090,7 @@ class Notebooks( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -1144,6 +1162,7 @@ class Notebooks( object ):
     return dict()
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),

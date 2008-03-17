@@ -1,6 +1,7 @@
 import re
 import os
 import sha
+import cherrypy
 import psycopg2 as psycopg
 from psycopg2.pool import PersistentConnectionPool
 import random
@@ -318,6 +319,20 @@ class Database( object ):
 
     if self.__pool:
       self.__pool.closeall()
+
+
+def end_transaction( function ):
+  """
+  Decorator that prevents transaction leaks by rolling back any transactions left open when the
+  wrapped function returns or raises.
+  """
+  def rollback( *args, **kwargs ):
+    try:
+      return function( *args, **kwargs )
+    finally:
+      cherrypy.root.database.rollback()
+
+  return rollback
 
 
 class Valid_id( object ):

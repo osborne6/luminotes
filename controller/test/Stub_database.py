@@ -77,5 +77,8 @@ class Stub_database( object ):
   def commit( self ):
     pass
 
+  def rollback( self ):
+    pass
+
   def close( self ):
     pass

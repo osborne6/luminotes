@@ -7,7 +7,7 @@ import cherrypy
 from threading import Lock, Event
 from Expose import expose
 from Validate import validate, Valid_int, Validation_error
-from Database import Valid_id
+from Database import Valid_id, end_transaction
 from Users import grab_user_id
 from Expire import strongly_expire
 from model.File import File
@@ -232,6 +232,7 @@ class Files( object ):
     self.__users = users
 
   @expose()
+  @end_transaction
   @grab_user_id
   @validate(
     file_id = Valid_id(),
@@ -280,6 +281,7 @@ class Files( object ):
 
   @expose( view = Upload_page )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
@@ -314,6 +316,7 @@ class Files( object ):
 
   @expose( view = Blank_page )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     upload = (),
@@ -383,6 +386,7 @@ class Files( object ):
 
   @expose()
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     file_id = Valid_id(),
@@ -449,6 +453,7 @@ class Files( object ):
 
   @expose( view = Json )
   @strongly_expire
+  @end_transaction
   @grab_user_id
   @validate(
     file_id = Valid_id(),
@@ -487,6 +492,7 @@ class Files( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     file_id = Valid_id(),
@@ -523,6 +529,7 @@ class Files( object ):
     )
 
   @expose( view = Json )
+  @end_transaction
   @grab_user_id
   @validate(
     file_id = Valid_id(),
