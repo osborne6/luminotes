@@ -1,12 +1,20 @@
 To upgrade the Luminotes database from an earlier version, manually apply each
 relevant schema delta file within model/delta/
 
-For instance, if you were upgrading from version 1.0.1 to 1.0.4, you would
+For instance, if you were upgrading from version 5.0.1 to 5.0.4, you would
 apply the following deltas in order:
 
-  psql -U luminotes luminotes -f model/delta/1.0.2.sql
-  psql -U luminotes luminotes -f model/delta/1.0.3.sql
-  psql -U luminotes luminotes -f model/delta/1.0.4.sql
+  psql -U luminotes luminotes -f model/delta/5.0.2.sql
+  psql -U luminotes luminotes -f model/delta/5.0.3.sql
+  psql -U luminotes luminotes -f model/delta/5.0.4.sql
 
 Any version which does not introduce a schema change does not have a
 corresponding schema delta file.
+
+Sometimes I include comments within a schema delta file with additional
+manual steps you need to take.
+
+After you've updated the schema, run the updatedb.py script:
+
+  export PYTHONPATH=.
+  python2.4 tools/updatedb.py
