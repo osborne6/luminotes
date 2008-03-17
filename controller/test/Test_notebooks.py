@@ -55,11 +55,31 @@ class Test_notebooks( Test_controller ):
     self.database.save( self.anon_notebook, commit = False )
 
     self.database.execute( self.user.sql_save_notebook( self.notebook.object_id, read_write = True, owner = True, rank = 0 ) )
-    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True, rank = 0 ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = True ) )
     self.database.execute( self.user.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
 
     self.database.execute( self.user2.sql_save_notebook( self.notebook.object_id, read_write = True, owner = False, rank = 0 ) )
-    self.database.execute( self.user2.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = False, rank = 0 ) )
+    self.database.execute( self.user2.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = False ) )
+
+  def make_extra_notebooks( self ):
+    user_id = self.user.object_id
+
+    self.trash2 = Notebook.create( self.database.next_id( Notebook ), u"trash", user_id = user_id )
+    self.database.save( self.trash2, commit = False )
+    self.notebook2 = Notebook.create( self.database.next_id( Notebook ), u"notebook", self.trash2.object_id, user_id = user_id )
+    self.database.save( self.notebook2, commit = False )
+
+    self.trash3 = Notebook.create( self.database.next_id( Notebook ), u"trash", user_id = user_id )
+    self.database.save( self.trash3, commit = False )
+    self.notebook3 = Notebook.create( self.database.next_id( Notebook ), u"notebook", self.trash3.object_id, user_id = user_id )
+    self.database.save( self.notebook3, commit = False )
+
+    self.database.execute( self.user.sql_save_notebook( self.notebook2.object_id, read_write = True, owner = True, rank = 1 ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook2.trash_id, read_write = True, owner = True ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook3.object_id, read_write = True, owner = True, rank = 2 ) )
+    self.database.execute( self.user.sql_save_notebook( self.notebook3.trash_id, read_write = True, owner = True ) )
+
+    self.database.commit()
 
   def make_users( self ):
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
@@ -2680,6 +2700,176 @@ class Test_notebooks( Test_controller ):
     assert notebook.owner == True
     assert notebook.trash_id
     assert notebook.user_id == self.user.object_id
+
+  def test_move_up( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_up", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+    notebooks = self.database.select_many( Notebook, self.user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+
+    assert notebooks
+    assert len( notebooks ) == 3
+    assert notebooks[ 0 ].object_id == self.notebook2.object_id
+    assert notebooks[ 0 ].rank == 0
+    assert notebooks[ 1 ].object_id == self.notebook.object_id
+    assert notebooks[ 1 ].rank == 1
+    assert notebooks[ 2 ].object_id == self.notebook3.object_id
+    assert notebooks[ 2 ].rank == 2
+
+  def test_move_up_and_wrap( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_up", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+    notebooks = self.database.select_many( Notebook, self.user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+
+    assert notebooks
+    assert len( notebooks ) == 3
+    assert notebooks[ 0 ].object_id == self.notebook2.object_id
+    assert notebooks[ 0 ].rank == 1
+    assert notebooks[ 1 ].object_id == self.notebook3.object_id
+    assert notebooks[ 1 ].rank == 2
+    assert notebooks[ 2 ].object_id == self.notebook.object_id
+    assert notebooks[ 2 ].rank == 3
+
+  def test_move_up_without_login( self ):
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_up", dict(
+      notebook_id = self.notebook2.object_id,
+    ) )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_up_without_access( self ):
+    self.login2()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_up", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_up_trash( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_up", dict(
+      notebook_id = self.trash.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_up_deleted_notebook( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/move_up", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_down( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_down", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+    notebooks = self.database.select_many( Notebook, self.user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+
+    assert notebooks
+    assert len( notebooks ) == 3
+    assert notebooks[ 0 ].object_id == self.notebook.object_id
+    assert notebooks[ 0 ].rank == 0
+    assert notebooks[ 1 ].object_id == self.notebook3.object_id
+    assert notebooks[ 1 ].rank == 1
+    assert notebooks[ 2 ].object_id == self.notebook2.object_id
+    assert notebooks[ 2 ].rank == 2
+
+  def test_move_down_and_wrap( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_down", dict(
+      notebook_id = self.notebook3.object_id,
+    ), session_id = self.session_id )
+
+    assert u"error" not in result
+
+    notebooks = self.database.select_many( Notebook, self.user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+
+    assert notebooks
+    assert len( notebooks ) == 3
+    assert notebooks[ 0 ].object_id == self.notebook3.object_id
+    assert notebooks[ 0 ].rank == -1
+    assert notebooks[ 1 ].object_id == self.notebook.object_id
+    assert notebooks[ 1 ].rank == 0
+    assert notebooks[ 2 ].object_id == self.notebook2.object_id
+    assert notebooks[ 2 ].rank == 1
+
+  def test_move_down_without_login( self ):
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_down", dict(
+      notebook_id = self.notebook2.object_id,
+    ) )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_down_without_access( self ):
+    self.login2()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_down", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_down_trash( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    result = self.http_post( "/notebooks/move_down", dict(
+      notebook_id = self.trash.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
+  def test_move_down_deleted_notebook( self ):
+    self.login()
+    self.make_extra_notebooks()
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/move_down", dict(
+      notebook_id = self.notebook2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
 
   def test_recent_notes( self ):
     result = cherrypy.root.notebooks.load_recent_notes(

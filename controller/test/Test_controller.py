@@ -79,6 +79,8 @@ class Test_controller( object ):
           continue
         notebooks.append( notebook )
 
+      notebooks.sort( lambda a, b: a.rank is None and 1 or cmp( a.rank, b.rank ) )
+
       return notebooks
 
     User.sql_load_notebooks = lambda self, parents_only = False, undeleted_only = False, read_write = False: \
