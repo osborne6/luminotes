@@ -26,6 +26,16 @@ class Ranker( object ):
         self.database.execute( user.sql_update_notebook_rank( notebook.object_id, rank ), commit = False )
         rank += 1
 
+    users = self.database.select_many( User, u"select * from luminotes_user_current where username is not null and username = 'anonymous';" )
+    user = users[ 0 ]
+
+    # rank the notebooks for the anonymous user
+    rank = 0
+    notebooks = self.database.select_many( Notebook, user.sql_load_notebooks( undeleted_only = True ) )
+
+    for notebook in notebooks:
+      self.database.execute( user.sql_update_notebook_rank( notebook.object_id, rank ), commit = False )
+      rank += 1
 
 def main( args ):
   database = Database()
