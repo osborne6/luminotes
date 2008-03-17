@@ -1,3 +1,6 @@
+1.2.15: March 17, 2008
+ * Fixed the bugs introduced by the previous released.
+
 1.2.14: March 17, 2008
  * Added ability to reorder notebooks on the right side of the page.
  * Fixed database transaction leak that was wasting memory.
