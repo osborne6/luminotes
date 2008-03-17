@@ -120,6 +120,13 @@ class Database( object ):
 
       connection.pending_saves = []
 
+  def rollback( self ):
+    connection = self.__get_connection()
+
+    # if a transaction has begun but not completed, then rollback the current transaction
+    if connection.get_transaction_status() > 0:
+      connection.rollback()
+
   def load( self, Object_type, object_id, revision = None ):
     """
     Load the object corresponding to the given object id from the database and return it, or None if
