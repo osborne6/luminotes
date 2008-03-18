@@ -535,7 +535,7 @@ class Test_controller( object ):
     if headers is None:
       headers = []
 
-    post_data = str( "".join( post_data ) )
+    post_data = "".join( post_data ).encode( "utf8" )
     headers.append( ( "Content-Type", "multipart/form-data; boundary=%s" % boundary ) )
 
     if "Content-Length" not in [ name for ( name, value ) in headers ]:

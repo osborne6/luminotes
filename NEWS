@@ -1,3 +1,7 @@
+1.2.16: March 18, 2008
+ * Fixed a bug that prevented the upload of filenames with special characters
+   in them.
+
 1.2.15: March 17, 2008
  * Fixed the bugs introduced by the previous released.
 

@@ -168,7 +168,7 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
     except ValueError:
       raise Upload_error( "The file_id is invalid." )
 
-    self.filename = self.filename.split( "/" )[ -1 ].split( "\\" )[ -1 ].strip()
+    self.filename = unicode( self.filename.split( "/" )[ -1 ].split( "\\" )[ -1 ].strip(), "utf8" )
 
     if not self.filename:
       raise Upload_error( "Please provide a filename." )
@@ -265,7 +265,9 @@ class Files( object ):
     db_file = self.__database.load( File, file_id )
 
     cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
-    cherrypy.response.headerMap[ u"Content-Disposition" ] = u'attachment; filename="%s"' % db_file.filename.replace( '"', r"\"" )
+    disposition = u'attachment; filename="%s"' % db_file.filename.replace( '"', r"\"" )
+    disposition = disposition.encode( "utf8" )
+    cherrypy.response.headerMap[ u"Content-Disposition" ] = disposition
     cherrypy.response.headerMap[ u"Content-Length" ] = db_file.size_bytes
 
     def stream():

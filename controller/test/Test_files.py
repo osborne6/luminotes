@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import time
 import types
 import cherrypy
@@ -32,6 +34,7 @@ class Test_files( Test_controller ):
     self.session_id = None
     self.file_id = "22"
     self.filename = "file.png"
+    self.unicode_filename = u"ümlaut.png"
     self.new_filename = "newfile.png"
     self.file_data = "foobar\x07`-=[]\;',./ ~!@#$%^&*()_+{}|:\"<>?" * 100
     self.weird_filename = self.file_data + ".png"
@@ -116,7 +119,7 @@ class Test_files( Test_controller ):
     if self.upload_thread:
       self.upload_thread.join()
 
-  def test_download( self ):
+  def test_download( self, filename = None ):
     self.login()
 
     self.http_upload(
@@ -125,7 +128,7 @@ class Test_files( Test_controller ):
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
       ),
-      filename = self.filename,
+      filename = filename or self.filename,
       file_data = self.file_data,
       content_type = self.content_type,
       session_id = self.session_id,
@@ -139,7 +142,7 @@ class Test_files( Test_controller ):
     headers = result[ u"headers" ]
     assert headers
     assert headers[ u"Content-Type" ] == self.content_type
-    assert headers[ u"Content-Disposition" ] == u'attachment; filename="%s"' % self.filename
+    assert headers[ u"Content-Disposition" ] == ( u'attachment; filename="%s"' % ( filename or self.filename ) ).encode( "utf8" )
 
     gen = result[ u"body" ]
     assert isinstance( gen, types.GeneratorType )
@@ -154,6 +157,9 @@ class Test_files( Test_controller ):
 
     file_data = "".join( pieces )
     assert file_data == self.file_data
+
+  def test_download_with_unicode_filename( self ):
+    self.test_download( self.unicode_filename )
 
   def test_download_without_login( self ):
     self.login()
@@ -229,7 +235,7 @@ class Test_files( Test_controller ):
 
     assert u"access" in result.get( u"error" )
 
-  def test_upload( self ):
+  def test_upload( self, filename = None ):
     self.login()
 
     result = self.http_upload(
@@ -238,7 +244,7 @@ class Test_files( Test_controller ):
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
       ),
-      filename = self.filename,
+      filename = filename or self.filename,
       file_data = self.file_data,
       content_type = self.content_type,
       session_id = self.session_id,
@@ -252,7 +258,7 @@ class Test_files( Test_controller ):
     assert db_file
     assert db_file.notebook_id == self.notebook.object_id
     assert db_file.note_id == self.note.object_id
-    assert db_file.filename == self.filename
+    assert db_file.filename == filename or self.filename
     assert db_file.size_bytes == len( self.file_data )
     assert db_file.content_type == self.content_type
 
@@ -263,6 +269,9 @@ class Test_files( Test_controller ):
     orig_storage_bytes = self.user.storage_bytes
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > orig_storage_bytes
+
+  def test_upload_with_unicode_filename( self ):
+    self.test_upload( self.unicode_filename )
 
   def test_upload_without_login( self ):
     result = self.http_upload(
