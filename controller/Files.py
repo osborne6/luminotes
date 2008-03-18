@@ -2,11 +2,12 @@ import os
 import re
 import cgi
 import time
+import urllib
 import tempfile
 import cherrypy
 from threading import Lock, Event
 from Expose import expose
-from Validate import validate, Valid_int, Validation_error
+from Validate import validate, Valid_int, Valid_bool, Validation_error
 from Database import Valid_id, end_transaction
 from Users import grab_user_id
 from Expire import strongly_expire
@@ -236,14 +237,19 @@ class Files( object ):
   @grab_user_id
   @validate(
     file_id = Valid_id(),
+    quote_filename = Valid_bool( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def download( self, file_id, user_id = None ):
+  def download( self, file_id, quote_filename = False, user_id = None ):
     """
     Return the contents of file that a user has previously uploaded.
 
     @type file_id: unicode
     @param file_id: id of the file to download
+    @type quote_filename: bool
+    @param quote_filename: True to URL quote the filename of the downloaded file, False to leave it
+                           as UTF-8. IE expects quoting while Firefox doesn't (optional, defaults
+                           to False)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: unicode
@@ -265,9 +271,12 @@ class Files( object ):
     db_file = self.__database.load( File, file_id )
 
     cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
-    disposition = u'attachment; filename="%s"' % db_file.filename.replace( '"', r"\"" )
-    disposition = disposition.encode( "utf8" )
-    cherrypy.response.headerMap[ u"Content-Disposition" ] = disposition
+
+    filename = db_file.filename.replace( '"', r"\"" ).encode( "utf8" )
+    if quote_filename:
+      filename = urllib.quote( filename, safe = "" )
+
+    cherrypy.response.headerMap[ u"Content-Disposition" ] = 'attachment; filename="%s"' % filename
     cherrypy.response.headerMap[ u"Content-Length" ] = db_file.size_bytes
 
     def stream():

@@ -2454,9 +2454,14 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
 }
 
 Upload_pulldown.prototype.upload_complete = function () {
+  if ( /MSIE/.test( navigator.userAgent ) )
+    var quote_filename = true;
+  else
+    var quote_filename = false;
+
   // now that the upload is done, the file link should point to the uploaded file
   this.uploading = false;
-  this.link.href = "/files/download?file_id=" + this.file_id
+  this.link.href = "/files/download?file_id=" + this.file_id + "&quote_filename=" + quote_filename;
 
   new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
   this.shutdown();

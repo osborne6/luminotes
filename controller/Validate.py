@@ -125,8 +125,12 @@ class Valid_bool( object ):
   """
   Validator for a boolean value.
   """
+  def __init__( self, none_okay = False ):
+    self.__none_okay = none_okay
+
   def __call__( self, value ):
     value = value.strip()
+    if self.__none_okay and value in ( None, "None", "" ): return None
 
     if value in ( u"True", u"true" ): return True
     if value in ( u"False", u"false" ): return False

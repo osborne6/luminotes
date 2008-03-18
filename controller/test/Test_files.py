@@ -2,6 +2,7 @@
 
 import time
 import types
+import urllib
 import cherrypy
 from threading import Thread
 from StringIO import StringIO
@@ -119,7 +120,7 @@ class Test_files( Test_controller ):
     if self.upload_thread:
       self.upload_thread.join()
 
-  def test_download( self, filename = None ):
+  def test_download( self, filename = None, quote_filename = None ):
     self.login()
 
     self.http_upload(
@@ -134,15 +135,30 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    result = self.http_get(
-      "/files/download?file_id=%s" % self.file_id,
-      session_id = self.session_id,
-    )
+    if quote_filename is None:
+      result = self.http_get(
+        "/files/download?file_id=%s" % self.file_id,
+        session_id = self.session_id,
+      )
+    elif quote_filename is True:
+      result = self.http_get(
+        "/files/download?file_id=%s&quote_filename=true" % self.file_id,
+        session_id = self.session_id,
+      )
+    else:
+      result = self.http_get(
+        "/files/download?file_id=%s&quote_filename=false" % self.file_id,
+        session_id = self.session_id,
+      )
 
     headers = result[ u"headers" ]
     assert headers
     assert headers[ u"Content-Type" ] == self.content_type
-    assert headers[ u"Content-Disposition" ] == ( u'attachment; filename="%s"' % ( filename or self.filename ) ).encode( "utf8" )
+
+    filename = ( filename or self.filename ).encode( "utf8" )
+    if quote_filename is True:
+      filename = urllib.quote( filename )
+    assert headers[ u"Content-Disposition" ] == 'attachment; filename="%s"' % filename
 
     gen = result[ u"body" ]
     assert isinstance( gen, types.GeneratorType )
@@ -160,6 +176,12 @@ class Test_files( Test_controller ):
 
   def test_download_with_unicode_filename( self ):
     self.test_download( self.unicode_filename )
+
+  def test_download_with_unicode_quoted_filename( self ):
+    self.test_download( self.unicode_filename, quote_filename = True )
+
+  def test_download_with_unicode_unquoted_filename( self ):
+    self.test_download( self.unicode_filename, quote_filename = False )
 
   def test_download_without_login( self ):
     self.login()
