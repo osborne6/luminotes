@@ -326,8 +326,8 @@ class Test_root( Test_controller ):
     assert u"error" not in result
     assert result[ u"notebook" ].object_id == self.privacy_notebook.object_id
 
-  def test_upgrade( self ):
-    result = self.http_get( "/upgrade" )
+  def test_pricing( self ):
+    result = self.http_get( "/pricing" )
 
     assert result[ u"user" ].username == u"anonymous"
     assert len( result[ u"notebooks" ] ) == 4
@@ -341,27 +341,14 @@ class Test_root( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
-    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
-    assert len( result[ u"startup_notes" ] ) == 0
-    assert result[ u"note_read_write" ] is False
+    assert result[ u"first_notebook" ] == None
+    assert result[ u"rate_plans" ] == self.settings[ u"global" ].get( u"luminotes.rate_plans", [] )
+    assert result[ u"unsubscribe_button" ] == self.settings[ u"global" ].get( u"luminotes.unsubscribe_button" )
 
-    assert result[ u"notes" ]
-    assert len( result[ u"notes" ] ) == 1
-    assert result[ u"notes" ][ 0 ].title == u"upgrade your wiki"
-    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
-
-    contents = result[ u"notes" ][ 0 ].contents
-    assert u"upgrade" in contents
-    assert u"Super" in contents
-    assert u"Extra super" in contents
-
-    # since the user is not logged in, no subscription buttons should be shown
-    assert u"button" not in contents
-
-  def test_upgrade_after_login( self ):
+  def test_pricing_after_login( self ):
     self.login()
 
-    result = self.http_get( "/upgrade", session_id = self.session_id )
+    result = self.http_get( "/pricing", session_id = self.session_id )
 
     assert result[ u"user" ].username == self.username
     assert len( result[ u"notebooks" ] ) == 5
@@ -375,22 +362,14 @@ class Test_root( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
-    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
-    assert len( result[ u"startup_notes" ] ) == 0
-    assert result[ u"note_read_write" ] is False
+    assert result[ u"first_notebook" ].object_id == self.notebook.object_id
+    assert result[ u"rate_plans" ] == self.settings[ u"global" ].get( u"luminotes.rate_plans", [] )
+    assert result[ u"unsubscribe_button" ] == self.settings[ u"global" ].get( u"luminotes.unsubscribe_button" )
 
-    assert result[ u"notes" ]
-    assert len( result[ u"notes" ] ) == 1
-    assert result[ u"notes" ][ 0 ].title == u"upgrade your wiki"
-    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+  def upgrade( self ):
+    result = self.http_get( "/upgrade" )
 
-    contents = result[ u"notes" ][ 0 ].contents
-    assert u"upgrade" in contents
-    assert u"Super" in contents
-    assert u"Extra super" in contents
-
-    # since the user is logged in, subscription buttons should be shown
-    assert u"button" in contents
+    assert result[ u"redirect" ] == u"/pricing"
 
   def test_next_id( self ):
     result = self.http_get( "/next_id" )

@@ -1,3 +1,6 @@
+1.2.18: March ??, 2008
+ * Newly redesigned upgrade/pricing/signup page.
+
 1.2.17: March 18, 2008
  * Internet Explorer expects quoted download filenames, while Firefox
    doesn't. So I took that into account by quoting conditionally based on the

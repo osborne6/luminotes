@@ -17,14 +17,14 @@ class User_area( Div ):
         user.username and Span(
           A(
             u"upgrade",
-            href = u"/upgrade",
+            href = u"/pricing",
             title = u"Upgrade your Luminotes account.",
           ),
           " | ",
         ) or Span(
           A(
             u"sign up",
-            href = u"/sign_up",
+            href = u"/pricing",
             title = u"Sign up for a real Luminotes account.",
           ),
           " | ",

@@ -18,7 +18,8 @@ class Product_page( Page ):
         Div(
           ( note_title == u"home" ) and title_image or A( title_image, href = u"/" ),   
           ( login_url and user.username == u"anonymous" ) and Div(
-            A( u"sign up", href = u"/sign_up", class_ = u"bold_link" ), u" | ",
+            ( note_title == u"pricing" ) and Span( u"pricing &amp sign up", class_ = u"bold_link" ) or \
+            A( u"pricing &amp; sign up", href = u"/pricing", class_ = u"bold_link" ), u" | ",
             A(
               u"login",
               href = login_url,
@@ -39,16 +40,18 @@ class Product_page( Page ):
             user.username and Span(
               A(
                 u"upgrade",
-                href = u"/upgrade",
+                href = u"/pricing",
                 title = u"Upgrade your Luminotes account.",
                 class_ = u"bold_link",
               ),
               " | ",
             ) or Span(
+              ( note_title == u"pricing" ) and Span( u"pricing &amp sign up", class_ = u"bold_link" ) or \
               A(
-                u"sign up",
-                href = u"/sign_up",
+                u"pricing &amp; sign up",
+                href = u"/pricing",
                 title = u"Sign up for a real Luminotes account.",
+                class_ = u"bold_link",
               ),
               " | ",
             ) or None,
@@ -64,7 +67,6 @@ class Product_page( Page ):
             ( note_title == u"home" ) and Span( u"home", class_ = u"bold_link" ) or A( u"home", href = u"/" ), u" | ",
             ( note_title == u"tour" ) and Span( u"tour", class_ = u"bold_link" ) or A( u"tour", href = u"/tour" ), u" | ",
             ( note_title == u"demo" ) and Span( u"demo", class_ = u"bold_link" ) or A( u"demo", href = u"/users/demo" ), u" | ",
-            ( note_title == u"upgrade" ) and Span( u"upgrade", class_ = u"bold_link" ) or A( u"pricing", href = u"/upgrade" ), u" | ",
             ( note_title == u"faq" ) and Span( u"faq", class_ = u"bold_link" ) or A( u"faq", href = u"/faq" ), u" | ",
             ( note_title == u"guide" ) and Span( u"guide", class_ = u"bold_link" ) or A( u"help", href = u"/guide" ), u" | ",
             ( note_title == u"contact" ) and Span( u"contact", class_ = u"bold_link" ) or A( u"contact", href = u"/contact_info" ), u" | ",

@@ -13,8 +13,8 @@ from model.User import User
 from view.Main_page import Main_page
 from view.Front_page import Front_page
 from view.Tour_page import Tour_page
+from view.Upgrade_page import Upgrade_page
 from view.Notebook_rss import Notebook_rss
-from view.Upgrade_note import Upgrade_note
 from view.Json import Json
 from view.Error_page import Error_page
 from view.Not_found_page import Not_found_page
@@ -79,6 +79,8 @@ class Root( object ):
     if note_title in ( u"sign_up", u"login" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
       if invite_id:
         return dict( redirect = u"%s/%s?invite_id=%s" % ( https_url, note_title, invite_id ) )
+      if after_login:
+        return dict( redirect = u"%s/%s?after_login=%s" % ( https_url, note_title, after_login ) )
       else:
         return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
 
@@ -270,47 +272,34 @@ class Root( object ):
 
     return result
 
-  @expose( view = Main_page )
+  @expose( view = Upgrade_page )
   @strongly_expire
   @end_transaction
   @grab_user_id
   @validate(
     user_id = Valid_id( none_okay = True ),
   )
-  def upgrade( self, user_id = None ):
+  def pricing( self, user_id = None ):
     """
-    Provide the information necessary to display the Luminotes upgrade page.
+    Provide the information necessary to display the Luminotes pricing page.
     """
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ) )
-    if anonymous:
-      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
-    else:
-      main_notebook = None
-
-    if user_id:
-      user = self.__database.load( User, user_id )
-    else:
-      user = None
-
-    https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
     result = self.__users.current( user_id )
-    result[ "notebook" ] = main_notebook
-    result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
-    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes() )
-    result[ "note_read_write" ] = False
-    result[ "notes" ] = [ Note.create(
-      object_id = u"upgrade",
-      contents = unicode( Upgrade_note(
-        self.__settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
-        self.__settings[ u"global" ].get( u"luminotes.unsubscribe_button" ),
-        https_url,
-        user,
-      ) ),
-      notebook_id = main_notebook.object_id,
-    ) ]
-    result[ "invites" ] = []
+    parents = [ notebook for notebook in result[ u"notebooks" ] if notebook.trash_id and not notebook.deleted ]
+    if len( parents ) > 0:
+      result[ "first_notebook" ] = parents[ 0 ]
+    else:
+      result[ "first_notebook" ] = None
+
+    result[ "rate_plans" ] = self.__settings[ u"global" ].get( u"luminotes.rate_plans", [] )
+    result[ "unsubscribe_button" ] = self.__settings[ u"global" ].get( u"luminotes.unsubscribe_button" )
 
     return result
+
+  @expose()
+  def upgrade( self ):
+    return dict(
+      redirect = u"/pricing",
+    )
 
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )

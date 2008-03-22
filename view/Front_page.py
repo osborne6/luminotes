@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, Img, A, P, Table, Tr, Td, Li, Span, I, Br
+from Tags import Div, Img, A, P, Table, Tr, Td, Li, Span, I, Br, Ul, Li
 
 
 class Front_page( Product_page ):
@@ -49,7 +49,7 @@ class Front_page( Product_page ):
               A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
               A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
               Span( u" or ", class_ = u"hook_action_or" ),
-              A( u"Sign up", href = u"/sign_up", class_ = u"hook_action"  ),
+              A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ),
               class_ = u"hook_action_area",
               separator = u"",
             ),
@@ -74,6 +74,27 @@ class Front_page( Product_page ):
             Div(
               u'"',
               Span(
+                u"As soon as I saw Luminotes I knew it was what I and my students needed.",
+                class_ = u"quote_title",
+                separator = u"",
+              ),
+              u"""
+              Clear, easy to use and beautifully simple.
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"-Jonathan Lecun, Director, ", A( u"UK Teachers Online", href = u"http://www.ukteachersonline.co.uk/" ),
+              class_ = u"quote_signature"
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
                 u"What I love most about Luminotes is the ", I( u"simplicity" ), u" of it.",
                 class_ = u"quote_title",
                 separator = u"",
@@ -89,6 +110,29 @@ class Front_page( Product_page ):
             ),
             Div(
               u"-Michael Miller, President &amp; CEO, Mighty Hero Entertainment, Inc.",
+              class_ = u"quote_signature"
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
+                u"I'm a wiki addict, so I've tried most of them, desktop and web-based.",
+                class_ = u"quote_title",
+                separator = u"",
+              ),
+              u"""
+              What I like about your excellent product is the modeless editing (no edit
+              and save buttons). This makes Luminotes the fastest web-based wiki I have
+              used.
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"-Scott Tiner",
               class_ = u"quote_signature"
             ),
             class_ = u"quote",
@@ -195,6 +239,17 @@ class Front_page( Product_page ):
               class_ = u"thumbnail_area",
             ),
             P(
+              u"What can you do with Luminotes?",
+            ),
+            Ul(
+              Li( u"Plan a story" ),
+              Li( u"Collect recipes" ),
+              Li( u"Record your ideas" ),
+              Li( u"Keep track of your tasks" ),
+              Li( u"Take notes" ),
+              class_ = u"compact_list",
+            ),
+            P(
               u"""
               Luminotes is open source / free software and licensed under the terms of the
               GNU GPL.
@@ -202,24 +257,23 @@ class Front_page( Product_page ):
             ),
             class_ = u"what_is_luminotes_text",
           ),
+          Div(
+            P(
+              Span( u"Sound interesting?", class_ = u"hook_action_question" ), Br(),
+              A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
+              A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
+              Span( u" or ", class_ = u"hook_action_or" ),
+              A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ),
+              class_ = u"hook_action_area",
+              separator = u"",
+            ),
+          ),
           class_ = u"what_is_luminotes_area",
         ),
 
         class_ = u"wide_center_area",
       ),
 
-      Div(
-        P(
-          Span( u"Sound interesting?", class_ = u"hook_action_question" ), Br(),
-          A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
-          A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
-          Span( u" or ", class_ = u"hook_action_or" ),
-          A( u"Sign up", href = u"/sign_up", class_ = u"hook_action"  ),
-          class_ = u"hook_action_area",
-          separator = u"",
-        ),
-        class_ = u"center_area",
-      ),
       P(
         Span( id = u"new_note_button_preload" ),
         Span( id = u"link_button_preload" ),

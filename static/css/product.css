@@ -105,10 +105,6 @@
   margin-right: 20px;
 }
 
-.hook_bullet_list {
-  list-style-type: none;
-}
-
 .hook_action_area {
   background-color: #ffff99;
   font-weight: bold;
@@ -178,6 +174,10 @@
   padding-bottom: 0.5em;
 }
 
+.compact_list {
+  line-height: 100%;
+}
+
 .quotes_area {
   float: right;
   width: 400px;
@@ -207,10 +207,12 @@
 }
 
 .footer {
+  clear: both;
   background-color: #b0d0ff;
   height: 2em;
   margin-left: 0;
   margin-right: 0;
+  margin-top: 1em;
   border-top: 1px solid #999999;
 }
 
@@ -246,4 +248,128 @@
 
 .tour_screenshot_wrapper {
   padding: 1em;
+}
+
+.upgrade_subtitle {
+  text-align: center;
+  font-weight: bold;
+  padding-bottom: 0.5em;
+}
+
+.upgrade_text {
+  text-align: left;
+}
+
+.upgrade_area {
+  text-align: center;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  background-color: #ffffff;
+  border-bottom: 1px solid #cccccc;
+  margin: 0 auto;
+  margin-bottom: 1em;
+}
+
+.upgrade_table_area {
+  text-align: center;
+}
+
+#upgrade_table {
+  border-collapse: collapse;
+  border: 1px solid #999999;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1em;
+}
+
+#upgrade_table th {
+  padding: 0.5em;
+}
+
+#upgrade_table td {
+  text-align: center;
+  background-color: #fafafa;
+  padding: 0.5em;
+}
+
+#upgrade_table .plan_name {
+  width: 16%;
+  text-align: center;
+  background-color: #d0e0f0;
+}
+
+#upgrade_table .feature_name {
+  width: 36%;
+  text-align: left;
+  background-color: #fafafa;
+}
+
+#upgrade_table_small {
+  clear: both;
+  border-collapse: collapse;
+  border: 1px solid #999999;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#upgrade_table_small th {
+  padding: 0.5em;
+}
+
+#upgrade_table_small td {
+  text-align: center;
+  background-color: #fafafa;
+  padding: 0.5em;
+}
+
+#upgrade_table_small .plan_name {
+  width: 33%;
+  text-align: center;
+  background-color: #d0e0f0;
+}
+
+.price_text {
+  color: #ff6600;
+}
+
+.month_text {
+  padding-top: 0.5em;
+  font-size: 75%;
+}
+
+.subscribe_form {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+
+.sign_up_button_area {
+  margin-top: 0.5em;
+}
+
+.upgrade_left_area {
+  width: 400px;
+  margin-bottom: 1em;
+}
+
+.upgrade_right_area {
+  float: right;
+  width: 400px;
+  margin-left: 20px;
+  margin-bottom: 1em;
+}
+
+.thumbnail_left {
+  float: left;
+  margin: 0.5em;
+  margin-right: 1em;
+  margin-bottom: 0.5em;
+  border: 1px solid #999999;
+}
+
+.thumbnail_right {
+  float: right;
+  margin: 0.5em;
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+  border: 1px solid #999999;
 }

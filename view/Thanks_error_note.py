@@ -25,7 +25,7 @@ class Thanks_error_note( Span ):
         u"""
         Note: You can check the current status of your account by refreshing the
         """,
-        A( u"upgrade", href = u"/upgrade", target = "_top" ),
+        A( u"upgrade", href = u"/pricing", target = "_top" ),
         u"""
         page while logged in.
         """
