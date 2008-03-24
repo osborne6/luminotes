@@ -98,8 +98,8 @@ class Upgrade_page( Product_page ):
               alt = u"More room to stretch out",
             ),
             Ul(
-              Li( u"More room for your wiki notes." ),
-              Li( u"More room for your documents and files." ),
+              Li( u"More space for your wiki notes." ),
+              Li( u"More space for your documents and files." ),
               class_ = u"upgrade_text",
             ),
             Img(
@@ -176,7 +176,8 @@ class Upgrade_page( Product_page ):
             class_ = u"price_text",
             separator = u"",
           ),
-          user and user.username and user.rate_plan != index and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id,
+          user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
+               and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None,
         ) or None,
         ( not user or user.username in ( u"anonymous", None ) ) and Div(
           A(

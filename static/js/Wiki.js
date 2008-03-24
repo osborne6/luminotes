@@ -17,6 +17,7 @@ function Wiki( invoker ) {
   this.invites = evalJSON( getElement( "invites" ).value );
   this.invite_id = getElement( "invite_id" ).value;
   this.after_login = getElement( "after_login" ).value;
+  this.signup_plan = getElement( "signup_plan" ).value;
   this.font_size = null;
 
   var total_notes_count_node = getElement( "total_notes_count" );
@@ -693,10 +694,12 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   connect( editor, "invites_updated", function ( invites ) { self.invites = invites; self.share_notebook(); } );
   connect( editor, "submit_form", function ( url, form, callback ) {
     var args = {}
-    if ( url == "/users/signup" || url == "/users/login" ) {
+    if ( url == "/users/signup" ) {
       args[ "invite_id" ] = self.invite_id;
-      if ( url == "/users/login" )
-        args[ "after_login" ] = self.after_login;
+      args[ "rate_plan" ] = self.signup_plan;
+    } else if ( url == "/users/login" ) {
+      args[ "invite_id" ] = self.invite_id;
+      args[ "after_login" ] = self.after_login;
     }
 
     self.invoker.invoke( url, "POST", args, callback, form );

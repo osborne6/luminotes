@@ -93,6 +93,18 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
+  def test_signup_with_rate_plan( self ):
+    result = self.http_post( "/users/signup", dict(
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      signup_button = u"sign up",
+      rate_plan = u"2",
+    ) )
+
+    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2"
+
   def test_signup_without_email_address( self ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,
@@ -250,6 +262,62 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
+  def test_current_after_signup_with_rate_plan( self ):
+    result = self.http_post( "/users/signup", dict(
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      signup_button = u"sign up",
+      rate_plan = u"2",
+    ) )
+    session_id = result[ u"session_id" ]
+
+    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2"
+
+    user = self.database.last_saved_obj
+    assert isinstance( user, User )
+    result = cherrypy.root.users.current( user.object_id )
+
+    assert result[ u"user" ].object_id == user.object_id
+    assert result[ u"user" ].username == self.new_username
+    assert result[ u"user" ].email_address == self.new_email_address
+
+    notebooks = result[ u"notebooks" ]
+    notebook = notebooks[ 0 ]
+    assert notebook.object_id
+    assert notebook.revision
+    assert notebook.name == u"my notebook"
+    assert notebook.trash_id
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    notebook = notebooks[ 1 ]
+    assert notebook.object_id == notebooks[ 0 ].trash_id
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == None
+
+    notebook = notebooks[ 2 ]
+    assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.revision == self.anon_notebook.revision
+    assert notebook.name == self.anon_notebook.name
+    assert notebook.trash_id == None
+    assert notebook.read_write == False
+    assert notebook.owner == False
+    assert notebook.rank == None
+
+    assert result.get( u"login_url" ) is None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
   def test_signup_with_different_passwords( self ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,
@@ -260,6 +328,58 @@ class Test_users( Test_controller ):
     ) )
 
     assert result[ u"error" ]
+
+  def test_subscribe( self ):
+    self.login()
+
+    result = self.http_post( "/users/subscribe", dict(
+      rate_plan = u"1",
+    ), session_id = self.session_id )
+
+    form = result.get( u"form" )
+    plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
+
+    assert form == plan[ u"button" ] % self.user.object_id
+
+  def test_subscribe_with_free_rate_plan( self ):
+    self.login()
+
+    result = self.http_post( "/users/subscribe", dict(
+      rate_plan = u"0",
+    ), session_id = self.session_id )
+
+    assert u"plan" in result[ u"error" ]
+    assert u"invalid" in result[ u"error" ]
+
+  def test_subscribe_with_invalid_rate_plan( self ):
+    self.login()
+
+    result = self.http_post( "/users/subscribe", dict(
+      rate_plan = u"17",
+    ), session_id = self.session_id )
+
+    assert u"plan" in result[ u"error" ]
+    assert u"invalid" in result[ u"error" ]
+
+  def test_subscribe_without_login( self ):
+    result = self.http_post( "/users/subscribe", dict(
+      rate_plan = u"1",
+    ) )
+
+    assert u"user" in result[ u"error" ]
+    assert u"invalid" in result[ u"error" ]
+
+  def test_subscribe_without_subscribe_button( self ):
+    self.login()
+    self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ][ u"button" ] = u"  "
+
+    result = self.http_post( "/users/subscribe", dict(
+      rate_plan = u"1",
+    ), session_id = self.session_id )
+
+
+    print result
+    assert u"not configured" in result[ u"error" ]
 
   def test_demo( self ):
     result = self.http_post( "/users/demo", dict() )

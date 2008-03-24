@@ -142,12 +142,14 @@ class Valid_int( object ):
   """
   Validator for an integer value.
   """
-  def __init__( self, min = None, max = None ):
+  def __init__( self, min = None, max = None, none_okay = False ):
     self.min = min
     self.max = max
     self.message = None
+    self.__none_okay = none_okay
 
   def __call__( self, value ):
+    if self.__none_okay and value in ( None, "None", "" ): return None
     value = int( value )
 
     if self.min is not None and value < self.min:

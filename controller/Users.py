@@ -10,7 +10,7 @@ from model.Note import Note
 from model.Password_reset import Password_reset
 from model.Invite import Invite
 from Expose import expose
-from Validate import validate, Valid_string, Valid_bool, Validation_error
+from Validate import validate, Valid_string, Valid_bool, Valid_int, Validation_error
 from Database import Valid_id, end_transaction
 from Expire import strongly_expire
 from view.Json import Json
@@ -21,6 +21,7 @@ from view.Blank_page import Blank_page
 from view.Thanks_note import Thanks_note
 from view.Thanks_error_note import Thanks_error_note
 from view.Processing_note import Processing_note
+from view.Form_submit_page import Form_submit_page
 
 
 USERNAME_PATTERN = re.compile( "^[a-zA-Z0-9]+$" )
@@ -205,8 +206,9 @@ class Users( object ):
     email_address = ( Valid_string( min = 0, max = 60 ) ),
     signup_button = unicode,
     invite_id = Valid_id( none_okay = True ),
+    rate_plan = Valid_int( none_okay = True ),
   )
-  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None ):
+  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None, rate_plan = None ):
     """
     Create a new User based on the given information. Start that user with their own Notebook and a
     "welcome to your wiki" Note. For convenience, login the newly created user as well.
@@ -223,6 +225,9 @@ class Users( object ):
     @param signup_button: ignored
     @type invite_id: unicode
     @param invite_id: id of invite to redeem upon signup (optional)
+    @type rate_plan: int
+    @param rate_plan: index of rate plan to signup for (optional). if greater than zero, redirect
+                      to PayPal subscribe page after signup
     @rtype: json dict
     @return: { 'redirect': url, 'authenticated': userdict }
     @raise Signup_error: passwords don't match or the username is unavailable
@@ -275,6 +280,9 @@ class Users( object ):
 
       self.convert_invite_to_access( invite, user_id )
       redirect = u"/notebooks/%s" % invite.notebook_id
+    # if there's a requested rate plan, then redirect to the PayPal subscribe page
+    elif rate_plan and rate_plan > 0:
+      redirect = u"/users/subscribe?rate_plan=%s" % rate_plan
     # otherwise, just redirect to the newly created notebook
     else:
       redirect = u"/notebooks/%s" % notebook.object_id
@@ -282,6 +290,39 @@ class Users( object ):
     return dict(
       redirect = redirect,
       authenticated = user,
+    )
+
+  @expose( view = Form_submit_page )
+  @grab_user_id
+  @validate(
+    rate_plan = Valid_int(),
+    user_id = Valid_id(),
+  )
+  def subscribe( self, rate_plan, user_id ):
+    """
+    Submit a subscription form to PayPal, allowing the user to subscribe to the given rate plan.
+
+    @type rate_plan: int
+    @param rate_plan: index of rate plan to subscribe to
+    @type user_id: unicode
+    @param user_id: id of current logged-in user
+    @rtype: dict
+    @return: { 'form': subscription_form_html }
+    @raise Signup_error: invalid rate plan, no logged-in user, or missing subscribe button
+    """
+    if rate_plan == 0 or rate_plan >= len( self.__rate_plans ):
+      raise Signup_error( u"The rate plan is invalid." )
+
+    plan = self.__rate_plans[ rate_plan ]
+    button = plan.get( u"button" )
+    if not button or not button.strip():
+      raise Signup_error(
+        u"Sorry, that rate plan is not configured for subscriptions. Please contact %s." % \
+        ( self.__support_email or u"support" )
+      )
+
+    return dict(
+      form = button % user_id,
     )
 
   @expose()

@@ -32,6 +32,7 @@ class Main_page( Page ):
     invites = None,
     invite_id = None,
     after_login = None,
+    signup_plan = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -108,6 +109,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"invites", id = u"invites", value = json( invites ) ),
       Input( type = u"hidden", name = u"invite_id", id = u"invite_id", value = invite_id ),
       Input( type = u"hidden", name = u"after_login", id = u"after_login", value = after_login ),
+      Input( type = u"hidden", name = u"signup_plan", id = u"signup_plan", value = signup_plan ),
       Div(
         id = u"status_area",
       ),

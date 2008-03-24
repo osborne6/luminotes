@@ -132,7 +132,7 @@ class Front_page( Product_page ):
               separator = u"",
             ),
             Div(
-              u"-Scott Tiner",
+              u"-Scott Tiner, Technical Writer",
               class_ = u"quote_signature"
             ),
             class_ = u"quote",

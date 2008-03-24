@@ -56,9 +56,10 @@ class Root( object ):
     note_title = unicode,
     invite_id = Valid_id( none_okay = True ),
     after_login = Valid_string( min = 0, max = 100 ),
+    plan = Valid_int( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, note_title, invite_id = None, after_login = None, user_id = None ):
+  def default( self, note_title, invite_id = None, after_login = None, plan = None, user_id = None ):
     """
     Convenience method for accessing a note in the main notebook by name rather than by note id.
 
@@ -68,6 +69,8 @@ class Root( object ):
     @param invite_id: id of the invite used to get to this note (optional)
     @type after_login: unicode
     @param after_login: URL to redirect to after login (optional, must start with "/")
+    @type plan: int
+    @param plan: rate plan index (optional, defaults to None)
     @rtype: unicode
     @return: rendered HTML page
     """
@@ -81,6 +84,8 @@ class Root( object ):
         return dict( redirect = u"%s/%s?invite_id=%s" % ( https_url, note_title, invite_id ) )
       if after_login:
         return dict( redirect = u"%s/%s?after_login=%s" % ( https_url, note_title, after_login ) )
+      if plan:
+        return dict( redirect = u"%s/%s?plan=%s" % ( https_url, note_title, plan ) )
       else:
         return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
 
@@ -100,6 +105,8 @@ class Root( object ):
       result[ "invite_id" ] = invite_id
     if after_login and after_login.startswith( u"/" ):
       result[ "after_login" ] = after_login
+    if plan:
+      result[ "signup_plan" ] = plan
 
     return result
 
