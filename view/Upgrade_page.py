@@ -82,7 +82,7 @@ class Upgrade_page( Product_page ):
             class_ = u"upgrade_table_area",
           ),
 
-          user and user.username and P(
+          user and user.username not in ( u"anonymous", None ) and P(
             u"You're currently subscribed to Luminotes %s." % 
             rate_plans[ user.rate_plan ][ u"name" ].capitalize(),
             ( user.rate_plan > 0 ) and unsubscribe_button or None,
