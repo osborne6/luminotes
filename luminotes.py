@@ -1,12 +1,17 @@
 #!/usr/bin/python2.4
 
+import socket
 import cherrypy
 from controller.Database import Database
 from controller.Root import Root
 from config import Common
 
 
+SOCKET_TIMEOUT_SECONDS = 60
+
+
 def main( args ):
+  socket.setdefaulttimeout( SOCKET_TIMEOUT_SECONDS )
   database = Database()
 
   cherrypy.config.update( Common.settings )
