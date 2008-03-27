@@ -242,7 +242,8 @@ class Front_page( Product_page ):
               u"What can you do with Luminotes?",
             ),
             Ul(
-              Li( u"Plan a story" ),
+              Li( u"Outline a story" ),
+              Li( u"Plan a trip" ),
               Li( u"Collect recipes" ),
               Li( u"Record your ideas" ),
               Li( u"Keep track of your tasks" ),
