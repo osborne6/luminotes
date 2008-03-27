@@ -995,6 +995,32 @@ class Test_files( Test_controller ):
     assert db_file is None
     assert not Upload_file.exists( self.file_id )
 
+  def test_purge_unused_empty_link_with_quote_filename( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.note.contents = '<a href="/files/download?file_id=%s&quote_filename=true"></a>' % self.file_id
+    self.database.save( self.note )
+
+    # the file is linked to from the note's contents but the link title is empty, so this should
+    # delete it
+    cherrypy.root.files.purge_unused( self.note )
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file is None
+    assert not Upload_file.exists( self.file_id )
+
   def test_purge_unused_keep_file( self ):
     self.login()
 
@@ -1075,6 +1101,32 @@ class Test_files( Test_controller ):
     assert db_file is None
     assert not Upload_file.exists( self.file_id )
 
+  def test_purge_unused_all_links_with_quote_filename( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.note.contents = '<a href="/files/download?file_id=%s&quote_filename=true">file link</a>' % self.file_id
+    self.database.save( self.note )
+
+    # the file is linked to from the note's contents, but because of the purge_all_links flag, it
+    # should be deleted anyway
+    cherrypy.root.files.purge_unused( self.note, purge_all_links = True )
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file is None
+    assert not Upload_file.exists( self.file_id )
+
   def test_purge_unused_multiple_files( self ):
     self.login()
 
@@ -1091,6 +1143,51 @@ class Test_files( Test_controller ):
     )
 
     self.note.contents = '<a href="/files/download?file_id=%s">file link</a>' % self.file_id
+    self.database.save( self.note )
+
+    other_file_id = u"23"
+    self.http_upload(
+      "/files/upload?file_id=%s" % other_file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = u"otherfile.png",
+      file_data = u"whee",
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    # one file is linked from the note's contents but the other is not. the file that is not linked
+    # should be deleted
+    cherrypy.root.files.purge_unused( self.note )
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.object_id == self.file_id
+    assert db_file.filename == self.filename
+    assert Upload_file.exists( self.file_id )
+
+    other_db_file = self.database.load( File, other_file_id )
+    assert other_db_file is None
+    assert not Upload_file.exists( other_file_id )
+
+  def test_purge_unused_multiple_files_with_quote_filename( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.note.contents = '<a href="/files/download?file_id=%s&quote_filename=false">file link</a>' % self.file_id
     self.database.save( self.note )
 
     other_file_id = u"23"
