@@ -1,3 +1,12 @@
+1.2.20: March 29, 2008
+ * Fixed a bug in which closing a Luminotes window with an unsaved note in
+   Firefox would occasionally not save it.
+
+1.2.19: March 26, 2008
+ * Increased default socket timeout so as not to timeout slow clients.
+ * Fixed a bug in which Files.purge_unused() deleted the file for a file link
+   that had a quote_filename parameter.
+
 1.2.18: March 24, 2008
  * Newly redesigned upgrade/pricing/signup page. You can now signup for a
    Luminotes account and upgrade to a paid plan all at once.
