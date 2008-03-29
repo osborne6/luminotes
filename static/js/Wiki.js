@@ -792,7 +792,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
   }
 }
 
-Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
+Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   if ( editor )
     addElementClass( editor.iframe, "focused_note_frame" );
 
@@ -808,7 +808,7 @@ Wiki.prototype.editor_focused = function ( editor, fire_and_forget ) {
       this.display_empty_message();
     } else {
       // when switching editors, save the one being left
-      this.save_editor( null, fire_and_forget );
+      this.save_editor( null, null, null, synchronous );
     }
   }
 
@@ -1234,7 +1234,7 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.load_editor( editor.title, editor.id, null, null, editor.closed ? null : editor.iframe );
 }
 
-Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback ) {
+Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous ) {
   if ( !editor )
     editor = this.focused_editor;
 
@@ -1252,7 +1252,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback ) {
       editor.mark_clean();
       if ( callback )
         callback();
-    }, null, fire_and_forget );
+    }, null, synchronous, fire_and_forget );
   } else {
     if ( callback )
       callback();
