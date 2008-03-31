@@ -171,8 +171,7 @@ class Html_cleaner(HTMLParser):
       self.result.append( xssescape('&%s' % ref) )
 
   def handle_comment(self, comment):
-    if comment:
-      self.result.append( xssescape("<!--%s-->" % comment) )
+    pass # strip comments
 
   def handle_starttag(self, tag, method, attrs):
     if tag not in self.permitted_tags:
