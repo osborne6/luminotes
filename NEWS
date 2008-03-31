@@ -1,3 +1,7 @@
+1.2.21: March 30, 2008
+ * Made Html_cleaner support many more HTML tags and attributes, so users can
+   cut and paste from other programs into Luminotes.
+
 1.2.20: March 29, 2008
  * Fixed a bug in which closing a Luminotes window with an unsaved note in
    Firefox would occasionally not save it.
