@@ -5,6 +5,8 @@ import time
 import urllib
 import tempfile
 import cherrypy
+from PIL import Image
+from cStringIO import StringIO
 from threading import Lock, Event
 from Expose import expose
 from Validate import validate, Valid_int, Valid_bool, Validation_error
@@ -17,6 +19,7 @@ from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
 from view.Json import Json
 from view.Progress_bar import stream_progress, stream_quota_error, quota_error_script, general_error_script
+from view.File_preview_page import File_preview_page
 
 
 class Access_error( Exception ):
@@ -238,9 +241,10 @@ class Files( object ):
   @validate(
     file_id = Valid_id(),
     quote_filename = Valid_bool( none_okay = True ),
+    preview = Valid_bool( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def download( self, file_id, quote_filename = False, user_id = None ):
+  def download( self, file_id, quote_filename = False, preview = True, user_id = None ):
     """
     Return the contents of file that a user has previously uploaded.
 
@@ -250,14 +254,17 @@ class Files( object ):
     @param quote_filename: True to URL quote the filename of the downloaded file, False to leave it
                            as UTF-8. IE expects quoting while Firefox doesn't (optional, defaults
                            to False)
+    @type preview: bool
+    @param preview: True to redirect to a preview page if the file is a valid image, False to
+                    unconditionally initiate a download
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
-    @rtype: unicode
+    @rtype: generator
     @return: file data
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
     # release the session lock before beginning to stream the download. otherwise, if the
-    # upload is cancelled before it's done, the lock won't be released
+    # download is cancelled before it's done, the lock won't be released
     try:
       cherrypy.session.release_lock()
     except KeyError:
@@ -268,7 +275,14 @@ class Files( object ):
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
       raise Access_error()
 
-    db_file = self.__database.load( File, file_id )
+    # if the file is openable as an image, then allow the user to view it instead of downloading it
+    if preview:
+      server_filename = Upload_file.make_server_filename( file_id )
+      try:
+        Image.open( server_filename )
+        return dict( redirect = u"/files/preview?file_id=%s&quote_filename=%s" % ( file_id, quote_filename ) )
+      except IOError:
+        pass
 
     cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
 
@@ -278,6 +292,142 @@ class Files( object ):
 
     cherrypy.response.headerMap[ u"Content-Disposition" ] = 'attachment; filename="%s"' % filename
     cherrypy.response.headerMap[ u"Content-Length" ] = db_file.size_bytes
+
+    def stream():
+      CHUNK_SIZE = 8192
+      local_file = Upload_file.open_file( file_id )
+
+      while True:
+        data = local_file.read( CHUNK_SIZE )
+        if len( data ) == 0: break
+        yield data        
+
+    return stream()
+
+  @expose( view = File_preview_page )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    quote_filename = Valid_bool( none_okay = True ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def preview( self, file_id, quote_filename = False, user_id = None ):
+    """
+    Return the contents of file that a user has previously uploaded.
+
+    @type file_id: unicode
+    @param file_id: id of the file to view
+    @type quote_filename: bool
+    @param quote_filename: quote_filename value to include in download URL
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: unicode
+    @return: file data
+    @raise Access_error: the current user doesn't have access to the notebook that the file is in
+    """
+    db_file = self.__database.load( File, file_id )
+
+    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+      raise Access_error()
+
+    filename = db_file.filename.replace( '"', r"\"" ).encode( "utf8" )
+
+    return dict(
+      file_id = file_id,
+      filename = filename,
+      quote_filename = quote_filename,
+    )
+
+  @expose()
+  @end_transaction
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def thumbnail( self, file_id, user_id = None ):
+    """
+    Return a thumbnail for a file that a user has previously uploaded. If a thumbnail cannot be
+    generated for the given file, return a default thumbnail image.
+
+    @type file_id: unicode
+    @param file_id: id of the file to return a thumbnail for
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: generator
+    @return: thumbnail image data
+    @raise Access_error: the current user doesn't have access to the notebook that the file is in
+    """
+    try:
+      cherrypy.session.release_lock()
+    except KeyError:
+      pass
+
+    db_file = self.__database.load( File, file_id )
+
+    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+      raise Access_error()
+
+    cherrypy.response.headerMap[ u"Content-Type" ] = u"image/png"
+
+    # attempt to open the file as an image
+    server_filename = Upload_file.make_server_filename( file_id )
+    try:
+      image = Image.open( server_filename )
+
+      # scale the image down into a thumbnail
+      THUMBNAIL_MAX_SIZE = ( 75, 75 ) # in pixels
+      image.thumbnail( THUMBNAIL_MAX_SIZE, Image.ANTIALIAS )
+    except IOError:
+      image = Image.open( "static/images/default_thumbnail.png" )
+
+    # save the image into a memory buffer
+    image_buffer = StringIO()
+    image.save( image_buffer, "PNG" )
+    image_buffer.seek( 0 )
+
+    def stream( image_buffer ):
+      CHUNK_SIZE = 8192
+
+      while True:
+        data = image_buffer.read( CHUNK_SIZE )
+        if len( data ) == 0: break
+        yield data        
+
+    return stream( image_buffer )
+
+  @expose()
+  @end_transaction
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def image( self, file_id, user_id = None ):
+    """
+    Return the contents of an image file that a user has previously uploaded. This is distinct
+    from the download() method above in that it doesn't set HTTP headers for a file download.
+
+    @type file_id: unicode
+    @param file_id: id of the file to return
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: generator
+    @return: image data
+    @raise Access_error: the current user doesn't have access to the notebook that the file is in
+    """
+    try:
+      cherrypy.session.release_lock()
+    except KeyError:
+      pass
+
+    db_file = self.__database.load( File, file_id )
+
+    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+      raise Access_error()
+
+    cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
 
     def stream():
       CHUNK_SIZE = 8192

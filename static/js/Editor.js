@@ -379,9 +379,11 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
     // special case for links to uploaded files
     if ( !link.target && /\/files\//.test( link.href ) ) {
-      if ( !/\/files\/new$/.test( link.href ) )
-        location.href = link.href;
-      return false;
+      if ( !/\/files\/new$/.test( link.href ) ) {
+        window.open( link.href );
+        event.stop();
+      }
+      return true;
     }
 
     event.stop();

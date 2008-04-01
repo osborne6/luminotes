@@ -2537,14 +2537,25 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
     "title": "delete file"
   } );
 
+  var query = parse_query( link );
+  this.file_id = query.file_id;
+
+  if ( /MSIE/.test( navigator.userAgent ) )
+    var quote_filename = true;
+  else
+    var quote_filename = false;
+
+  appendChildNodes( this.div, createDOM( "span", {},
+    createDOM( "a", { href: "/files/download?file_id=" + this.file_id + "&quote_filename=" + quote_filename, target: "_new" },
+      createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id, "class": "file_thumbnail" } )
+    )
+  ) );
+
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "filename: " ) );
   appendChildNodes( this.div, this.filename_field );
   appendChildNodes( this.div, this.file_size );
   appendChildNodes( this.div, " " );
   appendChildNodes( this.div, delete_button );
-
-  var query = parse_query( link );
-  this.file_id = query.file_id;
 
   // get the file's name and size from the server
   this.invoker.invoke(

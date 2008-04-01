@@ -643,3 +643,10 @@ img {
   width: 40em;
   height: 4em;
 }
+
+.file_thumbnail {
+  margin-right: 0.5em;
+  vertical-align: top;
+  float: left;
+  cursor: pointer;
+}

@@ -183,6 +183,24 @@ class Test_files( Test_controller ):
   def test_download_with_unicode_unquoted_filename( self ):
     self.test_download( self.unicode_filename, quote_filename = False )
 
+  def test_download_image_with_preview_none( self ):
+    raise NotImplementedError()
+
+  def test_download_image_with_preview_true( self ):
+    raise NotImplementedError()
+
+  def test_download_image_with_preview_false( self ):
+    raise NotImplementedError()
+
+  def test_download_non_image_with_preview_none( self ):
+    raise NotImplementedError()
+
+  def test_download_non_image_with_preview_true( self ):
+    raise NotImplementedError()
+
+  def test_download_non_image_with_preview_false( self ):
+    raise NotImplementedError()
+
   def test_download_without_login( self ):
     self.login()
 
@@ -237,6 +255,57 @@ class Test_files( Test_controller ):
     )
 
     assert u"access" in result[ u"body" ][ 0 ]
+
+  def test_preview( self ):
+    raise NotImplementedError()
+
+  def test_preview_with_unicode_filename( self ):
+    raise NotImplementedError()
+
+  def test_preview_with_quote_filename_true( self ):
+    raise NotImplementedError()
+
+  def test_preview_with_quote_filename_false( self ):
+    raise NotImplementedError()
+
+  def test_preview_without_login( self ):
+    raise NotImplementedError()
+
+  def test_preview_without_access( self ):
+    raise NotImplementedError()
+
+  def test_preview_with_unknown_file_id( self ):
+    raise NotImplementedError()
+
+  def test_thumbnail( self ):
+    raise NotImplementedError()
+
+  def test_thumbnail_with_non_image( self ):
+    raise NotImplementedError()
+
+  def test_thumbnail_without_login( self ):
+    raise NotImplementedError()
+
+  def test_thumbnail_without_access( self ):
+    raise NotImplementedError()
+
+  def test_thumbnail_with_unknown_file_id( self ):
+    raise NotImplementedError()
+
+  def test_image( self ):
+    raise NotImplementedError()
+
+  def test_image_with_non_image( self ):
+    raise NotImplementedError()
+
+  def test_image_without_login( self ):
+    raise NotImplementedError()
+
+  def test_image_without_access( self ):
+    raise NotImplementedError()
+
+  def test_image_with_unknown_file_id( self ):
+    raise NotImplementedError()
 
   def test_upload_page( self ):
     self.login()
