@@ -1587,7 +1587,7 @@ class Test_notebooks( Test_controller ):
 
     note = result[ "note" ]
 
-    expected_contents = title_with_tags + cgi.escape( junk ) + u"<p>blah</p>"
+    expected_contents = title_with_tags + u"foohaxx0r<p>blah</p>"
 
     assert note.object_id == new_note.object_id
     assert note.title == new_note.title
