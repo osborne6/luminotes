@@ -1,3 +1,8 @@
+1.2.23: April 2, 2008
+ * Now displaying a thumbnail in the file info box for uploaded image files.
+ * When you click on a link for an image file, a new window opens where you
+   can see the full image and optionally download it.
+
 1.2.22: March 30, 2008
  * Made Html_cleaner strip HTML comments, which Open Office adds for styling
    purposes.

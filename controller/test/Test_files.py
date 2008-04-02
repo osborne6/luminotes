@@ -6,6 +6,7 @@ import urllib
 import cherrypy
 from threading import Thread
 from StringIO import StringIO
+from PIL import Image
 from Test_controller import Test_controller
 from model.Notebook import Notebook
 from model.Note import Note
@@ -60,6 +61,12 @@ class Test_files( Test_controller ):
       return fake_file
 
     @staticmethod
+    def open_image( file_id ):
+      fake_file = Upload_file.fake_files.get( file_id )
+
+      return Image.open( fake_file )
+
+    @staticmethod
     def delete_file( file_id ):
       fake_file = Upload_file.fake_files.get( file_id )
 
@@ -78,6 +85,7 @@ class Test_files( Test_controller ):
       self.complete()
 
     Upload_file.open_file = open_file
+    Upload_file.open_image = open_image
     Upload_file.delete_file = delete_file
     Upload_file.exists = exists
     Upload_file.close = close
@@ -120,7 +128,7 @@ class Test_files( Test_controller ):
     if self.upload_thread:
       self.upload_thread.join()
 
-  def test_download( self, filename = None, quote_filename = None ):
+  def test_download( self, filename = None, quote_filename = None, file_data = None, preview = None ):
     self.login()
 
     self.http_upload(
@@ -130,26 +138,29 @@ class Test_files( Test_controller ):
         note_id = self.note.object_id,
       ),
       filename = filename or self.filename,
-      file_data = self.file_data,
+      file_data = file_data or self.file_data,
       content_type = self.content_type,
       session_id = self.session_id,
     )
 
     if quote_filename is None:
-      result = self.http_get(
-        "/files/download?file_id=%s" % self.file_id,
-        session_id = self.session_id,
-      )
+      quote_param = ""
     elif quote_filename is True:
-      result = self.http_get(
-        "/files/download?file_id=%s&quote_filename=true" % self.file_id,
-        session_id = self.session_id,
-      )
+      quote_param = "&quote_filename=True"
     else:
-      result = self.http_get(
-        "/files/download?file_id=%s&quote_filename=false" % self.file_id,
-        session_id = self.session_id,
-      )
+      quote_param = "&quote_filename=False"
+
+    if preview is None:
+      preview_param = ""
+    elif preview is True:
+      preview_param = "&preview=True"
+    else:
+      preview_param = "&preview=False"
+
+    result = self.http_get(
+      "/files/download?file_id=%s%s%s" % ( self.file_id, quote_param, preview_param ),
+      session_id = self.session_id,
+    )
 
     headers = result[ u"headers" ]
     assert headers
@@ -172,7 +183,7 @@ class Test_files( Test_controller ):
         raise exc
 
     file_data = "".join( pieces )
-    assert file_data == self.file_data
+    assert file_data == ( file_data or self.file_data )
 
   def test_download_with_unicode_filename( self ):
     self.test_download( self.unicode_filename )
@@ -183,23 +194,82 @@ class Test_files( Test_controller ):
   def test_download_with_unicode_unquoted_filename( self ):
     self.test_download( self.unicode_filename, quote_filename = False )
 
-  def test_download_image_with_preview_none( self ):
-    raise NotImplementedError()
+  IMAGE_DATA = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x06bKGD\x00\xff\x00\xff\x00\xff\xa0\xbd\xa7\x93\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x07tIME\x07\xd7\x06\r\x13(:;\xf4\xc1{\x00\x00\x00\x1dtEXtComment\x00Created with The GIMP\xefd%n\x00\x00\x00\x0cIDAT\x08\xd7c\xf8\xf5\xeb\x17\x00\x05\xe0\x02\xefIj\xd4!\x00\x00\x00\x00IEND\xaeB`\x82'
+
+  def test_download_image( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/download?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"redirect" ] == u"/files/preview?file_id=%s&quote_filename=False" % self.file_id
 
   def test_download_image_with_preview_true( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/download?file_id=%s&preview=true" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"redirect" ] == u"/files/preview?file_id=%s&quote_filename=False" % self.file_id
+
+  def test_download_image_with_preview_true_and_quote_filename_true( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/download?file_id=%s&preview=true&quote_filename=True" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"redirect" ] == u"/files/preview?file_id=%s&quote_filename=True" % self.file_id
 
   def test_download_image_with_preview_false( self ):
-    raise NotImplementedError()
-
-  def test_download_non_image_with_preview_none( self ):
-    raise NotImplementedError()
+    self.test_download( file_data = self.IMAGE_DATA, preview = False )
 
   def test_download_non_image_with_preview_true( self ):
-    raise NotImplementedError()
+    self.test_download( preview = True )
 
   def test_download_non_image_with_preview_false( self ):
-    raise NotImplementedError()
+    self.test_download( preview = False )
 
   def test_download_without_login( self ):
     self.login()
@@ -257,55 +327,438 @@ class Test_files( Test_controller ):
     assert u"access" in result[ u"body" ][ 0 ]
 
   def test_preview( self ):
-    raise NotImplementedError()
+    self.login()
 
-  def test_preview_with_unicode_filename( self ):
-    raise NotImplementedError()
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/preview?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+    assert result[ u"filename" ] == self.filename
+    assert result[ u"quote_filename" ] == False
 
   def test_preview_with_quote_filename_true( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/preview?file_id=%s&quote_filename=true" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+    assert result[ u"filename" ] == self.filename
+    assert result[ u"quote_filename" ] == True
 
   def test_preview_with_quote_filename_false( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/preview?file_id=%s&quote_filename=false" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+    assert result[ u"filename" ] == self.filename
+    assert result[ u"quote_filename" ] == False
 
   def test_preview_without_login( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/preview?file_id=%s" % self.file_id,
+    )
+
+    assert u"access" in result[ u"error" ]
 
   def test_preview_without_access( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.login2()
+
+    result = self.http_get(
+      "/files/preview?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"error" ]
 
   def test_preview_with_unknown_file_id( self ):
-    raise NotImplementedError()
+    self.login()
+
+    result = self.http_get(
+      "/files/preview?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"error" ]
 
   def test_thumbnail( self ):
-    raise NotImplementedError()
+    self.login()
+
+    # make the test image big enough to require scaling down
+    image = Image.open( StringIO( self.IMAGE_DATA ) )
+    image = image.transform( ( 250, 250 ), Image.QUAD, range( 8 ) )
+
+    image_data = StringIO()
+    image.save( image_data, "PNG" )
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = image_data.getvalue(),
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    file_data = "".join( result[ u"body" ] )
+    image = Image.open( StringIO( file_data ) )
+    assert image
+    assert image.size == ( 125, 125 )
+
+  def test_thumbnail_without_scaling( self ):
+    self.login()
+
+    # make the test image small enough so that no scaling is performed
+    image = Image.open( StringIO( self.IMAGE_DATA ) )
+    image = image.transform( ( 100, 100 ), Image.QUAD, range( 8 ) )
+
+    image_data = StringIO()
+    image.save( image_data, "PNG" )
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = image_data.getvalue(),
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    file_data = "".join( result[ u"body" ] )
+    image = Image.open( StringIO( file_data ) )
+    assert image
+    assert image.size == ( 100, 100 )
+
+  def test_thumbnail_different_dimensions( self ):
+    self.login()
+
+    # make the test image small enough so that no scaling is performed
+    image = Image.open( StringIO( self.IMAGE_DATA ) )
+    image = image.transform( ( 250, 100 ), Image.QUAD, range( 8 ) )
+
+    image_data = StringIO()
+    image.save( image_data, "PNG" )
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = image_data.getvalue(),
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    file_data = "".join( result[ u"body" ] )
+    image = Image.open( StringIO( file_data ) )
+    assert image
+    assert image.size == ( 125, 50 )
 
   def test_thumbnail_with_non_image( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data, # not a valid image
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    # should get the default thumbnail image
+    file_data = "".join( result[ u"body" ] )
+    image = Image.open( StringIO( file_data ) )
+    assert image
+    assert image.size[ 0 ] <= 125
+    assert image.size[ 1 ] <= 125
 
   def test_thumbnail_without_login( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data, # not a valid image
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_thumbnail_without_access( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data, # not a valid image
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.login2()
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_thumbnail_with_unknown_file_id( self ):
-    raise NotImplementedError()
+    self.login()
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_image( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/image?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    assert "".join( result[ u"body" ] ) == self.IMAGE_DATA
 
   def test_image_with_non_image( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/image?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    assert "".join( result[ u"body" ] ) == self.file_data
 
   def test_image_without_login( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/image?file_id=%s" % self.file_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_image_without_access( self ):
-    raise NotImplementedError()
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.login2()
+
+    result = self.http_get(
+      "/files/image?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_image_with_unknown_file_id( self ):
-    raise NotImplementedError()
+    self.login()
+
+    result = self.http_get(
+      "/files/image?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_upload_page( self ):
     self.login()

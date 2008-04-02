@@ -522,20 +522,20 @@ class Test_controller( object ):
 
     for ( name, value ) in form_args.items():
       post_data.append( 'Content-Disposition: form-data; name="%s"\n\n%s\n--%s\n' % (
-        name, value, boundary
+        str( name ), str( value ), boundary
       ) )
 
     post_data.append( 'Content-Disposition: form-data; name="upload"; filename="%s"\n' % (
-      filename
+      filename.encode( "utf8" )
     ) )
-    post_data.append( "Content-Type: %s\n\n%s\n--%s--\n" % (
+    post_data.append( "Content-Type: %s\nContent-Transfer-Encoding: binary\n\n%s\n--%s--\n" % (
       content_type, file_data, boundary
     ) )
 
     if headers is None:
       headers = []
 
-    post_data = "".join( post_data ).encode( "utf8" )
+    post_data = "".join( post_data )
     headers.append( ( "Content-Type", "multipart/form-data; boundary=%s" % boundary ) )
 
     if "Content-Length" not in [ name for ( name, value ) in headers ]:

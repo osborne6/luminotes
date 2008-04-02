@@ -117,6 +117,10 @@ class Upload_file( object ):
     return file( Upload_file.make_server_filename( file_id ) )
 
   @staticmethod
+  def open_image( file_id ):
+    return Image.open( Upload_file.make_server_filename( file_id ) )
+
+  @staticmethod
   def delete_file( file_id ):
     return os.remove( Upload_file.make_server_filename( file_id ) )
 
@@ -277,9 +281,8 @@ class Files( object ):
 
     # if the file is openable as an image, then allow the user to view it instead of downloading it
     if preview:
-      server_filename = Upload_file.make_server_filename( file_id )
       try:
-        Image.open( server_filename )
+        Upload_file.open_image( file_id )
         return dict( redirect = u"/files/preview?file_id=%s&quote_filename=%s" % ( file_id, quote_filename ) )
       except IOError:
         pass
@@ -314,7 +317,7 @@ class Files( object ):
   )
   def preview( self, file_id, quote_filename = False, user_id = None ):
     """
-    Return the contents of file that a user has previously uploaded.
+    Return a page displaying an uploaded image file along with a link to download it.
 
     @type file_id: unicode
     @param file_id: id of the file to view
@@ -372,12 +375,11 @@ class Files( object ):
     cherrypy.response.headerMap[ u"Content-Type" ] = u"image/png"
 
     # attempt to open the file as an image
-    server_filename = Upload_file.make_server_filename( file_id )
     try:
-      image = Image.open( server_filename )
+      image = Upload_file.open_image( file_id )
 
       # scale the image down into a thumbnail
-      THUMBNAIL_MAX_SIZE = ( 75, 75 ) # in pixels
+      THUMBNAIL_MAX_SIZE = ( 125, 125 ) # in pixels
       image.thumbnail( THUMBNAIL_MAX_SIZE, Image.ANTIALIAS )
     except IOError:
       image = Image.open( "static/images/default_thumbnail.png" )
