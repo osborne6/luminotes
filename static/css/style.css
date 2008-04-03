@@ -650,3 +650,8 @@ img {
   float: left;
   cursor: pointer;
 }
+
+.rss_image {
+  vertical-align: middle;
+  border: 0;
+}
