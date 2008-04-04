@@ -63,6 +63,7 @@ function Wiki( invoker ) {
   connect( this.invoker, "message", this, "display_message" );
   connect( "search_form", "onsubmit", this, "search" );
   connect( "search_text", "onfocus", this, "search_focused" );
+  connect( "search_text", "onblur", this, "search_blurred" );
   connect( "html", "onclick", this, "background_clicked" );
   connect( "html", "onkeydown", this, "key_pressed" );
   connect( window, "onresize", this, "resize_editors" );
@@ -1319,6 +1320,13 @@ Wiki.prototype.search_focused = function ( event ) {
 
   if ( search_text.value == 'search' )
     search_text.value = '';
+}
+
+Wiki.prototype.search_blurred = function ( event ) {
+  var search_text = getElement( "search_text" );
+
+  if ( search_text.value == '' )
+    search_text.value = 'search';
 }
 
 Wiki.prototype.display_search_results = function ( result ) {
