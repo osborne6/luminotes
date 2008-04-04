@@ -31,6 +31,7 @@
 
 .wide_center_area {
   width: 45em;
+  max-width: 60%;
   height: 100%;
   margin: 0 auto;
 }
