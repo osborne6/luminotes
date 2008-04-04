@@ -108,6 +108,8 @@ class Main_page( Page ):
       self,
       title,
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
+      ( notebook.name == u"Luminotes blog" ) \
+        and Link( rel = u"alternate", type = u"application/rss+xml", title = u"Luminotes blog", href = "/blog?rss" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
