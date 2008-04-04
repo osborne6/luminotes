@@ -274,6 +274,7 @@ img {
 #search_text {
   padding: 0.25em;
   border: #999999 1px solid;
+  width: 100%;
 }
 
 #notebook_header_area {
