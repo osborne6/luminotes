@@ -1,0 +1,36 @@
+.header {
+  background-color: #afcfff;
+  background-image: url(/static/images/header.png);
+  background-repeat: repeat-x;
+  height: 60px;
+  margin-left: 0;
+  margin-right: 0;
+  border-bottom: 1px solid #999999;
+}
+
+.luminotes_title {
+  float: left;
+}
+
+.header_links {
+  float: right;
+  text-align: right;
+  font-size: 85%;
+  padding-top: 5px;
+}
+
+.header_user_links {
+  text-align: right;
+  font-size: 85%;
+  padding-top: 10px;
+}
+
+.bold_link {
+  font-weight: bold;
+}
+
+.wide_center_area {
+  width: 45em;
+  height: 100%;
+  margin: 0 auto;
+}

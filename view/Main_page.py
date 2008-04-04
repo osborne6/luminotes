@@ -1,8 +1,7 @@
 from cgi import escape
 from Page import Page
-from Tags import Input, Div, Span, H2, H4, A, Br, Strong, Script, Img
-from Search_form import Search_form
-from User_area import User_area
+from Header import Header
+from Tags import Link, Input, Div, Span, H2, H4, A, Br, Strong, Script, Img
 from Link_area import Link_area
 from Toolbar import Toolbar
 from Json import Json
@@ -92,6 +91,7 @@ class Main_page( Page ):
     Page.__init__(
       self,
       title,
+      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
       Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
@@ -113,6 +113,7 @@ class Main_page( Page ):
       Div(
         id = u"status_area",
       ),
+      Header( user, notebook, login_url, logout_url, notes and notes[ 0 ].title or u"wiki" ),
       Div(
         Div(
           Br(),
@@ -121,21 +122,6 @@ class Main_page( Page ):
         ),
         Link_area( notebooks, notebook, total_notes_count, parent_id, notebook_path, user ),
         Div(
-          Div(
-            Div(
-              User_area( user, login_url, logout_url ),
-              Div(
-                Search_form(),
-                id = u"search_area",
-              ),
-              id = u"search_and_user_area",
-            ),
-            Div(
-              A( Img( src = u"/static/images/luminotes_title_full.png", width = u"206", height = u"69" ), href = u"/", title = u"Luminotes personal wiki notebook" ),
-              id = u"title_area",
-            ),
-            id = u"top_area",
-          ),
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
             ( notebook.name == u"trash" or not notebook.read_write ) \

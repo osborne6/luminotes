@@ -6,10 +6,10 @@
   position: absolute;
   float: none;
   width: auto;
-  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 20 : document.body.scrollTop + 20 );
-  margin-left:expression( 
+  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 80 : document.body.scrollTop + 80 );
+  margin-left: expression( 
     document.body.clientWidth < ( 900 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "-2em": "2em"
+    parseInt( document.body.currentStyle.fontSize ) ?  "-120px": "-80px"
   );
 }
 
@@ -36,6 +36,7 @@
     document.body.clientWidth < ( 1300 / 12 ) * 
     parseInt( document.body.currentStyle.fontSize ) ?  "18%": "15em"
   );
+  text-align: right;
 }
 
 #center_area {
@@ -46,11 +47,18 @@
   );
 }
 
+#notebook_header_area {
+  width: 100%;
+}
+
 #link_area {
   width:expression( 
     document.body.clientWidth < ( 1300 / 12 ) * 
     parseInt( document.body.currentStyle.fontSize ) ?  "17%": "15em"
   );
+}
+
+#link_area_wrapper {
   margin-left: 1.5em;
 }
 
@@ -63,18 +71,11 @@
   position: absolute;
 }
 
-.toolbar_text {
-  position: relative;
-  top: 0.375em;
-}
-
-.toolbar_list_text {
-  position: relative;
-  top: -0.625em;
-  line-height: 50%;
-}
-
 .link_area_item {
   margin-bottom: 0.25em;
   padding: 0.25em 0.25em 0 0.5em;
+}
+
+#this_notebook_area_title {
+  margin-top: 1.5em;
 }

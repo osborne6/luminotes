@@ -43,7 +43,6 @@ img {
   max-width: 18%;
   position: fixed;
   text-align: right;
-  margin-top: 5em;
   z-index: 1;
 }
 
@@ -236,14 +235,18 @@ img {
 #link_area {
   float: right;
   text-align: left;
-  margin-top: 1em;
-  margin-right: 1em;
+  padding-right: 1em;
   line-height: 100%;
   width: 15em;
   max-width: 17%;
 }
 
-#link_area h4 {
+#this_notebook_area_title {
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+#notebooks_area_title {
   margin-top: 1.5em;
   margin-bottom: 0.25em;
 }
@@ -257,34 +260,15 @@ img {
 
 #status_area {
   position: fixed;
+  left: 0.25em;
+  top: 0.25em;
   padding: 1em;
   z-index: 1;
 }
 
-#title_area {
-  text-align: left;
-  padding-top: 0.5em;
-  margin-top: 0.5em;
-  margin-bottom: 1em;
-}
-
-#top_area {
-  margin-left: 0.25em;
-  margin-right: 0.25em;
-}
-
-#search_and_user_area {
-  float: right;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
-
-#search_area {
-  margin-top: 0.5em;
-}
-
 #search_form {
-  margin-bottom: 0em;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 #search_text {
@@ -292,17 +276,10 @@ img {
   border: #999999 1px solid;
 }
 
-#user_area {
-  text-align: right;
-  margin-bottom: 1em;
-}
-
-#user_area a {
-  font-weight: bold;
-}
-
 #notebook_header_area {
   padding: 0.2em;
+  margin-top: 1em;
+  width: 45em;
 }
 
 #notebook_header_name:hover {
