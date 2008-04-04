@@ -8,3 +8,4 @@ DROP TABLE password_reset;
 DROP TABLE user_notebook;
 DROP TABLE invite;
 DROP TABLE file;
+DROP FUNCTION drop_html_tags( text ); 

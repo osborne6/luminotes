@@ -101,7 +101,7 @@ class Main_page( Page ):
         "Luminotes privacy policy": "privacy",
       }.get( header_note_title, header_note_title )
 
-    own_notebooks = [ notebook for notebook in notebooks if notebook.read_write is True ]
+    own_notebooks = [ nb for nb in notebooks if nb.read_write is True ]
     header_notebook = own_notebooks and own_notebooks[ 0 ] or notebook
 
     Page.__init__(

@@ -66,7 +66,7 @@ class Initializer( object ):
     self.database.save( self.anonymous, commit = False )
 
     # give the anonymous user read-only access to the main notebook
-    self.database.execute( self.anonymous.sql_save_notebook( self.main_notebook.object_id, read_write = False ), commit = False )
+    self.database.execute( self.anonymous.sql_save_notebook( self.main_notebook.object_id, read_write = False, owner = False ), commit = False )
 
 
 def main( args = None ):
