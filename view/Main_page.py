@@ -88,6 +88,22 @@ class Main_page( Page ):
       except IOError:
         pass
 
+    if notebook.read_write is True:
+      header_note_title = u"wiki"
+    else:
+      all_notes = startup_notes + notes
+      header_note_title = ( notebook.name == "Luminotes" ) and all_notes and all_notes[ 0 ].title or notebook.name
+      header_note_title = {
+        "contact info": "contact",
+        "meet the team": "team",
+        "Luminotes user guide": "guide",
+        "Luminotes blog": "blog",
+        "Luminotes privacy policy": "privacy",
+      }.get( header_note_title, header_note_title )
+
+    own_notebooks = [ notebook for notebook in notebooks if notebook.read_write is True ]
+    header_notebook = own_notebooks and own_notebooks[ 0 ] or notebook
+
     Page.__init__(
       self,
       title,
@@ -113,7 +129,7 @@ class Main_page( Page ):
       Div(
         id = u"status_area",
       ),
-      Header( user, notebook, login_url, logout_url, notes and notes[ 0 ].title or u"wiki" ),
+      Header( user, header_notebook, login_url, logout_url, header_note_title ),
       Div(
         Div(
           Br(),

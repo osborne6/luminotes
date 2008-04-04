@@ -63,7 +63,7 @@ class Header( Div ):
           ( note_title == u"tour" ) and Span( u"tour", class_ = u"bold_link" ) or A( u"tour", href = u"/tour" ), u" | ",
           ( user.username in ( None, u"anonymous" ) ) and Span( ( note_title == u"wiki" ) and Span( u"demo", class_ = u"bold_link" ) or A( u"demo", href = u"/users/demo" ), u" | " ) or None,
           ( note_title == u"faq" ) and Span( u"faq", class_ = u"bold_link" ) or A( u"faq", href = u"/faq" ), u" | ",
-          ( note_title == u"guide" ) and Span( u"guide", class_ = u"bold_link" ) or A( u"help", href = u"/guide" ), u" | ",
+          ( note_title == u"guide" ) and Span( u"guide", class_ = u"bold_link" ) or A( u"guide", href = u"/guide" ), u" | ",
           ( note_title == u"contact" ) and Span( u"contact", class_ = u"bold_link" ) or A( u"contact", href = u"/contact_info" ), u" | ",
           ( note_title == u"team" ) and Span( u"team", class_ = u"bold_link" ) or A( u"team", href = u"/meet_the_team" ), u" | ",
           ( note_title == u"blog" ) and Span( u"blog", class_ = u"bold_link" ) or A( u"blog", href = u"/blog" ), u" | ",
