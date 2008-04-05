@@ -55,7 +55,7 @@ class Tour_page( Product_page ):
           Div(
             Div(
               Ol(
-                Li( u"Share your wiki with friends and colleages" ),
+                Li( u"Share your wiki with friends and colleagues" ),
                 Li( u"Send invites simply by entering email addresses" ),
                 Li( u"Control how much access each person gets" ),
                 Li( u"Revoke access at any time" ),
