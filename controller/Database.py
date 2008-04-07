@@ -59,8 +59,9 @@ class Database( object ):
     self.__cache = cache
 
     try:
-      import cmemcache
-      print "using memcached"
+      if self.__cache is None:
+        import cmemcache
+        print "using memcached"
     except ImportError:
       return None
 
