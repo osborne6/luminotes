@@ -28,26 +28,24 @@ img {
 #everything_area {
   margin: 0 auto;
   text-align: center;
-  width: 78em;
-  max-width: 100%;
+  max-width: 80em;
 }
 
-#toolbar_area {
+#left_area {
   float: left;
-  width: 15em;
-  max-width: 18%;
+  width: 17em;
+  max-width: 20%;
 }
 
 #toolbar {
-  width: 15em;
-  max-width: 18%;
-  position: fixed;
   text-align: right;
   z-index: 1;
 }
 
 #toolbar .button_wrapper {
   float: right;
+  margin-left: 15px;
+  margin-right: 15px;
 }
 
 #toolbar .image_button {
@@ -232,17 +230,43 @@ img {
   background-image: url(/static/images/arrow_down_hover.png);
 }
 
+#note_tree_area {
+  position: fixed;
+  width: 17em;
+  max-width: 20%;
+  text-align: left;
+  line-height: 140%;
+  top: 80px;
+  bottom: 1em;
+  overflow-y: visible;
+}
+
+#note_tree_area_holder {
+  height: 100%;
+  overflow-y: auto;
+  padding-left: 1em;
+  margin-right: 1em;
+}
+
+#note_tree_area_title {
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
 #link_area {
   float: right;
   text-align: left;
+  line-height: 140%;
+  width: 20%;
+}
+
+#link_area_holder {
+  padding-left: 1em;
   padding-right: 1em;
-  line-height: 100%;
-  width: 15em;
-  max-width: 17%;
 }
 
 #this_notebook_area_title {
-  margin-top: 0.5em;
+  margin-top: 0;
   margin-bottom: 0.25em;
 }
 
@@ -500,8 +524,19 @@ img {
 }
 
 .link_area_item {
-  margin-top: 0.25em;
-  padding: 0.25em 0.25em 0.25em 0.5em;
+  padding: 0.2em 0.25em 0.2em 0.5em;
+}
+
+.tree_expander {
+  float: left;
+  width: 20px;
+  height: 1.5em;
+  background: url(/static/images/tree_arrow.png) no-repeat center center;
+}
+
+.tree_expander:hover {
+  background: url(/static/images/tree_arrow_hover.png) no-repeat center center;
+  cursor: pointer;
 }
 
 #storage_usage_area {
@@ -607,6 +642,7 @@ img {
 
 .small_text {
   font-size: 90%;
+  font-weight: normal;
 }
 
 .new_feature_text {

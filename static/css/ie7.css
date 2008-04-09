@@ -1,7 +1,19 @@
-#toolbar {
-  left: 2em;
+#note_tree_area {
+  float: right;
+  margin-left: -6em;
+}
+
+#note_tree_area_holder {
+  overflow: auto;
+  height: expression( eval( documentElement.offsetHeight - 100 ) );
+}
+
+#center_area {
+  float: right;
+  max-width: 59%;
 }
 
 #this_notebook_area_title {
   margin-top: 1.5em;
 }
+

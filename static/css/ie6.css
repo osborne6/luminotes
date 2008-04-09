@@ -4,13 +4,20 @@
 
 #toolbar {
   position: absolute;
-  float: none;
-  width: auto;
+  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 50 ) || 0 ) );
+  text-align: right;
+}
+
+#note_tree_area {
+  left: 0;
+  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 50 ) || 0 ) );
+  position: absolute;
   top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 80 : document.body.scrollTop + 80 );
-  margin-left: expression( 
-    document.body.clientWidth < ( 900 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "-120px": "-80px"
-  );
+}
+
+#note_tree_area_holder {
+  overflow: auto;
+  height: expression( eval( documentElement.offsetHeight - 100 ) );
 }
 
 #status_area {
@@ -27,39 +34,20 @@
 #everything_area {
   width:expression( 
     document.body.clientWidth < ( 1300 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "100%": "78em"
+    parseInt( document.body.currentStyle.fontSize ) ?  "100%": "80em"
   );
-}
-
-#toolbar_area {
-  width:expression( 
-    document.body.clientWidth < ( 1300 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "18%": "15em"
-  );
-  text-align: right;
 }
 
 #center_area {
   float: right;
   width:expression( 
     document.body.clientWidth < ( 1300 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "60%": "45em"
+    parseInt( document.body.currentStyle.fontSize ) ?  "56%": "45em"
   );
 }
 
 #notebook_header_area {
   width: 100%;
-}
-
-#link_area {
-  width:expression( 
-    document.body.clientWidth < ( 1300 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "17%": "15em"
-  );
-}
-
-#link_area_wrapper {
-  margin-left: 1.5em;
 }
 
 .pulldown {

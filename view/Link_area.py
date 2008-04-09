@@ -4,7 +4,7 @@ from Search_form import Search_form
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, total_notes_count, parent_id, notebook_path, user ):
+  def __init__( self, notebooks, notebook, parent_id, notebook_path, user ):
     linked_notebooks = [ nb for nb in notebooks if
       ( nb.read_write or not nb.name.startswith( u"Luminotes" ) ) and
       nb.name not in ( u"trash" ) and
@@ -20,19 +20,6 @@ class Link_area( Div ):
             Search_form(),
             class_ = u"link_area_item",
           ),
-          ( parent_id is None ) and Div(
-            A(
-              u"all notes",
-              href = u"#",
-              id = u"all_notes_link",
-              title = u"View a list of all notes in this notebook.",
-            ),
-            Span(
-              Span( total_notes_count, id = u"total_notes_count" ), u"total",
-              class_ = u"small_text",
-            ),
-            class_ = u"link_area_item",
-          ) or None,
 
           ( notebook.name != u"Luminotes" ) and Div(
             A(
@@ -156,7 +143,7 @@ class Link_area( Div ):
         Div(
           id = u"storage_usage_area",
         ),
-        id = u"link_area_wrapper",
+        id = u"link_area_holder",
       ),
       id = u"link_area",
     )

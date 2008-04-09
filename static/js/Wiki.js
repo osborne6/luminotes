@@ -9,7 +9,6 @@ function Wiki( invoker ) {
   this.parent_id = getElement( "parent_id" ).value; // id of the notebook containing this one
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: note title to editor
-  this.all_notes_editor = null;      // editor for display of list of all notes
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
@@ -19,6 +18,7 @@ function Wiki( invoker ) {
   this.after_login = getElement( "after_login" ).value;
   this.signup_plan = getElement( "signup_plan" ).value;
   this.font_size = null;
+  this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -312,14 +312,6 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     );
   }
 
-  var all_notes_link = getElement( "all_notes_link" );
-  if ( all_notes_link ) {
-    connect( all_notes_link, "onclick", function ( event ) {
-      self.load_editor( "all notes", "null", null, null, getElement( "notes_top" ) );
-      event.stop();
-    } );
-  }
-
   var download_html_link = getElement( "download_html_link" );
   if ( download_html_link ) {
     connect( download_html_link, "onclick", function ( event ) {
@@ -398,8 +390,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
   this.increment_total_notes_count();
   this.blank_editor_id = editor.id;
-
-  this.add_all_notes_link( editor.id, "" );
+  signal( this, "note_added", editor );
 }
 
 Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, position_after ) {
@@ -443,13 +434,6 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, pos
   var self = this;
   if ( pulldown_title || note_id == undefined || note_id == "new" || note_id == "null" ) {
     // if the note_title corresponds to a "magic" note's title, then dynamically highlight or create the note
-    if ( note_title == "all notes" ) {
-      this.invoker.invoke(
-        "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
-        function( result ) { self.display_all_notes_list( result ); }
-      );
-      return;
-    }
     if ( note_title == "search results" ) {
       var editor = this.open_editors[ note_title ];
       if ( editor ) {
@@ -513,14 +497,12 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   if ( link && link.target )
     link.removeAttribute( "target" );
 
-  if ( note_title == "all notes" || note_title == "search results" || note_title == "share this notebook" ) {
+  if ( note_title == "search results" || note_title == "share this notebook" ) {
     link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
       [ "title", "note_id" ],
       [ note_title, "null" ]
     );
     if ( callback ) {
-      if ( note_title == "all notes" )
-        callback( "list of all notes in this notebook" );
       if ( note_title == "search results" )
         callback( "current search results" );
       else
@@ -751,7 +733,7 @@ Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) 
 
   if ( new_title != null && !editor.empty() ) {
     this.open_editors[ new_title ] = editor;
-    this.add_all_notes_link( editor.id, new_title );
+    signal( this, "note_renamed", editor, new_title );
   }
 }
 
@@ -804,7 +786,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
-      this.remove_all_notes_link( this.focused_editor.id );
+      signal( this, "note_removed", this.focused_editor.id );
       this.focused_editor.shutdown();
       this.decrement_total_notes_count();
       this.display_empty_message();
@@ -1081,7 +1063,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
 
     // if the editor to hide is completely empty, then simply remove it
     if ( editor.id == this.blank_editor_id && editor.empty() ) {
-      this.remove_all_notes_link( editor.id );
+      signal( this, "note_removed", editor.id );
       editor.shutdown();
       this.decrement_total_notes_count();
     } else {
@@ -1090,10 +1072,9 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
         this.save_editor( editor );
 
       editor.shutdown();
-      Highlight( "all_notes_link" );
     }
 
-    this.display_empty_message( id == "all_notes" );
+    this.display_empty_message();
   }
 
   event.stop();
@@ -1142,7 +1123,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor, message_div ); } );
     }
 
-    self.remove_all_notes_link( editor.id );
+    signal( self, "note_removed", editor.id );
 
     editor.shutdown();
     self.decrement_total_notes_count();
@@ -1176,7 +1157,7 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
     if ( editor == this.focused_editor )
       this.focused_editor = null;
 
-    this.remove_all_notes_link( editor.id );
+    signal( this, "note_removed", editor.id );
 
     editor.shutdown();
     this.decrement_total_notes_count();
@@ -1199,6 +1180,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
     this.startup_notes[ editor.id ] = true;
     this.increment_total_notes_count();
     this.load_editor( "Note not found.", editor.id, null, null, position_after );
+    signal( this, "note_added", editor );
   }
 
   event.stop();
@@ -1216,6 +1198,7 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
   this.startup_notes[ note_id ] = true;
   this.increment_total_notes_count();
   this.load_editor( "Note not found.", note_id, null, null, position_after );
+  signal( this, "note_removed", editor.id );
 
   event.stop();
 }
@@ -1369,40 +1352,6 @@ Wiki.prototype.display_search_results = function ( result ) {
   }
 
   this.search_results_editor = this.create_editor( "search_results", "<h3>search results</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
-}
-
-Wiki.prototype.display_all_notes_list = function ( result ) {
-  this.clear_messages();
-  this.clear_pulldowns();
-
-  if ( this.display_empty_message( true ) == true )
-    return;
-
-  if ( this.all_notes_editor )
-    this.all_notes_editor.shutdown();
-
-  // build up a list of all notes in this notebook, one link per note
-  var list = createDOM( "ul", { "id": "notes_list" } );
-  if ( this.focused_editor ) {
-    var focused_title = this.focused_editor.title;
-    if ( focused_title != "all notes" && focused_title != "search results" && focused_title != "share this notebook" )
-      appendChildNodes( list, this.create_all_notes_link( this.focused_editor.id, this.focused_editor.title || "untitled note" ) );
-  }
-
-  for ( var i in result.notes ) {
-    var note_tuple = result.notes[ i ]
-    var note_id = note_tuple[ 0 ];
-    var note_title = note_tuple[ 1 ];
-    if ( this.focused_editor && note_id == this.focused_editor.id )
-      continue;
-    if ( !note_title )
-      note_title = "untitled note";
-
-    appendChildNodes( list, this.create_all_notes_link( note_id, note_title ) );
-  }
-  var list_holder = createDOM( "div", {}, list );
-
-  this.all_notes_editor = this.create_editor( "all_notes", "<h3>all notes</h3>" + list_holder.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
 }
 
 Wiki.prototype.share_notebook = function () {
@@ -1792,11 +1741,7 @@ Wiki.prototype.display_empty_message = function ( replace_messages ) {
   }
 
   if ( !replace_messages ) {
-    var self = this;
-    this.invoker.invoke(
-      "/notebooks/all_notes", "GET", { "notebook_id": this.notebook.object_id },
-      function( result ) { self.display_all_notes_list( result ); }
-    );
+    // TODO: display a message about the note tree, or some way for the user to get back to their notes
     return true;
   }
 
@@ -1835,55 +1780,6 @@ Wiki.prototype.zero_total_notes_count = function () {
   if ( this.total_notes_count == null ) return;
   this.total_notes_count = 0;
   replaceChildNodes( "total_notes_count", this.total_notes_count );
-}
-
-Wiki.prototype.remove_all_notes_link = function ( note_id ) {
-  if ( !this.all_notes_editor ) return;
-
-  withDocument( this.all_notes_editor.document, function () {
-    var note_link = getElement( "note_link_" + note_id );
-    if ( note_link )
-      removeElement( note_link );
-  } );
-
-  this.all_notes_editor.resize();
-}
-
-Wiki.prototype.add_all_notes_link = function ( note_id, note_title ) {
-  if ( !this.all_notes_editor ) return;
-  if ( note_title == "all notes" || note_title == "search results" || note_title == "share this notebook" ) return;
-
-  if ( !note_title || note_title.length == 0 )
-    note_title = "untitled note";
-
-  var self = this;
-  withDocument( this.all_notes_editor.document, function () {
-    // if the note link already exists, update its title and bail
-    var note_link = getElement( "note_link_" + note_id );
-    if ( note_link ) {
-      replaceChildNodes( note_link.firstChild, note_title );
-      self.all_notes_editor.resize();
-      return;
-    }
-
-    var notes_list = getElement( "notes_list" );
-    if ( !notes_list ) return;
-    var first_note_link = notes_list.firstChild;
-    var new_note_link = self.create_all_notes_link( note_id, note_title );
-
-    if ( first_note_link )
-      insertSiblingNodesBefore( first_note_link, new_note_link );
-    else
-      appendChildNodes( notes_list, new_note_link );
-  } );
-
-  this.all_notes_editor.resize();
-}
-
-Wiki.prototype.create_all_notes_link = function ( note_id, note_title ) {
-  return createDOM( "li", { "id": "note_link_" + note_id },
-    createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id }, note_title )
-  );
 }
 
 Wiki.prototype.start_notebook_rename = function () {
@@ -2257,12 +2153,6 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
 
   // if the note has no destination note id set, try loading the note from the server by title
   if ( ( id == undefined || id == "new" || id == "null" ) && title.length > 0 ) {
-    if ( title == "all notes" ) {
-      this.title_field.value = title;
-      this.display_summary( title, "list of all notes in this notebook" );
-      return;
-    }
-
     if ( title == "search results" ) {
       this.title_field.value = title;
       this.display_summary( title, "current search results" );
@@ -2663,3 +2553,76 @@ File_link_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
+function Note_tree( wiki, notebook_id, invoker ) {
+  this.wiki = wiki;
+  this.notebook_id = notebook_id;
+  this.invoker = invoker;
+
+  // add onclick handlers to the initial note links within the tree
+  var links = getElementsByTagAndClassName( "a", "note_tree_link", "note_tree_area" );
+
+  var self = this;
+  for ( var i in links ) {
+    var link = links[ i ];
+    // TODO: connect expander as well
+    connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
+  }
+
+  // connect to the wiki note events
+  connect( wiki, "note_renamed", function ( editor, new_title ) { self.rename_link( editor, new_title ); } );
+  connect( wiki, "note_added", function ( editor ) { self.add_link( editor ); } );
+  connect( wiki, "note_removed", function ( id ) { self.remove_link( id ); } );
+  connect( wiki, "note_updated", function ( editor ) { self.update_child_links( editor ); } );
+}
+
+Note_tree.prototype.link_clicked = function ( event ) {
+  var link = event.target();
+  var query = parse_query( link );
+  var note_id = query[ "note_id" ];
+
+  if ( !note_id )
+    return;
+
+  this.wiki.load_editor( null, note_id );
+  event.stop();
+}
+
+Note_tree.prototype.add_link = function ( editor ) {
+  // for now, only add startup notes to the note tree
+  if ( !editor.startup )
+    return;
+
+  var expander = createDOM( "div", { "class": "tree_expander" } );
+  var link = createDOM( "a", {
+   "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
+   "id": "note_tree_link_" + editor.id,
+   "class": "note_tree_link"
+  }, editor.title );
+
+  appendChildNodes( "note_tree_area_holder", createDOM(
+    "div",
+    { "id": "note_tree_item_" + editor.id, "class": "link_area_item" },
+    expander,
+    link
+  ) );
+
+  var self = this;
+  // TODO: connect expander as well
+  connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
+}
+
+Note_tree.prototype.remove_link = function ( id ) {
+  removeElement( "note_tree_item_" + id );
+}
+
+Note_tree.prototype.rename_link = function ( editor, new_title ) {
+}
+
+Note_tree.prototype.expand_link = function ( id ) {
+}
+
+Note_tree.prototype.collapse_link = function ( id ) {
+}
+
+Note_tree.prototype.update_child_links = function ( editor ) {
+}
