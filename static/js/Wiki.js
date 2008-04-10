@@ -1237,6 +1237,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       editor.mark_clean();
       if ( callback )
         callback();
+      signal( self, "note_saved", editor );
     }, null, synchronous, fire_and_forget );
   } else {
     if ( callback )
@@ -2572,7 +2573,7 @@ function Note_tree( wiki, notebook_id, invoker ) {
   connect( wiki, "note_renamed", function ( editor, new_title ) { self.rename_link( editor, new_title ); } );
   connect( wiki, "note_added", function ( editor ) { self.add_link( editor ); } );
   connect( wiki, "note_removed", function ( id ) { self.remove_link( id ); } );
-  connect( wiki, "note_updated", function ( editor ) { self.update_child_links( editor ); } );
+  connect( wiki, "note_saved", function ( editor ) { self.update_link( editor ); } );
 }
 
 Note_tree.prototype.link_clicked = function ( event ) {
@@ -2626,11 +2627,22 @@ Note_tree.prototype.rename_link = function ( editor, new_title ) {
   replaceChildNodes( link, new_title || "untitled note" );
 }
 
+Note_tree.prototype.update_link = function ( editor ) {
+  var link = getElement( "note_tree_link_" + editor.id );
+
+  if ( !link ) {
+    this.add_link( editor );
+    return;
+  }
+
+  if ( !editor.startup )
+    this.remove_link( editor.id );
+
+  // TODO: if link is expanded, update child links (if any)
+}
+
 Note_tree.prototype.expand_link = function ( id ) {
 }
 
 Note_tree.prototype.collapse_link = function ( id ) {
-}
-
-Note_tree.prototype.update_child_links = function ( editor ) {
 }
