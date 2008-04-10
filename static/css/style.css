@@ -527,6 +527,10 @@ img {
   padding: 0.2em 0.25em 0.2em 0.5em;
 }
 
+.note_tree_item {
+  padding: 0.2em 0.25em 0.2em 0;
+}
+
 .tree_expander {
   float: left;
   width: 20px;

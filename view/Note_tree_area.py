@@ -17,13 +17,13 @@ class Note_tree_area( Div ):
         [ Div(
           Div( class_ = u"tree_expander" ),
           A(
-            note.title,
+            note.title or u"untitled note",
             href = u"/notebooks/%s?note_id=%s" % ( notebook.object_id, note.object_id ),
             id = u"note_tree_link_" + note.object_id,
             class_ = u"note_tree_link",
           ),
           id = u"note_tree_item_" + note.object_id,
-          class_ = u"link_area_item",
+          class_ = u"note_tree_item",
         ) for note in root_notes ],
         id = u"note_tree_area_holder",
       ),

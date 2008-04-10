@@ -2597,11 +2597,11 @@ Note_tree.prototype.add_link = function ( editor ) {
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
    "id": "note_tree_link_" + editor.id,
    "class": "note_tree_link"
-  }, editor.title );
+  }, editor.title || "untitled note" );
 
   appendChildNodes( "note_tree_area_holder", createDOM(
     "div",
-    { "id": "note_tree_item_" + editor.id, "class": "link_area_item" },
+    { "id": "note_tree_item_" + editor.id, "class": "note_tree_item" },
     expander,
     link
   ) );
@@ -2616,6 +2616,14 @@ Note_tree.prototype.remove_link = function ( id ) {
 }
 
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
+  var link = getElement( "note_tree_link_" + editor.id );
+
+  if ( !link ) {
+    this.add_link( editor );
+    return;
+  }
+
+  replaceChildNodes( link, new_title || "untitled note" );
 }
 
 Note_tree.prototype.expand_link = function ( id ) {
