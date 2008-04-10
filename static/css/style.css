@@ -525,10 +525,12 @@ img {
 
 .link_area_item {
   padding: 0.2em 0.25em 0.2em 0.5em;
+  font-size: 90%;
 }
 
 .note_tree_item {
   padding: 0.2em 0.25em 0.2em 0;
+  font-size: 90%;
 }
 
 .tree_expander {
@@ -541,6 +543,12 @@ img {
 .tree_expander:hover {
   background: url(/static/images/tree_arrow_hover.png) no-repeat center center;
   cursor: pointer;
+}
+
+.tree_expander_empty {
+  float: left;
+  width: 20px;
+  height: 1.5em;
 }
 
 #storage_usage_area {

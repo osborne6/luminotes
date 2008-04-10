@@ -2588,12 +2588,19 @@ Note_tree.prototype.link_clicked = function ( event ) {
   event.stop();
 }
 
+LINK_PATTERN = /<a\s+([^>]+\s)?href="[^"]+"[^>]*>/;
+
 Note_tree.prototype.add_link = function ( editor ) {
   // for now, only add startup notes to the note tree
   if ( !editor.startup )
     return;
 
-  var expander = createDOM( "div", { "class": "tree_expander" } );
+  // display the tree expander arrow if the given note's editor contains any outgoing links
+  if ( LINK_PATTERN.exec( editor.contents() ) )
+    var expander = createDOM( "div", { "class": "tree_expander" } );
+  else
+    var expander = createDOM( "div", { "class": "tree_expander_empty" } );
+
   var link = createDOM( "a", {
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
    "id": "note_tree_link_" + editor.id,
