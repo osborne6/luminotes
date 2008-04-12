@@ -47,33 +47,33 @@ class Upgrade_page( Product_page ):
               Tr(
                 Td( u"Unlimited wiki notebooks", class_ = u"feature_name" ),
                 [ Td(
-                  Img( src = u"/static/images/check.png", width = u"20", height = u"17" ),
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                 ) for plan in rate_plans ],
               ),
               Tr(
                 Td( u"Friendly email support", class_ = u"feature_name" ),
                 [ Td(
-                  Img( src = u"/static/images/check.png", width = u"20", height = u"17" ),
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                 ) for plan in rate_plans ],
               ),
               Tr(
                 Td( u"Invite people to view your wiki", class_ = u"feature_name" ),
                 [ Td(
-                  Img( src = u"/static/images/check.png", width = u"20", height = u"17" ),
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                 ) for plan in rate_plans ],
               ),
               Tr(
                 Td( u"Invite people to edit your wiki", class_ = u"feature_name" ),
                 [ Td(
                   plan[ u"notebook_collaboration" ] and
-                  Img( src = u"/static/images/check.png", width = u"20", height = u"17" ) or u"&nbsp",
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
                 ) for plan in rate_plans ],
               ),
               Tr(
                 Td( u"Wiki access control", class_ = u"feature_name" ),
                 [ Td(
                   plan[ u"notebook_collaboration" ] and
-                  Img( src = u"/static/images/check.png", width = u"20", height = u"17" ) or u"&nbsp",
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
                 ) for plan in rate_plans ],
               ),
               border = u"1",
