@@ -2659,8 +2659,6 @@ Note_tree.prototype.update_link = function ( editor ) {
 }
 
 Note_tree.prototype.expand_link = function ( event, note_id ) {
-  // FIXME: use of note_id here is problematic. if a given note is listed in multiple different locations, the id won't be unique in
-  // the DOM
   var expander = event.target();
 
   if ( !expander || hasElementClass( expander, "tree_expander_empty" ) )
@@ -2668,14 +2666,13 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
 
   // if it's collapsed, expand it
   if ( hasElementClass( expander, "tree_expander" ) ) {
-    var children_area = createDOM( "div", { "id": "note_tree_children_" + note_id },
+    var children_area = createDOM( "div", { "class": "note_tree_children_area" },
       createDOM( "span", { "class": "note_tree_loading" }, "loading..." )
     );
 
     swapElementClass( expander, "tree_expander", "tree_expander_expanded" );
-    insertSiblingNodesAfter( "note_tree_link_" + note_id,
-      children_area
-    );
+    var link = getFirstElementByTagAndClassName( "a", null, expander.parentNode );
+    insertSiblingNodesAfter( link, children_area );
 
     var self = this;
     this.invoker.invoke(
@@ -2698,7 +2695,7 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
   // if it's expanded, collapse it
   if ( hasElementClass( expander, "tree_expander_expanded" ) ) {
     swapElementClass( expander, "tree_expander_expanded", "tree_expander" );
-    var children = getElement( "note_tree_children_" + note_id );
+    var children = getFirstElementByTagAndClassName( "div", "note_tree_children_area", expander.parentNode );
     if ( children )
       removeElement( children );
   }
