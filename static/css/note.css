@@ -4,6 +4,11 @@ body {
   font-family: sans-serif;
 }
 
+a[target ^= "_"] {
+  background: url(/static/images/web_icon_tiny.png) right center no-repeat;
+  padding-right: 13px;
+}
+
 a:hover {
   color: #ff6600;
 }
