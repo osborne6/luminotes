@@ -1,4 +1,5 @@
 import re
+import cgi
 import cherrypy
 from datetime import datetime
 from Expose import expose
@@ -15,6 +16,7 @@ from model.User_revision import User_revision
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
+from view.Note_tree_area import Note_tree_area
 
 
 class Access_error( Exception ):
@@ -33,6 +35,9 @@ class Access_error( Exception ):
 
 class Notebooks( object ):
   WHITESPACE_PATTERN = re.compile( u"\s+" )
+  LINK_PATTERN = re.compile( u'<a\s+((?:[^>]+\s)?href="([^"]+)"(?:\s+target="([^"]*)")?[^>]*)>([^<]+)</a>', re.IGNORECASE )
+  FILE_PATTERN = re.compile( u'/files/' )
+
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
   """
@@ -447,6 +452,66 @@ class Notebooks( object ):
 
     return dict(
       revisions = revisions,
+    )
+
+  @expose( view = Json )
+  @strongly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    note_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def load_note_links( self, notebook_id, note_id, user_id = None ):
+    """
+    Return a list of HTTP links found within the contents of the given note.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note in question
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'tree_html': html_fragment }
+    @raise Access_error: the current user doesn't have access to the given notebook or note
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
+    note = self.__database.load( Note, note_id )
+    items = []
+
+    for match in self.LINK_PATTERN.finditer( note.contents ):
+      ( attributes, href, target, title ) = match.groups()
+
+      # if it has a link target, it's a link to an external web site
+      if target:
+        items.append( Note_tree_area.make_item( title, attributes, "note_tree_external_link" ) )
+        continue
+
+      # if it has '/files/' in its path, it's an uploaded file link
+      if self.FILE_PATTERN.search( href ):
+        items.append( Note_tree_area.make_item( title, attributes, "note_tree_file_link" ) )
+        continue
+
+      # if it has a note_id, load that child note and see whether it has any children of its own
+      child_note_ids = cgi.parse_qs( href.split( '?' )[ -1 ] ).get( u"note_id" )
+
+      if child_note_ids:
+        child_note_id = child_note_ids[ 0 ]
+        child_note = self.__database.load( Note, child_note_id )
+        if child_note and self.LINK_PATTERN.search( child_note.contents ):
+          items.append( Note_tree_area.make_item( title, attributes, "note_tree_link", has_children = True ) )
+          continue
+
+      # otherwise, it's childless
+      items.append( Note_tree_area.make_item( title, attributes, "note_tree_link", has_children = False ) )
+
+    return dict(
+      tree_html = unicode( Note_tree_area.make_tree( items ) ),
     )
 
   @expose( view = Json )

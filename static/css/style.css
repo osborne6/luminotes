@@ -230,6 +230,24 @@ img {
   background-image: url(/static/images/arrow_down_hover.png);
 }
 
+#tree_arrow_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/tree_arrow_hover.png);
+}
+
+#tree_arrow_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/tree_arrow_down.png);
+}
+
+#tree_arrow_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/tree_arrow_down_hover.png);
+}
+
 #note_tree_area {
   position: fixed;
   width: 17em;
@@ -246,11 +264,33 @@ img {
   overflow-y: auto;
   padding-left: 1em;
   margin-right: 1em;
+  border-collapse: collapse;
+  margin-left: 0.5em;
 }
 
 #note_tree_area_title {
   margin-top: 0.5em;
   margin-bottom: 0.25em;
+}
+
+.note_tree_link {
+  background: url(/static/images/note_icon.png) left center no-repeat;
+  padding-left: 18px;
+}
+
+.note_tree_external_link {
+  background: url(/static/images/web_icon.png) left center no-repeat;
+  padding-left: 18px;
+}
+
+.note_tree_file_link {
+  background: url(/static/images/file_icon.png) left center no-repeat;
+  padding-left: 18px;
+}
+
+.note_tree_loading {
+  background: url(/static/images/loading.gif) left center no-repeat;
+  padding-left: 20px;
 }
 
 #link_area {
@@ -535,7 +575,8 @@ img {
 
 .tree_expander {
   float: left;
-  width: 20px;
+  width: 11px;
+  margin-right: 4px;
   height: 1.5em;
   background: url(/static/images/tree_arrow.png) no-repeat center center;
 }
@@ -545,9 +586,23 @@ img {
   cursor: pointer;
 }
 
+.tree_expander_expanded {
+  float: left;
+  width: 11px;
+  margin-right: 4px;
+  height: 1.5em;
+  background: url(/static/images/tree_arrow_down.png) no-repeat center center;
+}
+
+.tree_expander_expanded:hover {
+  background: url(/static/images/tree_arrow_down_hover.png) no-repeat center center;
+  cursor: pointer;
+}
+
 .tree_expander_empty {
   float: left;
-  width: 20px;
+  width: 11px;
+  margin-right: 4px;
   height: 1.5em;
 }
 

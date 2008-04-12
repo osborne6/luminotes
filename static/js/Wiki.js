@@ -2563,15 +2563,24 @@ function Note_tree( wiki, notebook_id, invoker ) {
   var links = getElementsByTagAndClassName( "a", "note_tree_link", "note_tree_area" );
 
   var self = this;
+  function connect_expander( note_id ) {
+    connect( "note_tree_expander_" + note_id, "onclick", function ( event ) { self.expand_link( event, note_id ); } );
+  }
+
   for ( var i in links ) {
     var link = links[ i ];
-    // TODO: connect expander as well
+    var query = parse_query( link );
+    var note_id = query[ "note_id" ];
+    
+    if ( note_id )
+      connect_expander( note_id );
+
     connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
   }
 
   // connect to the wiki note events
   connect( wiki, "note_renamed", function ( editor, new_title ) { self.rename_link( editor, new_title ); } );
-  connect( wiki, "note_added", function ( editor ) { self.add_link( editor ); } );
+  connect( wiki, "note_added", function ( editor ) { self.add_root_link( editor ); } );
   connect( wiki, "note_removed", function ( id ) { self.remove_link( id ); } );
   connect( wiki, "note_saved", function ( editor ) { self.update_link( editor ); } );
 }
@@ -2590,16 +2599,16 @@ Note_tree.prototype.link_clicked = function ( event ) {
 
 LINK_PATTERN = /<a\s+([^>]+\s)?href="[^"]+"[^>]*>/;
 
-Note_tree.prototype.add_link = function ( editor ) {
+Note_tree.prototype.add_root_link = function ( editor ) {
   // for now, only add startup notes to the note tree
   if ( !editor.startup )
     return;
 
   // display the tree expander arrow if the given note's editor contains any outgoing links
   if ( LINK_PATTERN.exec( editor.contents() ) )
-    var expander = createDOM( "div", { "class": "tree_expander" } );
+    var expander = createDOM( "td", { "class": "tree_expander", "id": "note_tree_expander_" + editor.id } );
   else
-    var expander = createDOM( "div", { "class": "tree_expander_empty" } );
+    var expander = createDOM( "td", { "class": "tree_expander_empty", "id": "note_tree_expander_" + editor.id } );
 
   var link = createDOM( "a", {
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
@@ -2608,26 +2617,26 @@ Note_tree.prototype.add_link = function ( editor ) {
   }, editor.title || "untitled note" );
 
   appendChildNodes( "note_tree_area_holder", createDOM(
-    "div",
+    "tr",
     { "id": "note_tree_item_" + editor.id, "class": "note_tree_item" },
     expander,
-    link
+    createDOM( "td", {}, link )
   ) );
 
   var self = this;
-  // TODO: connect expander as well
+  connect( expander, "onclick", function ( event ) { self.expand_link( event, editor.id ); } );
   connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
 }
 
-Note_tree.prototype.remove_link = function ( id ) {
-  removeElement( "note_tree_item_" + id );
+Note_tree.prototype.remove_link = function ( note_id ) {
+  removeElement( "note_tree_item_" + note_id );
 }
 
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
   var link = getElement( "note_tree_link_" + editor.id );
 
   if ( !link ) {
-    this.add_link( editor );
+    this.add_root_link( editor );
     return;
   }
 
@@ -2638,7 +2647,7 @@ Note_tree.prototype.update_link = function ( editor ) {
   var link = getElement( "note_tree_link_" + editor.id );
 
   if ( !link ) {
-    this.add_link( editor );
+    this.add_root_link( editor );
     return;
   }
 
@@ -2646,10 +2655,52 @@ Note_tree.prototype.update_link = function ( editor ) {
     this.remove_link( editor.id );
 
   // TODO: if link is expanded, update child links (if any)
+  // TODO: hide/show the link's expander arrow based on the precense of outgoing links
 }
 
-Note_tree.prototype.expand_link = function ( id ) {
+Note_tree.prototype.expand_link = function ( event, note_id ) {
+  // FIXME: use of note_id here is problematic. if a given note is listed in multiple different locations, the id won't be unique in
+  // the DOM
+  var expander = event.target();
+
+  if ( !expander || hasElementClass( expander, "tree_expander_empty" ) )
+    return;
+
+  // if it's collapsed, expand it
+  if ( hasElementClass( expander, "tree_expander" ) ) {
+    var children_area = createDOM( "div", { "id": "note_tree_children_" + note_id },
+      createDOM( "span", { "class": "note_tree_loading" }, "loading..." )
+    );
+
+    swapElementClass( expander, "tree_expander", "tree_expander_expanded" );
+    insertSiblingNodesAfter( "note_tree_link_" + note_id,
+      children_area
+    );
+
+    var self = this;
+    this.invoker.invoke(
+      "/notebooks/load_note_links", "GET", {
+        "notebook_id": this.notebook_id,
+        "note_id": note_id
+      },
+      function ( result ) {
+        var span = createDOM( "span" );
+        span.innerHTML = result.tree_html;
+        replaceChildNodes( children_area, span );
+      }
+    );
+
+    return;
+  }
+
+  // if it's expanded, collapse it
+  if ( hasElementClass( expander, "tree_expander_expanded" ) ) {
+    swapElementClass( expander, "tree_expander_expanded", "tree_expander" );
+    var children = getElement( "note_tree_children_" + note_id );
+    if ( children )
+      removeElement( children );
+  }
 }
 
-Note_tree.prototype.collapse_link = function ( id ) {
+Note_tree.prototype.collapse_link = function ( event, note_id ) {
 }
