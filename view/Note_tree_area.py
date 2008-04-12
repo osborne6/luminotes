@@ -35,15 +35,16 @@ class Note_tree_area( Div ):
     )
 
   @staticmethod
-  def make_item( title, link_attributes, link_class, has_children = False, root_note_id = None ):
+  def make_item( title, link_attributes, link_class, has_children = False, root_note_id = None, target = None ):
     return Tr(
       has_children and \
         Td( id = root_note_id and u"note_tree_expander_" + root_note_id or None, class_ = u"tree_expander" ) or
         Td( id = root_note_id and u"note_tree_expander_" + root_note_id or None, class_ = u"tree_expander_empty" ),
       Td(
-        u"<a %s%s class=%s>%s</a>" % (
+        u"<a %s%s%s class=%s>%s</a>" % (
             link_attributes,
-            root_note_id and u" id=note_tree_link_" + root_note_id or None,
+            root_note_id and u' id="note_tree_link_%s"' % root_note_id or "",
+            target and u' target="%s"' % target or "",
             link_class,
             title or u"untitled note",
         ),

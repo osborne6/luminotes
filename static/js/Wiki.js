@@ -2690,6 +2690,8 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
       }
     );
 
+    // TODO: add onclick handler for each link that's to a note
+
     return;
   }
 

@@ -489,12 +489,12 @@ class Notebooks( object ):
 
       # if it has a link target, it's a link to an external web site
       if target:
-        items.append( Note_tree_area.make_item( title, attributes, "note_tree_external_link" ) )
+        items.append( Note_tree_area.make_item( title, attributes, u"note_tree_external_link", target = u"_new" ) )
         continue
 
       # if it has '/files/' in its path, it's an uploaded file link
       if self.FILE_PATTERN.search( href ):
-        items.append( Note_tree_area.make_item( title, attributes, "note_tree_file_link" ) )
+        items.append( Note_tree_area.make_item( title, attributes, u"note_tree_file_link", target = u"_new" ) )
         continue
 
       # if it has a note_id, load that child note and see whether it has any children of its own
@@ -504,11 +504,11 @@ class Notebooks( object ):
         child_note_id = child_note_ids[ 0 ]
         child_note = self.__database.load( Note, child_note_id )
         if child_note and self.LINK_PATTERN.search( child_note.contents ):
-          items.append( Note_tree_area.make_item( title, attributes, "note_tree_link", has_children = True ) )
+          items.append( Note_tree_area.make_item( title, attributes, u"note_tree_link", has_children = True ) )
           continue
 
       # otherwise, it's childless
-      items.append( Note_tree_area.make_item( title, attributes, "note_tree_link", has_children = False ) )
+      items.append( Note_tree_area.make_item( title, attributes, u"note_tree_link", has_children = False ) )
 
     return dict(
       tree_html = unicode( Note_tree_area.make_tree( items ) ),
