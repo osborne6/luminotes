@@ -2630,7 +2630,10 @@ Note_tree.prototype.add_root_link = function ( editor ) {
 }
 
 Note_tree.prototype.remove_link = function ( note_id ) {
-  removeElement( "note_tree_item_" + note_id );
+  var item = getElement( "note_tree_item_" + note_id );
+
+  if ( item )
+    removeElement( item );
 }
 
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
