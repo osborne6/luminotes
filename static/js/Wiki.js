@@ -2589,11 +2589,12 @@ Note_tree.prototype.link_clicked = function ( event ) {
   var link = event.target();
   var query = parse_query( link );
   var note_id = query[ "note_id" ];
+  var title = query[ "title" ];
 
   if ( !note_id )
     return;
 
-  this.wiki.load_editor( null, note_id );
+  this.wiki.load_editor( title, note_id );
   event.stop();
 }
 
