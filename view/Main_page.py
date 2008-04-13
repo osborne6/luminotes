@@ -140,7 +140,7 @@ class Main_page( Page ):
               hide_toolbar = parent_id or not notebook.read_write
             ),
             notebook,
-            startup_notes, # TODO: pass root_notes, not startup_notes
+            startup_notes + ( notes and notes or [] ),
             total_notes_count,
           ),
           id = u"left_area",
