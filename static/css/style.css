@@ -261,13 +261,13 @@ img {
 
 #note_tree_area_holder {
   max-height: 100%;
-  font-size: 90%;
   overflow: auto;
   margin-left: 0.5em;
 }
 
 #note_tree_root_table {
   margin-bottom: 1em;
+  font-size: 90%;
 }
 
 .note_tree_table {
