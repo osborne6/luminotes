@@ -2680,14 +2680,8 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
         "notebook_id": this.notebook_id,
         "note_id": note_id
       },
-      function ( result ) {
-        var span = createDOM( "span" );
-        span.innerHTML = result.tree_html;
-        replaceChildNodes( children_area, span );
-      }
+      function ( result ) { try{ self.display_child_links( result, children_area ); } catch(e){ alert(e); } }
     );
-
-    // TODO: add onclick handler for each link that's to a note
 
     return;
   }
@@ -2702,4 +2696,30 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
 }
 
 Note_tree.prototype.collapse_link = function ( event, note_id ) {
+}
+
+Note_tree.prototype.display_child_links = function ( result, children_area ) {
+  var self = this;
+
+  function connect_expander( expander, note_id ) {
+    connect( expander, "onclick", function ( event ) { self.expand_link( event, note_id ); } );
+  }
+
+  var span = createDOM( "span" );
+  span.innerHTML = result.tree_html;
+  replaceChildNodes( children_area, span );
+
+  // add an onclick handler for each newly loaded expander and each note link
+  var links = getElementsByTagAndClassName( "a", null, children_area );
+  for ( var i in links ) {
+    var link = links[ i ];
+    connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
+    var expander = getFirstElementByTagAndClassName( "td", "tree_expander", link.parentNode.parentNode );
+
+    if ( expander ) {
+      var note_id = parse_query( link )[ "note_id" ];
+      if ( note_id )
+        connect_expander( expander, note_id );
+    }
+  }
 }

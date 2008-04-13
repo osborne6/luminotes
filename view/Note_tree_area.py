@@ -20,13 +20,13 @@ class Note_tree_area( Div ):
         self.make_tree(
           [ self.make_item(
             title = note.title,
-            link_attributes = u"href=/notebooks/%s?note_id=%s" % ( notebook.object_id, note.object_id ),
+            link_attributes = u'href="/notebooks/%s?note_id=%s"' % ( notebook.object_id, note.object_id ),
             link_class = u"note_tree_link",
             has_children = self.LINK_PATTERN.search( note.contents ),
             root_note_id = note.object_id,
           ) for note in root_notes ],
-          tree_id = u"note_tree_area_holder",
         ),
+        id = u"note_tree_area_holder",
       ),
       Span( id = "tree_arrow_hover_preload" ),
       Span( id = "tree_arrow_down_preload" ),
@@ -57,5 +57,5 @@ class Note_tree_area( Div ):
   def make_tree( items, tree_id = None ):
     return Table(
       items,
-      id = tree_id,
+      class_ = u"note_tree_table",
     )

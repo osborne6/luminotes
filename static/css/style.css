@@ -256,16 +256,18 @@ img {
   line-height: 140%;
   top: 80px;
   bottom: 1em;
-  overflow-y: visible;
+  padding-left: 0.5em;
 }
 
 #note_tree_area_holder {
-  height: 100%;
-  overflow-y: auto;
-  padding-left: 1em;
-  margin-right: 1em;
-  border-collapse: collapse;
+  max-height: 100%;
+  font-size: 90%;
+  overflow: auto;
   margin-left: 0.5em;
+}
+
+.note_tree_table {
+  border-collapse: collapse;
 }
 
 #note_tree_area_title {
@@ -275,17 +277,17 @@ img {
 
 .note_tree_link {
   background: url(/static/images/note_icon.png) left center no-repeat;
-  padding-left: 18px;
+  padding-left: 19px;
 }
 
 .note_tree_external_link {
   background: url(/static/images/web_icon.png) left center no-repeat;
-  padding-left: 18px;
+  padding-left: 19px;
 }
 
 .note_tree_file_link {
   background: url(/static/images/file_icon.png) left center no-repeat;
-  padding-left: 18px;
+  padding-left: 19px;
 }
 
 .note_tree_loading {
@@ -564,46 +566,47 @@ img {
 }
 
 .link_area_item {
-  padding: 0.2em 0.25em 0.2em 0.5em;
-  font-size: 90%;
+  padding: 0.25em 0.25em 0.25em 0.5em;
 }
 
 .note_tree_item {
-  padding: 0.2em 0.25em 0.2em 0;
-  font-size: 90%;
+  padding: 0.25em 0.25em 0.25em 0;
 }
 
 .tree_expander {
   float: left;
   width: 11px;
+  height: 11px;
   margin-right: 4px;
-  height: 1.5em;
-  background: url(/static/images/tree_arrow.png) no-repeat center center;
+  margin-top: 0.5em;
+  background: url(/static/images/tree_arrow.png) no-repeat center top;
+  cursor: pointer;
 }
 
 .tree_expander:hover {
-  background: url(/static/images/tree_arrow_hover.png) no-repeat center center;
-  cursor: pointer;
+  background: url(/static/images/tree_arrow_hover.png) no-repeat center top;
 }
 
 .tree_expander_expanded {
   float: left;
   width: 11px;
+  height: 11px;
   margin-right: 4px;
-  height: 1.5em;
-  background: url(/static/images/tree_arrow_down.png) no-repeat center center;
+  margin-top: 0.5em;
+  background: url(/static/images/tree_arrow_down.png) no-repeat center top;
+  cursor: pointer;
 }
 
 .tree_expander_expanded:hover {
-  background: url(/static/images/tree_arrow_down_hover.png) no-repeat center center;
-  cursor: pointer;
+  background: url(/static/images/tree_arrow_down_hover.png) no-repeat center top;
 }
 
 .tree_expander_empty {
   float: left;
   width: 11px;
+  height: 11px;
   margin-right: 4px;
-  height: 1.5em;
+  margin-top: 0.5em;
 }
 
 #storage_usage_area {
