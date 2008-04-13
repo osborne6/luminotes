@@ -2617,7 +2617,7 @@ Note_tree.prototype.add_root_link = function ( editor ) {
    "class": "note_tree_link"
   }, editor.title || "untitled note" );
 
-  appendChildNodes( "note_tree_area_holder", createDOM(
+  appendChildNodes( "note_tree_root_table", createDOM(
     "tr",
     { "id": "note_tree_item_" + editor.id, "class": "note_tree_item" },
     expander,
@@ -2659,7 +2659,7 @@ Note_tree.prototype.update_link = function ( editor ) {
     this.remove_link( editor.id );
 
   // TODO: if link is expanded, update child links (if any)
-  // TODO: hide/show the link's expander arrow based on the precense of outgoing links
+  // TODO: hide/show the link's expander arrow based on the presence of outgoing links
 }
 
 Note_tree.prototype.expand_link = function ( event, note_id ) {
