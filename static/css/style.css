@@ -266,6 +266,10 @@ img {
   margin-left: 0.5em;
 }
 
+#note_tree_root_table {
+  margin-bottom: 1em;
+}
+
 .note_tree_table {
   border-collapse: collapse;
 }

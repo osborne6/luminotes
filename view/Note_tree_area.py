@@ -25,6 +25,7 @@ class Note_tree_area( Div ):
             has_children = self.LINK_PATTERN.search( note.contents ),
             root_note_id = note.object_id,
           ) for note in root_notes ],
+          tree_id = "note_tree_root_table",
         ),
         id = u"note_tree_area_holder",
       ),
@@ -57,5 +58,6 @@ class Note_tree_area( Div ):
   def make_tree( items, tree_id = None ):
     return Table(
       items,
+      id = tree_id or None,
       class_ = u"note_tree_table",
     )
