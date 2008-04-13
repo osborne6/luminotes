@@ -627,7 +627,9 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
   else
     var read_write = this.notebook.read_write;
 
+  var self = this;
   var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false, position_after );
+  connect( editor, "init_complete", function () { signal( self, "note_added", editor ); } );
   id = editor.id;
 
   // if a link that launched this editor was provided, update it with the created note's id
@@ -1180,7 +1182,6 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
     this.startup_notes[ editor.id ] = true;
     this.increment_total_notes_count();
     this.load_editor( "Note not found.", editor.id, null, null, position_after );
-    signal( this, "note_added", editor );
   }
 
   event.stop();
@@ -1198,7 +1199,6 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
   this.startup_notes[ note_id ] = true;
   this.increment_total_notes_count();
   this.load_editor( "Note not found.", note_id, null, null, position_after );
-  signal( this, "note_removed", editor.id );
 
   event.stop();
 }
@@ -2605,6 +2605,10 @@ Note_tree.prototype.add_root_link = function ( editor ) {
   if ( !editor.startup )
     return;
 
+  // if the root note is already present in the tree, no need to add it again
+  if ( getElement( "note_tree_item_" + editor.id ) )
+    return;
+
   // display the tree expander arrow if the given note's editor contains any outgoing links
   if ( LINK_PATTERN.exec( editor.contents() ) )
     var expander = createDOM( "td", { "class": "tree_expander", "id": "note_tree_expander_" + editor.id } );
@@ -2639,10 +2643,8 @@ Note_tree.prototype.remove_link = function ( note_id ) {
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
   var link = getElement( "note_tree_link_" + editor.id );
 
-  if ( !link ) {
-    this.add_root_link( editor );
+  if ( !link )
     return;
-  }
 
   replaceChildNodes( link, new_title || "untitled note" );
 }
@@ -2650,10 +2652,8 @@ Note_tree.prototype.rename_link = function ( editor, new_title ) {
 Note_tree.prototype.update_link = function ( editor ) {
   var link = getElement( "note_tree_link_" + editor.id );
 
-  if ( !link ) {
-    this.add_root_link( editor );
+  if ( !link )
     return;
-  }
 
   if ( !editor.startup )
     this.remove_link( editor.id );
