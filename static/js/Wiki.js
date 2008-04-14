@@ -2651,18 +2651,39 @@ Note_tree.prototype.rename_link = function ( editor, new_title ) {
 }
 
 Note_tree.prototype.update_link = function ( editor ) {
+  // TODO: this needs to add an expander arrow if the editor goes from having no children to having children links
+  // TODO: similar, if an editor goes from having children links to having zero children, its expander needs to disappear
   var link = getElement( "note_tree_link_" + editor.id );
 
-  if ( !link ) {
+  if ( !link && editor.startup ) {
     this.add_root_link( editor );
     return;
   }
 
-  if ( !editor.startup )
+  if ( link && !editor.startup )
     this.remove_link( editor.id );
 
-  // TODO: if link is expanded, update child links (if any)
-  // TODO: hide/show the link's expander arrow based on the presence of outgoing links
+  // if the tree has any expanded links to the given editor's note, then update the children of
+  // those links
+  function update_links( note_tree, notebook_id, note_id, children_area ) {
+    note_tree.invoker.invoke(
+      "/notebooks/load_note_links", "GET", {
+        "notebook_id": notebook_id,
+        "note_id": note_id
+      },
+      function ( result ) { note_tree.display_child_links( result, children_area ); }
+    );
+  }
+
+  var links = getElementsByTagAndClassName( "a", null, "note_tree_root_table" );
+
+  for ( var i in links ) {
+    var link = links[ i ]
+    var note_id = parse_query( link )[ "note_id" ];
+
+    if ( note_id == editor.id && link.nextSibling )
+      update_links( this, this.notebook_id, editor.id, link.nextSibling );
+  }
 }
 
 Note_tree.prototype.expand_link = function ( event, note_id ) {
@@ -2704,7 +2725,7 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
         "notebook_id": this.notebook_id,
         "note_id": note_id
       },
-      function ( result ) { try{ self.display_child_links( result, children_area ); } catch(e){ alert(e); } }
+      function ( result ) { self.display_child_links( result, children_area ); }
     );
 
     return;
