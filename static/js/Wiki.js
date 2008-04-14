@@ -2670,6 +2670,23 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
 
   // if it's collapsed, expand it
   if ( hasElementClass( expander, "tree_expander" ) ) {
+    // first check if the expander is for a link to a parent/grandparent/etc. if so, just highlight
+    // the containing table instead of performing an expansion
+    var parent_node = expander.parentNode;
+    while ( !hasElementClass( parent_node, "note_tree_root_table" ) ) {
+      parent_node = parent_node.parentNode;
+      if ( !parent_node ) break;
+      var parent_link = parent_node.previousSibling;
+
+      if ( !parent_link || !hasElementClass( parent_link, "note_tree_link" ) ) continue;
+      var parent_note_id = parse_query( parent_link )[ "note_id" ];
+
+      if ( note_id == parent_note_id ) {
+        new Highlight( parent_node.parentNode, { "endcolor": "#fafafa" } );
+        return;
+      }
+    }
+
     var children_area = createDOM( "div", { "class": "note_tree_children_area" },
       createDOM( "span", { "class": "note_tree_loading" }, "loading..." )
     );
