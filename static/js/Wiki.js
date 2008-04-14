@@ -2651,8 +2651,6 @@ Note_tree.prototype.rename_link = function ( editor, new_title ) {
 }
 
 Note_tree.prototype.update_link = function ( editor ) {
-  // TODO: this needs to add an expander arrow if the editor goes from having no children to having children links
-  // TODO: similar, if an editor goes from having children links to having zero children, its expander needs to disappear
   var link = getElement( "note_tree_link_" + editor.id );
 
   if ( !link && editor.startup ) {
@@ -2665,13 +2663,13 @@ Note_tree.prototype.update_link = function ( editor ) {
 
   // if the tree has any expanded links to the given editor's note, then update the children of
   // those links
-  function update_links( note_tree, notebook_id, note_id, children_area ) {
+  function update_links( note_tree, notebook_id, note_id, link, children_area ) {
     note_tree.invoker.invoke(
       "/notebooks/load_note_links", "GET", {
         "notebook_id": notebook_id,
         "note_id": note_id
       },
-      function ( result ) { note_tree.display_child_links( result, children_area ); }
+      function ( result ) { note_tree.display_child_links( result, link, children_area ); }
     );
   }
 
@@ -2680,9 +2678,12 @@ Note_tree.prototype.update_link = function ( editor ) {
   for ( var i in links ) {
     var link = links[ i ]
     var note_id = parse_query( link )[ "note_id" ];
+    var children_area = getFirstElementByTagAndClassName( "div", "note_tree_children_area", link.parentNode );
 
-    if ( note_id == editor.id && link.nextSibling )
-      update_links( this, this.notebook_id, editor.id, link.nextSibling );
+    if ( note_id != editor.id )
+      continue;
+
+    update_links( this, this.notebook_id, editor.id, link, children_area );
   }
 }
 
@@ -2725,7 +2726,7 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
         "notebook_id": this.notebook_id,
         "note_id": note_id
       },
-      function ( result ) { self.display_child_links( result, children_area ); }
+      function ( result ) { self.display_child_links( result, link, children_area ); }
     );
 
     return;
@@ -2743,7 +2744,7 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
 Note_tree.prototype.collapse_link = function ( event, note_id ) {
 }
 
-Note_tree.prototype.display_child_links = function ( result, children_area ) {
+Note_tree.prototype.display_child_links = function ( result, link, children_area ) {
   var self = this;
 
   function connect_expander( expander, note_id ) {
@@ -2752,19 +2753,53 @@ Note_tree.prototype.display_child_links = function ( result, children_area ) {
 
   var span = createDOM( "span" );
   span.innerHTML = result.tree_html;
-  replaceChildNodes( children_area, span );
 
-  // add an onclick handler for each newly loaded expander and each note link
-  var links = getElementsByTagAndClassName( "a", null, children_area );
-  for ( var i in links ) {
-    var link = links[ i ];
-    connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
-    var expander = getFirstElementByTagAndClassName( "td", "tree_expander", link.parentNode.parentNode );
+  // if there's a children area, replace its contents and add an onclick handler for each newly
+  // loaded expander and each note link
+  if ( children_area ) {
+    replaceChildNodes( children_area, span );
 
-    if ( expander ) {
-      var note_id = parse_query( link )[ "note_id" ];
-      if ( note_id )
-        connect_expander( expander, note_id );
+    var child_links = getElementsByTagAndClassName( "a", null, children_area );
+    for ( var i in child_links ) {
+      var child_link = child_links[ i ];
+      connect( child_link, "onclick", function ( event ) { self.link_clicked( event ); } );
+      var expander = getFirstElementByTagAndClassName( "td", "tree_expander", child_link.parentNode.parentNode );
+
+      if ( expander ) {
+        var note_id = parse_query( child_link )[ "note_id" ];
+        if ( note_id )
+          connect_expander( expander, note_id );
+      }
     }
+  } else {
+    var child_links = getElementsByTagAndClassName( "a", null, span );
   }
+
+  // if the parent has no children anymore, remove its expander arrow
+  if ( child_links.length == 0 ) {
+    if ( children_area )
+      removeElement( children_area );
+    var expander = getFirstElementByTagAndClassName( "td", "tree_expander", link.parentNode.parentNode );
+    if ( expander && link.parentNode.parentNode == expander.parentNode ) {
+      swapElementClass( expander, "tree_expander", "tree_expander_empty" );
+      disconnectAll( expander );
+      return;
+    }
+
+    expander = getFirstElementByTagAndClassName( "td", "tree_expander_expanded", link.parentNode.parentNode );
+    if ( expander && link.parentNode.parentNode == expander.parentNode ) {
+      swapElementClass( expander, "tree_expander_expanded", "tree_expander_empty" );
+      disconnectAll( expander );
+      return;
+    }
+
+    return;
+  }
+
+  // if a note without an expander arrow now has children, add an expander arrow for it
+  var expander = getFirstElementByTagAndClassName( "td", "tree_expander_empty", link.parentNode.parentNode );
+  if ( !expander || link.parentNode.parentNode != expander.parentNode ) return;
+  swapElementClass( expander, "tree_expander_empty", "tree_expander" );
+  var note_id = parse_query( link )[ "note_id" ];
+  connect_expander( expander, note_id );
 }
