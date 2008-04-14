@@ -22,7 +22,7 @@ class Note_tree_area( Div ):
             title = note.title,
             link_attributes = u'href="/notebooks/%s?note_id=%s"' % ( notebook.object_id, note.object_id ),
             link_class = u"note_tree_link",
-            has_children = self.LINK_PATTERN.search( note.contents ),
+            has_children = ( notebook.name != u"trash" ) and self.LINK_PATTERN.search( note.contents ) or False,
             root_note_id = note.object_id,
           ) for note in root_notes ],
           tree_id = "note_tree_root_table",

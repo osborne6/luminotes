@@ -1708,6 +1708,7 @@ Wiki.prototype.delete_all_editors = function ( event ) {
   }
 
   this.zero_total_notes_count();
+  removeElement( "note_tree_root_table" );
   this.display_empty_message( true );
 
   event.stop();
