@@ -2653,8 +2653,10 @@ Note_tree.prototype.rename_link = function ( editor, new_title ) {
 Note_tree.prototype.update_link = function ( editor ) {
   var link = getElement( "note_tree_link_" + editor.id );
 
-  if ( !link )
+  if ( !link ) {
+    this.add_root_link( editor );
     return;
+  }
 
   if ( !editor.startup )
     this.remove_link( editor.id );
