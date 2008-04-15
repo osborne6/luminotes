@@ -408,6 +408,10 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, pos
       pulldown_title = strip( pulldown.title_field.value );
       if ( pulldown_title )
         note_title = pulldown_title;
+
+      // only use the pulldown title if it has changed from the note's original title
+      if ( pulldown_title == note_title )
+        pulldown_title = undefined;
     }
 
     if ( link.target )
