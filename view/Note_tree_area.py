@@ -26,15 +26,17 @@ class Note_tree_area( Div ):
             root_note_id = note.object_id,
           ) for note in root_notes ],
           Div(
-            u'Add a note here: Click the "options" tab on a note, then "show on startup".',
+            ( notebook.name != u"trash" ) and u'Add a note here: Click the "options" tab on a note, then "show on startup".' or None,
             id = "note_tree_instructions",
             class_ = u"small_text link_area_item" + ( ( len( root_notes ) > 0 ) and u" undisplayed" or u"" ),
           ) or None,
           tree_id = "note_tree_root_table",
         ),
-        H4( u"recent notes",
-          id = u"recent_notes_area_title",
-        ),
+        ( notebook.name != u"trash" ) and Span(
+          H4( u"recent notes",
+            id = u"recent_notes_area_title",
+          ),
+        ) or None,
         self.make_tree(
           [ self.make_item(
             title = note.title,

@@ -1,3 +1,9 @@
+1.3.0: April 1?, 2008
+ * Created a new hierarchical note tree area for browsing notes.
+ * Added a list of recent notes.
+ * Made links to external sites displayed with a little icon, at least in
+   Firefox.
+
 1.2.24: April 4, 2008
  * Several cosmetic and layout changes to the wiki editing page.
  * Added rss icon to blog subscribe link.
