@@ -1130,7 +1130,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     editor.shutdown();
     self.decrement_total_notes_count();
     self.display_empty_message();
-  } );
+  }, false, true );
 
   event.stop();
 }
@@ -1219,7 +1219,7 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.load_editor( editor.title, editor.id, null, null, editor.closed ? null : editor.iframe );
 }
 
-Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous ) {
+Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous, suppress_save_signal ) {
   if ( !editor )
     editor = this.focused_editor;
 
@@ -1237,7 +1237,8 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       editor.mark_clean();
       if ( callback )
         callback();
-      signal( self, "note_saved", editor );
+      if ( !suppress_save_signal )
+        signal( self, "note_saved", editor );
     }, null, synchronous, fire_and_forget );
   } else {
     if ( callback )
@@ -2632,6 +2633,10 @@ Note_tree.prototype.add_root_link = function ( editor ) {
   var self = this;
   connect( expander, "onclick", function ( event ) { self.expand_link( event, editor.id ); } );
   connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
+
+  var instructions = getElement( "note_tree_instructions" );
+  if ( instructions )
+    addElementClass( instructions, "undisplayed" );
 }
 
 Note_tree.prototype.remove_link = function ( note_id ) {
@@ -2639,6 +2644,13 @@ Note_tree.prototype.remove_link = function ( note_id ) {
 
   if ( item )
     removeElement( item );
+
+  if ( getFirstElementByTagAndClassName( "a", null, "note_tree_root_table" ) )
+    return;
+
+  var instructions = getElement( "note_tree_instructions" );
+  if ( instructions )
+    removeElementClass( instructions, "undisplayed" );
 }
 
 Note_tree.prototype.rename_link = function ( editor, new_title ) {

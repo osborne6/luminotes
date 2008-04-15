@@ -25,9 +25,25 @@ class Note_tree_area( Div ):
             has_children = ( notebook.name != u"trash" ) and self.LINK_PATTERN.search( note.contents ) or False,
             root_note_id = note.object_id,
           ) for note in root_notes ],
+          Div(
+            u'Add a note here: Click the "options" tab on a note, then "show on startup".',
+            id = "note_tree_instructions",
+            class_ = u"small_text link_area_item" + ( ( len( root_notes ) > 0 ) and u" undisplayed" or u"" ),
+          ) or None,
           tree_id = "note_tree_root_table",
         ),
-        id = u"note_tree_area_holder",
+        H4( u"recent notes",
+          id = u"recent_notes_area_title",
+        ),
+        self.make_tree(
+          [ self.make_item(
+            title = note.title,
+            link_attributes = u'href="/notebooks/%s?note_id=%s"' % ( notebook.object_id, note.object_id ),
+            link_class = u"note_tree_link",
+            has_children = False,
+          ) for note in []],#recent_notes ],
+        ),
+        id = u"recent_notes_area_holder",
       ),
       Span( id = "tree_arrow_hover_preload" ),
       Span( id = "tree_arrow_down_preload" ),
@@ -55,9 +71,10 @@ class Note_tree_area( Div ):
     )
 
   @staticmethod
-  def make_tree( items, tree_id = None ):
+  def make_tree( items, other_node = None, tree_id = None ):
     return Table(
       items,
+      other_node,
       id = tree_id or None,
       class_ = u"note_tree_table",
     )

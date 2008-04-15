@@ -279,6 +279,11 @@ img {
   margin-bottom: 0.25em;
 }
 
+#recent_notes_area_title {
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
 .note_tree_link {
   background: url(/static/images/note_icon.png) left center no-repeat;
   padding-left: 19px;
@@ -716,6 +721,7 @@ img {
 
 .small_text {
   font-size: 90%;
+  line-height: 140%;
   font-weight: normal;
 }
 
