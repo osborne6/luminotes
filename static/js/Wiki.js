@@ -1176,7 +1176,11 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": this.notebook_id,
         "note_id": editor.id
-      }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
+      }, function ( result ) {
+        self.display_storage_usage( result.storage_bytes );
+        self.clear_messages();
+        self.clear_pulldowns();
+      } );
     }
 
     this.startup_notes[ editor.id ] = true;
@@ -1193,7 +1197,11 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
     this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
       "notebook_id": this.notebook_id,
       "note_id": note_id
-    }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
+    }, function ( result ) {
+      self.display_storage_usage( result.storage_bytes );
+      self.clear_messages();
+      self.clear_pulldowns();
+    } );
   }
 
   this.startup_notes[ note_id ] = true;
