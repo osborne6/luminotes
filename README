@@ -29,3 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 See the COPYING file for more information. Also note that MochiKit has its
 own separate license. See static/js/MochiKit_LICENSE.
+
+Additionally, certain icons are from the Tango Destop Project
+(http://tango.freedesktop.org), whose base icon theme is licensed under the
+Creative Commons Attribution Share-Alike. For details, see:
+http://creativecommons.org/licenses/by-sa/2.5/
+
+The following icons fall into this category:
+ * static/images/check.png
+ * static/images/note_icon.png
+ * static/images/file_icon.png
+ * static/images/default_thumbnail.png
