@@ -131,6 +131,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
@@ -164,6 +167,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
@@ -197,6 +203,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
@@ -230,6 +239,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
@@ -263,6 +275,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert not result.get( "recent_notes" )
     assert len( result[ "invites" ] ) == 0
 
     user = self.database.load( User, self.user.object_id )
@@ -294,6 +307,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert not result.get( "recent_notes" )
     assert len( result[ "invites" ] ) == 0
 
     user = self.database.load( User, self.user.object_id )
@@ -323,6 +337,7 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert not result.get( "recent_notes" )
     assert len( result[ "invites" ] ) == 0
 
     user = self.database.load( User, self.user.object_id )
@@ -355,6 +370,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" )[ 0 ].object_id == self.note.object_id
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
@@ -396,6 +414,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" )[ 0 ].revision == self.note.revision
     assert result.get( u"parent_id" ) == None
     assert result.get( u"note_read_write" ) == False
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
@@ -430,6 +451,9 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"notes" ) == []
     assert result.get( u"parent_id" ) == parent_id
     assert result.get( u"note_read_write" ) in ( None, True )
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note2.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note.object_id
 
     invites = result[ "invites" ]
     assert len( invites ) == 1
