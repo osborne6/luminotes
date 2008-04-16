@@ -32,7 +32,7 @@ class Note_tree_area( Div ):
           ) or None,
           tree_id = "note_tree_root_table",
         ),
-        ( recent_notes and notebook.name != u"trash" ) and Span(
+        ( recent_notes is not None and notebook.name != u"trash" ) and Span(
           H4( u"recent notes",
             id = u"recent_notes_area_title",
           ),
