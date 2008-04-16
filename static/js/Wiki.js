@@ -2636,7 +2636,7 @@ Note_tree.prototype.add_root_link = function ( editor ) {
    "class": "note_tree_link"
   }, editor.title || "untitled note" );
 
-  appendChildNodes( "note_tree_root_table", createDOM(
+  appendChildNodes( "note_tree_root_table_body", createDOM(
     "tr",
     { "id": "note_tree_item_" + editor.id, "class": "note_tree_item" },
     expander,

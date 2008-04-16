@@ -1,5 +1,5 @@
 import re
-from Tags import Div, Span, H4, A, Table, Tr, Td
+from Tags import Div, Span, H4, A, Table, Tbody, Tr, Td
 
 
 class Note_tree_area( Div ):
@@ -82,8 +82,11 @@ class Note_tree_area( Div ):
   @staticmethod
   def make_tree( items, other_node = None, tree_id = None ):
     return Table(
-      items,
-      other_node,
+      Tbody(
+        items,
+        other_node,
+        id = tree_id and tree_id + "_body" or None,
+      ),
       id = tree_id or None,
       class_ = u"note_tree_table",
     )
