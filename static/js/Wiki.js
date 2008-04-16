@@ -2820,6 +2820,7 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   if ( !expander || link.parentNode.parentNode != expander.parentNode ) return;
   swapElementClass( expander, "tree_expander_empty", "tree_expander" );
   var note_id = parse_query( link )[ "note_id" ];
+  disconnectAll( expander );
   connect_expander( expander, note_id );
 }
 
