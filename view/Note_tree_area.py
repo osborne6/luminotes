@@ -26,7 +26,7 @@ class Note_tree_area( Div ):
             root_note_id = note.object_id,
           ) for note in root_notes ],
           Div(
-            ( notebook.name != u"trash" ) and u'Add a note here: Click the "options" tab on a note, then "show on startup".' or None,
+            ( notebook.name != u"trash" ) and u'To add a note here, click the "options" tab on a note, then "show on startup".' or None,
             id = "note_tree_instructions",
             class_ = u"small_text link_area_item" + ( ( len( root_notes ) > 0 ) and u" undisplayed" or u"" ),
           ) or None,
