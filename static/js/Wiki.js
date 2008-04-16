@@ -2613,7 +2613,7 @@ Note_tree.prototype.link_clicked = function ( event ) {
   event.stop();
 }
 
-LINK_PATTERN = /<a\s+([^>]+\s)?href="[^"]+"[^>]*>/;
+LINK_PATTERN = /<a\s+([^>]+\s)?href="[^"]+"[^>]*>/i;
 
 Note_tree.prototype.add_root_link = function ( editor ) {
   // for now, only add startup notes to the note tree
