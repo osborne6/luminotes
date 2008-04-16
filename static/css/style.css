@@ -290,27 +290,27 @@ img {
 }
 
 .note_tree_link {
-  background: url(/static/images/note_icon.png) left center no-repeat;
+  background: url(/static/images/note_icon.png) left top no-repeat;
   padding-left: 19px;
 }
 
 .note_tree_external_link {
-  background: url(/static/images/web_icon.png) left center no-repeat;
+  background: url(/static/images/web_icon.png) left top no-repeat;
   padding-left: 19px;
 }
 
 .note_tree_file_link {
-  background: url(/static/images/file_icon.png) left center no-repeat;
+  background: url(/static/images/file_icon.png) left top no-repeat;
   padding-left: 19px;
 }
 
 .recent_note_link {
-  background: url(/static/images/note_icon.png) left center no-repeat;
+  background: url(/static/images/note_icon.png) left top no-repeat;
   padding-left: 19px;
 }
 
 .note_tree_loading {
-  background: url(/static/images/loading.gif) left center no-repeat;
+  background: url(/static/images/loading.gif) left top no-repeat;
   padding-left: 20px;
 }
 
