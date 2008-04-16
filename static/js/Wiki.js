@@ -1756,10 +1756,8 @@ Wiki.prototype.display_empty_message = function ( replace_messages ) {
     return true;
   }
 
-  if ( !replace_messages ) {
-    // TODO: display a message about the note tree, or some way for the user to get back to their notes
+  if ( !replace_messages )
     return true;
-  }
 
   return false;
 }
