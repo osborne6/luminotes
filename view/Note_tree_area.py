@@ -25,11 +25,11 @@ class Note_tree_area( Div ):
             has_children = ( notebook.name != u"trash" ) and self.LINK_PATTERN.search( note.contents ) or False,
             root_note_id = note.object_id,
           ) for note in root_notes ],
-          Div(
+          Tr( Td(
             ( notebook.name != u"trash" ) and u'To add a note here, click the "options" tab on a note, then "show on startup".' or None,
             id = "note_tree_instructions",
             class_ = u"small_text link_area_item" + ( ( len( root_notes ) > 0 ) and u" undisplayed" or u"" ),
-          ) or None,
+          ) ) or None,
           tree_id = "note_tree_root_table",
         ),
         ( recent_notes is not None and notebook.name != u"trash" ) and Span(
@@ -64,8 +64,8 @@ class Note_tree_area( Div ):
 
     return Tr(
       has_children and \
-        Td( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander" ) or
-        Td( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander_empty" ),
+        Td( Div( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander" ) ) or
+        Td( Div( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander_empty" ) ),
       Td(
         u"<a %s%s%s class=%s>%s</a>" % (
             link_attributes,

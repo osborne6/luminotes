@@ -2624,9 +2624,9 @@ Note_tree.prototype.add_root_link = function ( editor ) {
 
   // display the tree expander arrow if the given note's editor contains any outgoing links
   if ( LINK_PATTERN.exec( editor.contents() ) )
-    var expander = createDOM( "td", { "class": "tree_expander", "id": "note_tree_expander_" + editor.id } );
+    var expander = createDOM( "div", { "class": "tree_expander", "id": "note_tree_expander_" + editor.id } );
   else
-    var expander = createDOM( "td", { "class": "tree_expander_empty", "id": "note_tree_expander_" + editor.id } );
+    var expander = createDOM( "div", { "class": "tree_expander_empty", "id": "note_tree_expander_" + editor.id } );
 
   var link = createDOM( "a", {
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
@@ -2637,7 +2637,7 @@ Note_tree.prototype.add_root_link = function ( editor ) {
   appendChildNodes( "note_tree_root_table_body", createDOM(
     "tr",
     { "id": "note_tree_item_" + editor.id, "class": "note_tree_item" },
-    expander,
+    createDOM( "td", {}, expander ),
     createDOM( "td", {}, link )
   ) );
 
@@ -2717,7 +2717,7 @@ Note_tree.prototype.expand_collapse_link = function ( event, note_id ) {
   if ( hasElementClass( expander, "tree_expander" ) ) {
     // first check if the expander is for a link to a parent/grandparent/etc. if so, just highlight
     // the containing table instead of performing an expansion
-    var parent_node = expander.parentNode;
+    var parent_node = expander.parentNode.parentNode;
     while ( !hasElementClass( parent_node, "note_tree_root_table" ) ) {
       parent_node = parent_node.parentNode;
       if ( !parent_node ) break;
@@ -2737,7 +2737,7 @@ Note_tree.prototype.expand_collapse_link = function ( event, note_id ) {
     );
 
     swapElementClass( expander, "tree_expander", "tree_expander_expanded" );
-    var link = getFirstElementByTagAndClassName( "a", null, expander.parentNode );
+    var link = getFirstElementByTagAndClassName( "a", null, expander.parentNode.parentNode );
     insertSiblingNodesAfter( link, children_area );
 
     var self = this;
@@ -2755,7 +2755,7 @@ Note_tree.prototype.expand_collapse_link = function ( event, note_id ) {
   // if it's expanded, collapse it
   if ( hasElementClass( expander, "tree_expander_expanded" ) ) {
     swapElementClass( expander, "tree_expander_expanded", "tree_expander" );
-    var children = getFirstElementByTagAndClassName( "div", "note_tree_children_area", expander.parentNode );
+    var children = getFirstElementByTagAndClassName( "div", "note_tree_children_area", expander.parentNode.parentNode );
     if ( children )
       removeElement( children );
   }
@@ -2780,7 +2780,7 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
     for ( var i in child_links ) {
       var child_link = child_links[ i ];
       connect( child_link, "onclick", function ( event ) { self.link_clicked( event ); } );
-      var expander = getFirstElementByTagAndClassName( "td", "tree_expander", child_link.parentNode.parentNode );
+      var expander = getFirstElementByTagAndClassName( "div", "tree_expander", child_link.parentNode.parentNode );
 
       if ( expander ) {
         var note_id = parse_query( child_link )[ "note_id" ];
@@ -2796,15 +2796,15 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   if ( child_links.length == 0 ) {
     if ( children_area )
       removeElement( children_area );
-    var expander = getFirstElementByTagAndClassName( "td", "tree_expander", link.parentNode.parentNode );
-    if ( expander && link.parentNode.parentNode == expander.parentNode ) {
+    var expander = getFirstElementByTagAndClassName( "div", "tree_expander", link.parentNode.parentNode );
+    if ( expander && link.parentNode.parentNode == expander.parentNode.parentNode ) {
       swapElementClass( expander, "tree_expander", "tree_expander_empty" );
       disconnectAll( expander );
       return;
     }
 
-    expander = getFirstElementByTagAndClassName( "td", "tree_expander_expanded", link.parentNode.parentNode );
-    if ( expander && link.parentNode.parentNode == expander.parentNode ) {
+    expander = getFirstElementByTagAndClassName( "div", "tree_expander_expanded", link.parentNode.parentNode );
+    if ( expander && link.parentNode.parentNode == expander.parentNode.parentNode ) {
       swapElementClass( expander, "tree_expander_expanded", "tree_expander_empty" );
       disconnectAll( expander );
       return;
@@ -2814,8 +2814,8 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   }
 
   // if a note without an expander arrow now has children, add an expander arrow for it
-  var expander = getFirstElementByTagAndClassName( "td", "tree_expander_empty", link.parentNode.parentNode );
-  if ( !expander || link.parentNode.parentNode != expander.parentNode ) return;
+  var expander = getFirstElementByTagAndClassName( "div", "tree_expander_empty", link.parentNode.parentNode );
+  if ( !expander || link.parentNode.parentNode != expander.parentNode.parentNode ) return;
   swapElementClass( expander, "tree_expander_empty", "tree_expander" );
   var note_id = parse_query( link )[ "note_id" ];
   disconnectAll( expander );
@@ -2876,7 +2876,7 @@ Recent_notes.prototype.add_link = function ( editor ) {
   }
 
   // add a new recent note link at the top of the list
-  var expander = createDOM( "td", { "class": "tree_expander_empty", "id": "recent_note_expander_" + editor.id } );
+  var expander = createDOM( "div", { "class": "tree_expander_empty", "id": "recent_note_expander_" + editor.id } );
 
   var link = createDOM( "a", {
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
@@ -2887,7 +2887,7 @@ Recent_notes.prototype.add_link = function ( editor ) {
   insertSiblingNodesAfter( "recent_notes_top", createDOM(
     "tr",
     { "id": "recent_note_item_" + editor.id, "class": "recent_note_item" },
-    expander,
+    createDOM( "td", {}, expander ),
     createDOM( "td", {}, link )
   ) );
 

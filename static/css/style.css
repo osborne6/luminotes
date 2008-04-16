@@ -596,40 +596,38 @@ img {
   padding: 0.25em 0.25em 0.25em 0;
 }
 
+#note_tree_area td {
+  vertical-align: top;
+}
+
 .tree_expander {
-  float: left;
   width: 11px;
-  height: 11px;
+  height: 1.5em;
   margin-right: 4px;
-  margin-top: 0.5em;
-  background: url(/static/images/tree_arrow.png) no-repeat center top;
+  background: url(/static/images/tree_arrow.png) no-repeat center center;
   cursor: pointer;
 }
 
 .tree_expander:hover {
-  background: url(/static/images/tree_arrow_hover.png) no-repeat center top;
+  background: url(/static/images/tree_arrow_hover.png) no-repeat center center;
 }
 
 .tree_expander_expanded {
-  float: left;
   width: 11px;
-  height: 11px;
+  height: 1em;
   margin-right: 4px;
-  margin-top: 0.5em;
-  background: url(/static/images/tree_arrow_down.png) no-repeat center top;
+  background: url(/static/images/tree_arrow_down.png) no-repeat center center;
   cursor: pointer;
 }
 
 .tree_expander_expanded:hover {
-  background: url(/static/images/tree_arrow_down_hover.png) no-repeat center top;
+  background: url(/static/images/tree_arrow_down_hover.png) no-repeat center center;
 }
 
 .tree_expander_empty {
-  float: left;
   width: 11px;
-  height: 11px;
+  height: 1em;
   margin-right: 4px;
-  margin-top: 0.5em;
 }
 
 #storage_usage_area {
