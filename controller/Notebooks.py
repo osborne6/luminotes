@@ -128,6 +128,11 @@ class Notebooks( object ):
     if revision:
       result[ "note_read_write" ] = False
 
+    notebook = self.__database.load( Notebook, notebook_id )
+    if not notebook:
+      raise Access_error()
+    result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_recent_notes( start = 0, count = 10 ) )
+
     # if the user doesn't have any storage bytes yet, they're a new user, so see what type of
     # conversion this is (demo or signup)
     if result[ "user" ].storage_bytes == 0:

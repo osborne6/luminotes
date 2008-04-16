@@ -19,6 +19,7 @@ function Wiki( invoker ) {
   this.signup_plan = getElement( "signup_plan" ).value;
   this.font_size = null;
   this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
+  this.recent_notes = new Recent_notes( this, this.notebook_id );
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -2578,7 +2579,7 @@ function Note_tree( wiki, notebook_id, invoker ) {
 
   var self = this;
   function connect_expander( note_id ) {
-    connect( "note_tree_expander_" + note_id, "onclick", function ( event ) { self.expand_link( event, note_id ); } );
+    connect( "note_tree_expander_" + note_id, "onclick", function ( event ) { self.expand_collapse_link( event, note_id ); } );
   }
 
   for ( var i in links ) {
@@ -2643,7 +2644,7 @@ Note_tree.prototype.add_root_link = function ( editor ) {
   ) );
 
   var self = this;
-  connect( expander, "onclick", function ( event ) { self.expand_link( event, editor.id ); } );
+  connect( expander, "onclick", function ( event ) { self.expand_collapse_link( event, editor.id ); } );
   connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
 
   var instructions = getElement( "note_tree_instructions" );
@@ -2667,11 +2668,8 @@ Note_tree.prototype.remove_link = function ( note_id ) {
 
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
   var link = getElement( "note_tree_link_" + editor.id );
-
-  if ( !link )
-    return;
-
-  replaceChildNodes( link, new_title || "untitled note" );
+  if ( link )
+    replaceChildNodes( link, new_title || "untitled note" );
 }
 
 Note_tree.prototype.update_link = function ( editor ) {
@@ -2711,7 +2709,7 @@ Note_tree.prototype.update_link = function ( editor ) {
   }
 }
 
-Note_tree.prototype.expand_link = function ( event, note_id ) {
+Note_tree.prototype.expand_collapse_link = function ( event, note_id ) {
   var expander = event.target();
 
   if ( !expander || hasElementClass( expander, "tree_expander_empty" ) )
@@ -2765,14 +2763,11 @@ Note_tree.prototype.expand_link = function ( event, note_id ) {
   }
 }
 
-Note_tree.prototype.collapse_link = function ( event, note_id ) {
-}
-
 Note_tree.prototype.display_child_links = function ( result, link, children_area ) {
   var self = this;
 
   function connect_expander( expander, note_id ) {
-    connect( expander, "onclick", function ( event ) { self.expand_link( event, note_id ); } );
+    connect( expander, "onclick", function ( event ) { self.expand_collapse_link( event, note_id ); } );
   }
 
   var span = createDOM( "span" );
@@ -2826,4 +2821,100 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   swapElementClass( expander, "tree_expander_empty", "tree_expander" );
   var note_id = parse_query( link )[ "note_id" ];
   connect_expander( expander, note_id );
+}
+
+function Recent_notes( wiki, notebook_id ) {
+  this.wiki = wiki;
+  this.notebook_id = notebook_id;
+
+  // if there's no recent notes table, there's nothing to do with recent notes!
+  if ( !getElement( "recent_notes_table" ) )
+    return;
+
+  // add onclick handlers to the recent note links as well
+  var self = this;
+  var recent_links = getElementsByTagAndClassName( "a", "recent_note_link", "note_tree_area" );
+
+  for ( var i in recent_links ) {
+    var link = recent_links[ i ];
+    var query = parse_query( link );
+    var note_id = query[ "note_id" ];
+
+    connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
+  }
+
+  // connect to the wiki note events
+  connect( wiki, "note_added", function ( editor ) { self.add_link( editor ); } );
+  connect( wiki, "note_removed", function ( id ) { self.remove_link( id ); } );
+  connect( wiki, "note_saved", function ( editor ) { self.update_link( editor ); } );
+}
+
+Recent_notes.prototype.link_clicked = function ( event ) {
+  var link = event.target();
+  var query = parse_query( link );
+  var note_id = query[ "note_id" ];
+  var title = query[ "title" ];
+
+  if ( !note_id )
+    return;
+
+  this.wiki.load_editor( title, note_id );
+  event.stop();
+}
+
+Recent_notes.prototype.add_link = function ( editor ) {
+  // if the link is already present in the recent notes list, bail
+  var item = getElement( "recent_note_item_" + editor.id )
+  if ( item ) return;
+
+  MAX_RECENT_NOTES_COUNT = 10;
+
+  // if there will be too many recent notes listed once another is added, then remove the last one
+  var recent_items = getElementsByTagAndClassName( "tr", "recent_note_item", "recent_notes_table" );
+  if ( recent_items && recent_items.length >= MAX_RECENT_NOTES_COUNT ) {
+    var last_item = recent_items[ recent_items.length - 1 ];
+    removeElement( last_item );
+  }
+
+  // add a new recent note link at the top of the list
+  var expander = createDOM( "td", { "class": "tree_expander_empty", "id": "recent_note_expander_" + editor.id } );
+
+  var link = createDOM( "a", {
+   "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
+   "id": "recent_note_link_" + editor.id,
+   "class": "recent_note_link"
+  }, editor.title || "untitled note" );
+
+  insertSiblingNodesAfter( "recent_notes_top", createDOM(
+    "tr",
+    { "id": "recent_note_item_" + editor.id, "class": "recent_note_item" },
+    expander,
+    createDOM( "td", {}, link )
+  ) );
+
+  var self = this;
+  connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
+}
+
+Recent_notes.prototype.remove_link = function ( note_id ) {
+  var item = getElement( "recent_note_item_" + note_id );
+  if ( !item ) return;
+
+  removeElement( item );
+}
+
+Recent_notes.prototype.update_link = function ( editor ) {
+  var item = getElement( "recent_note_item_" + editor.id );
+  var link = getElement( "recent_note_link_" + editor.id );
+
+  // the link isn't in the recent notes list, so add it
+  if ( !item || !link ) {
+    this.add_link( editor );
+    return;
+  }
+
+  // the link is already in the recent notes list, so just move it to the top of the list
+  removeElement( item );
+  replaceChildNodes( link, editor.title );
+  insertSiblingNodesAfter( "recent_notes_top", item );
 }

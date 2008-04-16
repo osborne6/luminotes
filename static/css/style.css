@@ -270,6 +270,11 @@ img {
   font-size: 90%;
 }
 
+#recent_notes_table {
+  margin-bottom: 1em;
+  font-size: 90%;
+}
+
 .note_tree_table {
   border-collapse: collapse;
 }
@@ -296,6 +301,11 @@ img {
 
 .note_tree_file_link {
   background: url(/static/images/file_icon.png) left center no-repeat;
+  padding-left: 19px;
+}
+
+.recent_note_link {
+  background: url(/static/images/note_icon.png) left center no-repeat;
   padding-left: 19px;
 }
 
@@ -579,6 +589,10 @@ img {
 }
 
 .note_tree_item {
+  padding: 0.25em 0.25em 0.25em 0;
+}
+
+.recent_note_item {
   padding: 0.25em 0.25em 0.25em 0;
 }
 

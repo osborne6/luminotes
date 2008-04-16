@@ -33,6 +33,7 @@ class Main_page( Page ):
     invite_id = None,
     after_login = None,
     signup_plan = None,
+    recent_notes = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -141,6 +142,7 @@ class Main_page( Page ):
             ),
             notebook,
             startup_notes + ( notes and notes or [] ),
+            recent_notes,
             total_notes_count,
           ),
           id = u"left_area",

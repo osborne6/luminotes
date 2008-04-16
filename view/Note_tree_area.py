@@ -5,7 +5,7 @@ from Tags import Div, Span, H4, A, Table, Tr, Td
 class Note_tree_area( Div ):
   LINK_PATTERN = re.compile( u'<a\s+(?:[^>]+\s)?href="[^"]+"[^>]*>', re.IGNORECASE )
 
-  def __init__( self, toolbar, notebook, root_notes, total_notes_count ):
+  def __init__( self, toolbar, notebook, root_notes, recent_notes, total_notes_count ):
     Div.__init__(
       self,
       toolbar,
@@ -32,20 +32,24 @@ class Note_tree_area( Div ):
           ) or None,
           tree_id = "note_tree_root_table",
         ),
-        ( notebook.name != u"trash" ) and Span(
+        ( recent_notes and notebook.name != u"trash" ) and Span(
           H4( u"recent notes",
             id = u"recent_notes_area_title",
           ),
+          self.make_tree(
+            Tr( id = "recent_notes_top" ),
+            [ self.make_item(
+              title = note.title,
+              link_attributes = u'href="/notebooks/%s?note_id=%s"' % ( notebook.object_id, note.object_id ),
+              link_class = u"recent_note_link",
+              has_children = False,
+              root_note_id = note.object_id,
+              base_name = u"recent_note",
+            ) for note in recent_notes ],
+            tree_id = "recent_notes_table",
+          ),
         ) or None,
-        self.make_tree(
-          [ self.make_item(
-            title = note.title,
-            link_attributes = u'href="/notebooks/%s?note_id=%s"' % ( notebook.object_id, note.object_id ),
-            link_class = u"note_tree_link",
-            has_children = False,
-          ) for note in []],#recent_notes ],
-        ),
-        id = u"recent_notes_area_holder",
+        id = u"note_tree_area_holder",
       ),
       Span( id = "tree_arrow_hover_preload" ),
       Span( id = "tree_arrow_down_preload" ),
@@ -54,22 +58,25 @@ class Note_tree_area( Div ):
     )
 
   @staticmethod
-  def make_item( title, link_attributes, link_class, has_children = False, root_note_id = None, target = None ):
+  def make_item( title, link_attributes, link_class, has_children = False, root_note_id = None, target = None, base_name = None ):
+    if base_name is None:
+      base_name = u"note_tree"
+
     return Tr(
       has_children and \
-        Td( id = root_note_id and u"note_tree_expander_" + root_note_id or None, class_ = u"tree_expander" ) or
-        Td( id = root_note_id and u"note_tree_expander_" + root_note_id or None, class_ = u"tree_expander_empty" ),
+        Td( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander" ) or
+        Td( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander_empty" ),
       Td(
         u"<a %s%s%s class=%s>%s</a>" % (
             link_attributes,
-            root_note_id and u' id="note_tree_link_%s"' % root_note_id or "",
+            root_note_id and u' id="%s_link_%s"' % ( base_name, root_note_id ) or "",
             target and u' target="%s"' % target or "",
             link_class,
             title or u"untitled note",
         ),
       ),
-      id = root_note_id and u"note_tree_item_" + root_note_id or None,
-      class_ = u"note_tree_item",
+      id = root_note_id and u"%s_item_%s" % ( base_name, root_note_id ) or None,
+      class_ = u"%s_item" % base_name,
     )
 
   @staticmethod
