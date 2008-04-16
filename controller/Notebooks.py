@@ -488,6 +488,9 @@ class Notebooks( object ):
       raise Access_error()
 
     note = self.__database.load( Note, note_id )
+    if note is None or note.notebook_id != notebook_id:
+      raise Access_error()
+
     items = []
 
     for match in self.LINK_PATTERN.finditer( note.contents ):
@@ -495,7 +498,7 @@ class Notebooks( object ):
 
       # if it has a link target, it's a link to an external web site
       if target:
-        items.append( Note_tree_area.make_item( title, attributes, u"note_tree_external_link", target = u"_new" ) )
+        items.append( Note_tree_area.make_item( title, attributes, u"note_tree_external_link" ) )
         continue
 
       # if it has '/files/' in its path, it's an uploaded file link

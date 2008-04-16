@@ -67,7 +67,7 @@ class Note_tree_area( Div ):
         Td( Div( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander" ) ) or
         Td( Div( id = root_note_id and u"%s_expander_%s" % ( base_name, root_note_id ) or None, class_ = u"tree_expander_empty" ) ),
       Td(
-        u"<a %s%s%s class=%s>%s</a>" % (
+        u'<a %s%s%s class="%s">%s</a>' % (
             link_attributes,
             root_note_id and u' id="%s_link_%s"' % ( base_name, root_note_id ) or "",
             target and u' target="%s"' % target or "",

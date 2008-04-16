@@ -1002,6 +1002,200 @@ class Test_notebooks( Test_controller ):
     assert revisions[ 0 ].user_id == self.user.object_id
     assert revisions[ 0 ].username == self.username
 
+  def test_load_note_links( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert u"<a href=" not in html
+    assert u"tree_expander" not in html
+
+  def test_load_note_links_with_external_link( self ):
+    self.login()
+
+    link = u'<a href="http://example.com/link" target="_new"%s>link</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' class="note_tree_external_link"' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_with_file_link( self ):
+    self.login()
+
+    link = u'<a href="../../files/fileid?blah"%s>link to file</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' target="_new" class="note_tree_file_link"' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_with_note_link( self ):
+    self.login()
+
+    link = u'<a href="/notebooks/nbid?note_id=' + self.note2.object_id + '"%s>link to note2</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' class="note_tree_link"' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_with_note_link_with_uppercase_tags( self ):
+    self.login()
+
+    link = u'<A HREF="/notebooks/nbid?note_id=' + self.note2.object_id + '"%s>link to note2</A>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    link = u'<a HREF="/notebooks/nbid?note_id=' + self.note2.object_id + '"%s>link to note2</a>'
+    assert link % u' class="note_tree_link"' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_with_note_link_to_unknown_note_id( self ):
+    self.login()
+
+    link = u'<a href="/notebooks/nbid?note_id=' + self.unknown_note_id + '"%s>link to note2</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' class="note_tree_link"' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_with_note_link_with_children( self ):
+    self.login()
+
+    link = u'<a href="/notebooks/nbid?note_id=' + self.note2.object_id + '"%s>link to note2</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    link2 = u'<a href="/notebooks/nbid?note_id=' + self.note.object_id + '"%s>link back to note</a>'
+    self.note2.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note2 )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' class="note_tree_link"' in html
+    assert u"tree_expander" in html
+
+  def test_load_note_links_with_multiple_links( self ):
+    self.login()
+
+    link = u'<a href="/notebooks/nbid?note_id=' + self.note2.object_id + '"%s>link to note2</a>'
+    link2 = u'<a href="/notebooks/nbid?note_id=' + self.note.object_id + '"%s>link to self</a>'
+    external_link = u'<a href="/link" target="_top"%s>link</a>'
+    file_link = u'<a href="/files/fileid"%s>link to file</a>'
+    self.note.contents = u"<h3>blah</h3> %s and %s and %s and %s as well" % (
+      link % "", link2 % "", external_link % "", file_link % "",
+    )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' class="note_tree_link"' in html
+    assert link2 % u' class="note_tree_link"' in html
+    assert external_link % u' class="note_tree_external_link"' in html
+    assert file_link % u' target="_new" class="note_tree_file_link"' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_without_login( self ):
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ) )
+
+    assert u"access" in result.get( u"error" )
+
+  def test_load_note_links_without_access( self ):
+    self.make_extra_notebooks()
+    self.login2()
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook2.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result.get( u"error" )
+
+  def test_load_note_links_with_unknown_notebook( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.unknown_notebook_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result.get( u"error" )
+
+  def test_load_note_links_with_unknown_note_id( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.unknown_note_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result.get( u"error" )
+
+  def test_load_note_links_with_note_in_incorrect_notebook( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.anon_notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result.get( u"error" )
+
   def test_save_note( self, startup = False ):
     self.login()
 
