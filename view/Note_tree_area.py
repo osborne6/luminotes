@@ -33,7 +33,7 @@ class Note_tree_area( Div ):
           tree_id = "note_tree_root_table",
         ),
         ( recent_notes is not None and notebook.name != u"trash" ) and Span(
-          H4( u"recent notes",
+          H4( u"recent updates",
             id = u"recent_notes_area_title",
           ),
           self.make_tree(
