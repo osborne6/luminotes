@@ -72,6 +72,7 @@ class Header( Div ):
         ),
         class_ = u"wide_center_area",
       ),
+      id = u"header",
       class_ = u"header",
     )
 

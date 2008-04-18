@@ -79,6 +79,16 @@ class Link_area( Div ):
               class_ = u"link_area_item",
             ),
 
+            Div(
+              A(
+                u"nothing but notes",
+                href = u"#",
+                id = u"declutter_link",
+                title = u"Focus on just your notes without any distractions.",
+              ),
+              class_ = u"link_area_item",
+            ),
+
             ( notebook.owner and user.username ) and Div(
               A(
                 u"share",

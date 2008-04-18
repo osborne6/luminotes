@@ -359,6 +359,14 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       event.stop();
     } );
   }
+
+  var declutter_link = getElement( "declutter_link" );
+  if ( declutter_link ) {
+    connect( declutter_link, "onclick", function ( event ) {
+      self.declutter_clicked();
+      event.stop();
+    } );
+  }
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -1530,6 +1538,57 @@ Wiki.prototype.display_invites = function ( invite_area ) {
   }
 
   replaceChildNodes( invite_area, div );
+}
+
+Wiki.prototype.declutter_clicked = function () {
+  var header = getElement( "header" );
+  if ( header )
+    addElementClass( header, "undisplayed" );
+
+  var link_area_holder = getElement( "link_area_holder" );
+  if ( link_area_holder )
+    addElementClass( link_area_holder, "undisplayed" );
+
+  var note_tree_area_holder = getElement( "note_tree_area_holder" );
+  if ( note_tree_area_holder )
+    addElementClass( note_tree_area_holder, "undisplayed" );
+
+  var clutter_link = getElement( "clutter_link" );
+  if ( clutter_link ) {
+    removeElementClass( clutter_link, "undisplayed" );
+  } else {
+    clutter_link = createDOM(
+      "a",
+      { "href": "#", "id": "clutter_link", "title": "Return to the full view of your notebook." },
+      "show it all"
+    );
+
+    appendChildNodes( "link_area", createDOM( "div", { "class": "link_area_item" }, clutter_link ) );
+
+    var self = this;
+    connect( clutter_link, "onclick", function ( event ) {
+      self.clutter_clicked();
+      event.stop();
+    } );
+  }
+}
+
+Wiki.prototype.clutter_clicked = function () {
+  var header = getElement( "header" );
+  if ( header )
+    removeElementClass( header, "undisplayed" );
+
+  var link_area_holder = getElement( "link_area_holder" );
+  if ( link_area_holder )
+    removeElementClass( link_area_holder, "undisplayed" );
+
+  var note_tree_area_holder = getElement( "note_tree_area_holder" );
+  if ( note_tree_area_holder )
+    removeElementClass( note_tree_area_holder, "undisplayed" );
+
+  var clutter_link = getElement( "clutter_link" );
+  if ( clutter_link )
+    addElementClass( clutter_link, "undisplayed" );
 }
 
 Wiki.prototype.move_current_notebook_up = function ( event ) {
