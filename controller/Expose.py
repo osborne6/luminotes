@@ -58,6 +58,8 @@ def expose( view = None, rss = None ):
         if hasattr( error, "to_dict" ):
           if not view: raise error
           result = error.to_dict()
+        elif isinstance( error, cherrypy.HTTPRedirect ):
+          raise
         else:
           import traceback
           traceback.print_exc()

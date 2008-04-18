@@ -11,7 +11,7 @@ from threading import Lock, Event
 from Expose import expose
 from Validate import validate, Valid_int, Valid_bool, Validation_error
 from Database import Valid_id, end_transaction
-from Users import grab_user_id
+from Users import grab_user_id, Access_error
 from Expire import strongly_expire
 from model.File import File
 from model.User import User
@@ -20,20 +20,6 @@ from view.Blank_page import Blank_page
 from view.Json import Json
 from view.Progress_bar import stream_progress, stream_quota_error, quota_error_script, general_error_script
 from view.File_preview_page import File_preview_page
-
-
-class Access_error( Exception ):
-  def __init__( self, message = None ):
-    if message is None:
-      message = u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user."
-
-    Exception.__init__( self, message )
-    self.__message = message
-
-  def to_dict( self ):
-    return dict(
-      error = self.__message
-    )
 
 
 class Upload_error( Exception ):

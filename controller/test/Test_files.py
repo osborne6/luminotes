@@ -286,11 +286,12 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    result = self.http_get(
-      "/files/download?file_id=%s" % self.file_id,
-    )
+    path = "/files/download?file_id=%s" % self.file_id
+    result = self.http_get( path )
 
-    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_download_without_access( self ):
     self.login()
@@ -413,11 +414,12 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    result = self.http_get(
-      "/files/preview?file_id=%s" % self.file_id,
-    )
+    path = "/files/preview?file_id=%s" % self.file_id
+    result = self.http_get( path )
 
-    assert u"access" in result[ u"error" ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_preview_without_access( self ):
     self.login()
@@ -611,11 +613,12 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    result = self.http_get(
-      "/files/thumbnail?file_id=%s" % self.file_id,
-    )
+    path = "/files/thumbnail?file_id=%s" % self.file_id
+    result = self.http_get( path )
 
-    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_thumbnail_without_access( self ):
     self.login()
@@ -720,11 +723,12 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    result = self.http_get(
-      "/files/image?file_id=%s" % self.file_id,
-    )
+    path = "/files/image?file_id=%s" % self.file_id
+    result = self.http_get( path )
 
-    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_image_without_access( self ):
     self.login()
@@ -773,11 +777,12 @@ class Test_files( Test_controller ):
     assert result.get( u"file_id" )
 
   def test_upload_page_without_login( self ):
-    result = self.http_get(
-      "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
-    )
+    path = "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id )
+    result = self.http_get( path )
 
-    assert u"access" in result.get( u"error" )
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_upload( self, filename = None ):
     self.login()
@@ -1063,11 +1068,12 @@ class Test_files( Test_controller ):
     self.upload_thread.start()
 
     # report on that file's upload progress
-    result = self.http_get(
-      "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
-    )
+    path = "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename )
+    result = self.http_get( path )
 
-    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_progress_for_completed_upload( self ):
     self.login()
@@ -1192,11 +1198,12 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
-    result = self.http_get(
-      "/files/stats?file_id=%s" % self.file_id,
-    )
+    path = "/files/stats?file_id=%s" % self.file_id
+    result = self.http_get( path )
 
-    assert u"access" in result[ u"error" ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def test_stats_without_access( self ):
     self.login()

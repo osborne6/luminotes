@@ -1,3 +1,8 @@
+1.3.1: April 18, 2008
+ * Now if you try to load a page where access is required, and you're not
+   logged in, you'll be redirected to a login page. After you login, you'll
+   be redirected to the page you were originally trying to access.
+
 1.3.0: April 16, 2008
  * Created a new hierarchical note tree area for browsing notes.
  * Added a list of recent notes.

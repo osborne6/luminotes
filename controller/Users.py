@@ -131,7 +131,17 @@ def grab_user_id( function ):
     else:
       kwargs[ "user_id" ] = cherrypy.session.get( "user_id" )
 
-    return function( *args, **kwargs )
+    try:
+      return function( *args, **kwargs )
+    except Access_error:
+      # if there was an Access_error, and the user isn't logged in, and this is an HTTP GET request,
+      # redirect to the login page
+      if cherrypy.session.get( "user_id" ) is None and cherrypy.request.method == "GET":
+        original_path = cherrypy.request.path + \
+          ( cherrypy.request.query_string and u"?%s" % cherrypy.request.query_string or "" )
+        raise cherrypy.HTTPRedirect( u"/login?after_login=%s" % urllib.quote( original_path ) )
+      else:
+        raise
   
   return get_id
 

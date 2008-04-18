@@ -1,5 +1,6 @@
 import cherrypy
 import cgi
+import urllib
 from nose.tools import raises
 from urllib import quote
 from Test_controller import Test_controller
@@ -99,11 +100,13 @@ class Test_notebooks( Test_controller ):
     self.database.save( self.invite, commit = False )
 
   def test_default_without_login( self ):
-    result = self.http_get(
-      "/notebooks/%s" % self.notebook.object_id,
-    )
+    path = "/notebooks/%s" % self.notebook.object_id
+    result = self.http_get( path )
     
-    assert u"access" in result[ u"error" ]
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
@@ -2503,12 +2506,15 @@ class Test_notebooks( Test_controller ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
+    path = "/notebooks/download_html/%s" % self.notebook.object_id
     result = self.http_get(
-      "/notebooks/download_html/%s" % self.notebook.object_id,
+      path,
       session_id = self.session_id,
     )
 
-    assert result.get( "error" )
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
       
   def test_download_html_with_unknown_notebook( self ):
     self.login()

@@ -5,7 +5,7 @@ from datetime import datetime
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool
 from Database import Valid_id, Valid_revision, end_transaction
-from Users import grab_user_id
+from Users import grab_user_id, Access_error
 from Expire import strongly_expire
 from Html_nuker import Html_nuker
 from model.Notebook import Notebook
@@ -17,20 +17,6 @@ from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
 from view.Note_tree_area import Note_tree_area
-
-
-class Access_error( Exception ):
-  def __init__( self, message = None ):
-    if message is None:
-      message = u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user."
-
-    Exception.__init__( self, message )
-    self.__message = message
-
-  def to_dict( self ):
-    return dict(
-      error = self.__message
-    )
 
 
 class Notebooks( object ):
