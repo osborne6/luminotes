@@ -100,11 +100,16 @@ class Notebook( Persistent ):
   def sql_update( self ):
     return self.sql_create()
 
-  def sql_load_notes( self ):
+  def sql_load_notes( self, start = 0, count = None ):
     """
     Return a SQL string to load a list of all the notes within this notebook.
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc;" % quote( self.object_id )
+    if count is not None:
+      limit_clause = " limit %s" % count
+    else:
+      limit_clause = ""
+
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc offset %s%s;" % ( quote( self.object_id ), start, limit_clause )
 
   def sql_load_non_startup_notes( self ):
     """

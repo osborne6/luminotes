@@ -216,7 +216,7 @@ class Test_controller( object ):
     Note.sql_load_revisions = lambda self: \
       lambda database: sql_load_revisions( self, database )
 
-    def sql_load_notes( self, database ):
+    def sql_load_notes( self, start, count, database ):
       notes = []
 
       for ( object_id, obj_list ) in database.objects.items():
@@ -225,10 +225,13 @@ class Test_controller( object ):
           notes.append( obj )
 
       notes.sort( lambda a, b: -cmp( a.revision, b.revision ) )
-      return notes
+      if count is None:
+        return notes[ start : ]
+      else:
+        return notes[ start : start + count ]
 
-    Notebook.sql_load_notes = lambda self: \
-      lambda database: sql_load_notes( self, database )
+    Notebook.sql_load_notes = lambda self, start = 0, count = None: \
+      lambda database: sql_load_notes( self, start, count, database )
 
     def sql_load_startup_notes( self, database ):
       notes = []

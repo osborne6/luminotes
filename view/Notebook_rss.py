@@ -26,6 +26,8 @@ class Notebook_rss( Rss_channel ):
     invites = None,
     invite_id = None,
     after_login = None,
+    signup_plan = None,
+    recent_notes = None,
   ):
     if notebook.name == u"Luminotes":
       notebook_path = u"/"
@@ -47,7 +49,7 @@ class Notebook_rss( Rss_channel ):
         title = cgi.escape( note.title ),
         link = u"%s?note_id=%s" % ( notebook_path, note.object_id ),
         description = cgi.escape( note.contents ),
-        date = note.creation.strftime( "%Y-%m-%dT%H:%M:%SZ" ),
+        date = ( note.creation or note.revision ).strftime( "%Y-%m-%dT%H:%M:%SZ" ),
         guid = u"%s?note_id=%s" % ( notebook_path, note.object_id ),
-      ) for note in notes ],
+      ) for note in recent_notes or notes ],
     )

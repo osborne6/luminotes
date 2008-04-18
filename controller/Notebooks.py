@@ -118,7 +118,7 @@ class Notebooks( object ):
     if not notebook:
       raise Access_error()
     if notebook.name != u"Luminotes":
-      result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_recent_notes( start = 0, count = 10 ) )
+      result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
 
     # if the user doesn't have any storage bytes yet, they're a new user, so see what type of
     # conversion this is (demo or signup)
