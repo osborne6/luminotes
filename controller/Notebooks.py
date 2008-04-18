@@ -17,6 +17,7 @@ from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
 from view.Note_tree_area import Note_tree_area
+from view.Notebook_rss import Notebook_rss
 
 
 class Notebooks( object ):
@@ -44,7 +45,7 @@ class Notebooks( object ):
     self.__users = users
     self.__files = files
 
-  @expose( view = Main_page )
+  @expose( view = Main_page, rss = Notebook_rss )
   @strongly_expire
   @end_transaction
   @grab_user_id

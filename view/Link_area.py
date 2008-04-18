@@ -31,20 +31,22 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          ( notebook.name == u"Luminotes blog" ) and Div(
+          Div(
             A(
               u"subscribe to rss",
               href = u"%s?rss" % notebook_path,
               id = u"rss link",
-              title = u"Subscribe to the RSS feed for the Luminotes blog.",
+              title = u"Subscribe to the RSS feed for " + \
+                ( ( notebook.name == u"Luminotes blog" ) and u"the Luminotes blog." or u"this notebook." ),
             ),
             A(
-              Img( src = u"/static/images/rss.png", width = u"28", height = u"28", class_ = u"rss_image" ),
+              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"rss_image" ),
               href = u"%s?rss" % notebook_path,
-              title = u"Subscribe to the RSS feed for the Luminotes blog.",
+              title = u"Subscribe to the RSS feed for " + \
+                ( ( notebook.name == u"Luminotes blog" ) and u"the Luminotes blog." or u"this notebook." ),
             ),
             class_ = u"link_area_item",
-          ) or None,
+          ),
 
           notebook.read_write and Span(
             ( notebook.owner and notebook.name != u"trash" ) and Div(
