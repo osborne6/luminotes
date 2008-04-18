@@ -31,7 +31,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          Div(
+          ( notebook.name == u"Luminotes blog" ) and Div(
             A(
               u"subscribe to rss",
               href = u"%s?rss" % notebook_path,
@@ -46,7 +46,7 @@ class Link_area( Div ):
                 ( ( notebook.name == u"Luminotes blog" ) and u"the Luminotes blog." or u"this notebook." ),
             ),
             class_ = u"link_area_item",
-          ),
+          ) or None,
 
           notebook.read_write and Span(
             ( notebook.owner and notebook.name != u"trash" ) and Div(
