@@ -17,3 +17,8 @@
   margin-top: 1.5em;
 }
 
+#clutter_link {
+  position: relative;
+  top: 1.25em;
+  margin-left: 1em;
+}
