@@ -95,6 +95,26 @@ class Front_page( Product_page ):
             Div(
               u'"',
               Span(
+                u"Luminotes has saved me an immense amount of time with my current novel.",
+                class_ = u"quote_title",
+              ),
+              u"""
+              No more digging through mounds of text or trying to make sense of notes scrawled on random pages of my notebook months ago."
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"Michail Velichansky, ", A( u"Author", href = u"http://aggrocomic.com/" ),
+              class_ = u"quote_signature",
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
                 u"What I love most about Luminotes is the ", I( u"simplicity" ), u" of it.",
                 class_ = u"quote_title",
                 separator = u"",
