@@ -105,7 +105,7 @@ class Front_page( Product_page ):
               separator = u"",
             ),
             Div(
-              u"Michail Velichansky, ", A( u"Author", href = u"http://aggrocomic.com/" ),
+              u"Michail Velichansky, ", A( u"Writer", href = u"http://aggrocomic.com/" ),
               class_ = u"quote_signature",
             ),
             class_ = u"quote",
