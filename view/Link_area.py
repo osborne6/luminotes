@@ -4,7 +4,7 @@ from Search_form import Search_form
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, parent_id, notebook_path, user ):
+  def __init__( self, notebooks, notebook, parent_id, notebook_path, updates_path, user ):
     linked_notebooks = [ nb for nb in notebooks if
       ( nb.read_write or not nb.name.startswith( u"Luminotes" ) ) and
       nb.name not in ( u"trash" ) and
@@ -36,14 +36,25 @@ class Link_area( Div ):
               u"subscribe to rss",
               href = u"%s?rss" % notebook_path,
               id = u"rss link",
-              title = u"Subscribe to the RSS feed for " + \
-                ( ( notebook.name == u"Luminotes blog" ) and u"the Luminotes blog." or u"this notebook." ),
+              title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             A(
               Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"rss_image" ),
               href = u"%s?rss" % notebook_path,
-              title = u"Subscribe to the RSS feed for " + \
-                ( ( notebook.name == u"Luminotes blog" ) and u"the Luminotes blog." or u"this notebook." ),
+              title = u"Subscribe to the RSS feed for the Luminotes blog.",
+            ),
+            class_ = u"link_area_item",
+          ) or Div(
+            A(
+              u"subscribe to rss",
+              href = updates_path,
+              id = u"rss link",
+              title = u"Subscribe to the RSS feed for this notebook.",
+            ),
+            A(
+              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"rss_image" ),
+              href = updates_path,
+              title = u"Subscribe to the RSS feed for this notebook.",
             ),
             class_ = u"link_area_item",
           ) or None,

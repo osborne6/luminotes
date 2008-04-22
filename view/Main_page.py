@@ -1,3 +1,4 @@
+from urllib import urlencode
 from cgi import escape
 from Page import Page
 from Header import Header
@@ -82,6 +83,10 @@ class Main_page( Page ):
     else:
       notebook_path = u"/notebooks/%s" % notebook.object_id
 
+    updates_path = u"/notebooks/updates/%s?rss&%s" % (
+      notebook.object_id,
+      urlencode( [ ( u"notebook_name", notebook.name ) ] ),
+    )
     conversion_html = None
 
     if conversion:
@@ -111,7 +116,8 @@ class Main_page( Page ):
       title,
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
       ( notebook.name == u"Luminotes blog" ) \
-        and Link( rel = u"alternate", type = u"application/rss+xml", title = u"Luminotes blog", href = "/blog?rss" ) or None,
+        and Link( rel = u"alternate", type = u"application/rss+xml", title = u"Luminotes blog", href = "/blog?rss" ) \
+        or Link( rel = u"alternate", type = u"application/rss+xml", title = notebook.name, href = updates_path ),
       Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
@@ -147,7 +153,7 @@ class Main_page( Page ):
           ),
           id = u"left_area",
         ),
-        Link_area( notebooks, notebook, parent_id, notebook_path, user ),
+        Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user ),
         Div(
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
