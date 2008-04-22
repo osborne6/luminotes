@@ -367,13 +367,13 @@ class Files( object ):
       # scale the image down into a thumbnail
       THUMBNAIL_MAX_SIZE = ( 125, 125 ) # in pixels
       image.thumbnail( THUMBNAIL_MAX_SIZE, Image.ANTIALIAS )
+
+      # save the image into a memory buffer
+      image_buffer = StringIO()
+      image.save( image_buffer, "PNG" )
+      image_buffer.seek( 0 )
     except IOError:
       image = Image.open( "static/images/default_thumbnail.png" )
-
-    # save the image into a memory buffer
-    image_buffer = StringIO()
-    image.save( image_buffer, "PNG" )
-    image_buffer.seek( 0 )
 
     def stream( image_buffer ):
       CHUNK_SIZE = 8192
