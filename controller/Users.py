@@ -407,7 +407,7 @@ class Users( object ):
     password = Valid_string( min = 1, max = 30 ),
     login_button = unicode,
     invite_id = Valid_id( none_okay = True ),
-    after_login = Valid_string( min = 0, max = 100 ),
+    after_login = Valid_string( min = 0, max = 1000 ),
   )
   def login( self, username, password, login_button, invite_id = None, after_login = None ):
     """

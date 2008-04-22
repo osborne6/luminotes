@@ -9,5 +9,7 @@ class Rss_item( Item ):
       Link( link ),
       Description( description ),
       Dc_date( date ),
-      Guid( guid ),
+      # if we don't set the separator to empty, Node inserts newlines when the guid gets too long.
+      # newlines in guids make Thunderbird angry
+      Guid( guid, separator = u"" ),
     )

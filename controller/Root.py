@@ -46,7 +46,7 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
     self.__files = Files( database, self.__users )
-    self.__notebooks = Notebooks( database, self.__users, self.__files )
+    self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )
@@ -55,7 +55,7 @@ class Root( object ):
   @validate(
     note_title = unicode,
     invite_id = Valid_id( none_okay = True ),
-    after_login = Valid_string( min = 0, max = 100 ),
+    after_login = Valid_string( min = 0, max = 1000 ),
     plan = Valid_int( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )

@@ -18,6 +18,8 @@ from view.Json import Json
 from view.Html_file import Html_file
 from view.Note_tree_area import Note_tree_area
 from view.Notebook_rss import Notebook_rss
+from view.Updates_rss import Updates_rss
+from view.Update_link_page import Update_link_page
 
 
 class Notebooks( object ):
@@ -28,7 +30,7 @@ class Notebooks( object ):
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
   """
-  def __init__( self, database, users, files ):
+  def __init__( self, database, users, files, https_url ):
     """
     Create a new Notebooks object.
 
@@ -39,11 +41,14 @@ class Notebooks( object ):
     @type files: controller.Files
     @param files: controller for all uploaded files, used here for deleting files that are no longer
                   referenced within saved notes
+    @type https_url: unicode
+    @param https_url: base URL to use for SSL http requests, or an empty string
     @return: newly constructed Notebooks
     """
     self.__database = database
     self.__users = users
     self.__files = files
+    self.__https_url = https_url
 
   @expose( view = Main_page, rss = Notebook_rss )
   @strongly_expire
@@ -202,6 +207,70 @@ class Notebooks( object ):
       total_notes_count = total_notes_count,
       notes = note and [ note ] or [],
       invites = invites or [],
+    )
+
+  @expose( view = None, rss = Updates_rss )
+  @strongly_expire
+  @end_transaction
+  @validate(
+    notebook_id = Valid_id(),
+    notebook_name = Valid_string(),
+  )
+  def updates( self, notebook_id, notebook_name ):
+    """
+    Provide the information necessary to display an updated notes RSS feed for the given notebook.
+    This method does not require any sort of login.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook to provide updates for
+    @type notebook_name: unicode
+    @param notebook_name: name of the notebook to include in the RSS feed
+    @rtype: unicode
+    @return: rendered RSS feed
+    """
+    notebook = self.__database.load( Notebook, notebook_id )
+    if not notebook:
+      raise Access_error()
+
+    recent_notes = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
+
+    return dict(
+      recent_notes = [ ( note.object_id, note.revision ) for note in recent_notes ],
+      notebook_id = notebook_id,
+      notebook_name = notebook_name,
+      https_url = self.__https_url,
+    )
+
+  @expose( view = Update_link_page )
+  @strongly_expire
+  @end_transaction
+  @validate(
+    notebook_id = Valid_id(),
+    notebook_name = Valid_string(),
+    note_id = Valid_id(),
+    revision = Valid_revision(), 
+  )
+  def get_update_link( self, notebook_id, notebook_name, note_id, revision ):
+    """
+    Provide the information necessary to display a link to an updated note. This method does not
+    require any sort of login.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook the note is in
+    @type notebook_name: unicode
+    @param notebook_name: name of the notebook
+    @type note_id: unicode
+    @param note_id: id of the note to link to
+    @type revision: unicode
+    @param revision: ignored; present so RSS feed readers distinguish between different revisions
+    @rtype: unicode
+    @return: rendered HTML page
+    """
+    return dict(
+      notebook_id = notebook_id,
+      notebook_name = notebook_name,
+      note_id = note_id,
+      https_url = self.__https_url,
     )
 
   @expose( view = Json )
