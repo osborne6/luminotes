@@ -375,6 +375,9 @@ class Files( object ):
       image_buffer.seek( 0 )
     except IOError:
       image = Image.open( "static/images/default_thumbnail.png" )
+      image_buffer = StringIO()
+      image.save( image_buffer, "PNG" )
+      image_buffer.seek( 0 )
 
     def stream( image_buffer ):
       CHUNK_SIZE = 8192
