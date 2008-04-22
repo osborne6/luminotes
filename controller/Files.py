@@ -361,6 +361,7 @@ class Files( object ):
     cherrypy.response.headerMap[ u"Content-Type" ] = u"image/png"
 
     # attempt to open the file as an image
+    image_buffer = None
     try:
       image = Upload_file.open_image( file_id )
 
