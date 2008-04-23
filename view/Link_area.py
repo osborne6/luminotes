@@ -44,7 +44,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             class_ = u"link_area_item",
-          ) or Div(
+          ) or ( updates_path and Div(
             A(
               u"subscribe to rss",
               href = updates_path,
@@ -57,7 +57,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for this notebook.",
             ),
             class_ = u"link_area_item",
-          ) or None,
+          ) or None ),
 
           notebook.read_write and Span(
             ( notebook.owner and notebook.name != u"trash" ) and Div(

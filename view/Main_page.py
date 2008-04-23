@@ -74,8 +74,14 @@ class Main_page( Page ):
     else:
       title = None
 
+    updates_path = u"/notebooks/updates/%s?rss&%s" % (
+      notebook.object_id,
+      urlencode( [ ( u"notebook_name", notebook.name ) ] ),
+    )
+
     if notebook.name == u"Luminotes":
       notebook_path = u"/"
+      updates_path = None   # no RSS feed for the main notebook
     elif notebook.name == u"Luminotes user guide":
       notebook_path = u"/guide"
     elif notebook.name == u"Luminotes blog":
@@ -83,10 +89,6 @@ class Main_page( Page ):
     else:
       notebook_path = u"/notebooks/%s" % notebook.object_id
 
-    updates_path = u"/notebooks/updates/%s?rss&%s" % (
-      notebook.object_id,
-      urlencode( [ ( u"notebook_name", notebook.name ) ] ),
-    )
     conversion_html = None
 
     if conversion:
@@ -117,7 +119,8 @@ class Main_page( Page ):
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
       ( notebook.name == u"Luminotes blog" ) \
         and Link( rel = u"alternate", type = u"application/rss+xml", title = u"Luminotes blog", href = "/blog?rss" ) \
-        or Link( rel = u"alternate", type = u"application/rss+xml", title = notebook.name, href = updates_path ),
+        or ( updates_path and \
+             Link( rel = u"alternate", type = u"application/rss+xml", title = notebook.name, href = updates_path ) or None ),
       Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
