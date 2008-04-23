@@ -74,12 +74,33 @@ class Front_page( Product_page ):
             Div(
               u'"',
               Span(
+                u"Imagine an application that combines the features of a wiki and a web-based notebook.",
+                class_ = u"quote_title",
+                separator = u"",
+              ),
+              u"""
+              ... as a multi-user notebook that allows you to quickly take notes and collaborate on them with other users, Luminotes is unbeatable."
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"-Dmitri Popov, ", A( u"Review on Linux.com", href = u"http://www.linux.com/feature/132297" ),
+              class_ = u"quote_signature"
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
                 u"As soon as I saw Luminotes I knew it was what I and my students needed.",
                 class_ = u"quote_title",
                 separator = u"",
               ),
               u"""
-              Clear, easy to use and beautifully simple.
+              Clear, easy to use and beautifully simple."
               """,
               class_ = u"quote_text",
               separator = u"",
@@ -146,7 +167,7 @@ class Front_page( Product_page ):
               u"""
               What I like about your excellent product is the modeless editing (no edit
               and save buttons). This makes Luminotes the fastest web-based wiki I have
-              used.
+              used."
               """,
               class_ = u"quote_text",
               separator = u"",
