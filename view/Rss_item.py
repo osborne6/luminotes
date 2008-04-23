@@ -5,8 +5,8 @@ class Rss_item( Item ):
   def __init__( self, title, link, description, date, guid ):
     Item.__init__(
       self,
-      Title( title ),
-      Link( link ),
+      Title( title, separator = u"" ),
+      Link( link, separator = u"" ),
       Description( description ),
       Dc_date( date ),
       # if we don't set the separator to empty, Node inserts newlines when the guid gets too long.

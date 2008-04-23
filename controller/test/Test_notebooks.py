@@ -1,5 +1,4 @@
 import cherrypy
-import cgi
 import urllib
 from nose.tools import raises
 from urllib import quote
@@ -708,6 +707,121 @@ class Test_notebooks( Test_controller ):
     assert len( startup_notes ) == 0
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
+
+  def test_updates( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/updates/%s?rss&notebook_name=%s" % ( self.notebook.object_id, self.notebook.name ),
+      session_id = self.session_id,
+    )
+
+    assert len( result[ u"recent_notes" ] ) == 2
+    assert result[ u"recent_notes" ][ 0 ] == ( self.note2.object_id, self.note2.revision )
+    assert result[ u"recent_notes" ][ 1 ] == ( self.note.object_id, self.note.revision )
+    assert result[ u"notebook_id" ] == self.notebook.object_id
+    assert result[ u"notebook_name" ] == self.notebook.name
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
+
+  def test_updates_without_login( self ):
+    result = self.http_get(
+      "/notebooks/updates/%s?rss&notebook_name=%s" % ( self.notebook.object_id, self.notebook.name ),
+    )
+
+    # still should get the full results even without a login
+    assert len( result[ u"recent_notes" ] ) == 2
+    assert result[ u"recent_notes" ][ 0 ] == ( self.note2.object_id, self.note2.revision )
+    assert result[ u"recent_notes" ][ 1 ] == ( self.note.object_id, self.note.revision )
+    assert result[ u"notebook_id" ] == self.notebook.object_id
+    assert result[ u"notebook_name" ] == self.notebook.name
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
+
+  def test_updates_without_access( self ):
+    self.make_extra_notebooks()
+    self.login2()
+
+    result = self.http_get(
+      "/notebooks/updates/%s?rss&notebook_name=%s" % ( self.notebook2.object_id, self.notebook2.name ),
+      session_id = self.session_id,
+    )
+
+    # still should get the full results even without access
+    assert len( result[ u"recent_notes" ] ) == 0
+    assert result[ u"notebook_id" ] == self.notebook2.object_id
+    assert result[ u"notebook_name" ] == self.notebook2.name
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
+
+  def test_updates_with_unknown_notebook( self ):
+    result = self.http_get(
+      "/notebooks/updates/%s?rss&notebook_name=%s" % ( self.unknown_notebook_id, self.notebook.name ),
+    )
+
+    assert u"access" in result[ "body" ][ 0 ]
+
+  def test_updates_with_incorrect_notebook_name( self ):
+    result = self.http_get(
+      "/notebooks/updates/%s?rss&notebook_name=%s" % ( self.notebook.object_id, "whee" ),
+    )
+
+    # still produces results even with an incorrect notebook name
+    assert len( result[ u"recent_notes" ] ) == 2
+    assert result[ u"recent_notes" ][ 0 ] == ( self.note2.object_id, self.note2.revision )
+    assert result[ u"recent_notes" ][ 1 ] == ( self.note.object_id, self.note.revision )
+    assert result[ u"notebook_id" ] == self.notebook.object_id
+    assert result[ u"notebook_name" ] == u"whee"
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
+
+  def test_get_update_link( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/get_update_link?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "notebook_name", self.notebook.name ),
+        ( "note_id", self.note.object_id ),
+        ( "revision", str( self.note.revision ) ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    assert result[ u"notebook_id" ] == self.notebook.object_id
+    assert result[ u"notebook_name" ] == self.notebook.name
+    assert result[ u"note_id" ] == self.note.object_id
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
+
+  def test_get_update_link_without_login( self ):
+    result = self.http_get(
+      "/notebooks/get_update_link?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "notebook_name", self.notebook.name ),
+        ( "note_id", self.note.object_id ),
+        ( "revision", str( self.note.revision ) ),
+      ] ),
+    )
+
+    assert result[ u"notebook_id" ] == self.notebook.object_id
+    assert result[ u"notebook_name" ] == self.notebook.name
+    assert result[ u"note_id" ] == self.note.object_id
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
+
+  def test_get_update_link_without_access( self ):
+    self.make_extra_notebooks()
+    self.login2()
+
+    result = self.http_get(
+      "/notebooks/get_update_link?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook2.object_id ),
+        ( "notebook_name", self.notebook2.name ),
+        ( "note_id", self.note.object_id ),
+        ( "revision", str( self.note.revision ) ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    assert result[ u"notebook_id" ] == self.notebook2.object_id
+    assert result[ u"notebook_name" ] == self.notebook2.name
+    assert result[ u"note_id" ] == self.note.object_id
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
 
   def test_load_note( self ):
     self.login()
