@@ -23,6 +23,7 @@ class Product_page( Page ):
             u"Copyright &copy;2008 Luminotes", u" | ",
             A( u"download", href = u"/download" ), u" | ",
             A( u"contact", href = u"/contact_info" ), u" | ",
+            A( u"support", href = u"/support" ), u" | ",
             A( u"team", href = u"/meet_the_team" ), u" | ",
             A( u"blog", href = u"/blog" ), u" | ",
             A( u"privacy", href = u"/privacy" ),
