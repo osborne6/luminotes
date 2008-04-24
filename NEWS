@@ -1,3 +1,7 @@
+1.3.4: April 24, 2008
+ * Better support for RSS feeds of notebooks with unicode names.
+ * Now dynamically altering RSS feed link when notebook is renamed.
+
 1.3.3: April 22, 2008
  * RSS subscription support for each wiki notebook.
 

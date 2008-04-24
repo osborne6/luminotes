@@ -41,7 +41,7 @@ class Updates_rss( Rss_channel ):
   def note_link( notebook_id, notebook_name, note_id, revision, https_url ):
     query = urlencode( [
       ( u"notebook_id", notebook_id ),
-      ( u"notebook_name", notebook_name ),
+      ( u"notebook_name", notebook_name.encode( "utf8" ) ),
       ( u"note_id", note_id ),
       ( u"revision", unicode( revision ) ),
     ] )

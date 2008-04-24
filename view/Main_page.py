@@ -76,7 +76,7 @@ class Main_page( Page ):
 
     updates_path = u"/notebooks/updates/%s?rss&%s" % (
       notebook.object_id,
-      urlencode( [ ( u"notebook_name", notebook.name ) ] ),
+      urlencode( [ ( u"notebook_name", notebook.name.encode( "utf8" ) ) ] ),
     )
 
     if notebook.name == u"Luminotes":

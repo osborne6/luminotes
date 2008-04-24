@@ -1942,6 +1942,14 @@ Wiki.prototype.end_notebook_rename = function () {
     document.createTextNode( new_notebook_name )
   );
 
+  // rename the notebook within the rss link (if any)
+  var notebook_rss_link = getElement( "notebook_rss_link" );
+  if ( notebook_rss_link ) {
+    divider = "?rss&notebook_name=";
+    pieces = notebook_rss_link.href.split( divider );
+    notebook_rss_link.href = pieces[ 0 ] + divider + escape( new_notebook_name );
+  }
+
   // if the name has changed, then send the new name to the server
   if ( new_notebook_name == this.notebook.name )
     return;

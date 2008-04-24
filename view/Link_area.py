@@ -35,7 +35,7 @@ class Link_area( Div ):
             A(
               u"subscribe to rss",
               href = u"%s?rss" % notebook_path,
-              id = u"rss link",
+              id = u"blog_rss_link",
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             A(
@@ -48,7 +48,7 @@ class Link_area( Div ):
             A(
               u"subscribe to rss",
               href = updates_path,
-              id = u"rss link",
+              id = u"notebook_rss_link",
               title = u"Subscribe to the RSS feed for this notebook.",
             ),
             A(
