@@ -388,4 +388,4 @@ class Root( object ):
   notebooks = property( lambda self: self.__notebooks )
   users = property( lambda self: self.__users )
   files = property( lambda self: self.__files )
-  forums = property( lambda self: self.__forums )
+#  forums = property( lambda self: self.__forums )
