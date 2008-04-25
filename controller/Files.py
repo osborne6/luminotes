@@ -216,7 +216,7 @@ class Files( object ):
     Create a new Files object.
 
     @type database: controller.Database
-    @param database: database that files are stored in
+    @param database: database that file metadata is stored in
     @type users: controller.Users
     @param users: controller for all users
     @rtype: Files
