@@ -198,6 +198,27 @@
   margin: 0 auto;
 }
 
+.forums_area {
+  text-align: center;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  background-color: #ffffff;
+  border-bottom: 1px solid #cccccc;
+  margin: 0 auto;
+}
+
+.forums_text {
+  text-align: left;
+  width: 500px;
+  margin: 0 auto;
+  margin-top: 1em;
+}
+
+.forum_title {
+  font-weight: bold;
+  font-size: 105%;
+}
+
 .tour_screenshot {
   margin: 1.5em 1em 0.25em 1em;
   border: 1px solid #999999;

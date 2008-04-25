@@ -6,6 +6,7 @@ from Validate import validate, Valid_int, Valid_string
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Files import Files
+from Forums import Forums
 from Database import Valid_id, end_transaction
 from model.Note import Note
 from model.Notebook import Notebook
@@ -14,6 +15,7 @@ from view.Main_page import Main_page
 from view.Front_page import Front_page
 from view.Tour_page import Tour_page
 from view.Upgrade_page import Upgrade_page
+from view.Forums_page import Forums_page
 from view.Notebook_rss import Notebook_rss
 from view.Json import Json
 from view.Error_page import Error_page
@@ -47,6 +49,7 @@ class Root( object ):
     )
     self.__files = Files( database, self.__users )
     self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
+    self.__forums = Forums( database, self.__users )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )
@@ -385,3 +388,4 @@ class Root( object ):
   notebooks = property( lambda self: self.__notebooks )
   users = property( lambda self: self.__users )
   files = property( lambda self: self.__files )
+  forums = property( lambda self: self.__forums )
