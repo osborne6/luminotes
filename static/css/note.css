@@ -109,3 +109,7 @@ ol li {
   margin-bottom: 0.5em;
   border: 1px solid #999999;
 }
+
+.search_results_summary {
+  font-size: 82%;
+}

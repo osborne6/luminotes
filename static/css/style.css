@@ -741,6 +741,10 @@ img {
   font-weight: normal;
 }
 
+#note_tree_instructions {
+  line-height: 140%;
+}
+
 .new_feature_text {
   font-size: 90%;
   font-weight: bold;

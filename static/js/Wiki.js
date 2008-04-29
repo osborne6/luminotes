@@ -1364,6 +1364,7 @@ Wiki.prototype.display_search_results = function ( result ) {
     }
 
     var summary_span = createDOM( "span" );
+    summary_span.setAttribute( "class", "search_results_summary" );
     summary_span.innerHTML = summary;
 
     appendChildNodes( list,
