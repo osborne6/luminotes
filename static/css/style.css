@@ -275,6 +275,10 @@ img {
   font-size: 90%;
 }
 
+#recent_notes_spacer {
+  height: 0.5em;
+}
+
 .note_tree_table {
   border-collapse: collapse;
 }

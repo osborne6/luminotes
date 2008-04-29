@@ -46,7 +46,7 @@ class Note_tree_area( Div ):
               root_note_id = note.object_id,
               base_name = u"recent_note",
             ) for note in recent_notes ],
-            navigation = Tbody( Tr(
+            navigation = Tbody( Tr( id = "recent_notes_spacer" ), Tr(
               Td(),
               Td(
                 A( u"more", href = u"#", id = u"recent_notes_more_link", class_ = u"undisplayed" ),
