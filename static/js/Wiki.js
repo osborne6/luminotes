@@ -2941,15 +2941,21 @@ Recent_notes.prototype.total_notes_count_updated = function( count ) {
 }
 
 Recent_notes.prototype.update_navigation_links = function() {
-  if ( this.total_notes_count > this.max_recent_notes_count )
-    removeElementClass( "recent_notes_more_link", "undisplayed" );
-  else
-    addElementClass( "recent_notes_more_link", "undisplayed" );
+  var more_link = getElement( "recent_notes_more_link" );
+  if ( more_link ) {
+    if ( this.total_notes_count > this.max_recent_notes_count )
+      removeElementClass( more_link, "undisplayed" );
+    else
+      addElementClass( more_link, "undisplayed" );
+  }
 
-  if ( this.max_recent_notes_count > this.INCREMENT )
-    removeElementClass( "recent_notes_less_link", "undisplayed" );
-  else
-    addElementClass( "recent_notes_less_link", "undisplayed" );
+  var less_link = getElement( "recent_notes_less_link" );
+  if ( less_link ) {
+    if ( this.max_recent_notes_count > this.INCREMENT )
+      removeElementClass( less_link, "undisplayed" );
+    else
+      addElementClass( less_link, "undisplayed" );
+  }
 }
 
 Recent_notes.prototype.link_clicked = function ( event ) {
