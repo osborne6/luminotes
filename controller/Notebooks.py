@@ -543,8 +543,12 @@ class Notebooks( object ):
     if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
+    notebook = self.__database.load( Notebook, notebook_id )
+    if not notebook:
+      raise Access_error()
+
     note = self.__database.load( Note, note_id )
-    if note is None or note.notebook_id != notebook_id:
+    if note is None or note.notebook_id not in ( notebook_id, notebook.trash_id ):
       raise Access_error()
 
     items = []

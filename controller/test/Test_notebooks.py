@@ -1183,6 +1183,25 @@ class Test_notebooks( Test_controller ):
     assert link % u' class="note_tree_link"' in html
     assert u"tree_expander_empty" in html
 
+  def test_load_note_links_of_note_in_trash( self ):
+    self.login()
+
+    link = u'<a href="/notebooks/nbid?note_id=' + self.note2.object_id + '"%s>link to note2</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.note.deleted_from_id = self.note.notebook_id
+    self.note.notebook_id = self.trash.object_id
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' class="note_tree_link"' in html
+    assert u"tree_expander_empty" in html
+
   def test_load_note_links_with_note_link_with_uppercase_tags( self ):
     self.login()
 
