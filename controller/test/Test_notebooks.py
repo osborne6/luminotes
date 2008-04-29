@@ -3310,6 +3310,128 @@ class Test_notebooks( Test_controller ):
       user_id = self.anonymous.object_id,
     )
 
+  def test_load_recent_updates( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "start", "0" ),
+        ( "count", "10" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    notes = result.get( u"notes" )
+    assert notes
+    assert len( notes ) == 2
+    assert notes[ 0 ].object_id == self.note2.object_id
+    assert notes[ 1 ].object_id == self.note.object_id
+
+  def test_load_recent_updates_with_non_default_start( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "start", "1" ),
+        ( "count", "10" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    notes = result.get( u"notes" )
+    assert notes
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note.object_id
+
+  def test_load_recent_updates_with_too_small_start( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "start", "-1" ),
+        ( "count", "10" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    assert u"too small" in result[ "error" ]
+
+  def test_load_recent_updates_with_non_default_count( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "start", "0" ),
+        ( "count", "1" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    notes = result.get( u"notes" )
+    assert notes
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note2.object_id
+
+  def test_load_recent_updates_with_too_small_count( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook.object_id ),
+        ( "start", "0" ),
+        ( "count", "0" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    assert u"too small" in result[ "error" ]
+
+  def test_load_recent_updates_without_login( self ):
+    path = "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+      ( "notebook_id", self.notebook.object_id ),
+      ( "start", "0" ),
+      ( "count", "10" ),
+    ] )
+
+    result = self.http_get( path )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_load_recent_updates_without_access( self ):
+    self.login2()
+    self.make_extra_notebooks()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.notebook2.object_id ),
+        ( "start", "0" ),
+        ( "count", "10" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
+
+  def test_load_recent_updates_with_unknown_notebook( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/load_recent_updates?%s" % urllib.urlencode( [
+        ( "notebook_id", self.unknown_notebook_id ),
+        ( "start", "0" ),
+        ( "count", "10" ),
+      ] ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
