@@ -230,7 +230,7 @@ class Root( object ):
     result = self.__users.current( user_id )
     blog_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes blog" ]
 
-    result.update( self.__notebooks.load_recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id ) )
+    result.update( self.__notebooks.recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id ) )
 
     # if a single note was requested, just return that one note
     if note_id:

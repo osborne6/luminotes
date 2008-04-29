@@ -3,7 +3,7 @@ import cgi
 import cherrypy
 from datetime import datetime
 from Expose import expose
-from Validate import validate, Valid_string, Validation_error, Valid_bool
+from Validate import validate, Valid_string, Validation_error, Valid_bool, Valid_int
 from Database import Valid_id, Valid_revision, end_transaction
 from Users import grab_user_id, Access_error
 from Expire import strongly_expire
@@ -1364,17 +1364,59 @@ class Notebooks( object ):
 
     return dict()
 
-  def load_recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
+  @expose( view = Json )
+  @strongly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    start = Valid_int( min = 0 ),
+    count = Valid_int( min = 1 ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def load_recent_updates( self, notebook_id, start, count, user_id = None ):
     """
-    Provide the information necessary to display the page for a particular notebook's most recent
-    notes.
+    Provide the information necessary to display a notebook's recent updated/created notes, in
+    reverse chronological order by update time.
+    
 
     @type notebook_id: unicode
-    @param notebook_id: id of the notebook to display
+    @param notebook_id: id of the notebook containing the notes
     @type start: unicode or NoneType
     @param start: index of recent note to start with (defaults to 0, the most recent note)
     @type count: int or NoneType
     @param count: number of recent notes to display (defaults to 10 notes)
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: json dict
+    @return: { 'notes': recent_notes_list }
+    @raise Access_error: the current user doesn't have access to the given notebook or note
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+    
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if notebook is None:
+      raise Access_error()
+
+    recent_notes = self.__database.select_many( Note, notebook.sql_load_notes( start = start, count = count ) )
+
+    return dict(
+      notes = recent_notes,
+    )
+
+  def recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
+    """
+    Return the given notebook's recently updated notes in reverse chronological order by creation
+    time.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook containing the notes
+    @type start: unicode or NoneType
+    @param start: index of recent note to start with (defaults to 0, the most recent note)
+    @type count: int or NoneType
+    @param count: number of recent notes to return (defaults to 10 notes)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: dict

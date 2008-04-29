@@ -46,6 +46,13 @@ class Note_tree_area( Div ):
               root_note_id = note.object_id,
               base_name = u"recent_note",
             ) for note in recent_notes ],
+            navigation = Tbody( Tr(
+              Td(),
+              Td(
+                A( u"more", href = u"#", id = u"recent_notes_more_link", class_ = u"undisplayed" ),
+                A( u"less", href = u"#", id = u"recent_notes_less_link", class_ = u"undisplayed" ),
+              ),
+            ), id = u"recent_notes_navigation" ),
             tree_id = "recent_notes_table",
           ),
         ) or None,
@@ -80,13 +87,15 @@ class Note_tree_area( Div ):
     )
 
   @staticmethod
-  def make_tree( items, other_node = None, tree_id = None ):
+  def make_tree( first_node, second_node = None, third_node = None, navigation = None, tree_id = None ):
     return Table(
       Tbody(
-        items,
-        other_node,
+        first_node,
+        second_node,
+        third_node,
         id = tree_id and tree_id + "_body" or None,
       ),
+      navigation,
       id = tree_id or None,
       class_ = u"note_tree_table",
     )

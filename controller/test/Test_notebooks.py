@@ -3210,7 +3210,7 @@ class Test_notebooks( Test_controller ):
     assert u"access" in result[ u"error" ]
 
   def test_recent_notes( self ):
-    result = cherrypy.root.notebooks.load_recent_notes(
+    result = cherrypy.root.notebooks.recent_notes(
       self.notebook.object_id,
       user_id = self.user.object_id,
     )
@@ -3239,7 +3239,7 @@ class Test_notebooks( Test_controller ):
     assert user.storage_bytes == 0
 
   def test_recent_notes_with_start( self ):
-    result = cherrypy.root.notebooks.load_recent_notes(
+    result = cherrypy.root.notebooks.recent_notes(
       self.notebook.object_id,
       start = 1,
       user_id = self.user.object_id,
@@ -3268,7 +3268,7 @@ class Test_notebooks( Test_controller ):
     assert user.storage_bytes == 0
 
   def test_recent_notes_with_count( self ):
-    result = cherrypy.root.notebooks.load_recent_notes(
+    result = cherrypy.root.notebooks.recent_notes(
       self.notebook.object_id,
       count = 1,
       user_id = self.user.object_id,
@@ -3298,14 +3298,14 @@ class Test_notebooks( Test_controller ):
 
   @raises( Access_error )
   def test_recent_notes_with_unknown_notebok( self ):
-    result = cherrypy.root.notebooks.load_recent_notes(
+    result = cherrypy.root.notebooks.recent_notes(
       self.unknown_notebook_id,
       user_id = self.user.object_id,
     )
 
   @raises( Access_error )
   def test_recent_notes_with_incorrect_user( self ):
-    result = cherrypy.root.notebooks.load_recent_notes(
+    result = cherrypy.root.notebooks.recent_notes(
       self.notebook.object_id,
       user_id = self.anonymous.object_id,
     )

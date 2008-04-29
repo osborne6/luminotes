@@ -18,14 +18,15 @@ function Wiki( invoker ) {
   this.after_login = getElement( "after_login" ).value;
   this.signup_plan = getElement( "signup_plan" ).value;
   this.font_size = null;
-  this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
-  this.recent_notes = new Recent_notes( this, this.notebook_id );
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
     this.total_notes_count = parseInt( scrapeText( total_notes_count_node ) );
   else
     this.total_notes_count = null;
+
+  this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
+  this.recent_notes = new Recent_notes( this, this.notebook_id, this.invoker );
 
   // grab the current notebook from the list of available notebooks
   this.notebooks = evalJSON( getElement( "notebooks" ).value );
@@ -1841,18 +1842,21 @@ Wiki.prototype.increment_total_notes_count = function () {
   if ( this.total_notes_count == null ) return;
   this.total_notes_count += 1;
   replaceChildNodes( "total_notes_count", this.total_notes_count );
+  signal( this, "total_notes_count_updated", this.total_notes_count );
 }
 
 Wiki.prototype.decrement_total_notes_count = function () {
   if ( this.total_notes_count == null ) return;
   this.total_notes_count -= 1;
   replaceChildNodes( "total_notes_count", this.total_notes_count );
+  signal( this, "total_notes_count_updated", this.total_notes_count );
 }
 
 Wiki.prototype.zero_total_notes_count = function () {
   if ( this.total_notes_count == null ) return;
   this.total_notes_count = 0;
   replaceChildNodes( "total_notes_count", this.total_notes_count );
+  signal( this, "total_notes_count_updated", this.total_notes_count );
 }
 
 Wiki.prototype.start_notebook_rename = function () {
@@ -2889,9 +2893,15 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   connect_expander( expander, note_id );
 }
 
-function Recent_notes( wiki, notebook_id ) {
+function Recent_notes( wiki, notebook_id, invoker ) {
   this.wiki = wiki;
   this.notebook_id = notebook_id;
+  this.invoker = invoker;
+
+  this.INCREMENT = 10;
+  this.max_recent_notes_count = this.INCREMENT; // maximum increases when the user clicks "more"
+  this.total_notes_count = 0;
+  this.total_notes_count_updated( wiki.total_notes_count );
 
   // if there's no recent notes table, there's nothing to do with recent notes!
   if ( !getElement( "recent_notes_table" ) )
@@ -2913,6 +2923,33 @@ function Recent_notes( wiki, notebook_id ) {
   connect( wiki, "note_added", function ( editor ) { self.add_link( editor ); } );
   connect( wiki, "note_removed", function ( id ) { self.remove_link( id ); } );
   connect( wiki, "note_saved", function ( editor ) { self.update_link( editor ); } );
+  connect( wiki, "total_notes_count_updated", function ( count ) { self.total_notes_count_updated( count ); } );
+
+  // connect to the "more" navigation link
+  connect( "recent_notes_more_link", "onclick", function ( event ) { self.more_clicked( event ); } );
+  connect( "recent_notes_less_link", "onclick", function ( event ) { self.less_clicked( event ); } );
+}
+
+Recent_notes.prototype.links_count = function () {
+  var recent_links = getElementsByTagAndClassName( "a", "recent_note_link", "note_tree_area" );
+  return recent_links.length;
+}
+
+Recent_notes.prototype.total_notes_count_updated = function( count ) {
+  this.total_notes_count = count;
+  this.update_navigation_links();
+}
+
+Recent_notes.prototype.update_navigation_links = function() {
+  if ( this.total_notes_count > this.max_recent_notes_count )
+    removeElementClass( "recent_notes_more_link", "undisplayed" );
+  else
+    addElementClass( "recent_notes_more_link", "undisplayed" );
+
+  if ( this.max_recent_notes_count > this.INCREMENT )
+    removeElementClass( "recent_notes_less_link", "undisplayed" );
+  else
+    addElementClass( "recent_notes_less_link", "undisplayed" );
 }
 
 Recent_notes.prototype.link_clicked = function ( event ) {
@@ -2928,16 +2965,76 @@ Recent_notes.prototype.link_clicked = function ( event ) {
   event.stop();
 }
 
+Recent_notes.prototype.more_clicked = function ( event ) {
+  event.stop();
+  this.max_recent_notes_count += this.INCREMENT;
+
+  var self = this;
+  var links_count = this.links_count();
+
+  this.invoker.invoke(
+    "/notebooks/load_recent_updates", "GET", {
+      "notebook_id": this.notebook_id,
+      "start": links_count,
+      "count": this.max_recent_notes_count - links_count
+    },
+    function ( result ) { self.append_links( result ); }
+  );
+}
+
+Recent_notes.prototype.append_links = function ( result ) {
+  var self = this;
+  var table = getElement( "recent_notes_table" );
+  var links_count = this.links_count();
+
+  for ( var i in result.notes ) {
+    var note = result.notes[ i ];
+    var row = table.insertRow( links_count + 1 );
+    row.setAttribute( "id", "recent_note_item_" + note.object_id );
+    addElementClass( row, "recent_note_item" );
+
+    var expander_td = row.insertCell( 0 );
+    expander_td.innerHTML = '<div id="recent_note_expander_' + note.object_id + '" class="tree_expander_empty"';
+    var link_td = row.insertCell( 1 );
+    link_td.innerHTML =
+      '<a href="/notebooks/' + this.notebook_id + '?note_id=' + note.object_id +
+      '" id="recent_note_link_' + note.object_id + '" class="recent_note_link">' +
+      ( note.title || 'untitled note' ) + '</a>';
+
+    connect( "recent_note_link_" + note.object_id, "onclick", function ( event ) { self.link_clicked( event ); } );
+
+    links_count += 1;
+  }
+
+  this.update_navigation_links();
+}
+
+Recent_notes.prototype.less_clicked = function ( event ) {
+  event.stop();
+  this.max_recent_notes_count -= this.INCREMENT;
+  
+  var rows_to_remove_count = this.links_count() - this.max_recent_notes_count;
+  if ( rows_to_remove_count <= 0 )
+    return;
+
+  var rows = getElementsByTagAndClassName( "tr", "recent_note_item", "recent_notes_table" );
+  var row_count = rows.length;
+
+  for ( var i = 0; i < rows_to_remove_count; ++i ) {
+    removeElement( rows[ row_count - i - 1 ] );
+  }
+
+  this.update_navigation_links();
+}
+
 Recent_notes.prototype.add_link = function ( editor ) {
   // if the link is already present in the recent notes list, bail
   var item = getElement( "recent_note_item_" + editor.id )
   if ( item ) return;
 
-  MAX_RECENT_NOTES_COUNT = 10;
-
   // if there will be too many recent notes listed once another is added, then remove the last one
   var recent_items = getElementsByTagAndClassName( "tr", "recent_note_item", "recent_notes_table" );
-  if ( recent_items && recent_items.length >= MAX_RECENT_NOTES_COUNT ) {
+  if ( recent_items && recent_items.length >= this.max_recent_notes_count ) {
     var last_item = recent_items[ recent_items.length - 1 ];
     removeElement( last_item );
   }
