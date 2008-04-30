@@ -643,7 +643,8 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
 
   var self = this;
   var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false, position_after );
-  connect( editor, "init_complete", function () { signal( self, "note_added", editor ); } );
+  if ( !requested_revision )
+    connect( editor, "init_complete", function () { signal( self, "note_added", editor ); } );
   id = editor.id;
 
   // if a link that launched this editor was provided, update it with the created note's id
