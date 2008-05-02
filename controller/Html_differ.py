@@ -17,6 +17,7 @@ class Html_differ( HTMLParser ):
   WORD_AND_WHITESPACE_PATTERN = re.compile( "\S*\s*" )
 
   def handle_data( self, data ):
+    # this turns "foo bar baz" into [ "foo ", "bar ", "baz" ] and extends the result with it
     self.result.extend( self.WORD_AND_WHITESPACE_PATTERN.findall( data ) )
 
   def handle_charref( self, ref ):
@@ -33,8 +34,7 @@ class Html_differ( HTMLParser ):
       
   def handle_endtag( self, tag, attrs ):
     if tag not in self.requires_no_close:
-      bracketed = "</%s>" % tag
-      self.result.append( bracketed )
+      self.result.append( "</%s>" % tag )
       
   def unknown_starttag( self, tag, attr ):
     self.handle_starttag( tag, None, attr )
@@ -45,35 +45,56 @@ class Html_differ( HTMLParser ):
   # used to replace, for instance, "<br/>" with "<br />"
   INVALID_TAG_PATTERN = re.compile( "(\S)/>" )
   INVALID_TAG_FIX = "\\1 />"
-  START_TAG_PATTERN = re.compile( "<([^/][^>]*)>" )
-  END_TAG_PATTERN = re.compile( "</([^>]+)>" )
+
+  def convert_html_to_list( self, html ):
+    """
+    Given an HTML string, produce a list of its constituent elements (tags and text).
+
+    @type html: unicode
+    @param html: HTML string to parse
+    @rtype: [ unicode, ... ]
+    @return: parsed list of HTML elements
+    """
+    self.reset()
+    self.result = []
+    html = self.INVALID_TAG_PATTERN.sub( self.INVALID_TAG_FIX, html )
+    self.feed( html )
+    return [ x for x in self.result if x != "" ]
 
   def diff( self, html_a, html_b ):
     """
-    Return a composite HTML diff of the given HTML input strings.
+    Return a composite HTML diff of the given HTML input strings. The returned string contains the
+    entirety of the input strings, but with deleted/modified text from html_a wrapped in <del> tags,
+    and inserted/modified text from html_b wrapped in <ins> tags.
+
+    @type html_a: unicode
+    @param html_a: original HTML string
+    @type html_b: unicode
+    @param html-b: modified HTML string
+    @rtype: unicode
+    @return: composite HTML diff
     """
-    # parse html_a into a list
-    self.reset()
-    self.result = []
-    html_a = self.INVALID_TAG_PATTERN.sub( self.INVALID_TAG_FIX, html_a )
-    self.feed( html_a )
-    a = [ x for x in self.result if x != "" ]
+    # parse the two html strings into lists
+    a = self.convert_html_to_list( html_a )
+    b = self.convert_html_to_list( html_b )
 
-    # parse html_b into a list
-    self.reset()
-    self.result = []
-    html_b = self.INVALID_TAG_PATTERN.sub( self.INVALID_TAG_FIX, html_b )
-    self.feed( html_b )
-    b = [ x for x in self.result if x != "" ]
+    # prepare the two lists for diffing, and then diff 'em
+    ( a, b ) = self.prepare_lists( a, b )
+    return self.diff_lists( a, b )
 
-    ( a, b ) = self.__prepare_lists( a, b )
-    return self.__diff_lists( a, b )
+  START_TAG_PATTERN = re.compile( "<([^/][^>]*)>" )
+  END_TAG_PATTERN = re.compile( "</([^>]+)>" )
 
   @staticmethod
-  def __track_open_tags( item, open_tags ):
+  def track_open_tags( item, open_tags ):
     """
-    Add or remove from the open_tags list based on whether the given item is a start or end
-    tag.
+    Add or remove from the open_tags list based on whether the given item contains a start or end
+    tag. If item does not contain any tag, then open_tags remains unchanged.
+
+    @type item: unicode
+    @param item: chunk of HTML, containing either an HTML tag or just text
+    @type open_tags: [ unicode, ... ]
+    @param open_tags: list of open tags
     """
     match = Html_differ.START_TAG_PATTERN.search( item )
     if match:
@@ -87,10 +108,26 @@ class Html_differ( HTMLParser ):
     if match and tag in open_tags:
       open_tags.remove( tag )
 
-  def __prepare_lists( self, a, b ):
+  def prepare_lists( self, a, b ):
     """
-    Prepare the two lists for diffing by merging together adjacent elements within
-    modified/inserted/deleted start and end HTML tags.
+    Prepare the two lists for diffing by merging together adjacent elements that occur within
+    modified start and end HTML tags.
+
+    For instance, if:
+      a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
+      b = [ 'foo ', '<i>', 'bar ', 'baz', '</i> ', 'quux' ]
+    then the returned lists are as follows:
+      a = [ 'foo ', 'bar baz ', 'quux' ]
+      b = [ 'foo ', '<i>bar baz</i> ', 'quux' ]
+
+    Merging these elements together ensures that they're diffed as a single unit. Failing to perform
+    this step would mean that when a phrase in list a becomes italicized in list b, then it wouldn't
+    show up as modified in the resulting diff.
+
+    @type a: [ unicode, ... ]
+    @type b: [ unicode, ... ]
+    @rtype: ( [ unicode, ... ], [ unicode, ... ] )
+    @return: tuple of resulting list a and list b
     """
     matcher = SequenceMatcher( None, a, b )
     result_a = []
@@ -112,9 +149,9 @@ class Html_differ( HTMLParser ):
 
       # go through the altered items looking for start and end tags
       for i in range( i1, i2 ):
-        Html_differ.__track_open_tags( a[ i ], open_tags )
+        Html_differ.track_open_tags( a[ i ], open_tags )
       for j in range( j1, j2 ):
-        Html_differ.__track_open_tags( b[ j ], open_tags )
+        Html_differ.track_open_tags( b[ j ], open_tags )
 
       if change_type == "replace":
         open_del_items.extend( a[ i1:i2 ] )
@@ -125,16 +162,23 @@ class Html_differ( HTMLParser ):
         open_ins_items.extend( b[ j1:j2 ] )
 
       if len( open_tags ) == 0:
-        result_a.append( ''.join( open_del_items ) )
-        result_b.append( ''.join( open_ins_items ) )
+        if len( open_del_items ) > 0:
+          result_a.append( ''.join( open_del_items ) )
+        if len( open_ins_items ) > 0:
+          result_b.append( ''.join( open_ins_items ) )
         open_del_items = []
         open_ins_items = []
 
     return ( result_a, result_b )
 
-  def __diff_lists( self, a, b ):
+  def diff_lists( self, a, b ):
     """
     Diff two prepared lists and return the result as an HTML string.
+
+    @type a: [ unicode, ... ]
+    @type b: [ unicode, ... ]
+    @rtype: unicode
+    @return: composite HTML diff
     """
     matcher = SequenceMatcher( None, a, b )
     result = []
