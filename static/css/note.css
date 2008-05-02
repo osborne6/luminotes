@@ -9,12 +9,27 @@ a[target ^= "_new"] {
   padding-right: 13px;
 }
 
+.diff a[target ^= "_new"] {
+  background-image: none;
+  padding-right: 0;
+}
+
 a:hover {
   color: #ff6600;
 }
 
 h3 {
   margin-bottom: 1em;
+}
+
+ins {
+  color: green;
+  text-decoration: none;
+}
+
+del {
+  color: red;
+  text-decoration: line-through;
 }
 
 .button {
