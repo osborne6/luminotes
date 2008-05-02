@@ -45,6 +45,8 @@ class Html_differ( HTMLParser ):
   # used to replace, for instance, "<br/>" with "<br />"
   INVALID_TAG_PATTERN = re.compile( "(\S)/>" )
   INVALID_TAG_FIX = "\\1 />"
+  START_TAG_PATTERN = re.compile( "<([^/][^>]*)>" )
+  END_TAG_PATTERN = re.compile( "</([^>]+)>" )
 
   def diff( self, html_a, html_b ):
     """
@@ -64,24 +66,92 @@ class Html_differ( HTMLParser ):
     self.feed( html_b )
     b = [ x for x in self.result if x != "" ]
 
+    ( a, b ) = self.__prepare_lists( a, b )
     return self.__diff_lists( a, b )
 
+  @staticmethod
+  def __track_open_tags( item, open_tags ):
+    """
+    Add or remove from the open_tags list based on whether the given item is a start or end
+    tag.
+    """
+    match = Html_differ.START_TAG_PATTERN.search( item )
+    if match:
+      open_tags.append( match.group( 1 ) )
+      return
+
+    match = Html_differ.END_TAG_PATTERN.search( item )
+    if not match: return
+
+    tag = match.group( 1 )
+    if match and tag in open_tags:
+      open_tags.remove( tag )
+
+  def __prepare_lists( self, a, b ):
+    """
+    Prepare the two lists for diffing by merging together adjacent elements within
+    modified/inserted/deleted start and end HTML tags.
+    """
+    matcher = SequenceMatcher( None, a, b )
+    result_a = []
+    result_b = []
+    open_tags = []      # modified start tags
+    open_del_items = [] # deleted items within modified start and end tags
+    open_ins_items = [] # inserted items within modified start and end tags
+
+    for ( change_type, i1, i2, j1, j2 ) in matcher.get_opcodes():
+      if change_type == "equal":
+        equal_items = b[ j1:j2 ]
+        if len( open_tags ) == 0:
+          result_a.extend( equal_items )
+          result_b.extend( equal_items )
+        else:
+          open_del_items.extend( equal_items )
+          open_ins_items.extend( equal_items )
+        continue
+
+      # go through the altered items looking for start and end tags
+      for i in range( i1, i2 ):
+        Html_differ.__track_open_tags( a[ i ], open_tags )
+      for j in range( j1, j2 ):
+        Html_differ.__track_open_tags( b[ j ], open_tags )
+
+      if change_type == "replace":
+        open_del_items.extend( a[ i1:i2 ] )
+        open_ins_items.extend( b[ j1:j2 ] )
+      elif change_type == "delete":
+        open_del_items.extend( a[ i1:i2 ] )
+      elif change_type == "insert":
+        open_ins_items.extend( b[ j1:j2 ] )
+
+      if len( open_tags ) == 0:
+        result_a.append( ''.join( open_del_items ) )
+        result_b.append( ''.join( open_ins_items ) )
+        open_del_items = []
+        open_ins_items = []
+
+    return ( result_a, result_b )
+
   def __diff_lists( self, a, b ):
+    """
+    Diff two prepared lists and return the result as an HTML string.
+    """
     matcher = SequenceMatcher( None, a, b )
     result = []
+    open_tags = []
 
     # inspired by http://www.aaronsw.com/2002/diff/
-    for ( tag, i1, i2, j1, j2 ) in matcher.get_opcodes():
-      if tag == "replace":
+    for ( change_type, i1, i2, j1, j2 ) in matcher.get_opcodes():
+      if change_type == "replace":
         result.append(
           '<del class="diff modified">' + ''.join( a[ i1:i2 ] ) + '</del>' + \
           '<ins class="diff modified">' + ''.join( b[ j1:j2 ] ) + '</ins>'
         )
-      elif tag == "delete":
+      elif change_type == "delete":
         result.append( '<del class="diff">' + ''.join( a[ i1:i2 ] ) + '</del>' )
-      elif tag == "insert":
+      elif change_type == "insert":
         result.append( '<ins class="diff">' + ''.join( b[ j1:j2 ] ) + '</ins>' )
-      elif tag == "equal":
+      elif change_type == "equal":
         result.append( ''.join( b[ j1:j2 ] ) )
 
     return "".join( result )
