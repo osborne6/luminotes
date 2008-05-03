@@ -82,8 +82,9 @@ class Html_differ( HTMLParser ):
     ( a, b ) = self.prepare_lists( a, b )
     return self.diff_lists( a, b )
 
-  START_TAG_PATTERN = re.compile( "<(\w+)(\s+[^>]*)*>" )
-  END_TAG_PATTERN = re.compile( "</(\w+)>" )
+  SINGLE_TAG_PATTERN = re.compile( "<(\w+)(\s+[^>]*)*\s*/>" ) # e.g. '<br/>' or '<br />' or '<img src="foo" />'
+  START_TAG_PATTERN = re.compile( "<(\w+)(\s+[^>]*)*>" )      # e.g. '<i>' or '<a href="foo">'
+  END_TAG_PATTERN = re.compile( "</(\w+)>" )                  # e.g. '</i>' or '</a>'
 
   @staticmethod
   def track_open_tags( item, open_tags ):
@@ -96,6 +97,9 @@ class Html_differ( HTMLParser ):
     @type open_tags: [ unicode, ... ]
     @param open_tags: list of open tags
     """
+    match = Html_differ.SINGLE_TAG_PATTERN.search( item )
+    if match: return
+
     match = Html_differ.START_TAG_PATTERN.search( item )
     if match:
       open_tags.append( match.group( 1 ) )
@@ -148,10 +152,13 @@ class Html_differ( HTMLParser ):
         continue
 
       # go through the altered items looking for start and end tags
+      orig_len_open_tags = len( open_tags )
       for i in range( i1, i2 ):
         Html_differ.track_open_tags( a[ i ], open_tags )
       for j in range( j1, j2 ):
         Html_differ.track_open_tags( b[ j ], open_tags )
+
+      all_tags_got_closed = ( orig_len_open_tags > 0 and len( open_tags ) == 0 )
 
       if change_type == "replace":
         open_del_items.extend( a[ i1:i2 ] )
@@ -161,11 +168,17 @@ class Html_differ( HTMLParser ):
       elif change_type == "insert":
         open_ins_items.extend( b[ j1:j2 ] )
 
-      if len( open_tags ) == 0:
+      if all_tags_got_closed:
+        # if all tags were just closed, then merge the items that were in those tags
         if len( open_del_items ) > 0:
           result_a.append( ''.join( open_del_items ) )
         if len( open_ins_items ) > 0:
           result_b.append( ''.join( open_ins_items ) )
+        open_del_items = []
+        open_ins_items = []
+      elif len( open_tags ) == 0:
+        result_a.extend( open_del_items )
+        result_b.extend( open_ins_items )
         open_del_items = []
         open_ins_items = []
 

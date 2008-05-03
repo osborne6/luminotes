@@ -83,10 +83,21 @@ class Test_html_differ( object ):
 
     assert result == 'foo bar <del class="diff modified">baz </del><ins class="diff modified"><a href="whee">baz</a> </ins>quux'
 
+  def test_diff_with_br( self ):
+    a = 'foo bar baz quux'
+    b = 'foo bar <br/><br />baz quux'
+
+    result = self.differ.diff( a, b )
+
+    print result
+    assert result == 'foo bar <ins class="diff"><br /><br /></ins>baz quux'
+
   def test_track_open_tags( self ):
     open_tags = []
 
     self.differ.track_open_tags( u"foo ", open_tags )
+    assert open_tags == []
+    self.differ.track_open_tags( u"<br/>", open_tags )
     assert open_tags == []
     self.differ.track_open_tags( u"<i>", open_tags )
     assert open_tags == [ u"i" ]
@@ -95,6 +106,8 @@ class Test_html_differ( object ):
     self.differ.track_open_tags( u'<a href="whee">', open_tags )
     assert open_tags == [ u"i", u"a" ]
     self.differ.track_open_tags( u"baz", open_tags )
+    assert open_tags == [ u"i", u"a" ]
+    self.differ.track_open_tags( u"<br />", open_tags )
     assert open_tags == [ u"i", u"a" ]
     self.differ.track_open_tags( u"</a>", open_tags )
     assert open_tags == [ u"i" ]
@@ -181,6 +194,19 @@ class Test_html_differ( object ):
     assert new_a == [ 'foo ', 'bar baz ', 'quux' ]
     assert new_b == [ 'foo ', '<a href="whee">bar baz</a> ', 'quux' ]
 
+  def test_prepare_lists_with_br( self ):
+    a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
+    b = [ 'foo ', 'bar ', '<br/>', '<br />', 'baz ', 'quux' ]
+
+    result = self.differ.prepare_lists( a, b )
+
+    assert len( result ) == 2
+    ( new_a, new_b ) = result
+
+    # there should be no change
+    assert new_a == a
+    assert new_b == b
+
   def test_diff_lists_with_insert( self ):
     a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
     b = [ 'foo ', 'bar ', 'whee ', 'baz ', 'quux' ]
@@ -229,3 +255,11 @@ class Test_html_differ( object ):
 
     assert result == 'foo <del class="diff modified">bar baz </del><ins class="diff modified"><a href="whee">bar baz</a> </ins>quux'
 
+  def test_diff_lists_with_br( self ):
+    a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
+    b = [ 'foo ', 'bar ', '<br/>', '<br />', 'baz ', 'quux' ]
+
+    result = self.differ.diff_lists( a, b )
+
+    print result
+    assert result == 'foo bar <ins class="diff"><br/><br /></ins>baz quux'

@@ -1,3 +1,7 @@
+1.3.11: May 2, 2008
+ * Fixed another bug that prevented diffs from working. This time, those with
+   <br/> tags didn't parse correctly.
+
 1.3.10: May 2, 2008
  * Fixed a bug that prevented diffs from working for notes with links.
 
