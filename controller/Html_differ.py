@@ -182,6 +182,11 @@ class Html_differ( HTMLParser ):
         open_del_items = []
         open_ins_items = []
 
+    if len( open_del_items ):
+      result_a.extend( open_del_items )
+    if len( open_ins_items ):
+      result_b.extend( open_ins_items )
+
     return ( result_a, result_b )
 
   def diff_lists( self, a, b ):

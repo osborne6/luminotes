@@ -75,6 +75,15 @@ class Test_html_differ( object ):
 
     assert result == 'foo <del class="diff modified">bar baz </del><ins class="diff modified"><i>bar whee baz</i> </ins>quux'
 
+  def test_diff_with_italics_twice( self ):
+    a = 'foo bar baz quux <i>foo</i>'
+    b = 'foo bar baz quux <i>whee</i><i>foo</i>'
+
+    result = self.differ.diff( a, b )
+
+    # note the screwy placement of the <ins></ins> tags. this is the best the differ can do for now
+    assert result == 'foo bar baz quux <i><ins class="diff">whee</i><i></ins>foo</i>'
+
   def test_diff_with_link( self ):
     a = 'foo bar baz quux'
     b = 'foo bar <a href="whee">baz</a> quux'
@@ -181,6 +190,19 @@ class Test_html_differ( object ):
     assert new_a == [ 'foo ', 'bar baz ', 'quux' ]
     assert new_b == [ 'foo ', '<i>bar whee baz</i> ', 'quux' ]
 
+  def test_prepare_lists_with_italics_twice( self ):
+    a = [ 'foo ', 'bar ', 'baz ', 'quux ', '<i>', 'foo', '</i>' ]
+    b = [ 'foo ', 'bar ', 'baz ', 'quux ', '<i>', 'whee', '</i>', '<i>', 'foo', '</i>' ]
+
+    result = self.differ.prepare_lists( a, b )
+
+    assert len( result ) == 2
+    ( new_a, new_b ) = result
+
+    # there should be no change, because prepare_lists() doesn't know how to merge a complex case like this
+    assert new_a == a
+    assert new_b == b
+
   def test_prepare_lists_with_link( self ):
     a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
     b = [ 'foo ', '<a href="whee">', 'bar ', 'baz', '</a> ', 'quux' ]
@@ -246,6 +268,14 @@ class Test_html_differ( object ):
     result = self.differ.diff_lists( a, b )
 
     assert result == 'foo <del class="diff modified">bar baz </del><ins class="diff modified"><i>bar whee baz</i> </ins>quux'
+
+  def test_diff_lists_with_italics_twice( self ):
+    a = [ 'foo ', 'bar ', 'baz ', 'quux ', '<i>foo</i>' ]
+    b = [ 'foo ', 'bar ', 'baz ', 'quux ', '<i>whee</i>', '<i>foo</i>' ]
+
+    result = self.differ.diff_lists( a, b )
+
+    assert result == 'foo bar baz quux <ins class="diff"><i>whee</i></ins><i>foo</i>'
 
   def test_diff_lists_with_link( self ):
     a = [ 'foo ', 'bar baz ', 'quux' ]
