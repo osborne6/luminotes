@@ -75,6 +75,14 @@ class Test_html_differ( object ):
 
     assert result == 'foo <del class="diff modified">bar baz </del><ins class="diff modified"><i>bar whee baz</i> </ins>quux'
 
+  def test_diff_with_link( self ):
+    a = 'foo bar baz quux'
+    b = 'foo bar <a href="whee">baz</a> quux'
+
+    result = self.differ.diff( a, b )
+
+    assert result == 'foo bar <del class="diff modified">baz </del><ins class="diff modified"><a href="whee">baz</a> </ins>quux'
+
   def test_track_open_tags( self ):
     open_tags = []
 
@@ -84,11 +92,11 @@ class Test_html_differ( object ):
     assert open_tags == [ u"i" ]
     self.differ.track_open_tags( u"bar ", open_tags )
     assert open_tags == [ u"i" ]
-    self.differ.track_open_tags( u"<b>", open_tags )
-    assert open_tags == [ u"i", u"b" ]
+    self.differ.track_open_tags( u'<a href="whee">', open_tags )
+    assert open_tags == [ u"i", u"a" ]
     self.differ.track_open_tags( u"baz", open_tags )
-    assert open_tags == [ u"i", u"b" ]
-    self.differ.track_open_tags( u"</b>", open_tags )
+    assert open_tags == [ u"i", u"a" ]
+    self.differ.track_open_tags( u"</a>", open_tags )
     assert open_tags == [ u"i" ]
     self.differ.track_open_tags( u"</i>", open_tags )
     assert open_tags == []
@@ -160,6 +168,19 @@ class Test_html_differ( object ):
     assert new_a == [ 'foo ', 'bar baz ', 'quux' ]
     assert new_b == [ 'foo ', '<i>bar whee baz</i> ', 'quux' ]
 
+  def test_prepare_lists_with_link( self ):
+    a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
+    b = [ 'foo ', '<a href="whee">', 'bar ', 'baz', '</a> ', 'quux' ]
+
+    result = self.differ.prepare_lists( a, b )
+
+    assert len( result ) == 2
+    ( new_a, new_b ) = result
+
+    # the elements within italics should be merged
+    assert new_a == [ 'foo ', 'bar baz ', 'quux' ]
+    assert new_b == [ 'foo ', '<a href="whee">bar baz</a> ', 'quux' ]
+
   def test_diff_lists_with_insert( self ):
     a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
     b = [ 'foo ', 'bar ', 'whee ', 'baz ', 'quux' ]
@@ -199,3 +220,12 @@ class Test_html_differ( object ):
     result = self.differ.diff_lists( a, b )
 
     assert result == 'foo <del class="diff modified">bar baz </del><ins class="diff modified"><i>bar whee baz</i> </ins>quux'
+
+  def test_diff_lists_with_link( self ):
+    a = [ 'foo ', 'bar baz ', 'quux' ]
+    b = [ 'foo ', '<a href="whee">bar baz</a> ', 'quux' ]
+
+    result = self.differ.diff_lists( a, b )
+
+    assert result == 'foo <del class="diff modified">bar baz </del><ins class="diff modified"><a href="whee">bar baz</a> </ins>quux'
+

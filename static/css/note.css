@@ -27,9 +27,17 @@ ins {
   text-decoration: none;
 }
 
+ins a {
+  color: green;
+}
+
 del {
   color: red;
   text-decoration: line-through;
+}
+
+del a {
+  color: red;
 }
 
 .button {

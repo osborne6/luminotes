@@ -82,8 +82,8 @@ class Html_differ( HTMLParser ):
     ( a, b ) = self.prepare_lists( a, b )
     return self.diff_lists( a, b )
 
-  START_TAG_PATTERN = re.compile( "<([^/][^>]*)>" )
-  END_TAG_PATTERN = re.compile( "</([^>]+)>" )
+  START_TAG_PATTERN = re.compile( "<(\w+)(\s+[^>]*)*>" )
+  END_TAG_PATTERN = re.compile( "</(\w+)>" )
 
   @staticmethod
   def track_open_tags( item, open_tags ):
