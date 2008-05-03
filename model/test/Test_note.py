@@ -87,6 +87,25 @@ class Test_note( object ):
     assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
+  def test_replace_contents( self ):
+    new_contents = u"<h3>new</h3>new blah"
+    original_revision = self.note.revision
+    original_title = self.note.title
+
+    self.note.replace_contents( new_contents )
+
+    # nothing should change but the contents itself
+    assert self.note.revision == original_revision
+    assert self.note.contents == new_contents
+    assert self.note.summary == None
+    assert self.note.title == original_title
+    assert self.note.notebook_id == self.notebook_id
+    assert self.note.startup == self.startup
+    assert self.note.deleted_from_id == None
+    assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
+    assert self.note.creation == self.creation
+
   def test_set_summary( self ):
     summary = u"summary goes here..."
     original_revision = self.note.revision

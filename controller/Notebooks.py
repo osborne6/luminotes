@@ -8,6 +8,7 @@ from Database import Valid_id, Valid_revision, end_transaction
 from Users import grab_user_id, Access_error
 from Expire import strongly_expire
 from Html_nuker import Html_nuker
+from Html_differ import Html_differ
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Invite import Invite
@@ -59,13 +60,15 @@ class Notebooks( object ):
     note_id = Valid_id(),
     parent_id = Valid_id(),
     revision = Valid_revision(),
+    previous_revision = Valid_revision( none_okay = True ),
     rename = Valid_bool(),
     deleted_id = Valid_id(),
     preview = Valid_string(),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, notebook_id, note_id = None, parent_id = None, revision = None, rename = False,
-               deleted_id = None, preview = None, user_id = None ):
+  def default( self, notebook_id, note_id = None, parent_id = None, revision = None,
+               previous_revision = None, rename = False, deleted_id = None, preview = None,
+               user_id = None ):
     """
     Provide the information necessary to display the page for a particular notebook. If a
     particular note id is given without a revision, then the most recent version of that note is
@@ -79,6 +82,8 @@ class Notebooks( object ):
     @param parent_id: id of parent notebook to this notebook (optional)
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
+    @type previous_revision: unicode or NoneType
+    @param previous_revision: older revision timestamp to diff with the given revision (optional)
     @type rename: bool or NoneType
     @param rename: whether this is a new notebook and should be renamed (optional, defaults to False)
     @type deleted_id: unicode or NoneType
@@ -115,7 +120,7 @@ class Notebooks( object ):
     else:
       raise Access_error()
 
-    result.update( self.contents( notebook_id, note_id, revision, read_write, owner, user_id ) )
+    result.update( self.contents( notebook_id, note_id, revision, previous_revision, read_write, owner, user_id ) )
     result[ "parent_id" ] = parent_id
     if revision:
       result[ "note_read_write" ] = False
@@ -138,7 +143,8 @@ class Notebooks( object ):
 
     return result
 
-  def contents( self, notebook_id, note_id = None, revision = None, read_write = True, owner = True, user_id = None ):
+  def contents( self, notebook_id, note_id = None, revision = None, previous_revision = None,
+                read_write = True, owner = True, user_id = None ):
     """
     Return the startup notes for the given notebook. Optionally include a single requested note as
     well.
@@ -149,6 +155,8 @@ class Notebooks( object ):
     @param note_id: id of single note in this notebook to return (optional)
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the provided note (optional)
+    @type previous_revision: unicode or NoneType
+    @param previous_revision: older revision timestamp to diff with the given revision (optional)
     @type read_write: bool or NoneType
     @param read_write: whether the notebook should be returned as read-write (optional, defaults to True)
     @type owner: bool or NoneType
@@ -190,6 +198,12 @@ class Notebooks( object ):
           note = None
         else:
           raise Access_error()
+
+      # if two revisions were provided, then make the returned note's contents into a diff
+      if note and revision and previous_revision:
+        previous_note = self.__database.load( Note, note_id, previous_revision )
+        if previous_note and previous_note.contents:
+          note.replace_contents( Html_differ().diff( previous_note.contents, note.contents ) )
     else:
       note = None
 
@@ -281,10 +295,11 @@ class Notebooks( object ):
     notebook_id = Valid_id(),
     note_id = Valid_id(),
     revision = Valid_revision(),
+    previous_revision = Valid_revision( none_okay = True ),
     summarize = Valid_bool(),
     user_id = Valid_id( none_okay = True ),
   )
-  def load_note( self, notebook_id, note_id, revision = None, summarize = False, user_id = None ):
+  def load_note( self, notebook_id, note_id, revision = None, previous_revision = None, summarize = False, user_id = None ):
     """
     Return the information on a particular note by its id.
 
@@ -294,6 +309,8 @@ class Notebooks( object ):
     @param note_id: id of note to return
     @type revision: unicode or NoneType
     @param revision: revision timestamp of the note (optional)
+    @type previous_revision: unicode or NoneType
+    @param previous_revision: older revision timestamp to diff with the given revision (optional)
     @type summarize: bool or NoneType
     @param summarize: True to return a summary of the note's contents, False to return full text
                       (optional, defaults to False)
@@ -329,6 +346,11 @@ class Notebooks( object ):
         )
 
       raise Access_error()
+
+    if note and revision and previous_revision:
+      previous_note = self.__database.load( Note, note_id, previous_revision )
+      if previous_note and previous_note.contents:
+        note.replace_contents( Html_differ().diff( previous_note.contents, note.contents ) )
 
     return dict(
       note = summarize and self.summarize_note( note ) or note,

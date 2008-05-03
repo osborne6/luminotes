@@ -356,7 +356,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
   var share_notebook_link = getElement( "share_notebook_link" );
   if ( share_notebook_link ) {
     connect( share_notebook_link, "onclick", function ( event ) {
-      self.load_editor( "share this notebook", "null", null, null, getElement( "notes_top" ) );
+      self.load_editor( "share this notebook", "null", null, null, null, getElement( "notes_top" ) );
       event.stop();
     } );
   }
@@ -403,7 +403,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   signal( this, "note_added", editor );
 }
 
-Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, position_after ) {
+Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_revision, link, position_after ) {
   if ( this.notebook.name == "trash" && !revision ) {
     this.display_message( "If you'd like to use this note, try undeleting it first.", undefined, position_after );
     return;
@@ -495,7 +495,8 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, link, pos
     "/notebooks/load_note", "GET", {
       "notebook_id": this.notebook_id,
       "note_id": note_id,
-      "revision": revision
+      "revision": revision,
+      "previous_revision": previous_revision
     },
     function ( result ) { self.parse_loaded_editor( result, note_title, revision, link, position_after ); }
   );
@@ -1200,7 +1201,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
 
     this.startup_notes[ editor.id ] = true;
     this.increment_total_notes_count();
-    this.load_editor( "Note not found.", editor.id, null, null, position_after );
+    this.load_editor( "Note not found.", editor.id, null, null, null, position_after );
   }
 
   event.stop();
@@ -1221,7 +1222,7 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
 
   this.startup_notes[ note_id ] = true;
   this.increment_total_notes_count();
-  this.load_editor( "Note not found.", note_id, null, null, position_after );
+  this.load_editor( "Note not found.", note_id, null, null, null, position_after );
 
   event.stop();
 }
@@ -1237,9 +1238,8 @@ Wiki.prototype.undelete_notebook = function( event, notebook_id ) {
 Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
 
-  // display the two revisions for comparison by the user
-  this.load_editor( editor.title, editor.id, previous_revision, null, editor.closed ? null : editor.iframe );
-  this.load_editor( editor.title, editor.id, null, null, editor.closed ? null : editor.iframe );
+  // display a diff between the two revisions for examination by the user
+  this.load_editor( editor.title, editor.id, editor.revision, previous_revision, editor.closed ? null : editor.iframe );
 }
 
 Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous, suppress_save_signal ) {
@@ -2167,10 +2167,12 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
   var self = this;
   for ( var i = 0; i < user_revisions.length - 1; ++i ) { // -1 to skip the oldest revision
     var user_revision = user_revisions[ i ];
+    var previous_revision = user_revisions[ i + 1 ];
+
     var short_revision = this.wiki.brief_revision( user_revision.revision );
     var href = "/notebooks/" + this.notebook_id + "?" + queryString(
-      [ "note_id", "revision" ],
-      [ this.editor.id, user_revision.revision ]
+      [ "note_id", "revision", "previous_revision" ],
+      [ this.editor.id, user_revision.revision, previous_revision.revision ]
     );
 
     var link = createDOM(
@@ -2181,6 +2183,7 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
 
     this.links.push( link );
     link.revision = user_revision.revision;
+    link.previous_revision = previous_revision.revision;
     connect( link, "onclick", function ( event ) { self.link_clicked( event, self.editor.id ); } );
     appendChildNodes( this.div, link );
     appendChildNodes( this.div, createDOM( "br" ) );
@@ -2192,7 +2195,8 @@ Changes_pulldown.prototype.constructor = Changes_pulldown;
 
 Changes_pulldown.prototype.link_clicked = function( event, note_id ) {
   var revision = event.target().revision;
-  this.wiki.load_editor( "Revision not found.", note_id, revision, null, this.editor.iframe );
+  var previous_revision = event.target().previous_revision;
+  this.wiki.load_editor( "Revision not found.", note_id, revision, previous_revision, null, this.editor.iframe );
   event.stop();
 }
 

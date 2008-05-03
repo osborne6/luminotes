@@ -96,6 +96,9 @@ class Note( Persistent ):
     else:
       self.__title = None
 
+  def replace_contents( self, contents ):
+    self.__contents = contents
+
   def __set_summary( self, summary ):
     self.__summary = summary
 

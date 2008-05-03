@@ -392,7 +392,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
     var query = parse_query( link );
     var title = link_title( link, query );
     var id = query.note_id;
-    signal( self, "load_editor", title, id, null, link, self.iframe );
+    signal( self, "load_editor", title, id, null, null, link, self.iframe );
     return true;
   }
 

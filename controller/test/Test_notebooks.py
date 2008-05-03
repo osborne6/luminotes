@@ -428,6 +428,56 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_default_with_note_and_previous_revision( self ):
+    self.login()
+
+    previous_revision = self.note.revision
+    self.note.contents = u"<h3>my title</h3>foo blah"
+    self.database.save( self.note )
+
+    result = self.http_get(
+      "/notebooks/%s?note_id=%s&revision=%s&previous_revision=%s" % (
+        self.notebook.object_id,
+        self.note.object_id,
+        quote( unicode( self.note.revision ) ),
+        quote( unicode( previous_revision ) ),
+      ),
+      session_id = self.session_id,
+    )
+    
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).owner == True
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+
+    assert result.get( "notes" )
+    assert len( result.get( "notes" ) ) == 1
+    assert result.get( u"notes" )[ 0 ].object_id == self.note.object_id
+    assert result.get( u"notes" )[ 0 ].revision == self.note.revision
+    assert result.get( u"notes" )[ 0 ].contents == u'<h3>my title</h3><ins class="diff">foo </ins>blah'
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) == False
+    assert len( result.get( "recent_notes" ) ) == 2
+    assert result.get( "recent_notes" )[ 0 ].object_id == self.note.object_id
+    assert result.get( "recent_notes" )[ 1 ].object_id == self.note2.object_id
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_default_with_parent( self ):
     self.login()
 
@@ -601,6 +651,46 @@ class Test_notebooks( Test_controller ):
     note = notes[ 0 ]
     assert note.object_id == self.note.object_id
     assert note.revision == self.note.revision
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_contents_with_note_and_previous_revision( self ):
+    previous_revision = self.note.revision
+    self.note.contents = u"<h3>my title</h3>foo blah"
+    self.database.save( self.note )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = unicode( self.note.revision ),
+      previous_revision = unicode( previous_revision ),
+      user_id = self.user.object_id,
+    )
+    self.login()
+
+    notebook = result[ "notebook" ]
+    startup_notes = result[ "startup_notes" ]
+    assert result[ "total_notes_count" ] == 2
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 1
+    invite = invites[ 0 ]
+    assert invite.object_id == self.invite.object_id
+
+    assert notebook.object_id == self.notebook.object_id
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert len( startup_notes ) == 1
+    assert startup_notes[ 0 ].object_id == self.note.object_id
+
+    notes = result[ "notes" ]
+
+    assert notes
+    assert len( notes ) == 1
+    note = notes[ 0 ]
+    assert note.object_id == self.note.object_id
+    assert note.revision == self.note.revision
+    assert note.contents == u'<h3>my title</h3><ins class="diff">foo </ins>blah'
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
@@ -869,6 +959,42 @@ class Test_notebooks( Test_controller ):
     assert note.contents == previous_contents
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
+
+  def test_load_note_with_previous_revision( self ):
+    self.login()
+
+    # update the note to generate a new revision
+    previous_revision = self.note.revision
+    previous_title = self.note.title
+    previous_contents = self.note.contents
+    new_note_contents = u"<h3>my title</h3>foo blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = self.note.revision,
+    ), session_id = self.session_id )
+
+    new_revision = result[ "new_revision" ].revision
+
+    # load the note by the new revision, providing the previous revision as well
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = unicode( new_revision ),
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    # assert that we get a composite diff of the two revisions
+    assert note.object_id == self.note.object_id
+    assert note.revision == new_revision
+    assert note.title == previous_title
+    assert note.contents == u'<h3>my title</h3><ins class="diff">foo </ins>blah'
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
 
   def test_load_note_without_login( self ):
     result = self.http_post( "/notebooks/load_note/", dict(
