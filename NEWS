@@ -5,6 +5,8 @@
    "&quot;" character entity so it doesn't show up as a change in the diff.
  * Fixed a bug where attempting to load a notebook preview without access
    would give a "list index out of range" error instead of an access error.
+ * Fixed a bug where the Valid_id() validator would raise a TypeError when
+   given a None value. Now raising a ValueError instead.
 
 1.3.13: May 5, 2008
  * Instructions for enabling JavaScript, linked from various forms that
