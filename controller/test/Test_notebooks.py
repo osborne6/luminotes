@@ -345,6 +345,64 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_default_as_preview_viewer_without_login( self ):
+    path = "/notebooks/%s?preview=viewer" % self.notebook.object_id
+    result = self.http_get( path )
+    
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_default_as_preview_collaborator_without_login( self ):
+    path = "/notebooks/%s?preview=collaborator" % self.notebook.object_id
+    result = self.http_get( path )
+    
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_default_as_preview_owner_without_login( self ):
+    path = "/notebooks/%s?preview=owner" % self.notebook.object_id
+    result = self.http_get( path )
+    
+    print result
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_default_as_preview_viewer_without_access( self ):
+    self.make_extra_notebooks()
+    self.login2()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=viewer" % self.notebook2.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert u"access" in result.get( u"error" )
+
+  def test_default_as_preview_collaborator_without_access( self ):
+    self.make_extra_notebooks()
+    self.login2()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=collaborator" % self.notebook2.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert u"access" in result.get( u"error" )
+
+  def test_default_as_preview_owner_without_access( self ):
+    self.make_extra_notebooks()
+    self.login2()
+
+    result = self.http_get(
+      "/notebooks/%s?preview=owner" % self.notebook2.object_id,
+      session_id = self.session_id,
+    )
+    
+    assert u"access" in result.get( u"error" )
+
   def test_default_with_note( self ):
     self.login()
 

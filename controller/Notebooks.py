@@ -105,6 +105,8 @@ class Notebooks( object ):
       result[ u"notebooks" ] = [
         notebook for notebook in result[ "notebooks" ] if notebook.object_id == notebook_id
       ]
+      if len( result[ u"notebooks" ] ) == 0:
+        raise Access_error()
       result[ u"notebooks" ][ 0 ].owner = False
     elif preview == u"viewer":
       read_write = False
@@ -112,6 +114,8 @@ class Notebooks( object ):
       result[ u"notebooks" ] = [
         notebook for notebook in result[ "notebooks" ] if notebook.object_id == notebook_id
       ]
+      if len( result[ u"notebooks" ] ) == 0:
+        raise Access_error()
       result[ u"notebooks" ][ 0 ].read_write = False
       result[ u"notebooks" ][ 0 ].owner = False
     elif preview in ( u"owner", u"default", None ):
