@@ -23,6 +23,7 @@ class Updater( object ):
     ( u"advanced browser features.html", False ),
     ( u"supported browsers.html", False ),
     ( u"support.html", False ),
+    ( u"enable JavaScript.html", False ),
   ]
 
   def __init__( self, database ):
