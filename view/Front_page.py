@@ -74,6 +74,27 @@ class Front_page( Product_page ):
             Div(
               u'"',
               Span(
+                u"Luminotes is a wiki without the markup learning curve.",
+                class_ = u"quote_title",
+                separator = u"",
+              ),
+              u"""
+              ... Luminotes has you simply start typing, using familiar rich text buttons to add bullets and other styling, and a simple linking and tagging system for your notes."
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"-Kevin Purdy, ", A( u"Review on Lifehacker", href = u"http://lifehacker.com/386813/luminotes-is-a-wiki-without-the-markup-learning-curve" ),
+              class_ = u"quote_signature"
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
                 u"Imagine an application that combines the features of a wiki and a web-based notebook.",
                 class_ = u"quote_title",
                 separator = u"",
