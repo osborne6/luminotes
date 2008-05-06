@@ -6,7 +6,7 @@ from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool, Valid_int
 from Database import Valid_id, Valid_revision, end_transaction
 from Users import grab_user_id, Access_error
-from Expire import strongly_expire
+from Expire import strongly_expire, weakly_expire
 from Html_nuker import Html_nuker
 from Html_differ import Html_differ
 from model.Notebook import Notebook
@@ -974,7 +974,7 @@ class Notebooks( object ):
     )
 
   @expose( view = Html_file )
-  @strongly_expire
+  @weakly_expire
   @end_transaction
   @grab_user_id
   @validate(

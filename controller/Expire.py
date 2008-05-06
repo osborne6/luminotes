@@ -13,3 +13,17 @@ def strongly_expire( function ):
       return function( *args, **kwargs )
 
   return expire
+
+
+def weakly_expire( function ):
+  """
+  Decorator that sends headers that instruct browsers and proxies not to cache. This cache busting
+  isn't as strong as the @strongly_expire decorator, but it has the distinct benefit of not
+  breaking Internet Explorer HTTPS file downloads.
+  """
+  def expire( *args, **kwargs ):
+      cherrypy.response.headers[ "Expires" ] = "Sun, 19 Nov 1978 05:00:00 GMT"
+
+      return function( *args, **kwargs )
+
+  return expire
