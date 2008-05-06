@@ -152,6 +152,20 @@ shows up in various error messages and other places for a support contact
 address.
 
 
+user rate plans
+---------------
+
+By default, all Luminotes users start at rate plan 0. This corresponds to the
+Luminotes "free" account level described at http://luminotes.com/pricing
+
+If you'd like to change the details of any of the rate plans, edit
+config/Common.py and change the first listed plan under luminotes.rate_plans.
+For instance, if you'd like users at rate plan 0 to be allowed to invite other
+users to edit their notebooks, change the "notebook_collaboration" value to
+"True". If you like, you can also increase the amount of storage they're
+allowed.
+
+
 memcached
 ---------
 
