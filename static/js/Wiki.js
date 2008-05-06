@@ -1517,7 +1517,9 @@ Wiki.prototype.display_invites = function ( invite_area ) {
     appendChildNodes(
       add_invite_to, createDOM( "div", { "class": "invite" },
       invite.email_address, " ",
-      ( invite.redeemed_username ? "(" + invite.redeemed_username + ")" : "" ),
+      createDOM( "span", { "class": "invite_status" },
+        invite.redeemed_username ? "(invite accepted by " + invite.redeemed_username + ")" : "(waiting for invite to be accepted)"
+      ),
       " ", revoke_button )
     );
 

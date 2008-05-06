@@ -7,6 +7,15 @@
    would give a "list index out of range" error instead of an access error.
  * Fixed a bug where the Valid_id() validator would raise a TypeError when
    given a None value. Now raising a ValueError instead.
+ * Fixed a bug where saving a note unsuccessfully could cause the note's
+   title show up in the recent updates list.
+ * If there is an error saving a note, then even if "hide" was clicked, the
+   note is not hidden. Instead, the note stays open so that the user can try
+   again.
+ * Fixed a bug where renaming a note to have no title caused the title to
+   show up as completely blank in the recent updates list. Now it shows up as
+   "untitled note".
+ * Made it clearer whether the invitee has accepted a particular invite yet.
 
 1.3.13: May 5, 2008
  * Instructions for enabling JavaScript, linked from various forms that
