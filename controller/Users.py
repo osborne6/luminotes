@@ -835,7 +835,7 @@ class Users( object ):
       raise Invite_error( u"Please enter at least one valid email address." )
 
     import smtplib
-    from email import Message
+    from email import Message, Charset
 
     for email_address in email_addresses_list:
       # record the sending of this invite email
@@ -868,11 +868,22 @@ class Users( object ):
         message[ u"Sender" ] = u"Luminotes personal wiki <%s>" % self.__support_email
       message[ u"To" ] = email_address
       message[ u"Subject" ] = notebook_name
-      message.set_payload(
-        u"I've shared a wiki with you called \"%s\".\n" % notebook_name +
-        u"Please visit the following link to view it online:\n\n" +
+
+      payload = \
+        u"I've shared a wiki with you called \"%s\".\n" % notebook_name + \
+        u"Please visit the following link to view it online:\n\n" + \
         u"%s/i/%s\n\n" % ( self.__https_url or self.__http_url, invite.object_id )
-      )
+
+      # try representing the payload as plain 7-bit ASCII for greatest compatibility
+      try:
+        str( notebook_name )
+        message.set_payload( payload )
+      # if that doesn't work, encode the payload as UTF-8 instead
+      except UnicodeEncodeError:
+        message.set_payload( payload.encode( "utf-8" ) )
+        charset = Charset.Charset( "utf-8" )
+        charset.body_encoding = Charset.QP
+        message.set_charset( charset )
 
       # send the message out through localhost's smtp server
       server = smtplib.SMTP()

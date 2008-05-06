@@ -378,7 +378,6 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
 
-    print result
     assert u"not configured" in result[ u"error" ]
 
   def test_demo( self ):
@@ -1081,6 +1080,62 @@ class Test_users( Test_controller ):
     assert self.email_address in from_address
     assert to_addresses == email_addresses_list
     assert self.notebooks[ 0 ].name in message
+    matches = self.INVITE_LINK_PATTERN.search( message )
+    invite_id = matches.group( 2 )
+    assert invite_id
+
+    # assert that the invite has the read_write / owner flags set appropriately
+    invites = self.database.objects.get( invite_id )
+    assert invites
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
+    assert invite
+    assert invite.read_write is False
+    assert invite.owner is False
+
+  def test_send_invites_with_unicode_notebook_name( self ):
+    # trick send_invites() into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+    self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
+
+    self.notebooks[ 0 ].name = u"\xe4"
+    quoted_printable_notebook_name = u"=C3=A4"
+    self.database.save( self.notebooks[ 0 ] )
+
+    email_addresses_list = [ u"foo@example.com" ]
+    email_addresses = email_addresses_list[ 0 ]
+
+    result = self.http_post( "/users/send_invites", dict(
+      notebook_id = self.notebooks[ 0 ].object_id,
+      email_addresses = email_addresses,
+      access = u"viewer",
+      invite_button = u"send invites",
+    ), session_id = self.session_id )
+    session_id = result[ u"session_id" ]
+    
+    assert u"An invitation has been sent." in result[ u"message" ]
+    invites = result[ u"invites" ]
+    assert len( invites ) == 1
+    invite = invites[ -1 ]
+    assert invite
+    assert invite.read_write is False
+    assert invite.owner is False
+
+    assert smtplib.SMTP.connected == False
+    assert len( smtplib.SMTP.emails ) == 1
+
+    from email.Message import Message, Charset
+    ( from_address, to_addresses, message ) = smtplib.SMTP.emails[ 0 ]
+
+    assert self.email_address in from_address
+    assert to_addresses == email_addresses_list
+    assert u'Content-Type: text/plain; charset="utf-8"' in message
+    assert u'Content-Transfer-Encoding: quoted-printable' in message
+    assert quoted_printable_notebook_name in message
     matches = self.INVITE_LINK_PATTERN.search( message )
     invite_id = matches.group( 2 )
     assert invite_id
@@ -2286,7 +2341,6 @@ class Test_users( Test_controller ):
     self.user.sql_load_notebooks()
     notebooks = self.database.select_many( Notebook, self.user2.sql_load_notebooks() )
     new_notebook = [ notebook for notebook in notebooks if notebook.object_id == invite.notebook_id ][ 0 ]
-    print new_notebook.rank
     assert new_notebook.rank == 8 # one higher than the other notebook this user has access to
 
     assert invite.redeemed_user_id == self.user2.object_id

@@ -1,3 +1,9 @@
+1.3.16: May 6, 2008
+ * Fixed a bug where an invite sent for a notebook with an accented unicode
+   name would cause a UnicodeEncodeError upon sending the invite email. Now
+   such invites are encoded as quoted-printable UTF-8, while other invites
+   continue to be 7-bit ASCII.
+
 1.3.15: May 6, 2008
  * Fixed a bug where the "show on startup" checkbox did not appear checked if
    you created a startup note, hid it, and then opened it the note tree area.
