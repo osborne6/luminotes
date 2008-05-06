@@ -1084,15 +1084,17 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
       signal( this, "note_removed", editor.id );
       editor.shutdown();
       this.decrement_total_notes_count();
+      this.display_empty_message();
     } else {
       // before hiding an editor, save it
-      if ( this.notebook.read_write && editor.read_write )
-        this.save_editor( editor );
-
-      editor.shutdown();
+      if ( this.notebook.read_write && editor.read_write ) {
+        var self = this;
+        this.save_editor( editor, false, function () {
+          editor.shutdown();
+          self.display_empty_message();
+        } );
+      }
     }
-
-    this.display_empty_message();
   }
 
   event.stop();
@@ -3090,6 +3092,6 @@ Recent_notes.prototype.update_link = function ( editor ) {
 
   // the link is already in the recent notes list, so just move it to the top of the list
   removeElement( item );
-  replaceChildNodes( link, editor.title );
+  replaceChildNodes( link, editor.title || "untitled note" );
   insertSiblingNodesAfter( "recent_notes_top", item );
 }

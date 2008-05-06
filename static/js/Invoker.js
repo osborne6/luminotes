@@ -70,18 +70,18 @@ Invoker.prototype.handle_response = function ( request, callback ) {
 
   var result = evalJSONRequest( request );
 
-  if ( result.error )
+  if ( result.error ) {
     signal( this, "error_message", result.error );
+    return;
+  }
 
   if ( result.message )
     signal( this, "message", result.message );
 
   if ( callback )
     callback( result );
-
-  if ( result.redirect )
+  else if ( result.redirect )
     window.location = result.redirect;
-
-  if ( result.reload )
+  else if ( result.reload )
     window.location.reload();
 }
