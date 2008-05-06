@@ -1263,6 +1263,12 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       self.update_editor_revisions( result, editor );
       self.display_storage_usage( result.storage_bytes );
       editor.mark_clean();
+
+      if ( editor.startup )
+        self.startup_notes[ editor.id ] = true;
+      else if ( self.startup_notes[ editor.id ] )
+        delete self.startup_notes[ editor.id ];
+
       if ( callback )
         callback();
       if ( !suppress_save_signal )
