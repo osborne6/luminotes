@@ -1095,7 +1095,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
         } );
       } else {
         editor.shutdown();
-        self.display_empty_message();
+        this.display_empty_message();
       }
     }
   }
