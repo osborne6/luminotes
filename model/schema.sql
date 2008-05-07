@@ -274,7 +274,7 @@ CREATE INDEX note_notebook_id_startup_index ON note USING btree (notebook_id, st
 -- Name: note_notebook_id_title_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
 --
 
-CREATE INDEX note_notebook_id_title_index ON note USING btree (notebook_id, title);
+CREATE INDEX note_notebook_id_title_index ON note USING btree (notebook_id, md5(title));
 
 
 --
