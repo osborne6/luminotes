@@ -204,6 +204,29 @@ class Front_page( Product_page ):
             Div(
               u'"',
               Span(
+                u"I came across your software using the WikiMatrix comparison and fell in love instantly.",
+                class_ = u"quote_title",
+                separator = u"",
+              ),
+              u"""
+              This is probably the best personal wiki software I have seen to date. Playing with
+              the demo sold me completely. The design, interface, usage, and above all how bloody
+              easy it is is perfect."
+              """,
+              class_ = u"quote_text",
+              separator = u"",
+            ),
+            Div(
+              u"-Kyle Gruel",
+              class_ = u"quote_signature"
+            ),
+            class_ = u"quote",
+          ),
+
+          Div(
+            Div(
+              u'"',
+              Span(
                 u"Marvelous! Simply marvelous!",
                 class_ = u"quote_title",
               ),
