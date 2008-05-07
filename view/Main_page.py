@@ -66,6 +66,8 @@ class Main_page( Page ):
       u"creation" : note.creation,
     } for note in notes ]
 
+    root_notes = startup_notes + ( notes and [ note for note in notes if note.object_id not in startup_note_ids ] or [] )
+
     def json( string ):
       return escape( unicode( Json( string ) ), quote = True )
 
@@ -150,7 +152,7 @@ class Main_page( Page ):
               hide_toolbar = parent_id or not notebook.read_write
             ),
             notebook,
-            startup_notes + ( notes and notes or [] ),
+            root_notes,
             recent_notes,
             total_notes_count,
           ),
