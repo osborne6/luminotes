@@ -34,6 +34,7 @@ class Main_page( Page ):
     invite_id = None,
     after_login = None,
     signup_plan = None,
+    signup_yearly = None,
     recent_notes = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
@@ -129,6 +130,7 @@ class Main_page( Page ):
       Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ) or None,
       Input( type = u"hidden", name = u"storage_bytes", id = u"storage_bytes", value = user.storage_bytes ),
       Input( type = u"hidden", name = u"rate_plan", id = u"rate_plan", value = json( rate_plan ) ),
+      Input( type = u"hidden", name = u"yearly", id = u"yearly", value = json( signup_yearly ) ),
       Input( type = u"hidden", name = u"notebooks", id = u"notebooks", value = json( notebooks ) ),
       Input( type = u"hidden", name = u"notebook_id", id = u"notebook_id", value = notebook.object_id ),
       Input( type = u"hidden", name = u"parent_id", id = u"parent_id", value = parent_id or "" ),

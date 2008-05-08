@@ -12,6 +12,7 @@ function Wiki( invoker ) {
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
+  this.yearly = evalJSON( getElement( "yearly" ).value );
   this.storage_usage_high = false;
   this.invites = evalJSON( getElement( "invites" ).value );
   this.invite_id = getElement( "invite_id" ).value;
@@ -725,9 +726,9 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     if ( url == "/users/signup" ) {
       args[ "invite_id" ] = self.invite_id;
       args[ "rate_plan" ] = self.signup_plan;
+      args[ "yearly" ] = self.yearly;
     } else if ( url == "/users/login" ) {
       args[ "invite_id" ] = self.invite_id;
-      args[ "after_login" ] = self.after_login;
     }
 
     self.invoker.invoke( url, "POST", args, callback, form );

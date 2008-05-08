@@ -113,6 +113,7 @@ class Root( object ):
       result[ "after_login" ] = after_login
     if plan:
       result[ "signup_plan" ] = plan
+      result[ "signup_yearly" ] = yearly
 
     return result
 

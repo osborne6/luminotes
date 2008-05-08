@@ -27,6 +27,7 @@ class Notebook_rss( Rss_channel ):
     invite_id = None,
     after_login = None,
     signup_plan = None,
+    signup_yearly = None,
     recent_notes = None,
   ):
     if notebook.name == u"Luminotes":
