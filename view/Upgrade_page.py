@@ -187,13 +187,13 @@ class Upgrade_page( Product_page ):
             separator = u"",
           ),
           user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
-               and yearly and ( plan.get( u"yearly_button" ).strip() and plan.get( u"yearly_button" ) % user.object_id or None ) or \
-                              ( plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None ),
+               and ( yearly and ( plan.get( u"yearly_button" ).strip() and plan.get( u"yearly_button" ) % user.object_id or None ) or \
+                                ( plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None ) ) or None,
         ) or None,
         ( not user or user.username in ( u"anonymous", None ) ) and Div(
           A(
             Img( src = u"/static/images/sign_up_button.png", width = "76", height = "23" ),
-            href = u"/sign_up?plan=%s" % index,
+            href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),
           ),
           class_ = u"sign_up_button_area",
         ) or None,

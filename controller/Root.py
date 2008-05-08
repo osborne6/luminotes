@@ -2,7 +2,7 @@ import cherrypy
 
 from Expose import expose
 from Expire import strongly_expire
-from Validate import validate, Valid_int, Valid_string
+from Validate import validate, Valid_int, Valid_string, Valid_bool
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Files import Files
@@ -60,9 +60,10 @@ class Root( object ):
     invite_id = Valid_id( none_okay = True ),
     after_login = Valid_string( min = 0, max = 1000 ),
     plan = Valid_int( none_okay = True ),
+    yearly = Valid_bool( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, note_title, invite_id = None, after_login = None, plan = None, user_id = None ):
+  def default( self, note_title, invite_id = None, after_login = None, plan = None, yearly = False, user_id = None ):
     """
     Convenience method for accessing a note in the main notebook by name rather than by note id.
 
@@ -74,6 +75,8 @@ class Root( object ):
     @param after_login: URL to redirect to after login (optional, must start with "/")
     @type plan: int
     @param plan: rate plan index (optional, defaults to None)
+    @type yearly: bool
+    @param yearly: True for yearly plan, False for monthly (optional, defaults to False)
     @rtype: unicode
     @return: rendered HTML page
     """
@@ -88,7 +91,7 @@ class Root( object ):
       if after_login:
         return dict( redirect = u"%s/%s?after_login=%s" % ( https_url, note_title, after_login ) )
       if plan:
-        return dict( redirect = u"%s/%s?plan=%s" % ( https_url, note_title, plan ) )
+        return dict( redirect = u"%s/%s?plan=%s&yearly=%s" % ( https_url, note_title, plan, yearly ) )
       else:
         return dict( redirect = u"%s/%s" % ( https_url, note_title ) )
 

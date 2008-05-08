@@ -103,7 +103,20 @@ class Test_users( Test_controller ):
       rate_plan = u"2",
     ) )
 
-    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2"
+    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2&yearly=False"
+
+  def test_signup_with_rate_plan_and_yearly( self ):
+    result = self.http_post( "/users/signup", dict(
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      signup_button = u"sign up",
+      rate_plan = u"2",
+      yearly = True,
+    ) )
+
+    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2&yearly=True"
 
   def test_signup_without_email_address( self ):
     result = self.http_post( "/users/signup", dict(
@@ -273,7 +286,7 @@ class Test_users( Test_controller ):
     ) )
     session_id = result[ u"session_id" ]
 
-    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2"
+    assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2&yearly=False"
 
     user = self.database.last_saved_obj
     assert isinstance( user, User )
@@ -340,6 +353,19 @@ class Test_users( Test_controller ):
     plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
 
     assert form == plan[ u"button" ] % self.user.object_id
+
+  def test_subscribe_yearly( self ):
+    self.login()
+
+    result = self.http_post( "/users/subscribe", dict(
+      rate_plan = u"1",
+      yearly = True,
+    ), session_id = self.session_id )
+
+    form = result.get( u"form" )
+    plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
+
+    assert form == plan[ u"yearly_button" ] % self.user.object_id
 
   def test_subscribe_with_free_rate_plan( self ):
     self.login()

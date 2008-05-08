@@ -217,8 +217,9 @@ class Users( object ):
     signup_button = unicode,
     invite_id = Valid_id( none_okay = True ),
     rate_plan = Valid_int( none_okay = True ),
+    yearly = Valid_bool( none_okay = True ),
   )
-  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None, rate_plan = None ):
+  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None, rate_plan = None, yearly = False ):
     """
     Create a new User based on the given information. Start that user with their own Notebook and a
     "welcome to your wiki" Note. For convenience, login the newly created user as well.
@@ -238,6 +239,8 @@ class Users( object ):
     @type rate_plan: int
     @param rate_plan: index of rate plan to signup for (optional). if greater than zero, redirect
                       to PayPal subscribe page after signup
+    @type yearly: bool
+    @param yearly: True for a yearly rate plan, False for monthly (optional, defaults to False )
     @rtype: json dict
     @return: { 'redirect': url, 'authenticated': userdict }
     @raise Signup_error: passwords don't match or the username is unavailable
@@ -292,7 +295,7 @@ class Users( object ):
       redirect = u"/notebooks/%s" % invite.notebook_id
     # if there's a requested rate plan, then redirect to the PayPal subscribe page
     elif rate_plan and rate_plan > 0:
-      redirect = u"/users/subscribe?rate_plan=%s" % rate_plan
+      redirect = u"/users/subscribe?rate_plan=%s&yearly=%s" % ( rate_plan, yearly )
     # otherwise, just redirect to the newly created notebook
     else:
       redirect = u"/notebooks/%s" % notebook.object_id
@@ -306,14 +309,17 @@ class Users( object ):
   @grab_user_id
   @validate(
     rate_plan = Valid_int(),
+    yearly = Valid_bool( none_okay = True ),
     user_id = Valid_id(),
   )
-  def subscribe( self, rate_plan, user_id ):
+  def subscribe( self, rate_plan, yearly = False, user_id = None ):
     """
     Submit a subscription form to PayPal, allowing the user to subscribe to the given rate plan.
 
     @type rate_plan: int
     @param rate_plan: index of rate plan to subscribe to
+    @type yearly: bool
+    @param yearly: True for a yearly rate plan, False for monthly (optional, defaults to False )
     @type user_id: unicode
     @param user_id: id of current logged-in user
     @rtype: dict
@@ -324,7 +330,10 @@ class Users( object ):
       raise Signup_error( u"The rate plan is invalid." )
 
     plan = self.__rate_plans[ rate_plan ]
-    button = plan.get( u"button" )
+    if yearly:
+      button = plan.get( u"yearly_button" )
+    else:
+      button = plan.get( u"button" )
     if not button or not button.strip():
       raise Signup_error(
         u"Sorry, that rate plan is not configured for subscriptions. Please contact %s." % \
