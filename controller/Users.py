@@ -1208,3 +1208,46 @@ class Users( object ):
 
   def rate_plan( self, plan_index ):
     return self.__rate_plans[ plan_index ]
+
+  @expose( view = Json )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    email_address = ( Valid_string( min = 0, max = 60 ) ),
+    settings_button = unicode,
+    user_id = Valid_id( none_okay = True ),
+  )
+  def update_settings( self, email_address, settings_button, user_id ):
+    """
+    Update the settings for a particular user.
+
+    @type email_address: unicode
+    @param email_address: new email address
+    @type settings_button: unicode
+    @param settings_button: ignored
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { "email_address": new_email_address }
+    @raise Validation_error: one of the arguments is invalid
+    @raise Access_error: the given user id is unknown
+    """
+    if len( email_address ) > 0:
+      try:
+        email_address = valid_email_address( email_address )
+      except ValueError:
+        raise Validation_error( "email_address", email_address, valid_email_address )
+    else:
+      email_address = None
+
+    user = self.__database.load( User, user_id )
+    if not user:
+      raise Access_error()
+
+    if email_address != user.email_address:
+      user.email_address = email_address
+      self.__database.save( user )
+
+    return dict(
+      email_address = email_address,
+    )

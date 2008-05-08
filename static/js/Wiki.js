@@ -17,6 +17,7 @@ function Wiki( invoker ) {
   this.invite_id = getElement( "invite_id" ).value;
   this.after_login = getElement( "after_login" ).value;
   this.signup_plan = getElement( "signup_plan" ).value;
+  this.email_address = getElement( "email_address" ).value || "";
   this.font_size = null;
 
   var total_notes_count_node = getElement( "total_notes_count" );
@@ -361,6 +362,14 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     } );
   }
 
+  var settings_link = getElement( "settings_link" );
+  if ( settings_link ) {
+    connect( settings_link, "onclick", function ( event ) {
+      self.load_editor( "account settings", "null", null, null, null, getElement( "notes_top" ) );
+      event.stop();
+    } );
+  }
+
   var declutter_link = getElement( "declutter_link" );
   if ( declutter_link ) {
     connect( declutter_link, "onclick", function ( event ) {
@@ -468,6 +477,16 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       this.share_notebook();
       return;
     }
+    if ( note_title == "account settings" ) {
+      var editor = this.open_editors[ note_title ];
+      if ( editor ) {
+        editor.highlight();
+        return;
+      }
+
+      this.display_settings();
+      return;
+    }
 
     // but if the note corresponding to the link's title is already open, highlight it and bail
     if ( !revision ) {
@@ -512,7 +531,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   if ( link && link.target )
     link.removeAttribute( "target" );
 
-  if ( note_title == "search results" || note_title == "share this notebook" ) {
+  if ( note_title == "search results" || note_title == "share this notebook" || note_title == "account settings" ) {
     link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
       [ "title", "note_id" ],
       [ note_title, "null" ]
@@ -520,8 +539,10 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
     if ( callback ) {
       if ( note_title == "search results" )
         callback( "current search results" );
-      else
+      else if ( note_title == "share this notebook" )
         callback( "share this notebook with others" );
+      else
+        callback( "account settings" );
     }
     return;
   }
@@ -694,6 +715,11 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   connect( editor, "load_editor", this, "load_editor" );
   connect( editor, "hide_clicked", function ( event ) { self.hide_editor( event, editor ) } );
   connect( editor, "invites_updated", function ( invites ) { self.invites = invites; self.share_notebook(); } );
+  connect( editor, "settings_updated", function ( result ) {
+    self.email_address = result.email_address || "";
+    self.display_message( "Your account settings have been updated." );
+  } );
+
   connect( editor, "submit_form", function ( url, form, callback ) {
     var args = {}
     if ( url == "/users/signup" ) {
@@ -1556,6 +1582,41 @@ Wiki.prototype.display_invites = function ( invite_area ) {
   replaceChildNodes( invite_area, div );
 }
 
+Wiki.prototype.display_settings = function () {
+  this.clear_pulldowns();
+
+  var settings_frame = getElement( "note_settings" );
+  if ( settings_frame ) {
+    settings_frame.editor.highlight();
+    return;
+  }
+
+  var div = createDOM( "div", {}, 
+    createDOM( "form", { "id": "settings_form" },
+      createDOM( "p", {},
+        createDOM( "b", {}, "email address" ),
+        createDOM( "br", {} ),
+        createDOM( "input",
+          { "type": "text", "name": "email_address", "id": "email_address", "class": "text_field",
+            "size": "30", "maxlength": "60", "value": this.email_address || "" }
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "input",
+          { "type": "submit", "name": "settings_button", "id": "settings_button", "class": "button", "value": "save settings" }
+        )
+      ),
+      createDOM( "p", {},
+        "Your email address will ",
+        createDOM( "a", { "href": "/privacy", "target": "_new" }, "never be shared" ),
+        ". It will only be used for password resets, contacting you about account problems, and the from address in any invite emails you send."
+      )
+    )
+  );
+
+  this.create_editor( "settings", "<h3>account settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+}
+
 Wiki.prototype.declutter_clicked = function () {
   var header = getElement( "header" );
   if ( header )
@@ -2266,6 +2327,12 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
     if ( title == "share this notebook" ) {
       this.title_field.value = title;
       this.display_summary( title, "share this notebook with others" );
+      return;
+    }
+
+    if ( title == "account settings" ) {
+      this.title_field.value = title;
+      this.display_summary( title, "account settings" );
       return;
     }
 

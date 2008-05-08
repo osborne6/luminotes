@@ -213,6 +213,17 @@ Editor.prototype.finish_init = function () {
         connect_button( revoke_button, invite_id );
       }
     }
+
+    var settings_button = getElement( "settings_button" );
+    if ( settings_button ) {
+      var settings_form = getElement( "settings_form" );
+      connect( settings_button, "onclick", function ( event ) {
+        signal( self, "submit_form", "/users/update_settings", settings_form, function ( result ) {
+          signal( self, "settings_updated", result );
+        } );
+        event.stop();
+      } );
+    }
   } );
 
   // browsers such as Firefox, but not Opera

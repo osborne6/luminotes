@@ -27,6 +27,22 @@ class Test_user( object ):
   def test_check_incorrect_password( self ):
     assert self.user.check_password( u"wrong" ) == False
 
+  def test_set_email_address( self ):
+    previous_revision = self.user.revision
+    email_address = u"alice@example.com"
+    self.user.email_address = email_address
+    
+    assert self.user.email_address == email_address
+    assert self.user.revision > previous_revision
+
+  def test_set_none_email_address( self ):
+    previous_revision = self.user.revision
+    email_address = None
+    self.user.email_address = email_address
+    
+    assert self.user.email_address == email_address
+    assert self.user.revision > previous_revision
+
   def test_set_password( self ):
     previous_revision = self.user.revision
     new_password = u"newpass"

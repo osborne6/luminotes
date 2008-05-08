@@ -141,6 +141,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"invite_id", id = u"invite_id", value = invite_id ),
       Input( type = u"hidden", name = u"after_login", id = u"after_login", value = after_login ),
       Input( type = u"hidden", name = u"signup_plan", id = u"signup_plan", value = signup_plan ),
+      Input( type = u"hidden", name = u"email_address", id = u"email_address", value = user.email_address ),
       Div(
         id = u"status_area",
       ),

@@ -34,6 +34,15 @@ class Header( Div ):
           ) or None,
           user.username and Span(
             A(
+              u"settings",
+              href = u"#",
+              title = u"Update your account settings.",
+              id = u"settings_link",
+            ),
+            " | ",
+          ) or None,
+          user.username and Span(
+            A(
               u"upgrade",
               href = u"/pricing",
               title = u"Upgrade your Luminotes account.",

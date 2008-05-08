@@ -3630,6 +3630,79 @@ class Test_users( Test_controller ):
     assert rate_plan
     assert rate_plan == self.settings[ u"global" ][ u"luminotes.rate_plans" ][ plan_index ]
 
+  def test_update_settings( self ):
+    self.login()
+    previous_revision = self.user.revision
+
+    result = self.http_post( "/users/update_settings", dict(
+      email_address = self.new_email_address,
+      settings_button = u"save settings",
+    ), session_id = self.session_id )
+
+    assert result[ u"email_address" ] == self.new_email_address
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.email_address == self.new_email_address
+    assert user.revision > previous_revision
+
+  def test_update_settings_without_login( self ):
+    original_revision = self.user.revision
+
+    result = self.http_post( "/users/update_settings", dict(
+      email_address = self.new_email_address,
+      settings_button = u"save settings",
+    ) )
+
+    assert u"access" in result[ u"error" ]
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.email_address == self.email_address
+    assert user.revision == original_revision
+
+  def test_update_settings_with_same_email_address( self ):
+    self.login()
+    original_revision = self.user.revision
+
+    result = self.http_post( "/users/update_settings", dict(
+      email_address = self.email_address,
+      settings_button = u"save settings",
+    ), session_id = self.session_id )
+
+    assert result[ u"email_address" ] == self.email_address
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.email_address == self.email_address
+    assert user.revision == original_revision
+
+  def test_update_settings_with_invalid_email_address( self ):
+    original_revision = self.user.revision
+
+    result = self.http_post( "/users/update_settings", dict(
+      email_address = u"foo@bar@com",
+      settings_button = u"save settings",
+    ) )
+
+    assert u"invalid" in result[ u"error" ]
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.email_address == self.email_address
+    assert user.revision == original_revision
+
+  def test_update_settings_with_blank_email_address( self ):
+    self.login()
+    previous_revision = self.user.revision
+
+    result = self.http_post( "/users/update_settings", dict(
+      email_address = u"",
+      settings_button = u"save settings",
+    ), session_id = self.session_id )
+
+    assert result[ u"email_address" ] == None
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.email_address == None
+    assert user.revision > previous_revision
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
