@@ -813,7 +813,8 @@ class Users( object ):
 
     # except for viewer-only invites, this feature requires a rate plan above basic
     user = self.__database.load( User, user_id )
-    if user is None or user.username is None or ( user.rate_plan == 0 and access != u"viewer" ):
+    plan = self.__rate_plans[ user.rate_plan ]
+    if user is None or user.username is None or ( plan[ u"notebook_collaboration" ] != True and access != u"viewer" ):
       raise Access_error()
 
     if access == u"collaborator":

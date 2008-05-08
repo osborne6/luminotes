@@ -403,7 +403,7 @@ class Test_controller( object ):
           {
             u"name": u"super",
             u"storage_quota_bytes": 1337 * 10,
-            u"notebook_collaboration": True,
+            u"notebook_collaboration": False,
             u"fee": 1.99,
             u"yearly_fee": 19.90,
             u"button": u"[subscribe here user %s!] button",
