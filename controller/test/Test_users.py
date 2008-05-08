@@ -2501,6 +2501,25 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+  def test_paypal_notify_payment_yearly( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"payment_gross" ] = u"90.00"
+    data[ u"mc_gross" ] = u"90.00"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    # being notified of a mere payment should not change the user's rate plan
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
   def test_paypal_notify_payment_invalid( self ):
     data = dict( self.PAYMENT_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -2543,6 +2562,14 @@ class Test_users( Test_controller ):
     result = self.http_post( "/users/paypal_notify", data );
 
     assert result.get( u"error" )
+
+  def test_paypal_notify_payment_missing_item_number( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
 
   def test_paypal_notify_payment_incorrect_gross( self ):
     data = dict( self.PAYMENT_DATA )
@@ -2785,6 +2812,25 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+  def test_paypal_notify_signup_yearly( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"amount3" ] = u"90.00"
+    data[ u"mc_amount3" ] = u"90.00"
+    data[ u"period3" ] = u"12 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
   def test_paypal_notify_signup_invalid( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -2888,6 +2934,26 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+  def test_paypal_notify_signup_yearly_period3_with_monthly_amount( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"period3" ] = u"12 M"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_signup_yearly_amount_with_monthly_period3( self ):
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount3" ] = u"19.90"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
   def test_paypal_notify_signup_missing_custom( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     result = self.http_post( "/users/paypal_notify", data );
@@ -2939,6 +3005,29 @@ class Test_users( Test_controller ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_modify"
     data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_paypal_notify_modify_yearly( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"amount3" ] = u"90.00"
+    data[ u"mc_amount3" ] = u"90.00"
+    data[ u"period3" ] = u"12 M"
     result = self.http_post( "/users/paypal_notify", data );
 
     assert len( result ) == 1
@@ -3166,6 +3255,29 @@ class Test_users( Test_controller ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
     data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_cancel_yearly( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    data[ u"amount3" ] = u"90.00"
+    data[ u"mc_amount3" ] = u"90.00"
+    data[ u"period3" ] = u"12 M"
     result = self.http_post( "/users/paypal_notify", data );
 
     assert len( result ) == 1

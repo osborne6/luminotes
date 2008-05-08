@@ -30,13 +30,18 @@ settings = {
         "storage_quota_bytes": 30 * MEGABYTE,
         "notebook_collaboration": False,
         "fee": None,
+        "yearly_fee": None,
       },
       {
         "name": "basic",
         "storage_quota_bytes": 250 * MEGABYTE,
         "notebook_collaboration": True,
         "fee": 5,
+        "yearly_fee": 50,
         "button":
+          """
+          """,
+        "yearly_button":
           """
           """,
       },
@@ -45,7 +50,11 @@ settings = {
         "storage_quota_bytes": 500 * MEGABYTE,
         "notebook_collaboration": True,
         "fee": 9,
+        "yearly_fee": 90,
         "button":
+          """
+          """,
+        "yearly_button":
           """
           """,
       },

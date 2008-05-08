@@ -1082,6 +1082,9 @@ class Users( object ):
 
     # verify item_number
     plan_index = params.get( u"item_number" )
+    if plan_index == None:
+      return dict() # ignore this transaction if there's no item number
+
     try:
       plan_index = int( plan_index )
     except ValueError:
@@ -1092,13 +1095,14 @@ class Users( object ):
     # verify mc_gross
     rate_plan = self.__rate_plans[ plan_index ]
     fee = u"%0.2f" % rate_plan[ u"fee" ]
+    yearly_fee = u"%0.2f" % rate_plan[ u"yearly_fee" ]
     mc_gross = params.get( u"mc_gross" )
-    if mc_gross and mc_gross != fee:
+    if mc_gross and mc_gross not in ( fee, yearly_fee ):
       raise Payment_error( u"invalid mc_gross", params )
 
     # verify mc_amount3
     mc_amount3 = params.get( u"mc_amount3" )
-    if mc_amount3 and mc_amount3 != fee:
+    if mc_amount3 and mc_amount3 not in ( fee, yearly_fee ):
       raise Payment_error( u"invalid mc_amount3", params )
 
     # verify item_name
@@ -1112,8 +1116,12 @@ class Users( object ):
 
     # verify period3
     period3 = params.get( u"period3" )
-    if period3 and period3 != u"1 M": # one-month subscription
-      raise Payment_error( u"invalid period3", params )
+    if mc_amount3 == yearly_fee:
+      if period3 and period3 != u"12 M": # one-year subscription
+        raise Payment_error( u"invalid period3", params )
+    else:
+      if period3 and period3 != u"1 M": # one-month subscription
+        raise Payment_error( u"invalid period3", params )
 
     params[ u"cmd" ] = u"_notify-validate"
     encoded_params = urllib.urlencode( params )

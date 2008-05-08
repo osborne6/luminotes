@@ -137,7 +137,12 @@ class Upgrade_page( Product_page ):
 
           P(
             Table(
-              self.fee_row( rate_plans, user, include_blank = False ),
+              Tr( Td(
+                u"Get two months free with a yearly subscription!",
+                class_ = u"upgrade_subtitle",
+                colspan = u"3",
+              ), colspan = u"3" ),
+              self.fee_row( rate_plans, user, include_blank = False, yearly = True ),
               Tr(
                 [ Td(
                   plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
@@ -164,20 +169,26 @@ class Upgrade_page( Product_page ):
       ),
     )
 
-  def fee_row( self, rate_plans, user, include_blank = True ):
+  def fee_row( self, rate_plans, user, include_blank = True, yearly = False ):
     return Tr(
       include_blank and Th( u"&nbsp;" ) or None,
       [ Th(
         plan[ u"name" ].capitalize(),
         plan[ u"fee" ] and Div(
-          Span(
+          yearly and Span(
+            u"$%s" % plan[ u"yearly_fee" ],
+            Span( u"/year", class_ = u"month_text" ),
+            class_ = u"price_text",
+            separator = u"",
+          ) or Span(
             u"$%s" % plan[ u"fee" ],
             Span( u"/month", class_ = u"month_text" ),
             class_ = u"price_text",
             separator = u"",
           ),
           user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
-               and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None,
+               and yearly and ( plan.get( u"yearly_button" ).strip() and plan.get( u"yearly_button" ) % user.object_id or None ) or \
+                              ( plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None ),
         ) or None,
         ( not user or user.username in ( u"anonymous", None ) ) and Div(
           A(
