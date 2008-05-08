@@ -1611,6 +1611,12 @@ Wiki.prototype.display_settings = function () {
         createDOM( "a", { "href": "/privacy", "target": "_new" }, "never be shared" ),
         ". It will only be used for password resets, contacting you about account problems, and the from address in any invite emails you send."
       )
+    ),
+    createDOM( "p", {},
+      createDOM(
+        "a", { "href": "/pricing", "target": "_top" },
+        "Upgrade, downgrade, or cancel your account."
+      )
     )
   );
 

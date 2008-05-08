@@ -32,7 +32,7 @@ class Header( Div ):
             ),
             u" | ",
           ) or None,
-          user.username and Span(
+          user.username and note_title == u"wiki" and Span(
             A(
               u"settings",
               href = u"#",
