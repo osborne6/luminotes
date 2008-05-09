@@ -1,3 +1,8 @@
+1.3.23: May 9, 2008
+ * Fixed tools/release.sh to include an empty session directory in the
+   produced tarball. Without a session directory, installing and running 
+   Luminotes server would yield session deadlock errors.
+
 1.3.22: May 8, 2008
  * In send_invites(), no longer implicitly assuming rate plan 0 has
    notebook_collaboration set to False.
@@ -43,7 +48,7 @@
  * Fixed a bug where the Valid_id() validator would raise a TypeError when
    given a None value. Now raising a ValueError instead.
  * Fixed a bug where saving a note unsuccessfully could cause the note's
-   title show up in the recent updates list.
+   title to show up in the recent updates list.
  * If there is an error saving a note, then even if "hide" was clicked, the
    note is not hidden. Instead, the note stays open so that the user can try
    again.

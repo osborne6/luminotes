@@ -4,5 +4,5 @@
 
 cd ..
 rm -f luminotes.tar.gz
-tar cvfz luminotes.tar.gz --exclude=session --exclude="*.log" --exclude="*.pyc" --exclude=".*" luminotes
+tar cvfz luminotes.tar.gz --exclude="session/*" --exclude="*.log" --exclude="*.pyc" --exclude=".*" luminotes
 cd -
