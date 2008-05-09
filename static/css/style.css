@@ -248,6 +248,12 @@ img {
   background-image: url(/static/images/tree_arrow_down_hover.png);
 }
 
+#note_icon_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/note_icon.png);
+}
+
 #note_tree_area {
   position: fixed;
   width: 17em;
