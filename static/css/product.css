@@ -1,55 +1,61 @@
 #new_note_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/new_note_button.png);
+  background-image: url(/static/images/toolbar/new_note_button.png);
 }
 
 #link_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/link_button.png);
+  background-image: url(/static/images/toolbar/link_button.png);
 }
 
 #attach_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/attach_button.png);
+  background-image: url(/static/images/toolbar/attach_button.png);
 }
 
 #bold_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/bold_button.png);
+  background-image: url(/static/images/toolbar/bold_button.png);
 }
 
 #italic_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/italic_button.png);
+  background-image: url(/static/images/toolbar/italic_button.png);
 }
 
 #underline_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/underline_button.png);
+  background-image: url(/static/images/toolbar/underline_button.png);
 }
 
 #title_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/title_button.png);
+  background-image: url(/static/images/toolbar/title_button.png);
 }
 
 #bullet_list_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/bullet_list_button.png);
+  background-image: url(/static/images/toolbar/bullet_list_button.png);
 }
 
 #numbered_list_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/numbered_list_button.png);
+  background-image: url(/static/images/toolbar/numbered_list_button.png);
+}
+
+#note_icon_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/note_icon.png);
 }
 
 .hook_area {

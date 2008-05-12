@@ -20,6 +20,8 @@ function Wiki( invoker ) {
   this.signup_plan = getElement( "signup_plan" ).value;
   this.email_address = getElement( "email_address" ).value || "";
   this.font_size = null;
+  this.small_toolbar = false;
+  this.large_toolbar_bottom = 0;
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -71,6 +73,7 @@ function Wiki( invoker ) {
   connect( "html", "onclick", this, "background_clicked" );
   connect( "html", "onkeydown", this, "key_pressed" );
   connect( window, "onresize", this, "resize_editors" );
+  connect( window, "onresize", this, "resize_toolbar" );
   connect( document, "onmouseover", this, "detect_font_resize" );
 
   var blank_note_stub = getElement( "blank_note_stub" );
@@ -136,6 +139,8 @@ function Wiki( invoker ) {
       self.move_current_notebook_down( event );
     } );
   }
+
+  this.resize_toolbar();
 }
 
 Wiki.prototype.update_next_id = function ( result ) {
@@ -300,7 +305,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
 
-    this.make_image_button( "newNote", "new_note", true );
+    this.make_image_button( "newNote", "new_note" );
     this.make_image_button( "createLink", "link" );
     this.make_image_button( "attachFile", "attach" );
     this.make_image_button( "bold" );
@@ -753,6 +758,27 @@ Wiki.prototype.resize_editors = function () {
   }
 }
 
+Wiki.prototype.resize_toolbar = function () {
+  var last_toolbar_button = getElement( "insertOrderedList" );
+  var current_toolbar_bottom = getElementPosition( last_toolbar_button ).y + getElementDimensions( last_toolbar_button ).h;
+  var viewport_size = getViewportDimensions();
+  var VIEWPORT_WIDTH_THRESHOLD = 1000;
+
+  // if the toolbar is large and the bottom of the toolbar is outside of the viewport or the
+  // viewport is too narrow, then make the toolbar smaller
+  if ( !this.small_toolbar && ( current_toolbar_bottom > viewport_size.h || viewport_size.w < VIEWPORT_WIDTH_THRESHOLD ) ) {
+    this.large_toolbar_bottom = current_toolbar_bottom;
+    this.small_toolbar = true;
+    this.update_toolbar();
+  // otherwise, if the toolbar is small and making the toolbar large would still fit within the
+  // viewport and the viewport is wide, then make the toolbar large again
+  } else if ( this.small_toolbar && this.large_toolbar_bottom <= viewport_size.h && viewport_size.w >= VIEWPORT_WIDTH_THRESHOLD ) {
+    if ( !this.small_toolbar ) return; // it's already big, so bail
+    this.small_toolbar = false;
+    this.update_toolbar();
+  }
+}
+
 Wiki.prototype.detect_font_resize = function () {
   if ( !window.getComputedStyle ) return;
 
@@ -842,6 +868,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   }
 
   this.focused_editor = editor;
+  this.update_toolbar();
 }
 
 Wiki.prototype.key_pressed = function ( event ) {
@@ -904,82 +931,126 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   }
 }
 
-Wiki.prototype.make_image_button = function ( name, filename_prefix, handle_mouse_up_and_down ) {
+Wiki.prototype.get_toolbar_image_dir = function () {
+  var toolbar_image_dir = IMAGE_DIR + "toolbar/";
+  if ( this.small_toolbar )
+    toolbar_image_dir += "small/";
+
+  return toolbar_image_dir;
+}
+
+Wiki.prototype.resize_toolbar_button = function ( button ) {
+  var SMALL_BUTTON_SIZE = 20;
+  var LARGE_BUTTON_SIZE = 40;
+
+  var button_size = getElementDimensions( button );
+  
+  if ( this.small_toolbar ) {
+    if ( button_size.w == SMALL_BUTTON_SIZE ) return false;
+    setElementDimensions( button, { "w": SMALL_BUTTON_SIZE, "h": SMALL_BUTTON_SIZE } );
+  } else {
+    if ( button_size.w == LARGE_BUTTON_SIZE ) return false;
+    setElementDimensions( button, { "w": LARGE_BUTTON_SIZE, "h": LARGE_BUTTON_SIZE } );
+  }
+
+  return true;
+}
+
+Wiki.prototype.make_image_button = function ( name, filename_prefix ) {
   var button = getElement( name );
+  var toolbar_image_dir = this.get_toolbar_image_dir();
 
   if ( !filename_prefix )
     filename_prefix = name;
 
+  button.name = name;
   button.filename_prefix = filename_prefix;
 
+  this.resize_toolbar_button( button );
+  this.connect_image_button( button );
+}
+
+Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
+  var self = this;
+
   connect( button, "onmouseover", function ( event ) {
+    var toolbar_image_dir = self.get_toolbar_image_dir();
     if ( /_down/.test( button.src ) )
-      button.src = IMAGE_DIR + filename_prefix + "_button_down_hover.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
     else
-      button.src = IMAGE_DIR + filename_prefix + "_button_hover.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
   } );
 
   connect( button, "onmouseout", function ( event ) {
+    var toolbar_image_dir = self.get_toolbar_image_dir();
     if ( /_down/.test( button.src ) )
-      button.src = IMAGE_DIR + filename_prefix + "_button_down.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
     else
-      button.src = IMAGE_DIR + filename_prefix + "_button.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
   } );
 
-  if ( handle_mouse_up_and_down ) {
+  if ( button.name == "newNote" ) {
     connect( button, "onmousedown", function ( event ) {
+      var toolbar_image_dir = self.get_toolbar_image_dir();
       if ( /_hover/.test( button.src ) )
-        button.src = IMAGE_DIR + filename_prefix + "_button_down_hover.png";
+        button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
       else
-        button.src = IMAGE_DIR + filename_prefix + "_button_down.png";
+        button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
     } );
     connect( button, "onmouseup", function ( event ) {
+      var toolbar_image_dir = self.get_toolbar_image_dir();
       if ( /_hover/.test( button.src ) )
-        button.src = IMAGE_DIR + filename_prefix + "_button_hover.png";
+        button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
       else
-        button.src = IMAGE_DIR + filename_prefix + "_button.png";
+        button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
     } );
   }
 }
 
 Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
+  var toolbar_image_dir = this.get_toolbar_image_dir();
 
-  if ( /_down/.test( button.src ) )
+  if ( /_down/.test( button.src ) && !this.resize_toolbar_button( button ) )
     return;
 
   if ( /_hover/.test( button.src ) )
-    button.src = IMAGE_DIR + button.filename_prefix + "_button_down_hover.png";
+    button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
   else
-    button.src = IMAGE_DIR + button.filename_prefix + "_button_down.png";
+    button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
+
 }
 
 Wiki.prototype.up_image_button = function ( name ) {
   var button = getElement( name );
+  var toolbar_image_dir = this.get_toolbar_image_dir();
 
-  if ( !/_down/.test( button.src ) )
+  if ( !/_down/.test( button.src ) && !this.resize_toolbar_button( button ) )
     return;
 
   if ( /_hover/.test( button.src ) )
-    button.src = IMAGE_DIR + button.filename_prefix + "_button_hover.png";
+    button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
   else
-    button.src = IMAGE_DIR + button.filename_prefix + "_button.png";
+    button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
 }
 
 Wiki.prototype.toggle_image_button = function ( name ) {
   var button = getElement( name );
+  var toolbar_image_dir = this.get_toolbar_image_dir();
 
   if ( /_down/.test( button.src ) ) {
     if ( /_hover/.test( button.src ) )
-      button.src = IMAGE_DIR + button.filename_prefix + "_button_hover.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
     else
-      button.src = IMAGE_DIR + button.filename_prefix + "_button.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
+    this.resize_toolbar_button( button );
     return false;
   } else {
     if ( /_hover/.test( button.src ) )
-      button.src = IMAGE_DIR + button.filename_prefix + "_button_down_hover.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
     else
-      button.src = IMAGE_DIR + button.filename_prefix + "_button_down.png";
+      button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
+    this.resize_toolbar_button( button );
     return true;
   }
 }
@@ -1002,7 +1073,7 @@ Wiki.prototype.toggle_button = function ( event, button_id ) {
 }
 
 Wiki.prototype.update_button = function ( button_id, state_name, node_names ) {
-  if ( this.focused_editor.state_enabled( state_name, node_names ) )
+  if ( state_name && this.focused_editor.state_enabled( state_name, node_names ) )
     this.down_image_button( button_id );
   else
     this.up_image_button( button_id );
@@ -1013,6 +1084,7 @@ Wiki.prototype.update_toolbar = function() {
     return;
 
   var node_names = this.focused_editor.current_node_names();
+  this.update_button( "newNote" );
   this.update_button( "bold", "b", node_names );
   this.update_button( "italic", "i", node_names );
   this.update_button( "underline", "u", node_names );

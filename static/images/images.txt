@@ -1,9 +1,14 @@
-Button dimensions are 40x40 pixels.
+For the large toolbar, button dimensions are 40x40 pixels. Button fonts are
+Bitstream Vera Sans (regular, bold, and mono oblique). Most buttons are at 22
+pt. The link button is at 12 pt. The list buttons are at 10 pt with a -4 pixel
+line spacing. Down (pressed) buttons have their text offset two pixels down
+and two pixels to the right.
 
+For the small version of the toolbar, button dimensions are 20x20 pixels.
 Button fonts are Bitstream Vera Sans (regular, bold, and mono oblique). Most
-buttons are at 22 pt. The link button is at 12 pt. The list buttons are at 10
-pt with a -4 pixel line spacing. Down (pressed) buttons have their text offset
-two pixels down and two pixels to the right.
+buttons are at 14 pt. The link button is at 8 pt. The list buttons are at 6
+pt with a -3 pixel line spacing. Down (pressed) buttons have their text offset
+by one pixel down and one pixel right.
 
 To make the white glowing effect (which isn't present on any buttons
 currently), start with black text on a transparent background in the Gimp.
