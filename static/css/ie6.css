@@ -4,13 +4,13 @@
 
 #toolbar {
   position: absolute;
-  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 50 ) || 0 ) );
+  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 60 ) || 0 ) );
   text-align: right;
 }
 
 #note_tree_area {
   left: 0;
-  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 50 ) || 0 ) );
+  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 60 ) || 0 ) );
   position: absolute;
   top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 80 : document.body.scrollTop + 80 );
 }

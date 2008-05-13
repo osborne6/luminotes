@@ -412,7 +412,6 @@ Editor.prototype.mouse_clicked = function ( event ) {
   // in case the cursor has moved, update the state
   if ( this.edit_enabled )
     signal( this, "state_changed", this, link_clicked );
-
 }
 
 Editor.prototype.scrape_title = function () {

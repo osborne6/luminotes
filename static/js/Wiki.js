@@ -867,8 +867,12 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
     }
   }
 
-  this.focused_editor = editor;
-  this.update_toolbar();
+  if ( !this.focused_editor ) {
+    this.focused_editor = editor;
+    this.update_toolbar();
+  } else {
+    this.focused_editor = editor;
+  }
 }
 
 Wiki.prototype.key_pressed = function ( event ) {
@@ -1011,7 +1015,7 @@ Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
   var toolbar_image_dir = this.get_toolbar_image_dir();
 
-  if ( /_down/.test( button.src ) && !this.resize_toolbar_button( button ) )
+  if ( !this.resize_toolbar_button( button ) && /_down/.test( button.src ) )
     return;
 
   if ( /_hover/.test( button.src ) )
@@ -1025,7 +1029,7 @@ Wiki.prototype.up_image_button = function ( name ) {
   var button = getElement( name );
   var toolbar_image_dir = this.get_toolbar_image_dir();
 
-  if ( !/_down/.test( button.src ) && !this.resize_toolbar_button( button ) )
+  if ( !this.resize_toolbar_button( button ) && !/_down/.test( button.src ) )
     return;
 
   if ( /_hover/.test( button.src ) )
