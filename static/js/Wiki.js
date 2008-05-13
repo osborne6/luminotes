@@ -22,6 +22,7 @@ function Wiki( invoker ) {
   this.font_size = null;
   this.small_toolbar = false;
   this.large_toolbar_bottom = 0;
+  this.autosaver = Autosaver( this );
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -797,6 +798,8 @@ Wiki.prototype.editor_state_changed = function ( editor, link_clicked ) {
 
   if ( !link_clicked )
     this.display_link_pulldown( editor );
+
+  signal( this, "note_state_changed", editor );
 }
 
 Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) {
@@ -3255,4 +3258,33 @@ Recent_notes.prototype.update_link = function ( editor ) {
   removeElement( item );
   replaceChildNodes( link, editor.title || "untitled note" );
   insertSiblingNodesAfter( "recent_notes_top", item );
+}
+
+function Autosaver( wiki ) {
+  this.wiki = wiki;
+  this.last_state_change_time = null;
+  this.timer = null;
+  var INTERVAL_MILLISECONDS = 10000; // 10 seconds
+
+  function save_if_idle() {
+    // if the note state has changed in the last few seconds (e.g. due to typing), don't save,
+    // but do reschedule a new timer
+    if ( this.last_state_change_time + INTERVAL_MILLISECONDS > ( new Date() ).getTime() ) {
+      if ( this.timer ) clearTimeout( this.timer );
+      this.timer = setTimeout( save_if_idle, INTERVAL_MILLISECONDS );
+      return;
+    }
+
+    this.wiki.save_editor();
+  }
+
+  // whenever the focused editor's state changes, record the current time, cancel any current
+  // timer, and schedule a timer to save the editor in several seconds from now
+  var self = this;
+  connect( wiki, "note_state_changed", function ( editor ) {
+    self.last_state_change_time = ( new Date() ).getTime();
+
+    if ( self.timer ) clearTimeout( self.timer );
+    self.timer = setTimeout( save_if_idle, INTERVAL_MILLISECONDS );
+  } );
 }
