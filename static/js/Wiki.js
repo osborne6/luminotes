@@ -1085,17 +1085,21 @@ Wiki.prototype.toggle_button = function ( event, button_id ) {
 }
 
 Wiki.prototype.update_button = function ( button_id, state_name, node_names ) {
-  if ( state_name && this.focused_editor.state_enabled( state_name, node_names ) )
+  if ( state_name && node_names && this.focused_editor.state_enabled( state_name, node_names ) )
     this.down_image_button( button_id );
   else
     this.up_image_button( button_id );
 }
 
 Wiki.prototype.update_toolbar = function() {
-  if ( !this.focused_editor )
-    return;
+  var node_names = null;
+  var link = null;
 
-  var node_names = this.focused_editor.current_node_names();
+  if ( this.focused_editor ) {
+    node_names = this.focused_editor.current_node_names();
+    link = this.focused_editor.find_link_at_cursor();
+  }
+
   this.update_button( "newNote" );
   this.update_button( "bold", "b", node_names );
   this.update_button( "italic", "i", node_names );
@@ -1105,7 +1109,6 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
 
-  var link = this.focused_editor.find_link_at_cursor();
   if ( link ) {
     // determine whether the link is a note link or a file link
     if ( link.target || !/\/files\//.test( link.href ) ) {
