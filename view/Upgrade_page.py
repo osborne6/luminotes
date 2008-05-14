@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li
+from Tags import Div, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script
 
 
 class Upgrade_page( Product_page ):
@@ -13,6 +13,8 @@ class Upgrade_page( Product_page ):
       login_url,
       logout_url,
       u"pricing", # note title
+
+      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ),
 
       Div(
         Div(
@@ -39,42 +41,109 @@ class Upgrade_page( Product_page ):
             Table(
               self.fee_row( rate_plans, user ),
               Tr(
-                Td( u"Included storage space", class_ = u"feature_name" ),
+                Td(
+                  A( u"Included storage space", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'storage_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
                 [ Td(
                   plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
                 ) for plan in rate_plans ],
               ),
               Tr(
-                Td( u"Unlimited wiki notebooks", class_ = u"feature_name" ),
+                Td(
+                  Ul(
+                    Li( u"More space for your wiki notes." ),
+                    Li( u"More space for your documents and files." ),
+                  ),
+                  colspan = u"4",
+                  id = u"storage_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"Unlimited wiki notebooks", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'notebooks_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                 ) for plan in rate_plans ],
               ),
               Tr(
-                Td( u"Friendly email support", class_ = u"feature_name" ),
+                Td(
+                  Ul(
+                    Li( u"Create a unique notebook for each subject." ),
+                    Li( u"Keep work and personal notebooks separate." ),
+                  ),
+                  colspan = u"4",
+                  id = u"notebooks_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"Friendly email support", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'support_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                 ) for plan in rate_plans ],
               ),
               Tr(
-                Td( u"Invite people to view your wiki", class_ = u"feature_name" ),
+                Td(
+                  Ul(
+                    Li( u"Fast email responses to your support questions. From a real live human." ),
+                    Li( u"No waiting on hold with a call center." ),
+                  ),
+                  colspan = u"4",
+                  id = u"support_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"Invite people to view your wiki", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'view_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                 ) for plan in rate_plans ],
               ),
               Tr(
-                Td( u"Invite people to edit your wiki", class_ = u"feature_name" ),
+                Td(
+                  Ul(
+                    Li( u"Invite specific people to read your wiki." ),
+                    Li( u"Invite as many people as you want." ),
+                    Li( u"Share only the notebooks you want to share. Keep the others private." ),
+                  ),
+                  colspan = u"4",
+                  id = u"view_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"Invite people to edit your wiki", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'edit_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
                 [ Td(
                   plan[ u"notebook_collaboration" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
                 ) for plan in rate_plans ],
               ),
               Tr(
-                Td( u"Wiki access control", class_ = u"feature_name" ),
-                [ Td(
-                  plan[ u"notebook_collaboration" ] and
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                ) for plan in rate_plans ],
+                Td(
+                  Ul(
+                    Li( u"Invite specific people to collaborate on your wiki." ),
+                    Li( u"Decide who can edit and who can only view." ),
+                    Li( u"Invite as many people as you want. They only need free Luminotes accounts." ),
+                    Li( u"Revoke collaboration access with a single click." ),
+                    Li( u"Share only the notebooks you want to share. Keep the others private." ),
+                  ),
+                  colspan = u"4",
+                  id = u"edit_description",
+                  class_ = u"feature_description undisplayed",
+                ),
               ),
               border = u"1",
               id = u"upgrade_table",
@@ -93,16 +162,6 @@ class Upgrade_page( Product_page ):
         Div(
           Div(
             Img(
-              src = u"/static/images/more_room_to_stretch_out.png",
-              width = u"280", height = u"29",
-              alt = u"More room to stretch out",
-            ),
-            Ul(
-              Li( u"More space for your wiki notes." ),
-              Li( u"More space for your documents and files." ),
-              class_ = u"upgrade_text",
-            ),
-            Img(
               src = u"/static/images/zero_hassle.png",
               width = u"122", height = u"29",
               alt = u"Zero hassle",
@@ -113,26 +172,7 @@ class Upgrade_page( Product_page ):
               Li( u"No lock-in: Download your entire wiki anytime." ),
               class_ = u"upgrade_text",
             ),
-            class_= u"upgrade_right_area",
-          ),
-
-          Div(
-            Img(
-              src = u"/static/images/more_collaboration.png",
-              width = u"204", height = u"29",
-              alt = u"More collaboration",
-            ),
-            P(
-              Ul(
-                Li( u"Invite specific people to collaborate on your wiki." ),
-                Li( u"Decide who can edit and who can only view." ),
-                Li( u"Invite as many people as you want. They only need free Luminotes accounts." ),
-                Li( u"Revoke access with a single click." ),
-                Li( u"Share only the notebooks you want to share. Keep the others private." ),
-                class_ = u"upgrade_text",
-              ),
-            ),
-            class_= u"upgrade_left_area",
+            class_= u"center_area",
           ),
 
           P(

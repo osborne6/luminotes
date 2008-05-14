@@ -283,14 +283,20 @@
   margin-bottom: 1em;
 }
 
+#upgrade_table tr {
+  border: 0px solid #999999;
+}
+
 #upgrade_table th {
   padding: 0.5em;
+  border: 1px solid #999999;
 }
 
 #upgrade_table td {
   text-align: center;
   background-color: #fafafa;
   padding: 0.5em;
+  border: 1px solid #999999;
 }
 
 #upgrade_table .plan_name {
@@ -299,13 +305,27 @@
   background-color: #d0e0f0;
 }
 
+#upgrade_table ul {
+  margin-top: 0;
+}
+
 #upgrade_table .feature_name {
   width: 36%;
   text-align: left;
   background-color: #fafafa;
+  border-bottom: 0px;
+}
+
+#upgrade_table .feature_description {
+  font-size: 82%;
+  text-align: left;
+  background-color: #fafafa;
+  padding: 0.25em;
+  border-width: 0px;
 }
 
 #upgrade_table_small {
+  margin-top: 1em;
   clear: both;
   border-collapse: collapse;
   border: 1px solid #999999;
@@ -345,19 +365,6 @@
 
 .sign_up_button_area {
   margin-top: 0.5em;
-}
-
-.upgrade_left_area {
-  width: 400px;
-  margin-top: 1.5em;
-  margin-bottom: 1em;
-}
-
-.upgrade_right_area {
-  float: right;
-  width: 400px;
-  margin-left: 20px;
-  margin-bottom: 1em;
 }
 
 .thumbnail_left {
