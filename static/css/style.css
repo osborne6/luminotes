@@ -92,6 +92,12 @@ img {
   background-image: url(/static/images/toolbar/underline_button_hover.png);
 }
 
+#strikethrough_button_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/toolbar/strikethrough_button_hover.png);
+}
+
 #title_button_hover_preload {
   height: 0;
   overflow: hidden;
@@ -146,6 +152,12 @@ img {
   background-image: url(/static/images/toolbar/underline_button_down_hover.png);
 }
 
+#strikethrough_button_down_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/toolbar/strikethrough_button_down_hover.png);
+}
+
 #title_button_down_hover_preload {
   height: 0;
   overflow: hidden;
@@ -198,6 +210,12 @@ img {
   height: 0;
   overflow: hidden;
   background-image: url(/static/images/toolbar/underline_button_down.png);
+}
+
+#strikethrough_button_down_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/toolbar/strikethrough_button_down.png);
 }
 
 #title_button_down_preload {

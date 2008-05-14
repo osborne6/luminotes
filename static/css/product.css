@@ -34,6 +34,12 @@
   background-image: url(/static/images/toolbar/underline_button.png);
 }
 
+#strikethrough_button_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/toolbar/strikethrough_button.png);
+}
+
 #title_button_preload {
   height: 0;
   overflow: hidden;

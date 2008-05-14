@@ -302,6 +302,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
+    connect( "strikethrough", "onclick", function ( event ) { self.toggle_button( event, "strikethrough" ); } );
     connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
@@ -312,6 +313,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     this.make_image_button( "bold" );
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
+    this.make_image_button( "strikethrough" );
     this.make_image_button( "title" );
     this.make_image_button( "insertUnorderedList", "bullet_list" );
     this.make_image_button( "insertOrderedList", "numbered_list" );
@@ -906,6 +908,9 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-u: underline
     } else if ( code == 85 ) {
       this.toggle_button( event, "underline" );
+    // ctrl-s: strikethrough
+    } else if ( code == 83 ) {
+      this.toggle_button( event, "strikethrough" );
     // ctrl-t: title
     } else if ( code == 84 ) {
       this.toggle_button( event, "title" );
@@ -1095,6 +1100,7 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "bold", "b", node_names );
   this.update_button( "italic", "i", node_names );
   this.update_button( "underline", "u", node_names );
+  this.update_button( "strikethrough", "strike", node_names );
   this.update_button( "title", "h3", node_names );
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
