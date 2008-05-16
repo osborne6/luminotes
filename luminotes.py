@@ -12,7 +12,6 @@ SOCKET_TIMEOUT_SECONDS = 60
 
 def main( args ):
   socket.setdefaulttimeout( SOCKET_TIMEOUT_SECONDS )
-  database = Database()
 
   cherrypy.config.update( Common.settings )
 
@@ -24,6 +23,11 @@ def main( args ):
     settings = Production.settings
 
   cherrypy.config.update( settings )
+
+  database = Database(
+    host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
+    ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+  )
 
   cherrypy.lowercase_api = True
   root = Root( database, cherrypy.config.configMap )

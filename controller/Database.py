@@ -21,7 +21,7 @@ class Database( object ):
   ID_BITS = 128 # number of bits within an id
   ID_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
-  def __init__( self, connection = None, cache = None ):
+  def __init__( self, connection = None, cache = None, host = None, ssl_mode = None ):
     """
     Create a new database and return it.
 
@@ -53,7 +53,11 @@ class Database( object ):
       self.__pool = PersistentConnectionPool(
         1,  # minimum connections
         50, # maximum connections
-        "dbname=luminotes user=luminotes password=%s" % os.getenv( "PGPASSWORD", "dev" ),
+        "host=%s sslmode=%s dbname=luminotes user=luminotes password=%s" % (
+          host or "localhost",
+          ssl_mode or "allow",
+          os.getenv( "PGPASSWORD", "dev" )
+        ),
       )
 
     self.__cache = cache

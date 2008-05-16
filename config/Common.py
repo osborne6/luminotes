@@ -22,6 +22,8 @@ settings = {
     "luminotes.https_url": "",
     "luminotes.http_proxy_ip": "127.0.0.1",
     "luminotes.https_proxy_ip": "127.0.0.2",
+    "luminotes.db_host": "localhost",
+    "luminotes.db_ssl_mode": "allow", # "disallow", "allow", "prefer", or "require"
     "luminotes.support_email": "",
     "luminotes.payment_email": "",
     "luminotes.rate_plans": [
