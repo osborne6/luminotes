@@ -709,7 +709,12 @@ Editor.prototype.summarize = function () {
 }
 
 Editor.prototype.dirty = function () {
-  if ( this.document.body.innerHTML == this.initial_text )
+  // the replace() calls here cause the comparison to ignore difference between, for instance,
+  // "<br>" and "<br />"
+  var original_html = this.initial_text.replace( /\s*\/>/g, ">" );
+  var current_html = this.document.body.innerHTML.replace( /\s*\/>/g, ">" );
+
+  if ( current_html == original_html )
     return false;
 
   return true;
