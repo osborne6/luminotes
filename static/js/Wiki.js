@@ -2255,9 +2255,8 @@ function calculate_position( anchor, relative_to ) {
       position.y += relative_pos.y;
 
       // Work around an IE "feature" in which an element within an iframe changes its absolute
-      // position based on how far the page is scrolled. The if is necessary to prevent this
-      // workaround from screwing positions up in sane browsers like Firefox.
-      if ( getStyle( "content", "position" ) == "absolute" )
+      // position based on how far the page is scrolled.
+      if ( /MSIE/.test( navigator.userAgent ) )
         position.y -= getElement( "html" ).scrollTop;
 
     }
