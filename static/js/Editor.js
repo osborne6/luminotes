@@ -134,6 +134,10 @@ Editor.prototype.finish_init = function () {
 
   this.insert_html( this.initial_text );
 
+  // since the browser may subtly tweak the html when it's inserted, save off the browser's version
+  // of the html here. this yields more accurate comparisons within the dirty() method
+  this.initial_text = this.document.body.innerHTML;
+
   var self = this; // necessary so that the member functions of this editor object are used
   if ( this.edit_enabled ) {
     connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
@@ -708,11 +712,17 @@ Editor.prototype.summarize = function () {
   return summary;
 }
 
+// return the given html in a normal form. this makes html string comparisons more accurate
+normalize_html = function ( html ) {
+  // remove any "pulldown" attributes
+  html = html.replace( /\s+pulldown="[^"]"/g, "" );
+
+  return html;
+}
+
 Editor.prototype.dirty = function () {
-  // the replace() calls here cause the comparison to ignore difference between, for instance,
-  // "<br>" and "<br />"
-  var original_html = this.initial_text.replace( /\s*\/>/g, ">" );
-  var current_html = this.document.body.innerHTML.replace( /\s*\/>/g, ">" );
+  var original_html = normalize_html( this.initial_text )
+  var current_html = normalize_html( this.document.body.innerHTML )
 
   if ( current_html == original_html )
     return false;
