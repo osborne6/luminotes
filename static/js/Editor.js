@@ -718,6 +718,8 @@ Editor.prototype.summarize = function () {
 
 // return the given html in a normal form. this makes html string comparisons more accurate
 normalize_html = function ( html ) {
+  if ( !html ) return html;
+
   // remove any "pulldown" attributes, which get added in IE whenever link.pulldown is set
   var normal_html = html.replace( /\s+pulldown="null"/g, "" );
 
