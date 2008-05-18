@@ -1,7 +1,8 @@
-function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after ) {
+function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty ) {
   this.id = id;
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
+  this.start_dirty = start_dirty;
   this.deleted_from_id = deleted_from_id || null;
   this.revision = revision;
   this.user_revisions = new Array(); // cache for this note's list of revisions, loaded from the server on-demand
@@ -136,7 +137,10 @@ Editor.prototype.finish_init = function () {
 
   // since the browser may subtly tweak the html when it's inserted, save off the browser's version
   // of the html here. this yields more accurate comparisons within the dirty() method
-  this.initial_text = this.document.body.innerHTML;
+  if ( this.start_dirty )
+    this.initial_text = "";
+  else
+    this.initial_text = this.document.body.innerHTML;
 
   var self = this; // necessary so that the member functions of this editor object are used
   if ( this.edit_enabled ) {
@@ -714,10 +718,16 @@ Editor.prototype.summarize = function () {
 
 // return the given html in a normal form. this makes html string comparisons more accurate
 normalize_html = function ( html ) {
-  // remove any "pulldown" attributes
-  html = html.replace( /\s+pulldown="[^"]"/g, "" );
+  // remove any "pulldown" attributes, which get added in IE whenever link.pulldown is set
+  var normal_html = html.replace( /\s+pulldown="null"/g, "" );
 
-  return html;
+  // convert absolute URLs to the server into relative URLs. accomplish this by removing, for
+  // instance, "https://luminotes.com" from any URLs. this is necessary becuase IE insists on
+  // converting relative link URLs to absolute URLs
+  var base_url = window.location.protocol + "//" + window.location.host;
+  normal_html = normal_html.replace( '="' + base_url + '/', '="/' );
+
+  return normal_html;
 }
 
 Editor.prototype.dirty = function () {

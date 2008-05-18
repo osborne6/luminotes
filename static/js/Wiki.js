@@ -685,9 +685,12 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
 
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after ) {
   var self = this;
+  var dirty = false;
+
   if ( isUndefinedOrNull( id ) ) {
     if ( this.notebook.read_write ) {
       id = this.next_id;
+      dirty = true;
       this.invoker.invoke( "/next_id", "POST", null,
         function( result ) { self.update_next_id( result ); }
       );
@@ -708,7 +711,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, this.notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after );
+  var editor = new Editor( id, this.notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty );
 
   if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
