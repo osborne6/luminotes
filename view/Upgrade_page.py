@@ -5,6 +5,8 @@ from Tags import Div, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Scr
 class Upgrade_page( Product_page ):
   def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, rate_plans, unsubscribe_button ):
     MEGABYTE = 1024 * 1024
+    rate_plans = list( rate_plans )
+    rate_plans.reverse() # show rate plans highest to lowest
 
     Product_page.__init__(
       self,
@@ -210,6 +212,12 @@ class Upgrade_page( Product_page ):
     )
 
   def fee_row( self, rate_plans, user, include_blank = True, yearly = False ):
+    last_index = len( rate_plans ) - 1
+    plan_list = []
+
+    for ( index, plan ) in enumerate( rate_plans ):
+      plan_list.append( ( last_index - index, plan ) )
+
     return Tr(
       include_blank and Th( u"&nbsp;" ) or None,
       [ Th(
@@ -229,7 +237,7 @@ class Upgrade_page( Product_page ):
           user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
                and ( yearly and ( plan.get( u"yearly_button" ).strip() and plan.get( u"yearly_button" ) % user.object_id or None ) or \
                                 ( plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None ) ) or None,
-        ) or None,
+        ) or Div( Span( u"No fee", class_ = u"price_text" ) ),
         ( not user or user.username in ( u"anonymous", None ) ) and Div(
           A(
             Img( src = u"/static/images/sign_up_button.png", width = "76", height = "23" ),
@@ -238,5 +246,5 @@ class Upgrade_page( Product_page ):
           class_ = u"sign_up_button_area",
         ) or None,
         class_ = u"plan_name",
-      ) for ( index, plan ) in enumerate( rate_plans ) ],
+      ) for ( index, plan ) in plan_list ],
     )
