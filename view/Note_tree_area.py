@@ -28,7 +28,7 @@ class Note_tree_area( Div ):
           Tr( Td(
             ( notebook.name != u"trash" ) and u'To add a note here, click the "options" tab on a note, then "show on startup".' or None,
             id = "note_tree_instructions",
-            class_ = u"link_area_item" + ( ( len( root_notes ) > 0 ) and u" undisplayed" or u"" ),
+            class_ = ( ( len( root_notes ) > 0 ) and u"undisplayed" or u"" ),
           ) ) or None,
           tree_id = "note_tree_root_table",
         ),
