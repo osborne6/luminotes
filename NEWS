@@ -1,3 +1,7 @@
+1.3.33: May 19, 2008
+ * Searching now displays results from multiple notebooks and not just the
+   current notebook.
+
 1.3.32: May 19, 2008
  * Decreased some font sizes so more note links don't wrap as much.
 
