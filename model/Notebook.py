@@ -166,32 +166,38 @@ class Notebook( Persistent ):
     """
     return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and title = %s;" % ( quote( self.object_id ), quote( title ) )
 
-  def sql_search_notes( self, search_text ):
+  @staticmethod
+  def sql_search_notes( user_id, anonymous_user_id, first_notebook_id, search_text ):
     """
-    Return a SQL string to perform a full-text search for notes whose contents contain the given
-    search_text. This is a case-insensitive search.
+    Return a SQL string to perform a full-text search for notes within notebooks readable by the
+    given user whose contents contain the given search_text. This is a case-insensitive search.
 
     @type search_text: unicode
     @param search_text: text to search for within the notes
     """
     # strip out all search operators
-    search_text = self.SEARCH_OPERATORS.sub( u"", search_text ).strip()
+    search_text = Notebook.SEARCH_OPERATORS.sub( u"", search_text ).strip()
 
     # join all words with boolean "and" operator
-    search_text = u"&".join( self.WHITESPACE_PATTERN.split( search_text ) )
+    search_text = u"&".join( Notebook.WHITESPACE_PATTERN.split( search_text ) )
 
     return \
       """
       select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
              headline( drop_html_tags( contents ), query ) as summary from (
         select
-         id, revision, title, contents, notebook_id, startup, deleted_from_id, rank_cd( search, query ) as rank, user_id, null, query
+          note_current.id, note_current.revision, note_current.title, note_current.contents,
+          note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
+          rank_cd( search, query ) as rank, note_current.user_id, null, query
         from
-          note_current, to_tsquery( 'default', %s ) query
+          note_current, user_notebook, to_tsquery( 'default', %s ) query
         where
-          notebook_id = %s and query @@ search order by rank desc limit 20
+          note_current.notebook_id = user_notebook.notebook_id and ( user_notebook.user_id = %s or
+          ( user_notebook.user_id = %s and note_current.notebook_id = %s ) ) and
+          query @@ search order by note_current.notebook_id = %s desc, rank desc limit 20
       ) as sub;
-      """ % ( quote( search_text ), quote( self.object_id ) )
+      """ % ( quote( search_text ), quote( user_id ), quote( anonymous_user_id ),
+              quote( first_notebook_id ), quote( first_notebook_id ) )
 
   def sql_highest_note_rank( self ):
     """

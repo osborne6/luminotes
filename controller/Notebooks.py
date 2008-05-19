@@ -900,13 +900,13 @@ class Notebooks( object ):
   )
   def search( self, notebook_id, search_text, user_id ):
     """
-    Search the notes within a particular notebook for the given search text. Note that the search
-    is case-insensitive, and all HTML tags are ignored. Notes with title matches are generally
-    ranked higher than matches that are only in the note contents. The returned notes include
-    content summaries with the search terms highlighted.
+    Search the notes within all notebooks that the user has access to for the given search text.
+    Note that the search is case-insensitive, and all HTML tags are ignored. Notes with title
+    matches are generally ranked higher than matches that are only in the note contents. The
+    returned notes include content summaries with the search terms highlighted.
 
     @type notebook_id: unicode
-    @param notebook_id: id of notebook to search
+    @param notebook_id: id of notebook to show first in search results
     @type search_text: unicode
     @param search_text: search term
     @type user_id: unicode or NoneType
@@ -920,9 +920,8 @@ class Notebooks( object ):
     if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if not notebook:
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
+    if not anonymous:
       raise Access_error()
 
     MAX_SEARCH_TEXT_LENGTH = 256
@@ -932,7 +931,7 @@ class Notebooks( object ):
     if len( search_text ) == 0:
       raise Validation_error( u"search_text", None, unicode, message = u"is missing" )
 
-    notes = self.__database.select_many( Note, notebook.sql_search_notes( search_text ) )
+    notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, anonymous.object_id, notebook_id, search_text ) )
 
     return dict(
       notes = notes,

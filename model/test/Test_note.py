@@ -165,6 +165,7 @@ class Test_note( object ):
     assert datetime.now( tz = utc ) - d.get( "revision" ) < self.delta
     assert d.get( "contents" ) == self.contents
     assert d.get( "summary" ) == self.summary
+    assert d.get( "notebook_id" ) == self.notebook_id
     assert d.get( "title" ) == self.title
     assert d.get( "deleted_from_id" ) == None
     assert d.get( "user_id" ) == self.user_id

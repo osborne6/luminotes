@@ -40,6 +40,13 @@ del a {
   color: red;
 }
 
+hr {
+  border: 0;
+  color: #000000;
+  background-color: #000000;
+  height: 1px;
+}
+
 .button {
   border-style: outset;
   border-width: 0px;

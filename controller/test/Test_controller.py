@@ -276,20 +276,25 @@ class Test_controller( object ):
     Notebook.sql_load_note_by_title = lambda self, title: \
       lambda database: sql_load_note_by_title( self, title, database )
 
-    def sql_search_notes( self, search_text, database ):
-      notes = []
+    def sql_search_notes( user_id, anonymous_user_id, first_notebook_id, search_text, database ):
+      first_notes = []
+      other_notes = []
       search_text = search_text.lower()
 
       for ( object_id, obj_list ) in database.objects.items():
         obj = obj_list[ -1 ]
-        if isinstance( obj, Note ) and obj.notebook_id == self.object_id and \
+        if isinstance( obj, Note ) and ( database.user_notebook.get( user_id ) or \
+           ( database.user_notebook.get( anonymous_user_id ) and note.notebook_id == first_notebook_id ) ) and \
            search_text in obj.contents.lower():
-          notes.append( obj )
+          if obj.notebook_id == first_notebook_id:
+            first_notes.append( obj )
+          else:
+            other_notes.append( obj )
 
-      return notes
+      return first_notes + other_notes
 
-    Notebook.sql_search_notes = lambda self, search_text: \
-      lambda database: sql_search_notes( self, search_text, database )
+    Notebook.sql_search_notes = staticmethod( lambda user_id, anonymous_user_id, first_notebook_id, search_text: \
+      lambda database: sql_search_notes( user_id, anonymous_user_id, first_notebook_id, search_text, database ) )
 
     def sql_highest_note_rank( self, database ):
       max_rank = -1

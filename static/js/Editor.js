@@ -377,6 +377,8 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
     // search through the tree of elements containing the clicked target. if a link isn't found, bail
     var link = event.target()
+    if ( !link ) false;
+
     while ( link.nodeName != "A" ) {
       link = link.parentNode;
       if ( !link )
@@ -539,6 +541,7 @@ Editor.prototype.find_link_at_cursor = function () {
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
     var link = selection.anchorNode;
+    if ( !link ) return null;
 
     while ( link.nodeName != "A" ) {
       link = link.parentNode;

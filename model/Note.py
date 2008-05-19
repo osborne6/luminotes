@@ -171,6 +171,7 @@ class Note( Persistent ):
     d.update( dict(
       contents = self.__contents,
       summary = self.__summary,
+      notebook_id = self.__notebook_id,
       title = self.__title,
       deleted_from_id = self.__deleted_from_id,
       user_id = self.__user_id,

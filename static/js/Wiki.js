@@ -35,11 +35,12 @@ function Wiki( invoker ) {
 
   // grab the current notebook from the list of available notebooks
   this.notebooks = evalJSON( getElement( "notebooks" ).value );
+  this.notebooks_by_id = {};
+
   for ( var i in this.notebooks ) {
-    if ( this.notebooks[ i ].object_id == this.notebook_id ) {
+    this.notebooks_by_id[ this.notebooks[ i ].object_id ] = this.notebooks[ i ];
+    if ( this.notebooks[ i ].object_id == this.notebook_id )
       this.notebook = this.notebooks[ i ]
-      break;
-    }
   }
 
   if ( this.notebook && this.notebook.read_write ) {
@@ -1473,12 +1474,13 @@ Wiki.prototype.display_search_results = function ( result ) {
     return;
   }
 
-  // otherwise, there are multiple search results, so create a "magic" search results note. but
-  // first close any open search results notes
+  // create a "magic" search results note. but first close any open search results notes
   if ( this.search_results_editor )
     this.search_results_editor.shutdown();
 
   var list = createDOM( "span", {} );
+  var other_notebooks_section = false;
+
   for ( var i in result.notes ) {
     var note = result.notes[ i ]
     if ( !note.title ) continue;
@@ -1497,9 +1499,27 @@ Wiki.prototype.display_search_results = function ( result ) {
     summary_span.setAttribute( "class", "search_results_summary" );
     summary_span.innerHTML = summary;
 
+    // when a link is clicked for a note from a notebook other than the current one, open it in a
+    // new window
+    var link_attributes = { "href": "/notebooks/" + note.notebook_id + "?note_id=" + note.object_id };
+    if ( note.notebook_id != this.notebook_id ) {
+      link_attributes[ "target" ] = "_new";
+
+      if ( !other_notebooks_section ) {
+        other_notebooks_section = true;
+        if ( i == 0 )
+          appendChildNodes( list, createDOM( "p", {}, "No matching notes in this notebook." ) );
+
+        appendChildNodes( list, createDOM( "hr" ), createDOM( "h4", {}, "other notebooks" ) );
+      }
+    }
+
+    var notebook = this.notebooks_by_id[ note.notebook_id ];
+
     appendChildNodes( list,
       createDOM( "p", {},
-        createDOM( "a", { "href": "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id }, note.title ),
+        createDOM( "a", link_attributes, note.title ),
+        other_notebooks_section && notebook && createDOM( "span", { "class": "small_text" }, " (", notebook.name, ")" ) || null,
         createDOM( "br" ),
         summary_span
       )
