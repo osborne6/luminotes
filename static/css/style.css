@@ -354,7 +354,7 @@ img {
 }
 
 #notebooks_area_title {
-  margin-top: 1.5em;
+  margin-top: 1em;
   margin-bottom: 0.25em;
 }
 
@@ -608,6 +608,7 @@ img {
 }
 
 .link_area_item {
+  font-size: 75%;
   padding: 0.25em 0.25em 0.25em 0.5em;
 }
 
