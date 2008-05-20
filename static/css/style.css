@@ -656,6 +656,7 @@ img {
 
 #storage_usage_area {
   padding-top: 0.1em;
+  font-size: 75%;
 }
 
 .storage_usage_low {
