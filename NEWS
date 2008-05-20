@@ -1,3 +1,6 @@
+1.3.34: May 19, 2008
+ * Improved performance of searching multiple notebooks.
+
 1.3.33: May 19, 2008
  * Searching now displays results from multiple notebooks and not just the
    current notebook.

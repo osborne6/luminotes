@@ -276,15 +276,23 @@ class Test_controller( object ):
     Notebook.sql_load_note_by_title = lambda self, title: \
       lambda database: sql_load_note_by_title( self, title, database )
 
-    def sql_search_notes( user_id, anonymous_user_id, first_notebook_id, search_text, database ):
+    def sql_search_notes( user_id, first_notebook_id, search_text, database ):
       first_notes = []
       other_notes = []
       search_text = search_text.lower()
 
       for ( object_id, obj_list ) in database.objects.items():
         obj = obj_list[ -1 ]
-        if isinstance( obj, Note ) and ( database.user_notebook.get( user_id ) or \
-           ( database.user_notebook.get( anonymous_user_id ) and note.notebook_id == first_notebook_id ) ) and \
+
+        if not isinstance( obj, Note ):
+          continue
+
+        if user_id in database.user_notebook:
+          for notebook_info in database.user_notebook[ user_id ]:
+            if notebook_info[ 0 ] != obj.notebook_id:
+              continue
+
+        if obj.deleted_from_id == None and \
            search_text in obj.contents.lower():
           if obj.notebook_id == first_notebook_id:
             first_notes.append( obj )
@@ -293,8 +301,8 @@ class Test_controller( object ):
 
       return first_notes + other_notes
 
-    Notebook.sql_search_notes = staticmethod( lambda user_id, anonymous_user_id, first_notebook_id, search_text: \
-      lambda database: sql_search_notes( user_id, anonymous_user_id, first_notebook_id, search_text, database ) )
+    Notebook.sql_search_notes = staticmethod( lambda user_id, first_notebook_id, search_text: \
+      lambda database: sql_search_notes( user_id, first_notebook_id, search_text, database ) )
 
     def sql_highest_note_rank( self, database ):
       max_rank = -1

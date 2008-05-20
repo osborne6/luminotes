@@ -920,9 +920,11 @@ class Notebooks( object ):
     if not self.__users.check_access( user_id, notebook_id ):
       raise Access_error()
 
-    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
-    if not anonymous:
-      raise Access_error()
+    # if the anonymous user has access to the given notebook, then run the search as the anonymous
+    # user instead of the given user id
+    if self.__users.check_access( user_id = None, notebook_id = notebook_id ) is True:
+      anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
+      user_id = anonymous.object_id
 
     MAX_SEARCH_TEXT_LENGTH = 256
     if len( search_text ) > MAX_SEARCH_TEXT_LENGTH:
@@ -931,7 +933,7 @@ class Notebooks( object ):
     if len( search_text ) == 0:
       raise Validation_error( u"search_text", None, unicode, message = u"is missing" )
 
-    notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, anonymous.object_id, notebook_id, search_text ) )
+    notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, notebook_id, search_text ) )
 
     return dict(
       notes = notes,
