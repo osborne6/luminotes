@@ -38,9 +38,13 @@ function Wiki( invoker ) {
   this.notebooks_by_id = {};
 
   for ( var i in this.notebooks ) {
-    this.notebooks_by_id[ this.notebooks[ i ].object_id ] = this.notebooks[ i ];
-    if ( this.notebooks[ i ].object_id == this.notebook_id )
-      this.notebook = this.notebooks[ i ]
+    var notebook = this.notebooks[ i ];
+
+    if ( !this.notebooks_by_id[ notebook.object_id ] )
+      this.notebooks_by_id[ notebook.object_id ] = notebook;
+
+    if ( !this.notebook && notebook.object_id == this.notebook_id )
+      this.notebook = notebook;
   }
 
   if ( this.notebook && this.notebook.read_write ) {
