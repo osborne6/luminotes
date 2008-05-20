@@ -239,13 +239,13 @@ img {
 #current_notebook_up_hover_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/arrow_up_hover.png);
+  background-image: url(/static/images/arrow_up_hover.png);
 }
 
 #current_notebook_down_hover_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/arrow_down_hover.png);
+  background-image: url(/static/images/arrow_down_hover.png);
 }
 
 #tree_arrow_hover_preload {
