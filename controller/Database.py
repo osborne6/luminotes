@@ -6,6 +6,7 @@ import psycopg2 as psycopg
 from psycopg2.pool import PersistentConnectionPool
 import random
 from model.Persistent import Persistent
+from model.Notebook import Notebook
 
 
 class Connection_wrapper( object ):
@@ -20,6 +21,9 @@ class Connection_wrapper( object ):
 class Database( object ):
   ID_BITS = 128 # number of bits within an id
   ID_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+  # caching Notebooks causes problems because different users have different read_write/owner values
+  CLASSES_NOT_TO_CACHE = ( Notebook, )
 
   def __init__( self, connection = None, cache = None, host = None, ssl_mode = None ):
     """
@@ -103,7 +107,10 @@ class Database( object ):
     else:
       cursor.execute( obj.sql_create() )
 
-    cache = self.__get_cache_connection()
+    if isinstance( obj, self.CLASSES_NOT_TO_CACHE ):
+      cache = None
+    else:
+      cache = self.__get_cache_connection()
 
     if commit:
       connection.commit()
@@ -145,10 +152,10 @@ class Database( object ):
     @rtype: Object_type or NoneType
     @return: loaded object, or None if no match
     """
-    if revision is None:
-      cache = self.__get_cache_connection()
-    else:
+    if revision or Object_type in self.CLASSES_NOT_TO_CACHE:
       cache = None
+    else:
+      cache = self.__get_cache_connection()
 
     if cache: # don't bother caching old revisions
       obj = cache.get( Persistent.make_cache_key( Object_type, object_id ) )
@@ -175,10 +182,10 @@ class Database( object ):
     @rtype: Object_type or NoneType
     @return: loaded object, or None if no match
     """
-    if use_cache:
-      cache = self.__get_cache_connection()
-    else:
+    if not use_cache or Object_type in self.CLASSES_NOT_TO_CACHE:
       cache = None
+    else:
+      cache = self.__get_cache_connection()
 
     if cache:
       cache_key = sha.new( sql_command ).hexdigest()
