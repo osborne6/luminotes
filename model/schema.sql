@@ -60,6 +60,29 @@ CREATE TABLE invite (
 ALTER TABLE public.invite OWNER TO luminotes;
 
 --
+-- Name: luminotes_group; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE TABLE luminotes_group (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    name text
+);
+
+
+ALTER TABLE public.luminotes_group OWNER TO luminotes;
+
+--
+-- Name: luminotes_group_current; Type: VIEW; Schema: public; Owner: luminotes
+--
+
+CREATE VIEW luminotes_group_current AS
+    SELECT luminotes_group.id, luminotes_group.revision, luminotes_group.name FROM luminotes_group WHERE (luminotes_group.revision IN (SELECT max(sub_group.revision) AS max FROM luminotes_group sub_group WHERE (sub_group.id = luminotes_group.id)));
+
+
+ALTER TABLE public.luminotes_group_current OWNER TO luminotes;
+
+--
 -- Name: luminotes_user; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
 
@@ -158,6 +181,19 @@ CREATE TABLE password_reset (
 ALTER TABLE public.password_reset OWNER TO luminotes;
 
 --
+-- Name: user_group; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE TABLE user_group (
+    user_id text NOT NULL,
+    group_id text NOT NULL,
+    "admin" boolean DEFAULT false
+);
+
+
+ALTER TABLE public.user_group OWNER TO luminotes;
+
+--
 -- Name: user_notebook; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
 
@@ -240,6 +276,13 @@ CREATE INDEX file_note_id_index ON file USING btree (note_id);
 --
 
 CREATE INDEX file_notebook_id_index ON file USING btree (notebook_id);
+
+
+--
+-- Name: luminotes_group_pkey; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX luminotes_group_pkey ON luminotes_group USING btree (id, revision);
 
 
 --
