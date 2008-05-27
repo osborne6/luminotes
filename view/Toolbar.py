@@ -60,7 +60,7 @@ class Toolbar( Div ):
           ) ),
           Div( Input(
             type = u"image",
-            id = u"title", title = u"title [ctrl-T]",
+            id = u"title", title = u"title",
             src = u"/static/images/toolbar/title_button.png",
             width = u"40", height = u"40",
             class_ = "image_button",

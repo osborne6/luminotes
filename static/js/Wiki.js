@@ -919,9 +919,6 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-s: strikethrough
     } else if ( code == 83 ) {
       this.toggle_button( event, "strikethrough" );
-    // ctrl-t: title
-    } else if ( code == 84 ) {
-      this.toggle_button( event, "title" );
     // ctrl-period: unordered list
     } else if ( code == 190 ) {
       this.toggle_button( event, "insertUnorderedList" );
