@@ -904,7 +904,11 @@ class Test_notebooks( Test_controller ):
       "/notebooks/updates/%s?rss&notebook_name=%s" % ( self.unknown_notebook_id, self.notebook.name ),
     )
 
-    assert u"access" in result[ "body" ][ 0 ]
+    # should return no notes (and not raise an error)
+    assert len( result[ u"recent_notes" ] ) == 0
+    assert result[ u"notebook_id" ] == self.unknown_notebook_id
+    assert result[ u"notebook_name" ] == self.notebook.name
+    assert result[ u"https_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ]
 
   def test_updates_with_incorrect_notebook_name( self ):
     result = self.http_get(

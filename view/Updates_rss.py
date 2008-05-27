@@ -28,13 +28,19 @@ class Updates_rss( Rss_channel ):
       cgi.escape( notebook_name ),
       notebook_path,
       u"Luminotes notebook",
-      [ Rss_item(
+      recent_notes and [ Rss_item(
         title = u"Note updated",
         link = self.note_link( notebook_id, notebook_name, note_id, revision, https_url ),
         description = cgi.escape( u'A note in <a href="%s">this notebook</a> has been updated. <a href="%s?note_id=%s">View the note.</a>' % ( notebook_path, notebook_path, note_id ) ),
         date = revision.strftime( "%Y-%m-%dT%H:%M:%SZ" ),
         guid = self.note_link( notebook_id, notebook_name, note_id, revision, https_url ),
-      ) for ( note_id, revision ) in recent_notes ],
+      ) for ( note_id, revision ) in recent_notes ] or [ Rss_item(
+        title = u"Unknown notebook",
+        link = None,
+        description = cgi.escape( u'Sorry, that notebook is unknown.' ),
+        date = None,
+        guid = None,
+      ) ],
     )
 
   @staticmethod

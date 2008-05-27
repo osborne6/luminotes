@@ -248,7 +248,12 @@ class Notebooks( object ):
     """
     notebook = self.__database.load( Notebook, notebook_id )
     if not notebook:
-      raise Access_error()
+      return dict(
+        recent_notes = [],
+        notebook_id = notebook_id,
+        notebook_name = notebook_name,
+        https_url = self.__https_url,
+      )
 
     recent_notes = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
 
