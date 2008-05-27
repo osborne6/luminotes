@@ -15,16 +15,16 @@ class Page( Html ):
       self,
       Head(
         Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/style.css" ),
-        Script( type = u"text/javascript", src = u"https://ssl.google-analytics.com/urchin.js" ) or None,
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
-        [ child for child in children if type( child ) in head_types ],
+        Script( type = u"text/javascript", src = u"https://ssl.google-analytics.com/urchin.js" ) or None,
+        [ child for child in children if isinstance( child, head_types ) ],
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),
         """<!--[if IE 6]><link href="/static/css/ie6.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
         """<!--[if IE 7]><link href="/static/css/ie7.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
       ),
       Body(
         Div(
-          *[ child for child in children if type( child ) not in head_types ],
+          *[ child for child in children if not isinstance( child, head_types ) ],
           **attrs
         ),
       ),

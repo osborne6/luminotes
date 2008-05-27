@@ -1,6 +1,6 @@
 from Page import Page
 from Header import Header
-from Tags import Link, Div, A, Span
+from Tags import Link, Meta, Div, A, Span
 
 
 class Product_page( Page ):
@@ -10,6 +10,8 @@ class Product_page( Page ):
       None, # use the default title
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/product.css" ),
+      Meta( name = u"description", content = u"Luminotes is a WYSIWYG personal wiki notebook for organizing your notes and ideas." ),
+      Meta( name = u"keywords", content = u"note taking, personal wiki, wysiwyg wiki, easy wiki, simple wiki, wiki notebook" ),
 
       Header( user, first_notebook, login_url, logout_url, note_title ),
 
