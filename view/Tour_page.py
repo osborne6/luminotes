@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, Img, A, Ol, Li, P, Span, I, Br
+from Tags import Div, H1, Img, A, Ol, Li, P, Span, I, Br
 
 
 class Tour_page( Product_page ):
@@ -13,11 +13,11 @@ class Tour_page( Product_page ):
       u"tour", # note title
 
       Div(
-        Div(
+        H1(
           Img(
             src = u"/static/images/tour.png",
             width = u"277", height = u"47",
-            alt = u"Luminotes Tour",
+            alt = u"Luminotes tour",
           ),
         ),
         Div(

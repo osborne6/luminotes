@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script
+from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script
 
 
 class Upgrade_page( Product_page ):
@@ -20,17 +20,17 @@ class Upgrade_page( Product_page ):
 
       Div(
         Div(
-          user and user.username not in ( None, u"anonymous" ) and Div(
+          user and user.username not in ( None, u"anonymous" ) and H1(
             Img(
               src = u"/static/images/upgrade.png",
               width = u"152", height = u"51",
-              alt = u"Upgrade",
+              alt = u"upgrade",
             ),
-          ) or Div(
+          ) or H1(
             Img(
               src = u"/static/images/sign_up.png",
               width = u"138", height = u"51",
-              alt = u"Sign Up",
+              alt = u"sign up",
             ),
           ),
           P(
