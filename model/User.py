@@ -229,7 +229,7 @@ class User( Persistent ):
     return \
       """
       select
-        luminiotes_group_current.*, user_group.admin
+        luminotes_group_current.*, user_group.admin
       from
         user_group, luminotes_group_current
       where

@@ -179,6 +179,25 @@ class Test_controller( object ):
     User.sql_highest_notebook_rank = lambda self: \
       lambda database: sql_highest_notebook_rank( self, database )
 
+    def sql_load_groups( self, database ):
+      groups = []
+      group_infos = database.user_group.get( self.object_id )
+
+      if not group_infos: return []
+
+      for group_info in group_infos:
+        ( group_id, admin ) = group_info
+        group = database.objects.get( group_id )[ -1 ]
+        group.admin = admin
+        groups.append( group )
+
+      groups.sort( lambda a, b: cmp( a.name, b.name ) )
+
+      return groups
+
+    User.sql_load_groups = lambda self: \
+      lambda database: sql_load_groups( self, database )
+
     def sql_revoke_invite_access( notebook_id, trash_id, email_address, database ):
       invites = []
 

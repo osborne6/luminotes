@@ -5,6 +5,7 @@ import cherrypy
 from pytz import utc
 from datetime import datetime, timedelta
 from model.User import User
+from model.Group import Group
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
@@ -494,6 +495,7 @@ class Users( object ):
       'login_url': url,
       'logout_url': url,
       'rate_plan': rateplandict,
+      'groups': groups,
     }
     @raise Validation_error: one of the arguments is invalid
     @raise Access_error: user_id or anonymous user unknown
@@ -514,9 +516,11 @@ class Users( object ):
 
     if user_id and user_id != anonymous.object_id:
       notebooks = self.__database.select_many( Notebook, user.sql_load_notebooks() )
+      groups = self.__database.select_many( Group, user.sql_load_groups() )
     # if the user is not logged in, return a login URL
     else:
       notebooks = []
+      groups = []
       if len( anon_notebooks ) > 0 and anon_notebooks[ 0 ]:
         main_notebook = anon_notebooks[ 0 ]
         login_note = self.__database.select_one( Note, main_notebook.sql_load_note_by_title( u"login" ) )
@@ -529,6 +533,7 @@ class Users( object ):
       login_url = login_url,
       logout_url = self.__https_url + u"/users/logout",
       rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},
+      groups = groups,
     )
 
   def calculate_storage( self, user ):

@@ -195,6 +195,8 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
+    assert result[ u"groups" ] == []
+
   def test_current_after_signup_with_invite_id( self ):
     # trick send_invites() into using a fake SMTP server
     Stub_smtp.reset()
@@ -275,6 +277,8 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
+    assert result[ u"groups" ] == []
+
   def test_current_after_signup_with_rate_plan( self ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,
@@ -330,6 +334,8 @@ class Test_users( Test_controller ):
     rate_plan = result[ u"rate_plan" ]
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert result[ u"groups" ] == []
 
   def test_signup_with_different_passwords( self ):
     result = self.http_post( "/users/signup", dict(
@@ -461,6 +467,8 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
+    assert result[ u"groups" ] == []
+
   def test_current_after_demo_twice( self ):
     result = self.http_post( "/users/demo", dict() )
     session_id = result[ u"session_id" ]
@@ -562,6 +570,8 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
+    assert result[ u"groups" ] == []
+
   def test_current_anonymous( self ):
     result = cherrypy.root.users.current( self.anonymous.object_id )
 
@@ -585,6 +595,8 @@ class Test_users( Test_controller ):
     assert rate_plan
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert result[ u"groups" ] == []
 
   def test_login_with_invite_id( self ):
     # trick send_invites() into using a fake SMTP server

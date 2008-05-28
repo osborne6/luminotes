@@ -3,7 +3,7 @@ from Tags import Div, Img, A, P, Table, Tr, Td, Li, Span, I, Br, Ul, Li
 
 
 class Front_page( Product_page ):
-  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan ):
+  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups ):
     Product_page.__init__(
       self,
       user,

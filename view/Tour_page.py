@@ -3,7 +3,7 @@ from Tags import Div, H1, Img, A, Ol, Li, P, Span, I, Br
 
 
 class Tour_page( Product_page ):
-  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan ):
+  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups ):
     Product_page.__init__(
       self,
       user,

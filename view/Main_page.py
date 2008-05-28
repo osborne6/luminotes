@@ -36,6 +36,7 @@ class Main_page( Page ):
     signup_plan = None,
     signup_yearly = None,
     recent_notes = None,
+    groups = None,
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
@@ -144,6 +145,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"after_login", id = u"after_login", value = after_login ),
       Input( type = u"hidden", name = u"signup_plan", id = u"signup_plan", value = signup_plan ),
       Input( type = u"hidden", name = u"email_address", id = u"email_address", value = user.email_address ),
+      Input( type = u"hidden", name = u"groups", id = u"groups", value = json( groups ) ),
       Div(
         id = u"status_area",
       ),

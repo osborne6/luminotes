@@ -19,6 +19,7 @@ function Wiki( invoker ) {
   this.after_login = getElement( "after_login" ).value;
   this.signup_plan = getElement( "signup_plan" ).value;
   this.email_address = getElement( "email_address" ).value || "";
+  this.groups = evalJSON( getElement( "groups" ).value );
   this.font_size = null;
   this.small_toolbar = false;
   this.large_toolbar_bottom = 0;
@@ -1704,8 +1705,28 @@ Wiki.prototype.display_settings = function () {
     return;
   }
 
+  var group_list = createDOM( "ul" );
+  for ( var i in this.groups ) {
+    var group = this.groups[ i ];
+    var item = createDOM( "li", {} );
+    appendChildNodes( item, group.name + " " );
+    if ( group.admin )
+      appendChildNodes( item, "(admin)" );
+    appendChildNodes( group_list, item );
+  }
+
+  if ( this.groups.length == 0 ) {
+    var item = createDOM( "li", {}, "You're not a member of any groups." );
+    appendChildNodes( group_list, item );
+  }
+
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "settings_form" },
+      createDOM( "p", {},
+        createDOM( "b", {}, "group membership" ),
+        createDOM( "br", {} ),
+        group_list
+      ),
       createDOM( "p", {},
         createDOM( "b", {}, "email address" ),
         createDOM( "br", {} ),
@@ -1719,7 +1740,7 @@ Wiki.prototype.display_settings = function () {
           { "type": "submit", "name": "settings_button", "id": "settings_button", "class": "button", "value": "save settings" }
         )
       ),
-      createDOM( "p", {},
+      createDOM( "p", { "class": "small_text" },
         "Your email address will ",
         createDOM( "a", { "href": "/privacy", "target": "_new" }, "never be shared" ),
         ". It will only be used for password resets, contacting you about account problems, and the from address in any invite emails you send."

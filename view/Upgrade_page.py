@@ -3,7 +3,7 @@ from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li,
 
 
 class Upgrade_page( Product_page ):
-  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, rate_plans, unsubscribe_button ):
+  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, rate_plans, unsubscribe_button ):
     MEGABYTE = 1024 * 1024
     rate_plans = list( rate_plans )
     rate_plans.reverse() # show rate plans highest to lowest

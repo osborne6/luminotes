@@ -7,6 +7,7 @@ class Stub_database( object ):
     # map of object id to list of saved objects (presumably in increasing order of revisions)
     self.objects = {}
     self.user_notebook = {} # map of user_id to ( notebook_id, read_write, owner )
+    self.user_group = {}    # map of user_id to ( group_id, admin )
     self.last_saved_obj = None
     self.last_saved_user = None
     self.__next_id = 0
