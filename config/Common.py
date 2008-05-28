@@ -29,15 +29,22 @@ settings = {
     "luminotes.rate_plans": [
       {
         "name": "free",
+        "designed_for": "professionals",
         "storage_quota_bytes": 30 * MEGABYTE,
+        "included_users": 1,
         "notebook_collaboration": False,
+        "user_admin": False,
         "fee": None,
         "yearly_fee": None,
+        "designed_for": "students",
       },
       {
         "name": "basic",
+        "designed_for": "professionals",
         "storage_quota_bytes": 250 * MEGABYTE,
+        "included_users": 1,
         "notebook_collaboration": True,
+        "user_admin": False,
         "fee": 5,
         "yearly_fee": 50,
         "button":
@@ -46,11 +53,15 @@ settings = {
         "yearly_button":
           """
           """,
+        "designed_for": "home users",
       },
       {
         "name": "standard",
+        "designed_for": "professionals",
         "storage_quota_bytes": 500 * MEGABYTE,
+        "included_users": 1,
         "notebook_collaboration": True,
+        "user_admin": False,
         "fee": 9,
         "yearly_fee": 90,
         "button":
@@ -60,15 +71,38 @@ settings = {
           """
           """,
       },
-#      {
-#        "name": "premium",
-#        "storage_quota_bytes": 2000 * MEGABYTE,
-#        "notebook_collaboration": True,
-#        "fee": 19,
-#        "button":
-#          """
-#          """,
-#      },
+      {
+        "name": "plus",
+        "designed_for": "small teams",
+        "storage_quota_bytes": 1000 * MEGABYTE,
+        "included_users": 10,
+        "notebook_collaboration": True,
+        "user_admin": True,
+        "fee": 19,
+        "yearly_fee": 190,
+        "button":
+          """
+          """,
+        "yearly_button":
+          """
+          """,
+      },
+      {
+        "name": "max",
+        "designed_for": "organizations",
+        "storage_quota_bytes": 5000 * MEGABYTE,
+        "included_users": 50,
+        "notebook_collaboration": True,
+        "user_admin": True,
+        "fee": 99,
+        "yearly_fee": 990,
+        "button":
+          """
+          """,
+        "yearly_button":
+          """
+          """,
+      },
     ],
     "luminotes.unsubscribe_button":
       """
