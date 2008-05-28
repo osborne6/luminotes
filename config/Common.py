@@ -29,18 +29,17 @@ settings = {
     "luminotes.rate_plans": [
       {
         "name": "free",
-        "designed_for": "professionals",
+        "designed_for": "students",
         "storage_quota_bytes": 30 * MEGABYTE,
         "included_users": 1,
         "notebook_collaboration": False,
         "user_admin": False,
         "fee": None,
         "yearly_fee": None,
-        "designed_for": "students",
       },
       {
         "name": "basic",
-        "designed_for": "professionals",
+        "designed_for": "home users",
         "storage_quota_bytes": 250 * MEGABYTE,
         "included_users": 1,
         "notebook_collaboration": True,
@@ -53,7 +52,6 @@ settings = {
         "yearly_button":
           """
           """,
-        "designed_for": "home users",
       },
       {
         "name": "standard",
