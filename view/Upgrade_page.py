@@ -180,7 +180,7 @@ class Upgrade_page( Product_page ):
               ),
               Tr(
                 Td(
-                  A( u"User administration (coming soon!)", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'admin_description' ); return false;" ),
+                  A( u"User administration", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'admin_description' ); return false;" ),
                   class_ = u"feature_name",
                 ),
                 [ Td(
