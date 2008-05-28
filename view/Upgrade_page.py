@@ -44,6 +44,16 @@ class Upgrade_page( Product_page ):
               self.fee_row( rate_plans, user ),
               Tr(
                 Td(
+                  u"Designed for",
+                  class_ = u"feature_name",
+                ),
+                [ Td(
+                  plan[ u"designed_for" ],
+                  class_ = u"feature_value",
+                ) for plan in rate_plans ],
+              ),
+              Tr(
+                Td(
                   A( u"Included storage space", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'storage_description' ); return false;" ),
                   class_ = u"feature_name",
                 ),
@@ -57,8 +67,28 @@ class Upgrade_page( Product_page ):
                     Li( u"More space for your wiki notes." ),
                     Li( u"More space for your documents and files." ),
                   ),
-                  colspan = u"4",
+                  colspan = len( rate_plans ) + 1,
                   id = u"storage_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"Included accounts", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'users_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
+                [ Td(
+                  ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br>%s users" % plan[ u"included_users" ],
+                  class_ = u"feature_value",
+                ) for plan in rate_plans ],
+              ),
+              Tr(
+                Td(
+                  Ul(
+                    Li( u"Collaborate on a wiki with multiple people in your organization." ),
+                  ),
+                  colspan = len( rate_plans ) + 1,
+                  id = u"users_description",
                   class_ = u"feature_description undisplayed",
                 ),
               ),
@@ -77,7 +107,7 @@ class Upgrade_page( Product_page ):
                     Li( u"Create a unique notebook for each subject." ),
                     Li( u"Keep work and personal notebooks separate." ),
                   ),
-                  colspan = u"4",
+                  colspan = len( rate_plans ) + 1,
                   id = u"notebooks_description",
                   class_ = u"feature_description undisplayed",
                 ),
@@ -97,7 +127,7 @@ class Upgrade_page( Product_page ):
                     Li( u"Fast email responses to your support questions. From a real live human." ),
                     Li( u"No waiting on hold with a call center." ),
                   ),
-                  colspan = u"4",
+                  colspan = len( rate_plans ) + 1,
                   id = u"support_description",
                   class_ = u"feature_description undisplayed",
                 ),
@@ -118,7 +148,7 @@ class Upgrade_page( Product_page ):
                     Li( u"Invite as many people as you want." ),
                     Li( u"Share only the notebooks you want to share. Keep the others private." ),
                   ),
-                  colspan = u"4",
+                  colspan = len( rate_plans ) + 1,
                   id = u"view_description",
                   class_ = u"feature_description undisplayed",
                 ),
@@ -142,8 +172,30 @@ class Upgrade_page( Product_page ):
                     Li( u"Revoke collaboration access with a single click." ),
                     Li( u"Share only the notebooks you want to share. Keep the others private." ),
                   ),
-                  colspan = u"4",
+                  colspan = len( rate_plans ) + 1,
                   id = u"edit_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"User administration (coming soon!)", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'admin_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
+                [ Td(
+                  plan[ u"user_admin" ] and
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
+                ) for plan in rate_plans ],
+              ),
+              Tr(
+                Td(
+                  Ul(
+                    Li( u"Manage all Luminotes accounts for your organization. All from one web page." ),
+                    Li( u"Create and delete users as needed." ),
+                    Li( u"Grant or revoke access to wiki notebooks." ),
+                  ),
+                  colspan = len( rate_plans ) + 1,
+                  id = u"admin_description",
                   class_ = u"feature_description undisplayed",
                 ),
               ),
@@ -182,12 +234,18 @@ class Upgrade_page( Product_page ):
               Tr( Td(
                 u"Get two months free with a yearly subscription!",
                 class_ = u"upgrade_subtitle",
-                colspan = u"3",
-              ), colspan = u"3" ),
+                colspan = u"%d" % len( rate_plans ),
+              ), colspan = u"%d" % len( rate_plans ) ),
               self.fee_row( rate_plans, user, include_blank = False, yearly = True ),
               Tr(
                 [ Td(
                   plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
+                ) for plan in rate_plans ],
+              ),
+              Tr(
+                [ Td(
+                  ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br />%s users" % plan[ u"included_users" ],
+                  class_ = u"feature_value",
                 ) for plan in rate_plans ],
               ),
               border = u"1",
