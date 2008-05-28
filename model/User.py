@@ -222,6 +222,60 @@ class User( Persistent ):
     """
     return "select coalesce( max( rank ), -1 ) from user_notebook where user_id = %s;" % quote( self.object_id )
 
+  def sql_load_groups( self ):
+    """
+    Return a SQL string to load a list of the groups to which this user has membership.
+    """
+    return \
+      """
+      select
+        luminiotes_group_current.*, user_group.admin
+      from
+        user_group, luminotes_group_current
+      where
+        user_group.user_id = %s and
+        user_group.group_id = luminotes_group_current.id
+      order by luminotes_group_current.name;
+      """ % quote( self.object_id )
+
+  def sql_save_group( self, group_id, admin = False ):
+    """
+    Return a SQL string to save the id of a group to which this user has membership.
+    """
+    if rank is None: rank = quote( None )
+
+    return \
+      "insert into user_group ( user_id, group_id, admin ) values " + \
+      "( %s, %s, %s );" % ( quote( self.object_id ), quote( group_id ), quote( admin and 't' or 'f' ) )
+
+  def sql_remove_group( self, group_id ):
+    """
+    Return a SQL string to remove this user's membership to a particular group.
+    """
+    return \
+      "delete from user_group where user_id = %s and group_id = %s;" % ( quote( self.object_id ), quote( group_id ) )
+
+  def sql_in_group( self, group_id, admin = False ):
+    """
+    Return a SQL string to determine whether this has membership to the given group.
+    """
+    if admin is True:
+      return \
+        "select user_id from user_group where user_id = %s and group_id = %s and admin = 't';" % \
+        ( quote( self.object_id ), quote( group_id ) )
+    else:
+      return \
+        "select user_id from user_group where user_id = %s and group_id = %s;" % \
+        ( quote( self.object_id ), quote( group_id ) )
+
+  def sql_update_group_admin( self, group_id, admin = False ):
+    """
+    Return a SQL string to update the user's group membership to have the given admin flag.
+    """
+    return \
+      "update user_group set admin = %s where user_id = %s and group_id = %s;" % \
+      ( quote( admin and 't' or 'f' ), quote( self.object_id ), quote( group_id ) )
+
   @staticmethod
   def sql_revoke_invite_access( notebook_id, trash_id, email_address ):
     return \
