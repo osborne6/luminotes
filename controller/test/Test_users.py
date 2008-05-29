@@ -9,6 +9,7 @@ from Test_controller import Test_controller
 from Stub_smtp import Stub_smtp
 import Stub_urllib2
 from model.User import User
+from model.Group import Group
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
@@ -36,6 +37,8 @@ class Test_users( Test_controller ):
     self.email_address2 = u"out-there@example.com"
     self.user = None
     self.user2 = None
+    self.group = None
+    self.group2 = None
     self.anonymous = None
     self.notebooks = None
     self.session_id = None
@@ -66,15 +69,22 @@ class Test_users( Test_controller ):
     )
     self.database.save( self.startup_note )
 
+    self.group = Group.create( self.database.next_id( Group ), u"my group" )
+    self.database.save( self.group, commit = False )
+    self.group2 = Group.create( self.database.next_id( Group ), u"other group" )
+    self.database.save( self.group2, commit = False )
+
     self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
     self.database.save( self.user, commit = False )
     self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True, owner = True, rank = 0 ), commit = False )
     self.database.execute( self.user.sql_save_notebook( trash_id1, read_write = True, owner = True ), commit = False )
     self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True, owner = True, rank = 1 ), commit = False )
     self.database.execute( self.user.sql_save_notebook( trash_id2, read_write = True, owner = True ), commit = False )
+    self.database.execute( self.user.sql_save_group( self.group.object_id, admin = False ) )
 
     self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2 )
     self.database.save( self.user2, commit = False )
+    self.database.execute( self.user2.sql_save_group( self.group.object_id, admin = True ) )
 
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
@@ -570,7 +580,10 @@ class Test_users( Test_controller ):
     assert rate_plan[ u"name" ] == u"super"
     assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
 
-    assert result[ u"groups" ] == []
+    assert result[ u"groups" ]
+    assert result[ u"groups" ][ 0 ].object_id == self.group.object_id
+    assert result[ u"groups" ][ 0 ].name == self.group.name
+    assert result[ u"groups" ][ 0 ].admin == False
 
   def test_current_anonymous( self ):
     result = cherrypy.root.users.current( self.anonymous.object_id )
@@ -718,6 +731,41 @@ class Test_users( Test_controller ):
     access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, read_write = True, owner = True )
 
     assert access is False
+
+  def test_check_group( self ):
+    membership = cherrypy.root.users.check_group( self.user.object_id, self.group.object_id )
+
+    assert membership is True
+
+  def test_check_group_with_admin( self ):
+    membership = cherrypy.root.users.check_group( self.user2.object_id, self.group.object_id )
+
+    assert membership is True
+
+  def test_check_group_anon( self ):
+    membership = cherrypy.root.users.check_group( self.anonymous.object_id, self.group.object_id )
+
+    assert membership is False
+
+  def test_check_group_without_membership( self ):
+    membership = cherrypy.root.users.check_group( self.user.object_id, self.group2.object_id )
+
+    assert membership is False
+
+  def test_check_group_without_user( self ):
+    membership = cherrypy.root.users.check_group( None, self.group2.object_id )
+
+    assert membership is False
+
+  def test_check_group_admin( self ):
+    membership = cherrypy.root.users.check_group( self.user.object_id, self.group.object_id, admin = True )
+
+    assert membership is False
+
+  def test_check_group_admin_with_admin( self ):
+    membership = cherrypy.root.users.check_group( self.user2.object_id, self.group.object_id, admin = True )
+
+    assert membership is True
 
   def test_send_reset( self ):
     # trick send_reset() into using a fake SMTP server

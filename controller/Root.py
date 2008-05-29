@@ -5,6 +5,7 @@ from Expire import strongly_expire
 from Validate import validate, Valid_int, Valid_string, Valid_bool
 from Notebooks import Notebooks
 from Users import Users, grab_user_id
+from Groups import Groups
 from Files import Files
 from Forums import Forums
 from Database import Valid_id, end_transaction
@@ -47,6 +48,7 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
     )
+    self.__groups = Groups( database, self.__users )
     self.__files = Files( database, self.__users )
     self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
     self.__forums = Forums( database, self.__users )
@@ -391,5 +393,6 @@ class Root( object ):
   database = property( lambda self: self.__database )
   notebooks = property( lambda self: self.__notebooks )
   users = property( lambda self: self.__users )
+  groups = property( lambda self: self.__groups )
   files = property( lambda self: self.__files )
 #  forums = property( lambda self: self.__forums )

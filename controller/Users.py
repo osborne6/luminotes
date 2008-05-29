@@ -596,6 +596,27 @@ class Users( object ):
 
     return False
 
+  def check_group( self, user_id, group_id, admin = False ):
+    """
+    Determine whether the given user has membership to the given group.
+
+    @type user_id: unicode
+    @param user_id: id of user whose membership to check
+    @type group_id: unicode
+    @param group_id: id of group to check membership in
+    @type admin: bool
+    @param admin: True if admin-level membership is being checked (defaults to False)
+    @rtype: bool
+    @return: True if the user has membership
+    """
+    # check if the given user has access to this notebook
+    user = self.__database.load( User, user_id )
+
+    if user and self.__database.select_one( bool, user.sql_in_group( group_id, admin ) ):
+      return True
+
+    return False
+
   @expose( view = Json )
   @end_transaction
   @validate(

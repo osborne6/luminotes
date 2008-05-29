@@ -242,8 +242,6 @@ class User( Persistent ):
     """
     Return a SQL string to save the id of a group to which this user has membership.
     """
-    if rank is None: rank = quote( None )
-
     return \
       "insert into user_group ( user_id, group_id, admin ) values " + \
       "( %s, %s, %s );" % ( quote( self.object_id ), quote( group_id ), quote( admin and 't' or 'f' ) )

@@ -31,6 +31,7 @@ class Truncated_StringIO( Wrapped_StringIO ):
 class Test_controller( object ):
   def __init__( self ):
     from model.User import User
+    from model.Group import Group
     from model.Notebook import Notebook
     from model.Note import Note
     from model.Invite import Invite
@@ -198,6 +199,31 @@ class Test_controller( object ):
     User.sql_load_groups = lambda self: \
       lambda database: sql_load_groups( self, database )
 
+    def sql_save_group( self, group_id, admin, database ):
+      if self.object_id in database.user_group:
+        database.user_group[ self.object_id ].append( ( group_id, admin ) )
+      else:
+        database.user_group[ self.object_id ] = [ ( group_id, admin ) ]
+
+    User.sql_save_group = lambda self, group_id, admin = False: \
+      lambda database: sql_save_group( self, group_id, admin, database )
+
+    def sql_in_group( self, group_id, admin, database ):
+      for ( user_id, group_infos ) in database.user_group.items():
+        for group_info in group_infos:
+          ( db_group_id, db_admin ) = group_info
+
+          if self.object_id == user_id and group_id == db_group_id:
+            if admin is True and db_admin is False:
+              return False
+
+            return True
+
+      return False
+
+    User.sql_in_group = lambda self, group_id, admin = False: \
+      lambda database: sql_in_group( self, group_id, admin, database )
+
     def sql_revoke_invite_access( notebook_id, trash_id, email_address, database ):
       invites = []
 
@@ -213,6 +239,27 @@ class Test_controller( object ):
 
     User.sql_revoke_invite_access = staticmethod( lambda notebook_id, trash_id, email_address: \
       lambda database: sql_revoke_invite_access( notebook_id, trash_id, email_address, database ) )
+
+    def sql_load_users( self, admin, database ):
+      users = []
+
+      for ( user_id, group_infos ) in database.user_group.items():
+        for group_info in group_infos:
+          ( db_group_id, db_admin ) = group_info
+
+          if db_group_id != self.object_id: continue
+          if admin is True and db_admin != True: continue
+          if admin is False and db_admin != False: continue
+
+          user = database.objects.get( user_id )[ -1 ]
+          users.append( user )
+
+      users.sort( lambda a, b: cmp( a.username, b.username ) )
+
+      return users
+
+    Group.sql_load_users = lambda self, admin = None: \
+      lambda database: sql_load_users( self, admin, database )
 
     def sql_load_revisions( self, database ):
       note_list = database.objects.get( self.object_id )

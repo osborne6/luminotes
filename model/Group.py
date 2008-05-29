@@ -67,6 +67,29 @@ class Group( Persistent ):
   def sql_update( self ):
     return self.sql_create()
 
+  def sql_load_users( self, admin = None ):
+    """
+    Return a SQL string to load a list of the users with membership to this group.
+    """
+    if admin is True:
+      admin_clause = " and user_group.admin = 't'"
+    elif admin is False:
+      admin_clause = " and user_group.admin = 'f'"
+    else:
+      admin_clause = ""
+
+    return \
+      """
+      select
+        luminotes_user_current.*
+      from
+        user_group, luminotes_user_current
+      where
+        user_group.group_id = %s and
+        user_group.user_id = luminotes_user_current.id%s
+      order by user_group.username;
+      """ % quote( self.object_id )
+
   def to_dict( self ):
     d = Persistent.to_dict( self )
 
