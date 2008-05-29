@@ -1,5 +1,7 @@
 1.4.0: ??
- * 
+ * Implemented some basic user administration features.
+ * Added new rate plans with support for user administration.
+ * Wrote a tool for manually updating a user's rate plan: tools/set_plan.py
 
 1.3.40: May 27, 2008
  * Added some minor product page tweaks like meta description tags.
