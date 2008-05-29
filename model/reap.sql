@@ -91,6 +91,21 @@ where
   and
     notebook.revision < now() - interval '1 week';
 
+-- Delete old group revisions.
+delete from
+  luminotes_group
+where
+  revision not in (
+    SELECT
+      max( sub_group.revision ) as max
+    from
+      luminotes_group sub_group
+    where
+      sub_group.id = luminotes_group.id
+  )
+  and
+    luminotes_group.revision < now() - interval '1 week';
+
 -- Delete old user revisions.
 delete from
   luminotes_user
@@ -112,6 +127,30 @@ delete from
 where
   notebook_id not in (
     select id from notebook_current
+  );
+
+-- Delete permissions for users that no longer exist.
+delete from
+  user_notebook
+where
+  user_id not in (
+    select id from luminotes_user_current
+  );
+
+-- Delete memberships to groups that no longer exist.
+delete from
+  user_group
+where
+  group_id not in (
+    select id from luminotes_group_current
+  );
+
+-- Delete memberships of users that no longer exist.
+delete from
+  user_group
+where
+  user_id not in (
+    select id from luminotes_user_current
   );
 
 vacuum analyze;
