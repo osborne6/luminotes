@@ -15,7 +15,7 @@ class Plan_setter( object ):
   def __init__( self, database, user_id, rate_plan ):
     self.database = database
     self.user_id = user_id
-    self.rate_plan = rate_plan
+    self.rate_plan = int( rate_plan )
 
     self.set_plan()
     self.database.commit()
