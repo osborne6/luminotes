@@ -1706,27 +1706,9 @@ Wiki.prototype.display_settings = function () {
   }
 
   var group_list = createDOM( "ul" );
-  for ( var i in this.groups ) {
-    var group = this.groups[ i ];
-    var item = createDOM( "li", {} );
-    appendChildNodes( item, group.name + " " );
-    if ( group.admin )
-      appendChildNodes( item, "(admin)" );
-    appendChildNodes( group_list, item );
-  }
-
-  if ( this.groups.length == 0 ) {
-    var item = createDOM( "li", {}, "You're not a member of any groups." );
-    appendChildNodes( group_list, item );
-  }
 
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "settings_form" },
-      createDOM( "p", {},
-        createDOM( "b", {}, "group membership" ),
-        createDOM( "br", {} ),
-        group_list
-      ),
       createDOM( "p", {},
         createDOM( "b", {}, "email address" ),
         createDOM( "br", {} ),
@@ -1747,6 +1729,11 @@ Wiki.prototype.display_settings = function () {
       )
     ),
     createDOM( "p", {},
+      createDOM( "b", {}, "group membership" ),
+      createDOM( "br", {} ),
+      group_list
+    ),
+    createDOM( "p", {},
       createDOM(
         "a", { "href": "/pricing", "target": "_top" },
         "Upgrade, downgrade, or cancel your account."
@@ -1754,7 +1741,44 @@ Wiki.prototype.display_settings = function () {
     )
   );
 
+  var self = this;
+
+  function connect_group_link( group, link ) {
+    connect( link, "onclick", function ( event ) {
+      this.invoker.invoke( "/groups/load_users", "GET", { 
+        "group_id": group.object_id,
+      }, function ( result ) {
+        self.display_group_settings( group, result );
+      } );
+      event.stop();
+    } );
+  }
+
+  for ( var i in this.groups ) {
+    var group = this.groups[ i ];
+    var item = createDOM( "li", {} );
+    appendChildNodes( group_list, item );
+
+    if ( group.admin ) {
+      var link = createDOM( "a", { "href": "#" }, group.name );
+      appendChildNodes( item, link );
+      appendChildNodes( item, " (admin)" );
+      connect_group_link( group, link );
+    } else {
+      appendChildNodes( item, group.name );
+    }
+  }
+
+  if ( this.groups.length == 0 ) {
+    var item = createDOM( "li", {}, "You're not a member of any groups." );
+    appendChildNodes( group_list, item );
+  }
+
   this.create_editor( "settings", "<h3>account settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+}
+
+Wiki.prototype.display_group_settings = function ( result ) {
+  console.log( result );
 }
 
 Wiki.prototype.declutter_clicked = function () {
