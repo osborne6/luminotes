@@ -1746,7 +1746,7 @@ Wiki.prototype.display_settings = function () {
   function connect_group_link( group, link ) {
     connect( link, "onclick", function ( event ) {
       this.invoker.invoke( "/groups/load_users", "GET", { 
-        "group_id": group.object_id,
+        "group_id": group.object_id
       }, function ( result ) {
         self.display_group_settings( group, result );
       } );
