@@ -154,11 +154,6 @@ Editor.prototype.finish_init = function () {
   connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
 
-  // special case: don't handle mouse click for share_notebook magic note, so radio button links
-  // work as intended
-  if ( this.id != "share_notebook" )
-    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
-
   // special-case: connect any submit buttons within the contents of this note
   withDocument( this.document, function () {
     var signup_button = getElement( "signup_button" );
