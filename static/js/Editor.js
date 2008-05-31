@@ -153,41 +153,34 @@ Editor.prototype.finish_init = function () {
   connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
   connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
+  connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+
+  // handle each form submit event by forwarding it on as a custom event
+  var forms = getElementsByTagAndClassName( "form", null, this.document );
+  for ( var i in forms ) {
+    var form = forms[ i ];
+    connect( form, "onsubmit", function ( event ) {
+      signal( self, "submit_form", form.getAttribute( "target" ), form );
+      event.stop();
+    } );
+  }
+
+  // connect each (non-submit) button to issue an event
+  var buttons = getElementsByTagAndClassName( "input", "button", this.document );
+  for ( var i in buttons ) {
+    var button = buttons[ i ];
+    if ( button.getAttribute( "type" ) == "submit")
+      continue;
+
+    connect( button, "onclick", function ( event ) {
+      signal( self, "button_clicked", this, button );
+      event.stop();
+    } );
+  }
 
   // special-case: connect any submit buttons within the contents of this note
+  // TODO: phase out entirely
   withDocument( this.document, function () {
-    var signup_button = getElement( "signup_button" );
-    if ( signup_button ) {
-      var signup_form = getElement( "signup_form" );
-      connect( signup_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/signup", signup_form ); event.stop();
-      } );
-    }
-
-    var login_button = getElement( "login_button" );
-    if ( login_button ) {
-      var login_form = getElement( "login_form" );
-      connect( login_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/login", login_form ); event.stop();
-      } );
-    }
-
-    var send_reset_button = getElement( "send_reset_button" );
-    if ( send_reset_button ) {
-      var send_reset_form = getElement( "send_reset_form" );
-      connect( send_reset_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/send_reset", send_reset_form ); event.stop();
-      } );
-    }
-
-    var reset_button = getElement( "reset_button" );
-    if ( reset_button ) {
-      var reset_form = getElement( "reset_form" );
-      connect( reset_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/reset_password", reset_form ); event.stop();
-      } );
-    }
-
     var invite_button = getElement( "invite_button" );
     if ( invite_button ) {
       var invite_form = getElement( "invite_form" );

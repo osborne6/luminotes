@@ -35,6 +35,7 @@ class Redeem_reset_note( Span ):
             value = ( len( users ) > 1 ) and u"reset passwords" or u"reset password" ),
         ),
         id = "reset_form",
+        target = "/users/reset_password",
       ),
       P(
         Strong( u"tip:" ),

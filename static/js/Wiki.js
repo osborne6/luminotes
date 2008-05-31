@@ -1588,7 +1588,7 @@ Wiki.prototype.share_notebook = function () {
   this.display_invites( invite_area );
 
   var div = createDOM( "div", {}, 
-    createDOM( "form", { "id": "invite_form" },
+    createDOM( "form", { "id": "invite_form", "target": "/users/send_invites" },
       createDOM( "input", { "type": "hidden", "name": "notebook_id", "value": this.notebook_id } ),
       createDOM( "p", {},
         createDOM( "b", {}, "people to invite" ),
@@ -1708,7 +1708,7 @@ Wiki.prototype.display_settings = function () {
   var group_list = createDOM( "ul" );
 
   var div = createDOM( "div", {}, 
-    createDOM( "form", { "id": "settings_form" },
+    createDOM( "form", { "id": "settings_form", "target": "/users/update_settings" },
       createDOM( "p", {},
         createDOM( "b", {}, "email address" ),
         createDOM( "br", {} ),
