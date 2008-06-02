@@ -1437,8 +1437,10 @@ Wiki.prototype.submit_form = function ( form ) {
       self.share_notebook();
     }
   } else if ( url == "/users/update_settings" ) {
-    self.email_address = result.email_address || "";
-    self.display_message( "Your account settings have been updated." );
+    callback = function ( result ) {
+      self.email_address = result.email_address || "";
+      self.display_message( "Your account settings have been updated." );
+    }
   }
 
   this.invoker.invoke( url, "POST", args, callback, form );
