@@ -59,6 +59,10 @@ class Test_groups( Test_controller ):
     assert result[ u"other_users" ][ 1 ].object_id == self.user3.object_id
     assert result[ u"other_users" ][ 1 ].username == self.user3.username
 
+    assert result[ u"group" ].object_id == self.group.object_id
+    assert result[ u"group" ].name == self.group.name
+    assert result[ u"group" ].admin == self.group.admin
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,

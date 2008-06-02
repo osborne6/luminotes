@@ -32,6 +32,7 @@ class Groups( object ):
     @param user_id: id of current logged-in user (if any)
     @rtype: dict
     @return: {
+      'group': group_info,
       'admin_users': admin_user_list,
       'other_users': non_admin_user_list,
     }
@@ -50,6 +51,7 @@ class Groups( object ):
     other_users = self.__database.select_many( User, group.sql_load_users( admin = False ) )
 
     return dict(
+      group = group,
       admin_users = admin_users,
       other_users = other_users,
     )
