@@ -160,67 +160,27 @@ Editor.prototype.finish_init = function () {
   for ( var i in forms ) {
     var form = forms[ i ];
     connect( form, "onsubmit", function ( event ) {
-      signal( self, "submit_form", form.getAttribute( "target" ), form );
+      signal( self, "submit_form", form );
       event.stop();
     } );
   }
 
   // connect each (non-submit) button to issue an event
-  var buttons = getElementsByTagAndClassName( "input", "button", this.document );
-  for ( var i in buttons ) {
-    var button = buttons[ i ];
-    if ( button.getAttribute( "type" ) == "submit")
-      continue;
-
+  function connect_button( button ) {
     connect( button, "onclick", function ( event ) {
       signal( self, "button_clicked", this, button );
       event.stop();
     } );
   }
 
-  // special-case: connect any submit buttons within the contents of this note
-  // TODO: phase out entirely
-  withDocument( this.document, function () {
-    var invite_button = getElement( "invite_button" );
-    if ( invite_button ) {
-      var invite_form = getElement( "invite_form" );
-      connect( invite_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/send_invites", invite_form, function ( result ) {
-          if ( !result.invites ) return;
-          signal( self, "invites_updated", result.invites );
-        } );
-        event.stop();
-      } );
+  var buttons = getElementsByTagAndClassName( "input", "button", this.document );
+  for ( var i in buttons ) {
+    var button = buttons[ i ];
+    if ( button.getAttribute( "type" ) == "submit")
+      continue;
 
-      function connect_button( revoke_button, invite_id ) {
-        connect( revoke_button, "onclick", function ( event ) {
-          signal( self, "revoke_invite", invite_id, function ( result ) {
-            if ( !result.invites ) return;
-            signal( self, "invites_updated", result.invites );
-          } );
-          event.stop();
-        } );
-      }
-
-      var revoke_buttons = getElementsByTagAndClassName( "input", "revoke_button" );
-      for ( var i in revoke_buttons ) {
-        var revoke_button = revoke_buttons[ i ];
-        var invite_id = revoke_button.id.split( "_" ).pop();
-        connect_button( revoke_button, invite_id );
-      }
-    }
-
-    var settings_button = getElement( "settings_button" );
-    if ( settings_button ) {
-      var settings_form = getElement( "settings_form" );
-      connect( settings_button, "onclick", function ( event ) {
-        signal( self, "submit_form", "/users/update_settings", settings_form, function ( result ) {
-          signal( self, "settings_updated", result );
-        } );
-        event.stop();
-      } );
-    }
-  } );
+    connect_button( button );
+  }
 
   // browsers such as Firefox, but not Opera
   if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.edit_enabled )

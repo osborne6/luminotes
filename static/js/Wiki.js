@@ -732,30 +732,8 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 
   connect( editor, "load_editor", this, "load_editor" );
   connect( editor, "hide_clicked", function ( event ) { self.hide_editor( event, editor ) } );
-  connect( editor, "invites_updated", function ( invites ) { self.invites = invites; self.share_notebook(); } );
-  connect( editor, "settings_updated", function ( result ) {
-    self.email_address = result.email_address || "";
-    self.display_message( "Your account settings have been updated." );
-  } );
-
-  connect( editor, "submit_form", function ( url, form, callback ) {
-    var args = {}
-    if ( url == "/users/signup" ) {
-      args[ "invite_id" ] = self.invite_id;
-      args[ "rate_plan" ] = self.signup_plan;
-      args[ "yearly" ] = self.yearly;
-    } else if ( url == "/users/login" ) {
-      args[ "invite_id" ] = self.invite_id;
-    }
-
-    self.invoker.invoke( url, "POST", args, callback, form );
-  } );
-  connect( editor, "revoke_invite", function ( invite_id, callback ) {
-    self.invoker.invoke( "/users/revoke_invite", "POST", {
-      "notebook_id": self.notebook_id,
-      "invite_id": invite_id
-    }, callback );
-  } );
+  connect( editor, "submit_form", function ( form ) { self.submit_form( form ); } );
+  connect( editor, "button_clicked", function ( editor, button ) { self.editor_button_clicked( editor, button ); } );
 
   this.clear_pulldowns();
 
@@ -1440,6 +1418,48 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
   editor.user_revisions.push( result.new_revision );
 }
 
+Wiki.prototype.submit_form = function ( form ) {
+  var self = this;
+  var args = {}
+  var url = form.getAttribute( "target" );
+  var callback = null;
+
+  if ( url == "/users/signup" ) {
+    args[ "invite_id" ] = this.invite_id;
+    args[ "rate_plan" ] = this.signup_plan;
+    args[ "yearly" ] = this.yearly;
+  } else if ( url == "/users/login" ) {
+    args[ "invite_id" ] = this.invite_id;
+  } else if ( url == "/users/send_invites" ) {
+    callback = function ( result ) {
+      if ( !result.invites ) return;
+      self.invites = result.invites;
+      self.share_notebook();
+    }
+  } else if ( url == "/users/update_settings" ) {
+    self.email_address = result.email_address || "";
+    self.display_message( "Your account settings have been updated." );
+  }
+
+  this.invoker.invoke( url, "POST", args, callback, form );
+}
+
+Wiki.prototype.editor_button_clicked = function ( editor, button ) {
+  if ( hasElementClass( button, "revoke_button" ) ) {
+    var invite_id = button.id.split( "_" ).pop();
+    var self = this;
+
+    this.invoker.invoke( "/users/revoke_invite", "POST", {
+      "notebook_id": this.notebook_id,
+      "invite_id": invite_id
+    }, function ( result ) {
+      if ( !result.invites ) return;
+      self.invites = result.invites;
+      self.share_notebook();
+    } );
+  }
+}
+
 Wiki.prototype.search = function ( event ) {
   this.clear_messages();
   this.clear_pulldowns();
@@ -1645,7 +1665,7 @@ Wiki.prototype.display_invites = function ( invite_area ) {
     var revoke_button = createDOM( "input", {
       "type": "button",
       "id": "revoke_" + invite.object_id,
-      "class": "revoke_button",
+      "class": "revoke_button button",
       "value": " x ",
       "title": "revoke this person's notebook access"
     } );
