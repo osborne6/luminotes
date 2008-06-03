@@ -55,3 +55,42 @@ class Groups( object ):
       admin_users = admin_users,
       other_users = other_users,
     )
+
+  @expose( view = Json )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    group_id = Valid_id(),
+    group_name = Valid_string( min = 0, max = 100 ),
+    group_settings_button = unicode,
+    user_id = Valid_id( none_okay = True ),
+  )
+  def update_settings( self, group_id, group_name, group_settings_button, user_id = None ):
+    """
+    Update the settings for the given group.
+
+    @type group_id: unicode
+    @param group_id: id of group whose users to return
+    @type group_name: unicode
+    @param group_name: new name of the group
+    @type group_settings_button: unicode
+    @param group_settings_button: ignored
+    @rtype: dict
+    @return: { 'message': message }
+    @raise Access_error: the current user doesn't have admin membership to the given group
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_group( user_id, group_id, admin = True ):
+      raise Access_error()
+
+    group = self.__database.load( Group, group_id )
+
+    if group is None:
+      raise Access_error()
+
+    group.name = group_name
+    self.__database.save( group )
+
+    return dict(
+      message = u"The group settings have been saved.",
+    )
