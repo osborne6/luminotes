@@ -156,13 +156,17 @@ Editor.prototype.finish_init = function () {
   connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
 
   // handle each form submit event by forwarding it on as a custom event
-  var forms = getElementsByTagAndClassName( "form", null, this.document );
-  for ( var i in forms ) {
-    var form = forms[ i ];
+  function connect_form( form ) {
     connect( form, "onsubmit", function ( event ) {
       signal( self, "submit_form", form );
       event.stop();
     } );
+  }
+
+  var forms = getElementsByTagAndClassName( "form", null, this.document );
+  for ( var i in forms ) {
+    var form = forms[ i ];
+    connect_form( form );
   }
 
   // connect each (non-submit) button to issue an event
