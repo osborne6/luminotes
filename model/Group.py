@@ -87,8 +87,8 @@ class Group( Persistent ):
       where
         user_group.group_id = %s and
         user_group.user_id = luminotes_user_current.id%s
-      order by user_group.username;
-      """ % quote( self.object_id )
+      order by luminotes_user_current.username;
+      """ % ( quote( self.object_id ), admin_clause )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )
