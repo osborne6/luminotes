@@ -87,6 +87,7 @@ class Upgrade_page( Product_page ):
                 Td(
                   Ul(
                     Li( u"Collaborate on a wiki with multiple people in your organization." ),
+                    Li( u"Only one subscription is necessary. Additional user accounts are included." ),
                   ),
                   colspan = len( rate_plans ) + 1,
                   id = u"users_description",
@@ -191,9 +192,8 @@ class Upgrade_page( Product_page ):
               Tr(
                 Td(
                   Ul(
-                    Li( u"Manage all Luminotes accounts for your organization. All from one web page." ),
+                    Li( u"Manage all Luminotes accounts for your organization from one web page." ),
                     Li( u"Create and delete users as needed." ),
-                    Li( u"Grant or revoke access to wiki notebooks." ),
                   ),
                   colspan = len( rate_plans ) + 1,
                   id = u"admin_description",
