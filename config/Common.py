@@ -86,7 +86,7 @@ settings = {
           """,
       },
       {
-        "name": "max",
+        "name": "premium",
         "designed_for": "organizations",
         "storage_quota_bytes": 5000 * MEGABYTE,
         "included_users": 50,
