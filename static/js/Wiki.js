@@ -1692,7 +1692,7 @@ Wiki.prototype.display_invites = function ( invite_area ) {
     }
 
     appendChildNodes(
-      add_invite_to, createDOM( "div", { "class": "invite" },
+      add_invite_to, createDOM( "div", { "class": "invite indented" },
       invite.email_address, " ",
       createDOM( "span", { "class": "invite_status" },
         invite.redeemed_username ? "(invite accepted by " + invite.redeemed_username + ")" : "(waiting for invite to be accepted)"
@@ -1736,7 +1736,7 @@ Wiki.prototype.display_settings = function () {
     return;
   }
 
-  var group_list = createDOM( "ul" );
+  var group_list = createDOM( "div" );
 
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "settings_form", "target": "/users/update_settings" },
@@ -1774,7 +1774,7 @@ Wiki.prototype.display_settings = function () {
 
   for ( var i in this.groups ) {
     var group = this.groups[ i ];
-    var item = createDOM( "li", {} );
+    var item = createDOM( "div", { "class": "indented" } );
     appendChildNodes( group_list, item );
     appendChildNodes( item, group.name );
 
@@ -1804,39 +1804,108 @@ Wiki.prototype.display_group_settings = function ( result ) {
     return;
   }
 
-  var admin_list = createDOM( "ul" );
-  var user_list = createDOM( "ul" );
+  var admin_list = createDOM( "div" );
+  var user_list = createDOM( "div" );
 
   var div = createDOM( "div", {}, 
+    createDOM( "form", { "id": "group_settings_form", "target": "/groups/update_settings" },
+      createDOM( "input",
+        { "type": "hidden", "name": "group_id", "id": "group_id", "value": result.group.object_id }
+      ),
+      createDOM( "p", {},
+        createDOM( "b", {}, "group name" ),
+        createDOM( "br", {} ),
+        createDOM( "input",
+          { "type": "text", "name": "group_name", "id": "group_name", "class": "text_field",
+            "size": "30", "maxlength": "100", "value": result.group.name }
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "input",
+          { "type": "submit", "name": "group_settings_button", "id": "group_settings_button", "class": "button", "value": "save settings" }
+        )
+      )
+    ),
     createDOM( "p", {},
-      createDOM( "b", {}, "group admins" ),
+      createDOM( "b", {}, "admins" ),
       createDOM( "br", {} ),
       admin_list
     ),
     createDOM( "p", {},
-      createDOM( "b", {}, "group members" ),
+      createDOM( "b", {}, "members" ),
       createDOM( "br", {} ),
       user_list
+    ),
+    createDOM( "h3", {}, "create group member" ),
+    createDOM( "form", { "id": "create_user_form", "target": "/users/signup_group_member" },
+      createDOM( "input",
+        { "type": "hidden", "name": "group_id", "id": "group_id", "value": result.group.object_id }
+      ),
+      createDOM( "p", {},
+        createDOM( "b", {}, "new username" ),
+        createDOM( "br", {} ),
+        createDOM( "input",
+          { "type": "text", "name": "username", "id": "username", "class": "text_field",
+            "size": "30", "maxlength": "60" }
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "b", {}, "password" ),
+        createDOM( "br", {} ),
+        createDOM( "input",
+          { "type": "password", "name": "password", "id": "password", "class": "text_field",
+            "size": "30", "maxlength": "60" }
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "b", {}, "password" ), " (again)",
+        createDOM( "br", {} ),
+        createDOM( "input",
+          { "type": "password", "name": "password_repeat", "id": "password_repeat", "class": "text_field",
+            "size": "30", "maxlength": "60" }
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "b", {}, "email address" ),
+        createDOM( "br", {} ),
+        createDOM( "input",
+          { "type": "text", "name": "email_address", "id": "email_address", "class": "text_field",
+            "size": "30", "maxlength": "60" }
+        )
+      ),
+      createDOM( "p", {},
+        createDOM( "input",
+          { "type": "submit", "name": "create_user_button", "id": "create_user_button", "class": "button", "value": "create member" }
+        )
+      )
     )
   );
 
   for ( var i in result.admin_users ) {
     var user = result.admin_users[ i ];
-    appendChildNodes( admin_list, createDOM( "li", {}, user.username ) );
+    appendChildNodes( admin_list, createDOM( "div", { "class": "indented" }, user.username ) );
   }
 
   if ( result.admin_users.length == 0 )
-    appendChildNodes( admin_list, createDOM( "li", {}, "This group has no admin users." ) );
+    appendChildNodes( admin_list, createDOM( "div", { "class": "indented" }, "This group has no admin users." ) );
 
   for ( var i in result.other_users ) {
     var user = result.other_users[ i ];
-    appendChildNodes( user_list, createDOM( "li", {}, user.username ) );
+    appendChildNodes( user_list, createDOM( "div", { "class": "indented" }, user.username,
+      createDOM( "input", {
+        "type": "button",
+        "id": "remove_user_" + user.object_id,
+        "class": "remove_user_button button",
+        "value": " x ",
+        "title": "remove this user from the group"
+      } )
+    ) );
   }
 
   if ( result.other_users.length == 0 )
-    appendChildNodes( user_list, createDOM( "li", {}, "This group has no members." ) );
+    appendChildNodes( user_list, createDOM( "div", { "class": "indented" }, "This group has no members." ) );
 
-  this.create_editor( "group_" + result.group.object_id, "<h3>" + result.group.name + " admin settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "note_settings" ) );
+  this.create_editor( "group_" + result.group.object_id, "<h3>group admin settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "note_settings" ) );
 }
 
 Wiki.prototype.declutter_clicked = function () {

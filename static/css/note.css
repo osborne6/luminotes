@@ -70,6 +70,11 @@ hr {
   font-size: 90%;
 }
 
+.remove_user_button {
+  margin-left: 0.5em;
+  font-size: 90%;
+}
+
 .text_field {
   margin-top: 0.25em;
   padding: 0.25em;
@@ -113,7 +118,7 @@ ol li {
   cursor: pointer;
 }
 
-.invite {
+.indented {
   margin-left: 1em;
 }
 
