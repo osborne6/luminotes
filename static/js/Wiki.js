@@ -1447,9 +1447,10 @@ Wiki.prototype.submit_form = function ( form ) {
 }
 
 Wiki.prototype.editor_button_clicked = function ( editor, button ) {
+  var self = this;
+
   if ( hasElementClass( button, "revoke_button" ) ) {
     var invite_id = button.id.split( "_" ).pop();
-    var self = this;
 
     this.invoker.invoke( "/users/revoke_invite", "POST", {
       "notebook_id": this.notebook_id,
@@ -1458,6 +1459,14 @@ Wiki.prototype.editor_button_clicked = function ( editor, button ) {
       if ( !result.invites ) return;
       self.invites = result.invites;
       self.share_notebook();
+    } );
+  } else if ( hasElementClass( button, "admin_button" ) ) {
+    var group_id = button.id.split( "_" ).pop();
+
+    this.invoker.invoke( "/groups/load_users", "GET", {
+      "group_id": group_id
+    }, function ( result ) {
+      self.display_group_settings( result );
     } );
   }
 }
@@ -1763,31 +1772,20 @@ Wiki.prototype.display_settings = function () {
     )
   );
 
-  var self = this;
-
-  function connect_group_link( group, link ) {
-    connect( link, "onclick", function ( event ) {
-      this.invoker.invoke( "/groups/load_users", "GET", { 
-        "group_id": group.object_id
-      }, function ( result ) {
-        self.display_group_settings( group, result );
-      } );
-      event.stop();
-    } );
-  }
-
   for ( var i in this.groups ) {
     var group = this.groups[ i ];
     var item = createDOM( "li", {} );
     appendChildNodes( group_list, item );
+    appendChildNodes( item, group.name );
 
     if ( group.admin ) {
-      var link = createDOM( "a", { "href": "#" }, group.name );
-      appendChildNodes( item, link );
-      appendChildNodes( item, " (admin)" );
-      connect_group_link( group, link );
-    } else {
-      appendChildNodes( item, group.name );
+      appendChildNodes( item, createDOM( "input", {
+        "id": "admin_" + group.object_id,
+        "class": "admin_button button",
+        "type": "button",
+        "value": "admin",
+        "title": "administer this group's users"
+      } ) );
     }
   }
 
@@ -1800,7 +1798,45 @@ Wiki.prototype.display_settings = function () {
 }
 
 Wiki.prototype.display_group_settings = function ( result ) {
-  console.log( result );
+  var group_frame = getElement( "note_group_" + result.group.object_id );
+  if ( group_frame ) {
+    group_frame.editor.highlight();
+    return;
+  }
+
+  var admin_list = createDOM( "ul" );
+  var user_list = createDOM( "ul" );
+
+  var div = createDOM( "div", {}, 
+    createDOM( "p", {},
+      createDOM( "b", {}, "group admins" ),
+      createDOM( "br", {} ),
+      admin_list
+    ),
+    createDOM( "p", {},
+      createDOM( "b", {}, "group members" ),
+      createDOM( "br", {} ),
+      user_list
+    )
+  );
+
+  for ( var i in result.admin_users ) {
+    var user = result.admin_users[ i ];
+    appendChildNodes( admin_list, createDOM( "li", {}, user.username ) );
+  }
+
+  if ( result.admin_users.length == 0 )
+    appendChildNodes( admin_list, createDOM( "li", {}, "This group has no admin users." ) );
+
+  for ( var i in result.other_users ) {
+    var user = result.other_users[ i ];
+    appendChildNodes( user_list, createDOM( "li", {}, user.username ) );
+  }
+
+  if ( result.other_users.length == 0 )
+    appendChildNodes( user_list, createDOM( "li", {}, "This group has no members." ) );
+
+  this.create_editor( "group_" + result.group.object_id, "<h3>" + result.group.name + " admin settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "note_settings" ) );
 }
 
 Wiki.prototype.declutter_clicked = function () {
