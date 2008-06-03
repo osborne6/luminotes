@@ -87,7 +87,8 @@ class Upgrade_page( Product_page ):
                 Td(
                   Ul(
                     Li( u"Collaborate on a wiki with multiple people in your organization." ),
-                    Li( u"Only one subscription is necessary. Additional user accounts are included." ),
+                    Li( u"Only one subscription is necessary." ),
+                    Li( u"Additional user accounts are included (as listed)." ),
                   ),
                   colspan = len( rate_plans ) + 1,
                   id = u"users_description",
