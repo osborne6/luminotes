@@ -208,6 +208,17 @@ class Test_controller( object ):
     User.sql_save_group = lambda self, group_id, admin = False: \
       lambda database: sql_save_group( self, group_id, admin, database )
 
+    def sql_remove_group( self, group_id, database ):
+      for ( user_id, group_infos ) in database.user_group.items():
+        for group_info in group_infos:
+          ( db_group_id, db_admin ) = group_info
+
+          if self.object_id == user_id and group_id == db_group_id:
+            database.user_group[ user_id ].remove( group_info )
+
+    User.sql_remove_group = lambda self, group_id: \
+      lambda database: sql_remove_group( self, group_id, database )
+
     def sql_in_group( self, group_id, admin, database ):
       for ( user_id, group_infos ) in database.user_group.items():
         for group_info in group_infos:

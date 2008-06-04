@@ -767,6 +767,61 @@ class Test_users( Test_controller ):
 
     assert membership is True
 
+  def test_check_remove_group( self ):
+    self.login2()
+
+    result = self.http_post( "/users/remove_group", dict(
+      user_id_to_remove = self.user.object_id,
+      group_id = self.group.object_id,
+    ), session_id = self.session_id )
+
+    assert u"revoked" in result[ u"message" ]
+    assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == False
+
+  def test_check_remove_group_without_access( self ):
+    self.login2()
+
+    result = self.http_post( "/users/remove_group", dict(
+      user_id_to_remove = self.user.object_id,
+      group_id = self.group2.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+    assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
+
+  def test_check_remove_group_without_admin_access( self ):
+    self.login()
+
+    result = self.http_post( "/users/remove_group", dict(
+      user_id_to_remove = self.user.object_id,
+      group_id = self.group.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+    assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
+
+  def test_check_remove_group_with_unknown_group( self ):
+    self.login2()
+
+    result = self.http_post( "/users/remove_group", dict(
+      user_id_to_remove = self.user.object_id,
+      group_id = u"unknowngroupid",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+    assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
+
+  def test_check_remove_group_with_unknown_user( self ):
+    self.login2()
+
+    result = self.http_post( "/users/remove_group", dict(
+      user_id_to_remove = u"unknownuserid",
+      group_id = self.group.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+    assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
+
   def test_send_reset( self ):
     # trick send_reset() into using a fake SMTP server
     Stub_smtp.reset()

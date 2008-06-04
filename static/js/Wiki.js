@@ -1419,6 +1419,9 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
 }
 
 Wiki.prototype.submit_form = function ( form ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
   var self = this;
   var args = {}
   var url = form.getAttribute( "target" );
@@ -1447,6 +1450,9 @@ Wiki.prototype.submit_form = function ( form ) {
 }
 
 Wiki.prototype.editor_button_clicked = function ( editor, button ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
   var self = this;
 
   if ( hasElementClass( button, "revoke_button" ) ) {
@@ -1467,6 +1473,21 @@ Wiki.prototype.editor_button_clicked = function ( editor, button ) {
       "group_id": group_id
     }, function ( result ) {
       self.display_group_settings( result );
+    } );
+  } else if ( hasElementClass( button, "remove_user_button" ) ) {
+    var id_pieces = button.id.split( "_" );
+    var group_id = id_pieces.pop();
+    var user_id = id_pieces.pop();
+
+    this.invoker.invoke( "/users/remove_group", "POST", {
+      "user_id_to_remove": user_id,
+      "group_id": group_id
+    }, function ( result ) {
+      self.invoker.invoke( "/groups/load_users", "GET", {
+        "group_id": group_id
+      }, function ( result ) {
+        self.display_group_settings( result );
+      } );
     } );
   }
 }
@@ -1798,11 +1819,11 @@ Wiki.prototype.display_settings = function () {
 }
 
 Wiki.prototype.display_group_settings = function ( result ) {
+  this.clear_pulldowns();
+
   var group_frame = getElement( "note_group_" + result.group.object_id );
-  if ( group_frame ) {
-    group_frame.editor.highlight();
-    return;
-  }
+  if ( group_frame )
+    group_frame.editor.shutdown();
 
   var admin_list = createDOM( "div" );
   var user_list = createDOM( "div" );
@@ -1825,16 +1846,6 @@ Wiki.prototype.display_group_settings = function ( result ) {
           { "type": "submit", "name": "group_settings_button", "id": "group_settings_button", "class": "button", "value": "save settings" }
         )
       )
-    ),
-    createDOM( "p", {},
-      createDOM( "b", {}, "admins" ),
-      createDOM( "br", {} ),
-      admin_list
-    ),
-    createDOM( "p", {},
-      createDOM( "b", {}, "members" ),
-      createDOM( "br", {} ),
-      user_list
     ),
     createDOM( "h3", {}, "create group member" ),
     createDOM( "form", { "id": "create_user_form", "target": "/users/signup_group_member" },
@@ -1878,6 +1889,17 @@ Wiki.prototype.display_group_settings = function ( result ) {
           { "type": "submit", "name": "create_user_button", "id": "create_user_button", "class": "button", "value": "create member" }
         )
       )
+    ),
+    createDOM( "h3", {}, "group members" ),
+    createDOM( "p", {},
+      createDOM( "b", {}, "admins" ),
+      createDOM( "br", {} ),
+      admin_list
+    ),
+    createDOM( "p", {},
+      createDOM( "b", {}, "members" ),
+      createDOM( "br", {} ),
+      user_list
     )
   );
 
@@ -1894,7 +1916,7 @@ Wiki.prototype.display_group_settings = function ( result ) {
     appendChildNodes( user_list, createDOM( "div", { "class": "indented" }, user.username,
       createDOM( "input", {
         "type": "button",
-        "id": "remove_user_" + user.object_id,
+        "id": "remove_user_" + user.object_id + "_" + result.group.object_id,
         "class": "remove_user_button button",
         "value": " x ",
         "title": "remove this user from the group"

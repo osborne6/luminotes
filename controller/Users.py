@@ -619,6 +619,40 @@ class Users( object ):
 
   @expose( view = Json )
   @end_transaction
+  @grab_user_id
+  @validate(
+    user_id_to_remove = Valid_id(),
+    group_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def remove_group( self, user_id_to_remove, group_id, user_id = None ):
+    """
+    Remove a user's membership from the given group.
+
+    @type user_id_to_remove: unicode
+    @param user_id_to_remove: id of the user to remove from the group
+    @type group_id: unicode
+    @param group_id: id of the group to remove membership from
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any)
+    @raise Validation_error: one of the arguments is invalid
+    @raise Access_error: the current user doesn't have admin membership to the given group
+    """
+    if not self.check_group( user_id, group_id, admin = True ):
+      raise Access_error()
+
+    user = self.__database.load( User, user_id_to_remove )
+    if not user:
+      raise Access_error()
+
+    self.__database.execute( user.sql_remove_group( group_id ) )
+
+    return dict(
+      message = u"Group membership for %s has been revoked." % user.username,
+    )
+
+  @expose( view = Json )
+  @end_transaction
   @validate(
     email_address = ( Valid_string( min = 1, max = 60 ), valid_email_address ),
     send_reset_button = unicode,
