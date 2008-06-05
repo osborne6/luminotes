@@ -548,6 +548,17 @@ class Users( object ):
     """
     return sum( self.__database.select_one( tuple, user.sql_calculate_storage() ), 0 )
 
+  def calculate_group_storage( self, user ):
+    """
+    Calculate total storage utilization for all groups that the given user is a member of.
+
+    @type user: User
+    @param user: user for which to calculate storage utilization
+    @rtype: int
+    @return: total bytes used for group storage
+    """
+    return self.__database.select_one( int, user.sql_calculate_group_storage() )
+
   def update_storage( self, user_id, commit = True ):
     """
     Calculate and record total storage utilization for the given user.
@@ -564,6 +575,7 @@ class Users( object ):
     if user:
       user.storage_bytes = self.calculate_storage( user )
       self.__database.save( user, commit )
+      user.group_storage_bytes = self.calculate_group_storage( user )
 
     return user
 

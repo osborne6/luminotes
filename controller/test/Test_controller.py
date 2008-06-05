@@ -119,6 +119,12 @@ class Test_controller( object ):
     User.sql_calculate_storage = lambda self: \
       lambda database: sql_calculate_storage( self, database )
 
+    def sql_calculate_group_storage( self, database ):
+      return 0
+
+    User.sql_calculate_group_storage = lambda self: \
+      lambda database: sql_calculate_group_storage( self, database )
+
     def sql_has_access( self, notebook_id, read_write, owner, database ):
       for ( user_id, notebook_infos ) in database.user_notebook.items():
         for notebook_info in notebook_infos:

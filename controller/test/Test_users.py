@@ -679,6 +679,7 @@ class Test_users( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == expected_size
+    assert user.group_storage_bytes == 0
     assert user.revision > previous_revision
 
   def test_update_storage_with_unknown_user_id( self ):
@@ -690,6 +691,7 @@ class Test_users( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert self.user.storage_bytes == 0
+    assert self.user.group_storage_bytes == 0
     assert self.user.revision == original_revision
 
   def test_check_access( self ):
