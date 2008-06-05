@@ -41,6 +41,7 @@ class User( Persistent ):
     self.__password_hash = password_hash
     self.__email_address = email_address
     self.__storage_bytes = storage_bytes or 0
+    self.__group_storage_bytes = 0
     self.__rate_plan = rate_plan or 0
 
   @staticmethod
@@ -323,11 +324,37 @@ class User( Persistent ):
       ) as file_storage;
       """ % ( quote( self.object_id ), quote( self.object_id ) )
 
+  def sql_calculate_group_storage( self ):
+    """
+    Return a SQL string to calculate the total bytes of storage usage for all groups that this user
+    is a member of. This includes the cumulative storage of all users in these groups.
+    """
+    return \
+      """
+      select
+        coalesce( sum( storage_bytes ), 0 )
+      from
+        user_group, luminotes_user_current
+      where
+        group_id in (
+          select
+            group_id
+          from
+            user_group
+          where
+            user_id = %s
+          ) and
+        user_id = luminotes_user_current.id
+      group by
+        user_id, storage_bytes;
+      """ % quote( self.object_id )
+
   def to_dict( self ):
     d = Persistent.to_dict( self )
     d.update( dict(
       username = self.username,
       storage_bytes = self.__storage_bytes,
+      group_storage_bytes = self.__group_storage_bytes,
       rate_plan = self.__rate_plan,
     ) )
 
@@ -346,6 +373,11 @@ class User( Persistent ):
     self.update_revision()
     self.__storage_bytes = storage_bytes
 
+  def __set_group_storage_bytes( self, group_storage_bytes ):
+    # The group_storage_bytes member isn't actually saved to the database, so setting it doesn't
+    # need to call update_revision().
+    self.__group_storage_bytes = group_storage_bytes
+
   def __set_rate_plan( self, rate_plan ):
     self.update_revision()
     self.__rate_plan = rate_plan
@@ -353,5 +385,6 @@ class User( Persistent ):
   username = property( lambda self: self.__username )
   email_address = property( lambda self: self.__email_address, __set_email_address )
   password = property( None, __set_password )
-  storage_bytes = property( lambda self: self.__storage_bytes, __set_storage_bytes )
+  storage_bytes = property( lambda self: self.__group_storage_bytes or self.__storage_bytes, __set_storage_bytes )
+  group_storage_bytes = property( lambda self: self.__group_storage_bytes, __set_group_storage_bytes )
   rate_plan = property( lambda self: self.__rate_plan, __set_rate_plan )

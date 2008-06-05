@@ -1,9 +1,12 @@
 1.4.0: ??
- * Implemented some basic user administration features.
+ * Implemented some basic user administration features, allowing you to create
+   Luminotes users yourself.
  * Added new rate plans with support for user administration.
  * Wrote a tool for manually updating a user's rate plan: tools/set_plan.py
  * Refactored some of the client-side form-handling code to cut down on
    special-case hacks.
+ * NOTE: After upgrading to this release, you must restart memcached to clear
+   the cache. Failing to do so will cause errors with the User object.
 
 1.3.40: May 27, 2008
  * Added some minor product page tweaks like meta description tags.

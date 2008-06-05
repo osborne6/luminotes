@@ -19,6 +19,7 @@ class Test_user( object ):
     assert self.user.username == self.username
     assert self.user.email_address == self.email_address
     assert self.user.storage_bytes == 0
+    assert self.user.group_storage_bytes == 0
     assert self.user.rate_plan == 0
 
   def test_check_correct_password( self ):
@@ -78,6 +79,14 @@ class Test_user( object ):
     assert self.user.storage_bytes == storage_bytes
     assert self.user.revision > previous_revision
 
+  def test_set_storage_bytes( self ):
+    original_revision = self.user.revision
+    group_storage_bytes = 44
+    self.user.group_storage_bytes = group_storage_bytes
+    
+    assert self.user.group_storage_bytes == group_storage_bytes
+    assert self.user.revision == original_revision
+
   def test_set_rate_plan( self ):
     previous_revision = self.user.revision
     rate_plan = 2
@@ -91,4 +100,5 @@ class Test_user( object ):
 
     assert d.get( "username" ) == self.username
     assert d.get( "storage_bytes" ) == self.user.storage_bytes
+    assert d.get( "group_storage_bytes" ) == self.user.group_storage_bytes
     assert d.get( "rate_plan" ) == self.user.rate_plan
