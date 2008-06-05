@@ -55,26 +55,6 @@ class Upgrade_page( Product_page ):
               ),
               Tr(
                 Td(
-                  A( u"Included storage space", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'storage_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
-                [ Td(
-                  plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
-                ) for plan in rate_plans ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"More space for your wiki notes." ),
-                    Li( u"More space for your documents and files." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"storage_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
                   A( u"Included accounts", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'users_description' ); return false;" ),
                   class_ = u"feature_name",
                 ),
@@ -92,6 +72,27 @@ class Upgrade_page( Product_page ):
                   ),
                   colspan = len( rate_plans ) + 1,
                   id = u"users_description",
+                  class_ = u"feature_description undisplayed",
+                ),
+              ),
+              Tr(
+                Td(
+                  A( u"Included storage space", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'storage_description' ); return false;" ),
+                  class_ = u"feature_name",
+                ),
+                [ Td(
+                  plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
+                ) for plan in rate_plans ],
+              ),
+              Tr(
+                Td(
+                  Ul(
+                    Li( u"More space for your wiki notes." ),
+                    Li( u"More space for your documents and files." ),
+                    Li( u"All of your users share a common pool of storage space." ),
+                  ),
+                  colspan = len( rate_plans ) + 1,
+                  id = u"storage_description",
                   class_ = u"feature_description undisplayed",
                 ),
               ),
@@ -241,13 +242,13 @@ class Upgrade_page( Product_page ):
               self.fee_row( rate_plans, user, include_blank = False, yearly = True ),
               Tr(
                 [ Td(
-                  plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
+                  ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br />%s users" % plan[ u"included_users" ],
+                  class_ = u"feature_value",
                 ) for plan in rate_plans ],
               ),
               Tr(
                 [ Td(
-                  ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br />%s users" % plan[ u"included_users" ],
-                  class_ = u"feature_value",
+                  plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
                 ) for plan in rate_plans ],
               ),
               border = u"1",
