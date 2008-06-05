@@ -722,6 +722,7 @@ class Notebooks( object ):
       user = self.__users.update_storage( user_id, commit = False )
       self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
       self.__database.commit()
+      user.group_storage_bytes = self.__users.calculate_group_storage( user )
     else:
       user = None
 
@@ -780,6 +781,7 @@ class Notebooks( object ):
       user = self.__users.update_storage( user_id, commit = False )
       self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
       self.__database.commit()
+      user.group_storage_bytes = self.__users.calculate_group_storage( user )
 
       return dict( storage_bytes = user.storage_bytes )
     else:
@@ -837,6 +839,7 @@ class Notebooks( object ):
       user = self.__users.update_storage( user_id, commit = False )
       self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
       self.__database.commit()
+      user.group_storage_bytes = self.__users.calculate_group_storage( user )
 
       return dict( storage_bytes = user.storage_bytes )
     else:
@@ -889,6 +892,7 @@ class Notebooks( object ):
     user = self.__users.update_storage( user_id, commit = False )
     self.__database.uncache_command( notebook.sql_count_notes() ) # cached note count is now invalid
     self.__database.commit()
+    user.group_storage_bytes = self.__users.calculate_group_storage( user )
 
     return dict(
       storage_bytes = user.storage_bytes,
@@ -1211,6 +1215,7 @@ class Notebooks( object ):
     self.__database.execute( user.sql_remove_notebook( notebook_id ), commit = False )
     user = self.__users.update_storage( user_id, commit = False )
     self.__database.commit()
+    user.group_storage_bytes = self.__users.calculate_group_storage( user )
 
     return dict( storage_bytes = user.storage_bytes )
 

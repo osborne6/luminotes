@@ -510,6 +510,8 @@ class Users( object ):
     if not user or not anonymous:
       raise Access_error()
 
+    user.group_storage_bytes = self.calculate_group_storage( user )
+
     # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None
     anon_notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
@@ -557,7 +559,7 @@ class Users( object ):
     @rtype: int
     @return: total bytes used for group storage
     """
-    return self.__database.select_one( int, user.sql_calculate_group_storage() )
+    return sum( self.__database.select_one( tuple, user.sql_calculate_group_storage() ), 0 )
 
   def update_storage( self, user_id, commit = True ):
     """
@@ -575,7 +577,6 @@ class Users( object ):
     if user:
       user.storage_bytes = self.calculate_storage( user )
       self.__database.save( user, commit )
-      user.group_storage_bytes = self.calculate_group_storage( user )
 
     return user
 

@@ -331,22 +331,22 @@ class User( Persistent ):
     """
     return \
       """
-      select
-        coalesce( sum( storage_bytes ), 0 )
-      from
-        user_group, luminotes_user_current
-      where
-        group_id in (
-          select
-            group_id
-          from
-            user_group
-          where
-            user_id = %s
-          ) and
-        user_id = luminotes_user_current.id
-      group by
-        user_id, storage_bytes;
+      select coalesce( sum( storage_bytes ), 0 ) from (
+        select
+          distinct user_id, storage_bytes
+        from
+          user_group, luminotes_user_current
+        where
+          group_id in (
+            select
+              group_id
+            from
+              user_group
+            where
+              user_id = %s
+            ) and
+          user_id = luminotes_user_current.id
+      ) as sub;
       """ % quote( self.object_id )
 
   def to_dict( self ):

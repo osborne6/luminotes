@@ -638,6 +638,8 @@ class Files( object ):
     if not user:
       raise Access_error()
 
+    user.group_storage_bytes = self.__users.calculate_group_storage( user )
+
     return dict(
       filename = db_file.filename,
       size_bytes = db_file.size_bytes,
@@ -674,6 +676,7 @@ class Files( object ):
     self.__database.execute( db_file.sql_delete(), commit = False )
     user = self.__users.update_storage( user_id, commit = False )
     self.__database.commit()
+    user.group_storage_bytes = self.__users.calculate_group_storage( user )
 
     Upload_file.delete_file( file_id )
 
