@@ -120,7 +120,7 @@ class Test_controller( object ):
       lambda database: sql_calculate_storage( self, database )
 
     def sql_calculate_group_storage( self, database ):
-      return 0
+      return ( 0, 0 )
 
     User.sql_calculate_group_storage = lambda self: \
       lambda database: sql_calculate_group_storage( self, database )
