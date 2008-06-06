@@ -1444,6 +1444,16 @@ Wiki.prototype.submit_form = function ( form ) {
       self.email_address = result.email_address || "";
       self.display_message( "Your account settings have been updated." );
     }
+  } else if ( url == "/users/signup_group_member" ) {
+    callback = function ( result ) {
+      var group_id = getFirstElementByTagAndClassName( "input", "group_id", form ).value;
+      console.log( form, group_id );
+      self.invoker.invoke( "/groups/load_users", "GET", {
+        "group_id": group_id
+      }, function ( result ) {
+        self.display_group_settings( result );
+      } );
+    }
   }
 
   this.invoker.invoke( url, "POST", args, callback, form );
@@ -1831,7 +1841,7 @@ Wiki.prototype.display_group_settings = function ( result ) {
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "group_settings_form", "target": "/groups/update_settings" },
       createDOM( "input",
-        { "type": "hidden", "name": "group_id", "id": "group_id", "value": result.group.object_id }
+        { "type": "hidden", "name": "group_id", "class": "group_id", "value": result.group.object_id }
       ),
       createDOM( "p", {},
         createDOM( "b", {}, "group name" ),
@@ -1850,7 +1860,7 @@ Wiki.prototype.display_group_settings = function ( result ) {
     createDOM( "h3", {}, "create group member" ),
     createDOM( "form", { "id": "create_user_form", "target": "/users/signup_group_member" },
       createDOM( "input",
-        { "type": "hidden", "name": "group_id", "id": "group_id", "value": result.group.object_id }
+        { "type": "hidden", "name": "group_id", "class": "group_id", "value": result.group.object_id }
       ),
       createDOM( "p", {},
         createDOM( "b", {}, "new username" ),

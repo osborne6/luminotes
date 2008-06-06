@@ -207,23 +207,10 @@ class Users( object ):
     self.__payment_email = payment_email
     self.__rate_plans = rate_plans
 
-  @expose( view = Json )
-  @end_transaction
-  @update_auth
-  @validate(
-    username = ( Valid_string( min = 1, max = 30 ), valid_username ),
-    password = Valid_string( min = 1, max = 30 ),
-    password_repeat = Valid_string( min = 1, max = 30 ),
-    email_address = ( Valid_string( min = 0, max = 60 ) ),
-    signup_button = unicode,
-    invite_id = Valid_id( none_okay = True ),
-    rate_plan = Valid_int( none_okay = True ),
-    yearly = Valid_bool( none_okay = True ),
-  )
-  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None, rate_plan = None, yearly = False ):
+  def __create_user( self, username, password, password_repeat, email_address, initial_rate_plan = None ):
     """
     Create a new User based on the given information. Start that user with their own Notebook and a
-    "welcome to your wiki" Note. For convenience, login the newly created user as well.
+    "welcome to your wiki" Note. This method does not commit the transaction to the database.
 
     @type username: unicode (alphanumeric only)
     @param username: username to use for this new user
@@ -233,19 +220,13 @@ class Users( object ):
     @param password_repeat: password to use, again
     @type email_address: unicode
     @param email_address: user's email address
-    @type signup_button: unicode
-    @param signup_button: ignored
-    @type invite_id: unicode
-    @param invite_id: id of invite to redeem upon signup (optional)
-    @type rate_plan: int
-    @param rate_plan: index of rate plan to signup for (optional). if greater than zero, redirect
-                      to PayPal subscribe page after signup
-    @type yearly: bool
-    @param yearly: True for a yearly rate plan, False for monthly (optional, defaults to False )
-    @rtype: json dict
-    @return: { 'redirect': url, 'authenticated': userdict }
+    @type initial_rate_plan: int or NoneType
+    @param initial_rate_plan: index of rate plan to start the user with before they even subscribe
+                              (defaults to None)
+    @type user: ( model.User, model.Notebook )
+    @parm user: ( newly created user, newly created notebook )
     @raise Signup_error: passwords don't match or the username is unavailable
-    @raise Validation_error: one of the arguments is invalid
+    @raise Validation_error: the email address is invalid
     """
     if password != password_repeat:
       raise Signup_error( u"The passwords you entered do not match. Please try again." )
@@ -278,12 +259,56 @@ class Users( object ):
 
     # actually create the new user
     user_id = self.__database.next_id( User, commit = False )
-    user = User.create( user_id, username, password, email_address )
+    user = User.create( user_id, username, password, email_address, rate_plan = initial_rate_plan )
     self.__database.save( user, commit = False )
 
     # record the fact that the new user has access to their new notebook
     self.__database.execute( user.sql_save_notebook( notebook_id, read_write = True, owner = True, rank = 0 ), commit = False )
     self.__database.execute( user.sql_save_notebook( trash_id, read_write = True, owner = True ), commit = False )
+
+    return ( user, notebook )
+
+  @expose( view = Json )
+  @end_transaction
+  @update_auth
+  @validate(
+    username = ( Valid_string( min = 1, max = 30 ), valid_username ),
+    password = Valid_string( min = 1, max = 30 ),
+    password_repeat = Valid_string( min = 1, max = 30 ),
+    email_address = ( Valid_string( min = 0, max = 60 ) ),
+    signup_button = unicode,
+    invite_id = Valid_id( none_okay = True ),
+    rate_plan = Valid_int( none_okay = True ),
+    yearly = Valid_bool( none_okay = True ),
+  )
+  def signup( self, username, password, password_repeat, email_address, signup_button, invite_id = None, rate_plan = None, yearly = False ):
+    """
+    Create a new User based on the given information. For convenience, login the newly created user
+    as well.
+
+    @type username: unicode (alphanumeric only)
+    @param username: username to use for this new user
+    @type password: unicode
+    @param password: password to use
+    @type password_repeat: unicode
+    @param password_repeat: password to use, again
+    @type email_address: unicode
+    @param email_address: user's email address
+    @type signup_button: unicode
+    @param signup_button: ignored
+    @type invite_id: unicode
+    @param invite_id: id of invite to redeem upon signup (optional)
+    @type rate_plan: int
+    @param rate_plan: index of rate plan to signup for (optional). if greater than zero, redirect
+                      to PayPal subscribe page after signup
+    @type yearly: bool
+    @param yearly: True for a yearly rate plan, False for monthly (optional, defaults to False )
+    @rtype: json dict
+    @return: { 'redirect': url, 'authenticated': userdict }
+    @raise Signup_error: passwords don't match or the username is unavailable
+    @raise Validation_error: one of the arguments is invalid
+    """
+    ( user, notebook ) = self.__create_user( username, password, password_repeat, email_bddress )
     self.__database.commit()
 
     # if there's an invite_id, then redeem that invite and redirect to the invite's notebook
@@ -304,6 +329,92 @@ class Users( object ):
     return dict(
       redirect = redirect,
       authenticated = user,
+    )
+
+  @expose( view = Json )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    group_id = Valid_id(),
+    username = ( Valid_string( min = 1, max = 30 ), valid_username ),
+    password = Valid_string( min = 1, max = 30 ),
+    password_repeat = Valid_string( min = 1, max = 30 ),
+    email_address = ( Valid_string( min = 0, max = 60 ) ),
+    create_user_button = unicode,
+    user_id = Valid_id( none_okay = True )
+  )
+  def signup_group_member( self, group_id, username, password, password_repeat, email_address, create_user_button, user_id ):
+    """
+    Create a new User in a particular group based on the given information. Start that user with
+    their own Notebook and a "welcome to your wiki" Note. This method is only available to a user
+    with admin access to the group.
+
+    @type group_id: unicode
+    @param group_id: id of the group to which the new user should be added
+    @type username: unicode (alphanumeric only)
+    @param username: username to use for this new user
+    @type password: unicode
+    @param password: password to use
+    @type password_repeat: unicode
+    @param password_repeat: password to use, again
+    @type email_address: unicode
+    @param email_address: user's email address
+    @type create_user_button: unicode
+    @param create_user_button: ignored
+    @type user_id: unicode
+    @param user_id: id of current logged-in user
+    @rtype: json dict
+    @return: { 'message': message }
+    @raise Signup_error: passwords don't match or the username is unavailable
+    @raise Validation_error: one of the arguments is invalid
+    @raise Access_error: the current user doesn't have admin membership to the given group
+    """
+    if not self.check_group( user_id, group_id, admin = True ):
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+    if not user:
+      raise Access_error()
+
+    if user.rate_plan < 0 or user.rate_plan >= len( self.__rate_plans ):
+      raise Access_error()
+
+    plan = self.__rate_plans[ user.rate_plan ]
+
+    if not plan.get( u"user_admin" ):
+      raise Access_error()
+
+    # the current user's rate plan has a maximum number of included users. make sure we're not
+    # exceeding that number
+    included_users_count = plan.get( u"included_users" )
+    if not included_users_count:
+      raise Access_error()
+
+    group = self.__database.load( Group, group_id )
+    if not group:
+      raise Access_error() 
+
+    # TODO: once multiple groups per account are supported, this needs to count all users in all
+    # groups of the current admin user
+    group_users = self.__database.select_many( User, group.sql_load_users() )
+    if len( group_users ) >= included_users_count:
+      raise Signup_error( 'Your current rate plan includes a maximum of %s users. Please upgrade your account for additional users.' % included_users_count )
+
+    # create a new user with the same rate plan as the currently logged-in user
+    ( created_user, notebook ) = self.__create_user(
+      username,
+      password,
+      password_repeat,
+      email_address,
+      initial_rate_plan = user.rate_plan,
+    )
+
+    # add the new user to the group
+    self.__database.execute( created_user.sql_save_group( group_id, admin = False ), commit = False )
+    self.__database.commit()
+
+    return dict(
+      message = u"A new group member has been created."
     )
 
   @expose( view = Form_submit_page )

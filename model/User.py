@@ -45,7 +45,7 @@ class User( Persistent ):
     self.__rate_plan = rate_plan or 0
 
   @staticmethod
-  def create( object_id, username = None, password = None, email_address = None ):
+  def create( object_id, username = None, password = None, email_address = None, rate_plan = None ):
     """
     Convenience constructor for creating a new user.
 
@@ -57,13 +57,15 @@ class User( Persistent ):
     @param password: secret password for login purposes (optional)
     @type email_address: unicode or NoneType
     @param email_address: a hopefully valid email address (optional)
+    @type rate_plan: int or NoneType
+    @param rate_plan: index into the rate plan array in config/Common.py (optional, defaults to 0)
     @rtype: User
     @return: newly created user
     """
     salt = User.__create_salt()
     password_hash = User.__hash_password( salt, password )
 
-    return User( object_id, None, username, salt, password_hash, email_address )
+    return User( object_id, None, username, salt, password_hash, email_address, rate_plan = rate_plan )
 
   @staticmethod
   def __create_salt():
