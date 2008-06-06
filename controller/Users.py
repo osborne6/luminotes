@@ -308,7 +308,7 @@ class Users( object ):
     @raise Signup_error: passwords don't match or the username is unavailable
     @raise Validation_error: one of the arguments is invalid
     """
-    ( user, notebook ) = self.__create_user( username, password, password_repeat, email_bddress )
+    ( user, notebook ) = self.__create_user( username, password, password_repeat, email_address )
     self.__database.commit()
 
     # if there's an invite_id, then redeem that invite and redirect to the invite's notebook
@@ -317,7 +317,7 @@ class Users( object ):
       if not invite:
         raise Signup_error( u"The invite is unknown." )
 
-      self.convert_invite_to_access( invite, user_id )
+      self.convert_invite_to_access( invite, user.object_id )
       redirect = u"/notebooks/%s" % invite.notebook_id
     # if there's a requested rate plan, then redirect to the PayPal subscribe page
     elif rate_plan and rate_plan > 0:
@@ -751,7 +751,8 @@ class Users( object ):
   )
   def remove_group( self, user_id_to_remove, group_id, user_id = None ):
     """
-    Remove a user's membership from the given group.
+    Remove a user's membership from the given group. For now, this also sets them to the lowest
+    rate plan.
 
     @type user_id_to_remove: unicode
     @param user_id_to_remove: id of the user to remove from the group
@@ -770,6 +771,11 @@ class Users( object ):
       raise Access_error()
 
     self.__database.execute( user.sql_remove_group( group_id ) )
+
+    # setting the user's rate plan to 0 upon group removal prevents a group admin from creating
+    # an unlimited number of users with high-end rate plans
+    user.rate_plan = 0
+    self.__database.save( user )
 
     return dict(
       message = u"Group membership for %s has been revoked." % user.username,

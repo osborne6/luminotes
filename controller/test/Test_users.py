@@ -769,8 +769,11 @@ class Test_users( Test_controller ):
 
     assert membership is True
 
-  def test_check_remove_group( self ):
+  def test_remove_group( self ):
     self.login2()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
 
     result = self.http_post( "/users/remove_group", dict(
       user_id_to_remove = self.user.object_id,
@@ -780,8 +783,14 @@ class Test_users( Test_controller ):
     assert u"revoked" in result[ u"message" ]
     assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == False
 
-  def test_check_remove_group_without_access( self ):
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_remove_group_without_access( self ):
     self.login2()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
 
     result = self.http_post( "/users/remove_group", dict(
       user_id_to_remove = self.user.object_id,
@@ -791,8 +800,14 @@ class Test_users( Test_controller ):
     assert u"access" in result[ u"error" ]
     assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
 
-  def test_check_remove_group_without_admin_access( self ):
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_remove_group_without_admin_access( self ):
     self.login()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
 
     result = self.http_post( "/users/remove_group", dict(
       user_id_to_remove = self.user.object_id,
@@ -802,8 +817,14 @@ class Test_users( Test_controller ):
     assert u"access" in result[ u"error" ]
     assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
 
-  def test_check_remove_group_with_unknown_group( self ):
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_remove_group_with_unknown_group( self ):
     self.login2()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
 
     result = self.http_post( "/users/remove_group", dict(
       user_id_to_remove = self.user.object_id,
@@ -813,8 +834,14 @@ class Test_users( Test_controller ):
     assert u"access" in result[ u"error" ]
     assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
 
-  def test_check_remove_group_with_unknown_user( self ):
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+  def test_remove_group_with_unknown_user( self ):
     self.login2()
+
+    self.user.rate_plan = 1
+    self.database.save( self.user )
 
     result = self.http_post( "/users/remove_group", dict(
       user_id_to_remove = u"unknownuserid",
@@ -823,6 +850,9 @@ class Test_users( Test_controller ):
 
     assert u"access" in result[ u"error" ]
     assert cherrypy.root.users.check_group( self.user.object_id, self.group.object_id ) == True
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
 
   def test_send_reset( self ):
     # trick send_reset() into using a fake SMTP server
