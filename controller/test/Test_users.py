@@ -82,7 +82,7 @@ class Test_users( Test_controller ):
     self.database.execute( self.user.sql_save_notebook( trash_id2, read_write = True, owner = True ), commit = False )
     self.database.execute( self.user.sql_save_group( self.group.object_id, admin = False ) )
 
-    self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2 )
+    self.user2 = User.create( self.database.next_id( User ), self.username2, self.password2, self.email_address2, rate_plan = 1 )
     self.database.save( self.user2, commit = False )
     self.database.execute( self.user2.sql_save_group( self.group.object_id, admin = True ) )
 
@@ -357,6 +357,197 @@ class Test_users( Test_controller ):
     ) )
 
     assert result[ u"error" ]
+
+  def test_signup_group_member( self ):
+    self.login2()
+
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"created" in result[ u"message" ]
+
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user
+    assert user.username == self.new_username
+    assert user.email_address == self.new_email_address
+    assert user.storage_bytes == 0
+    assert user.group_storage_bytes == 0
+    assert user.rate_plan == 1
+
+    membership = cherrypy.root.users.check_group( user.object_id, self.group.object_id )
+    assert membership is True
+
+  def test_signup_group_member_without_access( self ):
+    self.login2()
+
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group2.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_without_admin_access( self ):
+    self.login()
+
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_without_login( self ):
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ) )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_with_invalid_rate_plan( self ):
+    self.login2()
+
+    self.user2.rate_plan = 17
+    self.database.save( self.user2 )
+
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_without_user_admin_rate_plan( self ):
+    self.login2()
+
+    self.user2.rate_plan = 0
+    self.database.save( self.user2 )
+
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_without_user_admin_rate_plan( self ):
+    self.login2()
+
+    self.user2.rate_plan = 0
+    self.database.save( self.user2 )
+
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_without_included_users_in_rate_plan( self ):
+    self.login2()
+
+    del( self.settings[ u"global" ][ u"luminotes.rate_plans"][ 1 ][ u"included_users" ] )
+
+    # first successfully create a group member
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_with_unknown_group( self ):
+    self.login2()
+
+    # first successfully create a group member
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = u"unknowngroupid",
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( self.new_username ) )
+    assert user is None
+
+  def test_signup_group_member_with_too_many_users( self ):
+    self.login2()
+
+    # first successfully create a group member
+    self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = self.new_username,
+      password = self.new_password,
+      password_repeat = self.new_password,
+      email_address = self.new_email_address,
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    # then create another, going over the limit of the rate plan's included_users
+    result = self.http_post( "/users/signup_group_member", dict(
+      group_id = self.group.object_id,
+      username = u"kaylee",
+      password = u"reallyshiny",
+      password_repeat = u"reallyshiny",
+      email_address = u"mechanic@example.com",
+      create_user_button = u"create member",
+    ), session_id = self.session_id )
+
+    assert u"additional users" in result[ "error" ]
+    user = self.database.select_one( User, User.sql_load_by_username( u"kaylee" ) )
+    assert user is None
 
   def test_subscribe( self ):
     self.login()
