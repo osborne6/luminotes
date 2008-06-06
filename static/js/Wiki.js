@@ -1821,7 +1821,7 @@ Wiki.prototype.display_settings = function () {
   }
 
   if ( this.groups.length == 0 ) {
-    var item = createDOM( "li", {}, "You're not a member of any groups." );
+    var item = createDOM( "div", { "class": "indented" }, "You're not a member of any groups." );
     appendChildNodes( group_list, item );
   }
 
