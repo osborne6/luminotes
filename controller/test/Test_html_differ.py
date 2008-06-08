@@ -98,7 +98,6 @@ class Test_html_differ( object ):
 
     result = self.differ.diff( a, b )
 
-    print result
     assert result == 'foo bar <ins class="diff"><br /><br /></ins>baz quux'
 
   def test_track_open_tags( self ):
@@ -291,5 +290,4 @@ class Test_html_differ( object ):
 
     result = self.differ.diff_lists( a, b )
 
-    print result
     assert result == 'foo bar <ins class="diff"><br/><br /></ins>baz quux'

@@ -1,6 +1,8 @@
+import smtplib
 import cherrypy
 from Stub_database import Stub_database
 from Stub_view import Stub_view
+from Stub_smtp import Stub_smtp
 from config import Common
 from datetime import datetime
 from StringIO import StringIO
@@ -475,6 +477,10 @@ class Test_controller( object ):
 
 
   def setUp( self ):
+    # trick tested methods into using a fake SMTP server
+    Stub_smtp.reset()
+    smtplib.SMTP = Stub_smtp
+
     from controller.Root import Root
     cherrypy.lowercase_api = True
     self.database = Stub_database()

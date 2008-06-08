@@ -365,7 +365,6 @@ class Test_notebooks( Test_controller ):
     path = "/notebooks/%s?preview=owner" % self.notebook.object_id
     result = self.http_get( path )
     
-    print result
     headers = result.get( "headers" )
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )

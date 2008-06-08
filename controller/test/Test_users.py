@@ -6,7 +6,6 @@ from pytz import utc
 from nose.tools import raises
 from datetime import datetime, timedelta
 from Test_controller import Test_controller
-from Stub_smtp import Stub_smtp
 import Stub_urllib2
 from model.User import User
 from model.Group import Group
@@ -208,9 +207,6 @@ class Test_users( Test_controller ):
     assert result[ u"groups" ] == []
 
   def test_current_after_signup_with_invite_id( self ):
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -610,7 +606,6 @@ class Test_users( Test_controller ):
       rate_plan = u"1",
     ), session_id = self.session_id )
 
-
     assert u"not configured" in result[ u"error" ]
 
   def test_demo( self ):
@@ -803,9 +798,6 @@ class Test_users( Test_controller ):
     assert result[ u"groups" ] == []
 
   def test_login_with_invite_id( self ):
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1046,10 +1038,6 @@ class Test_users( Test_controller ):
     assert user.rate_plan == 1
 
   def test_send_reset( self ):
-    # trick send_reset() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     result = self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1064,9 +1052,6 @@ class Test_users( Test_controller ):
     assert self.RESET_LINK_PATTERN.search( smtplib.SMTP.message )
 
   def test_send_reset_to_unknown_email_address( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     result = self.http_post( "/users/send_reset", dict(
       email_address = u"unknown@example.com",
       send_reset_button = u"email me",
@@ -1079,9 +1064,6 @@ class Test_users( Test_controller ):
     assert smtplib.SMTP.message == None
 
   def test_redeem_reset( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1136,9 +1118,6 @@ class Test_users( Test_controller ):
     assert u"expired" in result[ u"error" ]
 
   def test_redeem_reset_expired( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1158,9 +1137,6 @@ class Test_users( Test_controller ):
     assert u"expired" in result[ u"error" ]
 
   def test_redeem_reset_already_redeemed( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1179,9 +1155,6 @@ class Test_users( Test_controller ):
     assert u"already" in result[ u"error" ]
 
   def test_redeem_reset_unknown_email( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1200,9 +1173,6 @@ class Test_users( Test_controller ):
     assert u"email address" in result[ u"error" ]
 
   def test_reset_password( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1275,9 +1245,6 @@ class Test_users( Test_controller ):
     assert user2.check_password( self.password2 )
 
   def test_reset_password_expired( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1315,9 +1282,6 @@ class Test_users( Test_controller ):
     assert user2.check_password( self.password2 )
 
   def test_reset_password_non_matching( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1346,9 +1310,6 @@ class Test_users( Test_controller ):
     assert user2.check_password( self.password2 )
 
   def test_reset_password_blank( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1374,9 +1335,6 @@ class Test_users( Test_controller ):
     assert self.user2.check_password( self.password2 )
 
   def test_reset_password_multiple_users( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.http_post( "/users/send_reset", dict(
       email_address = self.user.email_address,
       send_reset_button = u"email me",
@@ -1410,9 +1368,6 @@ class Test_users( Test_controller ):
     assert user2.check_password( new_password2 )
 
   def test_send_invites( self ):
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1458,9 +1413,6 @@ class Test_users( Test_controller ):
     assert invite.owner is False
 
   def test_send_invites_with_unicode_notebook_name( self ):
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1514,9 +1466,6 @@ class Test_users( Test_controller ):
     assert invite.owner is False
 
   def test_send_invites_collaborator( self ):
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1562,9 +1511,6 @@ class Test_users( Test_controller ):
     assert invite.owner is False
 
   def test_send_invites_owner( self ):
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1610,8 +1556,6 @@ class Test_users( Test_controller ):
     assert invite.owner is True
 
   def test_send_invites_multiple( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1650,8 +1594,6 @@ class Test_users( Test_controller ):
       assert self.INVITE_LINK_PATTERN.search( message )
 
   def test_send_invites_duplicate( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1690,8 +1632,6 @@ class Test_users( Test_controller ):
       assert self.INVITE_LINK_PATTERN.search( message )
 
   def test_send_invites_similar( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1770,8 +1710,6 @@ class Test_users( Test_controller ):
     assert access is True
 
   def test_send_invites_similar_downgrade( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1850,8 +1788,6 @@ class Test_users( Test_controller ):
     assert access is True
 
   def test_send_invites_with_generic_from_address( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     # setting the user's email address to None means the invite will be sent
@@ -1889,9 +1825,6 @@ class Test_users( Test_controller ):
     assert self.INVITE_LINK_PATTERN.search( message )
 
   def test_send_invites_without_login( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     self.user.rate_plan = 1
     self.database.save( self.user )
 
@@ -1910,8 +1843,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_too_short( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1931,8 +1862,6 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
 
   def test_send_invites_too_long( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1952,8 +1881,6 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
 
   def test_send_invites_no_addresses( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -1973,8 +1900,6 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
 
   def test_send_invites_without_username( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user._User__username = None
@@ -1996,8 +1921,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_without_any_access( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.database.user_notebook = {}
@@ -2019,8 +1942,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_without_read_write_access( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.database.user_notebook = {}
@@ -2043,8 +1964,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_without_owner_access( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.database.user_notebook = {}
@@ -2067,8 +1986,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_viewer_with_lowest_rate_plan( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     email_addresses_list = [ u"foo@example.com" ]
@@ -2100,8 +2017,6 @@ class Test_users( Test_controller ):
     assert self.INVITE_LINK_PATTERN.search( message )
 
   def test_send_invites_collaborator_with_lowest_rate_plan( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     email_addresses_list = [ u"foo@example.com" ]
@@ -2119,8 +2034,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_owner_with_lowest_rate_plan( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     email_addresses_list = [ u"foo@example.com" ]
@@ -2138,8 +2051,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_with_unknown_notebook( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     email_addresses_list = [ u"foo@example.com" ]
@@ -2158,9 +2069,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_revoke_invite( self ):
-    # trick send_invite() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2189,8 +2097,6 @@ class Test_users( Test_controller ):
     assert len( result[ u"invites" ] ) == 0
 
   def test_revoke_invite_multiple( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2221,8 +2127,6 @@ class Test_users( Test_controller ):
     assert result[ u"invites" ][ 0 ].email_address == email_addresses_list[ 1 ]
 
   def test_revoke_invite_redeemed( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2263,8 +2167,6 @@ class Test_users( Test_controller ):
     assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_revoke_invite_redeemed_self( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2306,9 +2208,6 @@ class Test_users( Test_controller ):
     assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_revoke_invite_without_login( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
-
     # login to send the invites, but don't send the logged-in session id for revoke_invite() below
     self.login()
 
@@ -2351,8 +2250,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_revoke_invite_for_incorrect_notebook( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2381,9 +2278,6 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_redeem_invite( self ):
-    # trick send_invite() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2428,8 +2322,6 @@ class Test_users( Test_controller ):
     assert u"unknown" in result[ u"error" ]
 
   def test_redeem_invite_after_login( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2464,8 +2356,6 @@ class Test_users( Test_controller ):
     assert notebook_id == self.notebooks[ 0 ].object_id
 
   def test_redeem_invite_after_login_already_redeemed( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2504,8 +2394,6 @@ class Test_users( Test_controller ):
     assert notebook_id == self.notebooks[ 0 ].object_id
 
   def test_redeem_invite_after_login_already_redeemed_by_different_user( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2539,8 +2427,6 @@ class Test_users( Test_controller ):
     assert u"already" in result[ u"error" ]
 
   def test_redeem_invite_already_redeemed( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2571,8 +2457,6 @@ class Test_users( Test_controller ):
     assert u"already" in result[ u"error" ]
 
   def test_redeem_invite_already_redeemed( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2601,8 +2485,6 @@ class Test_users( Test_controller ):
     assert u"unknown" in result[ u"error" ]
 
   def test_redeem_invite_missing_anonymous_user( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2630,8 +2512,6 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
 
   def test_redeem_invite_missing_invite_notebook( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2662,9 +2542,9 @@ class Test_users( Test_controller ):
     # start the invitee out with access to one notebook
     self.database.execute( self.user2.sql_save_notebook( self.notebooks[ 1 ].object_id, read_write = True, owner = False, rank = 7 ), commit = False )
 
-    # trick send_invites() into using a fake SMTP server
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
+
+
+
     self.login()
 
     self.user.rate_plan = 1
@@ -2710,8 +2590,6 @@ class Test_users( Test_controller ):
     assert invite.redeemed_user_id == self.user2.object_id
 
   def test_convert_invite_to_access_same_user( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2754,8 +2632,6 @@ class Test_users( Test_controller ):
     assert invite.redeemed_user_id == None
 
   def test_convert_invite_to_access_twice( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
@@ -2797,8 +2673,6 @@ class Test_users( Test_controller ):
 
   @raises( Invite_error )
   def test_convert_invite_with_unknown_user( self ):
-    Stub_smtp.reset()
-    smtplib.SMTP = Stub_smtp
     self.login()
 
     self.user.rate_plan = 1
