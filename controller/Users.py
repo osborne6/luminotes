@@ -1351,16 +1351,65 @@ class Users( object ):
       if params.get( u"recurring" ) != u"1":
         raise Payment_error( u"invalid recurring", params )
       user.rate_plan = plan_index
-      self.__database.save( user )
+      self.__database.save( user, commit = False )
+      self.__update_groups( user )
+      self.__database.commit()
     elif txn_type == u"subscr_cancel":
       user.rate_plan = 0 # return the user to the free account level
-      self.__database.save( user )
+      self.__database.save( user, commit = False )
+      self.__update_groups( user )
+      self.__database.commit()
     elif txn_type in ( u"subscr_payment", u"subscr_failed" ):
       pass # for now, ignore payments and let paypal handle them
     else:
       raise Payment_error( "unknown txn_type", params )
 
     return dict()
+
+  def __update_groups( self, user ):
+    """
+    Update a user's group membership as a result of a rate plan change. This method does not commit
+    the current database transaction.
+    """
+    rate_plan = self.__rate_plans[ user.rate_plan ]
+
+    # if the user has a rate plan with admin capabilities
+    if rate_plan.get( u"user_admin" ) is True:
+      has_an_admin_group = False
+      groups = self.__database.select_many( Group, user.sql_load_groups() )
+
+      # determine whether the user is the admin of at least one group
+      for group in groups:
+        if group.admin is False: continue
+        has_an_admin_group = True
+
+        # set all users in this group to the same rate plan as the admin
+        group_users = self.__database.select_many( User, group.sql_load_users() )
+        for group_user in group_users:
+          group_user.rate_plan = plan_index
+          self.__database.save( group_user )
+
+      # if the user is not an admin of any group, create one for them and make them the admin
+      if has_an_admin_group is False:
+        group_id = self.__database.next_id( Group, commit = False )
+        group = Group.create( group_id, name = u"my group", admin = True )
+        self.__database.save( group, commit = False )
+        self.__database.execute( user.sql_save_group( group_id, admin = True ), commit = False )
+
+      return
+
+    # otherwise, downgrade the user's group admin access to normal group membership
+    groups = self.__database.select_many( Group, user.sql_load_groups() )
+
+    for group in groups:
+      if group.admin is False: continue
+      self.__database.execute( user.sql_update_group_admin( group.object_id, admin = False ), commit = False )
+
+      # also return all users in this group to the free account level
+      group_users = self.__database.select_many( User, group.sql_load_users() )
+      for group_user in group_users:
+        group_user.rate_plan = 0
+        self.__database.save( group_user )
 
   @expose( view = Main_page )
   @end_transaction

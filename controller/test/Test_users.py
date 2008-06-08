@@ -3050,6 +3050,48 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
+  def __assert_has_admin_group( self ):
+    user_group_infos = self.database.user_group.get( self.user.object_id )
+    found_admin = False
+    group_id = None
+
+    # look through the user's groups and try to find at least one admin group
+    for user_group_info in user_group_infos:
+      assert user_group_info
+      assert len( user_group_info ) == 2
+      ( group_id, admin ) = user_group_info
+      assert group_id
+      if admin is True:
+        found_admin = True
+        break
+
+    assert found_admin is True
+
+    # load the group itself and make sure it looks kosher
+    group = self.database.load( Group, group_id )
+    assert group
+    assert group.name == u"my group"
+    assert group.admin is True
+
+  def __assert_no_admin_group( self ):
+    user_group_infos = self.database.user_group.get( self.user.object_id )
+    found_admin = False
+    group_id = None
+
+    # look through the user's groups and make sure there are no admin groups
+    for user_group_info in user_group_infos:
+      assert user_group_info
+      assert len( user_group_info ) == 2
+      ( group_id, admin ) = user_group_info
+      assert group_id
+      if admin is True:
+        found_admin = True
+        break
+
+    assert found_admin is False
+
   def test_paypal_notify_signup_yearly( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3069,6 +3111,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_signup_invalid( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3082,6 +3126,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_incorrect_receiver_email( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3091,6 +3137,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_incorrect_currency( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3102,6 +3150,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_invalid_item_number( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3111,6 +3161,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_incorrect_gross( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3122,6 +3174,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_incorrect_amount( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3131,6 +3185,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_incorrect_item_name( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3142,6 +3198,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_invalid_period1( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3151,6 +3209,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_invalid_period1( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3162,6 +3222,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_invalid_period3( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3171,6 +3233,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_yearly_period3_with_monthly_amount( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3182,6 +3246,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_yearly_amount_with_monthly_period3( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -3192,6 +3258,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_missing_custom( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     result = self.http_post( "/users/paypal_notify", data );
@@ -3199,6 +3267,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_invalid_custom( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3209,6 +3279,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_unknown_custom( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = u"1337"
@@ -3217,6 +3289,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_signup_missing_recurring( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3227,6 +3301,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_signup_invalid_recurring( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"recurring" ] = u"0"
@@ -3235,6 +3311,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify( self ):
     self.user.rate_plan = 2
@@ -3255,6 +3333,8 @@ class Test_users( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
+
+    self.__assert_has_admin_group()
 
   def test_paypal_notify_modify_yearly( self ):
     self.user.rate_plan = 2
@@ -3279,6 +3359,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_modify_invalid( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3296,6 +3378,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_incorrect_receiver_email( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3309,6 +3393,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify_incorrect_currency( self ):
     self.user.rate_plan = 2
@@ -3324,6 +3410,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_invalid_item_number( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3337,6 +3425,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify_incorrect_gross( self ):
     self.user.rate_plan = 2
@@ -3352,6 +3442,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_incorrect_amount( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3365,6 +3457,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify_incorrect_item_name( self ):
     self.user.rate_plan = 2
@@ -3380,6 +3474,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_invalid_period1( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3393,6 +3489,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify_invalid_period1( self ):
     self.user.rate_plan = 2
@@ -3408,6 +3506,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_invalid_period3( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3422,6 +3522,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_missing_custom( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3433,6 +3535,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify_invalid_custom( self ):
     self.user.rate_plan = 2
@@ -3447,6 +3551,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_unknown_custom( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3459,6 +3565,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
+
+    self.__assert_no_admin_group()
 
   def test_paypal_notify_modify_missing_recurring( self ):
     self.user.rate_plan = 2
@@ -3473,6 +3581,8 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_modify_invalid_recurring( self ):
     self.user.rate_plan = 2
     user = self.database.save( self.user )
@@ -3486,9 +3596,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 2
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_cancel( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3506,9 +3619,19 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
+  def __create_admin_group( self ):
+    group_id = self.database.next_id( Group, commit = False )
+    group = Group.create( group_id, name = u"my group", admin = True )
+    self.database.save( group, commit = False )
+    self.database.user_group[ self.user.object_id ].append( ( group_id, True ) )
+    self.database.commit()
+
   def test_paypal_notify_cancel_yearly( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3529,9 +3652,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+    self.__assert_no_admin_group()
+
   def test_paypal_notify_cancel_invalid( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3546,9 +3672,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_incorrect_receiver_email( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3560,9 +3689,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_incorrect_currency( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3574,9 +3706,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_invalid_item_number( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3588,9 +3723,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_incorrect_gross( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3602,9 +3740,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_incorrect_amount( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3616,9 +3757,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_incorrect_item_name( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3630,9 +3774,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_invalid_period1( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3644,9 +3791,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_invalid_period1( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3658,9 +3808,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_invalid_period3( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3672,9 +3825,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_missing_custom( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3684,9 +3840,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_invalid_custom( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3697,9 +3856,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_unknown_custom( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3710,9 +3872,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_missing_recurring( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3723,9 +3888,12 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+    self.__assert_has_admin_group()
+
   def test_paypal_notify_cancel_invalid_recurring( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
+    self.__create_admin_group()
 
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"txn_type" ] = u"subscr_cancel"
@@ -3735,6 +3903,8 @@ class Test_users( Test_controller ):
     assert result.get( u"error" )
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
+
+    self.__assert_has_admin_group()
 
   REFUND_DATA = {
     u"last_name": u"User",

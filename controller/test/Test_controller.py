@@ -243,6 +243,18 @@ class Test_controller( object ):
     User.sql_in_group = lambda self, group_id, admin = False: \
       lambda database: sql_in_group( self, group_id, admin, database )
 
+    def sql_update_group_admin( self, group_id, admin, database ):
+      for ( user_id, group_infos ) in database.user_group.items():
+        for group_info in group_infos:
+          ( db_group_id, db_admin ) = group_info
+
+          if self.object_id == user_id and group_id == db_group_id:
+            group_infos.remove( group_info )
+            group_infos.append( ( db_group_id, admin ) )
+
+    User.sql_update_group_admin = lambda self, group_id, admin = False: \
+      lambda database: sql_update_group_admin( self, group_id, admin, database )
+
     def sql_revoke_invite_access( notebook_id, trash_id, email_address, database ):
       invites = []
 
