@@ -1386,7 +1386,7 @@ class Users( object ):
         # set all users in this group to the same rate plan as the admin
         group_users = self.__database.select_many( User, group.sql_load_users() )
         for group_user in group_users:
-          group_user.rate_plan = plan_index
+          group_user.rate_plan = user.rate_plan
           self.__database.save( group_user )
 
       # if the user is not an admin of any group, create one for them and make them the admin

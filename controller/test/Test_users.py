@@ -3052,9 +3052,9 @@ class Test_users( Test_controller ):
 
     self.__assert_has_admin_group()
 
-  def __assert_has_admin_group( self ):
+  def __assert_has_admin_group( self, exactly_one = False ):
     user_group_infos = self.database.user_group.get( self.user.object_id )
-    found_admin = False
+    found_admin_count = 0
     group_id = None
 
     # look through the user's groups and try to find at least one admin group
@@ -3064,10 +3064,11 @@ class Test_users( Test_controller ):
       ( group_id, admin ) = user_group_info
       assert group_id
       if admin is True:
-        found_admin = True
-        break
+        found_admin_count += 1
 
-    assert found_admin is True
+    assert found_admin_count > 0
+    if exactly_one is True:
+      assert found_admin_count == 1
 
     # load the group itself and make sure it looks kosher
     group = self.database.load( Group, group_id )
@@ -3112,6 +3113,34 @@ class Test_users( Test_controller ):
     assert user.rate_plan == 1
 
     self.__assert_has_admin_group()
+
+  def test_paypal_notify_signup_with_existing_admin_group( self ):
+    self.user2.rate_plan = 0
+    self.database.save( self.user2, commit = False )
+
+    self.__create_admin_group( add_non_admin_user = True )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+    # assert that the rate plan of the other user in the group changed as well
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.rate_plan == 1
+
+    # assert that a second admin group wasn't created
+    self.__assert_has_admin_group( exactly_one = True )
 
   def test_paypal_notify_signup_invalid( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3360,6 +3389,37 @@ class Test_users( Test_controller ):
     assert user.rate_plan == 1
 
     self.__assert_has_admin_group()
+
+  def test_paypal_notify_modify_with_existing_admin_group( self ):
+    self.user.rate_plan = 2
+    user = self.database.save( self.user )
+    self.user2.rate_plan = 0
+    self.database.save( self.user2, commit = False )
+
+    self.__create_admin_group( add_non_admin_user = True )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_modify"
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 1
+
+    # assert that the rate plan of the other user in the group changed as well
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.rate_plan == 1
+
+    # assert that a second admin group wasn't created
+    self.__assert_has_admin_group( exactly_one = True )
 
   def test_paypal_notify_modify_invalid( self ):
     self.user.rate_plan = 2
@@ -3621,11 +3681,15 @@ class Test_users( Test_controller ):
 
     self.__assert_no_admin_group()
 
-  def __create_admin_group( self ):
+  def __create_admin_group( self, add_non_admin_user = False ):
     group_id = self.database.next_id( Group, commit = False )
     group = Group.create( group_id, name = u"my group", admin = True )
     self.database.save( group, commit = False )
     self.database.user_group[ self.user.object_id ].append( ( group_id, True ) )
+
+    if add_non_admin_user is True:
+      self.database.user_group [ self.user2.object_id ].append( ( group_id, False ) )
+
     self.database.commit()
 
   def test_paypal_notify_cancel_yearly( self ):
@@ -3651,6 +3715,33 @@ class Test_users( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
+
+    self.__assert_no_admin_group()
+
+  def test_paypal_notify_cancel_with_other_user_in_group( self ):
+    self.user.rate_plan = 1
+    user = self.database.save( self.user )
+    self.__create_admin_group( add_non_admin_user = True )
+
+    data = dict( self.SUBSCRIPTION_DATA )
+    data[ u"txn_type" ] = u"subscr_cancel"
+    data[ u"custom" ] = self.user.object_id
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+    # assert that the rate plan of the other user in the group changed as well
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.rate_plan == 0
 
     self.__assert_no_admin_group()
 
