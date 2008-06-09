@@ -1079,6 +1079,10 @@ Wiki.prototype.update_toolbar = function() {
   var node_names = null;
   var link = null;
 
+  // a read-only notebook doesn't have a visible toolbar
+  if ( !this.notebook.read_write )
+    return;
+
   if ( this.focused_editor ) {
     node_names = this.focused_editor.current_node_names();
     link = this.focused_editor.find_link_at_cursor();
