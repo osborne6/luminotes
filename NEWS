@@ -1,4 +1,4 @@
-1.4.0: ??
+1.4.0: June 9, 2008
  * Implemented some basic user administration features, allowing you to create
    Luminotes users yourself.
  * Added new rate plans with support for user administration.
