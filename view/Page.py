@@ -16,7 +16,6 @@ class Page( Html ):
       Head(
         Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/style.css" ),
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
-        Script( type = u"text/javascript", src = u"https://ssl.google-analytics.com/urchin.js" ),
         [ child for child in children if isinstance( child, head_types ) ],
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),
         """<!--[if IE 6]><link href="/static/css/ie6.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
@@ -27,6 +26,7 @@ class Page( Html ):
           *[ child for child in children if not isinstance( child, head_types ) ],
           **attrs
         ),
+        Script( type = u"text/javascript", src = u"https://ssl.google-analytics.com/urchin.js" ),
       ),
       id = "html",
       xmlns = u"http://www.w3.org/1999/xhtml",
