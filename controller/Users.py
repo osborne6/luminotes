@@ -1352,12 +1352,12 @@ class Users( object ):
         raise Payment_error( u"invalid recurring", params )
       user.rate_plan = plan_index
       self.__database.save( user, commit = False )
-      self.__update_groups( user )
+      self.update_groups( user )
       self.__database.commit()
     elif txn_type == u"subscr_cancel":
       user.rate_plan = 0 # return the user to the free account level
       self.__database.save( user, commit = False )
-      self.__update_groups( user )
+      self.update_groups( user )
       self.__database.commit()
     elif txn_type in ( u"subscr_payment", u"subscr_failed" ):
       pass # for now, ignore payments and let paypal handle them
@@ -1366,7 +1366,7 @@ class Users( object ):
 
     return dict()
 
-  def __update_groups( self, user ):
+  def update_groups( self, user ):
     """
     Update a user's group membership as a result of a rate plan change. This method does not commit
     the current database transaction.

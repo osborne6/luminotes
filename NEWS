@@ -1,6 +1,10 @@
+1.4.1: June ?, 2008:
+ * Updated tools/set_plan.py to automatically update a user's group
+   membership.
+
 1.4.0: June 9, 2008
- * Implemented some basic user administration features, allowing you to create
-   Luminotes users yourself.
+ * Implemented some basic user administration features, allowing you to
+   create Luminotes users yourself.
  * Added new rate plans with support for user administration.
  * Wrote a tool for manually updating a user's rate plan: tools/set_plan.py
  * Refactored some of the client-side form-handling code to cut down on

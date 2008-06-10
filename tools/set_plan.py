@@ -3,9 +3,12 @@
 import os
 import os.path
 import sys
+import cherrypy
 from controller.Database import Database
+from controller.Users import Users
 from model.Notebook import Notebook
 from model.User import User
+from config import Common
 
 
 class Plan_setter( object ):
@@ -16,6 +19,9 @@ class Plan_setter( object ):
     self.database = database
     self.user_id = user_id
     self.rate_plan = int( rate_plan )
+
+    rate_plans = Common.settings[ u"global" ][ u"luminotes.rate_plans" ]
+    self.users = Users( database, None, None, None, None, rate_plans )
 
     self.set_plan()
     self.database.commit()
@@ -28,7 +34,10 @@ class Plan_setter( object ):
       sys.exit( 1 )
 
     user.rate_plan = self.rate_plan
-    self.database.save( user )
+    self.database.save( user, commit = False )
+
+    # update a user's group membership as a result of a rate plan change
+    self.users.update_groups( user )
 
 def main( args ):
   database = Database()
