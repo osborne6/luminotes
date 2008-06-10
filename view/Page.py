@@ -26,7 +26,6 @@ class Page( Html ):
           *[ child for child in children if not isinstance( child, head_types ) ],
           **attrs
         ),
-        Script( type = u"text/javascript", src = u"https://ssl.google-analytics.com/urchin.js" ),
       ),
       id = "html",
       xmlns = u"http://www.w3.org/1999/xhtml",
