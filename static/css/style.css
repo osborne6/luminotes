@@ -22,7 +22,7 @@ ol li {
 }
 
 img {
-  border: 0;
+  border-width: 0;
 }
 
 h1 {
@@ -244,13 +244,13 @@ h1 {
 #current_notebook_up_hover_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/arrow_up_hover.png);
+  background-image: url(/static/images/up_arrow_hover.png);
 }
 
 #current_notebook_down_hover_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/arrow_down_hover.png);
+  background-image: url(/static/images/down_arrow_hover.png);
 }
 
 #tree_arrow_hover_preload {
