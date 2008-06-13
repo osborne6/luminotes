@@ -14,6 +14,8 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.closed = false;
   this.link_started = null;
   this.gecko = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.userAgent );
+  this.hover_target = null;
+  this.hover_timer = null;
   var iframe_id = "note_" + id;
 
   var self = this;
@@ -154,6 +156,8 @@ Editor.prototype.finish_init = function () {
   connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
   connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+  connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
+  connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
 
   // handle each form submit event by forwarding it on as a custom event
   function connect_form( form ) {
@@ -374,6 +378,46 @@ Editor.prototype.mouse_clicked = function ( event ) {
   // in case the cursor has moved, update the state
   if ( this.edit_enabled )
     signal( this, "state_changed", this, link_clicked );
+}
+
+HOVER_DURATION_MILLISECONDS = 1000;
+
+Editor.prototype.mouse_hovered = function ( event ) {
+  // search through the tree of elements containing the hover target for a link
+  var link = event.target()
+  if ( !link ) false;
+
+  while ( link.nodeName != "A" ) {
+    link = link.parentNode;
+    if ( !link )
+      break;
+  }
+  if ( !link || !link.href )
+    link = null;
+
+  var self = this;
+  var hover_target = link || event.target();
+  this.hover_target = hover_target;
+
+  if ( this.hover_timer )
+    clearTimeout( this.hover_timer );
+
+  this.hover_timer = setTimeout( function () { self.mouse_hover_timeout( hover_target ) }, HOVER_DURATION_MILLISECONDS );
+}
+
+Editor.prototype.mouse_hover_timeout = function ( hover_target ) {
+  // if the mouse is hovering over the same target that it was when the timer started
+  if ( hover_target == this.hover_target )
+    signal( this, "mouse_hovered", hover_target );
+}
+
+Editor.prototype.mouse_dragged = function ( event ) {
+  // reset the hover timer to prevent a mouse hover from being registered while the mouse is being dragged
+  if ( this.hover_timer ) {
+    var self = this;
+    clearTimeout( this.hover_timer );
+    this.hover_timer = setTimeout( function () { self.mouse_hover_timeout( self.hover_target ) }, HOVER_DURATION_MILLISECONDS );
+  }
 }
 
 Editor.prototype.scrape_title = function () {

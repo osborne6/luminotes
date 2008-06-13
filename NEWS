@@ -1,6 +1,11 @@
 1.4.1: June ?, 2008:
+ * Implemented support for embedded images within wiki notes.
+ * You can now open a link pulldown by simply hovering the mouse over a link
+   for a few seconds.
  * Updated tools/set_plan.py to automatically update a user's group
    membership.
+ * Removed Google AdWords <script> tag from distributed Luminotes tarball,
+   as not every installation of Luminotes uses AdWords.
 
 1.4.0: June 9, 2008
  * Implemented some basic user administration features, allowing you to

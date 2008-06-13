@@ -1577,6 +1577,33 @@ class Test_files( Test_controller ):
     assert db_file.filename == self.filename
     assert Upload_file.exists( self.file_id )
 
+  def test_purge_unused_keep_image_file( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.note.contents = '<a href="/files/download?file_id=%s"><img src="/blah"></a>' % self.file_id
+    self.database.save( self.note )
+
+    # the image file is linked to from the note's contents, so this should not delete it
+    cherrypy.root.files.purge_unused( self.note )
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.object_id == self.file_id
+    assert db_file.filename == self.filename
+    assert Upload_file.exists( self.file_id )
+
   def test_purge_unused_keep_file_with_quote_filename( self ):
     self.login()
 

@@ -728,6 +728,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     connect( editor, "changes_clicked", function ( event ) { self.toggle_editor_changes( event, editor ) } );
     connect( editor, "options_clicked", function ( event ) { self.toggle_editor_options( event, editor ) } );
     connect( editor, "focused", this, "editor_focused" );
+    connect( editor, "mouse_hovered", function ( target ) { self.editor_mouse_hovered( editor, target ) } );
   }
 
   connect( editor, "load_editor", this, "load_editor" );
@@ -800,7 +801,7 @@ Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) 
   }
 }
 
-Wiki.prototype.display_link_pulldown = function ( editor, link ) {
+Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   this.clear_messages();
 
   if ( !editor.read_write ) {
@@ -822,18 +823,20 @@ Wiki.prototype.display_link_pulldown = function ( editor, link ) {
   if ( pulldown )
     pulldown.update_position();
 
+  var link_contains_image = getElementsByTagAndClassName( "img", null, link );
+
   // if the cursor is now on a link, display a link pulldown if there isn't already one open
-  if ( link_title( link ).length > 0 ) {
+  if ( link_title( link ).length > 0 || link_contains_image ) {
     if ( !pulldown ) {
       this.clear_pulldowns();
       // display a different pulldown depending on whether the link is a note link or a file link
       if ( link.target || !/\/files\//.test( link.href ) )
-        new Link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+        new Link_pulldown( this, this.notebook_id, this.invoker, editor, link, ephemeral );
       else {
         if ( /\/files\/new$/.test( link.href ) )
-          new Upload_pulldown( this, this.notebook_id, this.invoker, editor, link );
+          new Upload_pulldown( this, this.notebook_id, this.invoker, editor, link, ephemeral );
         else
-          new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link );
+          new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link, ephemeral );
       }
     }
   }
@@ -865,6 +868,15 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   } else {
     this.focused_editor = editor;
   }
+}
+
+Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
+  // if the mouse is hovering over a link, open a link pulldown
+  if ( target.nodeName == "A" )
+    this.display_link_pulldown( editor, target, true );
+  // the mouse is hovering over something else, so clear all ephemeral pulldowns
+  else
+    this.clear_pulldowns( true );
 }
 
 Wiki.prototype.key_pressed = function ( event ) {
@@ -2151,15 +2163,19 @@ Wiki.prototype.clear_messages = function () {
   }
 }
 
-Wiki.prototype.clear_pulldowns = function () {
+Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
   var results = getElementsByTagAndClassName( "div", "pulldown" );
 
   for ( var i in results ) {
     var result = results[ i ];
 
     // close the pulldown if it's been open at least a quarter second
-    if ( new Date() - result.pulldown.init_time >= 250 )
+    if ( new Date() - result.pulldown.init_time >= 250 ) {
+      if ( ephemeral_only && !result.pulldown.ephemeral )
+        continue;
+
       result.pulldown.shutdown();
+    }
   }
 }
 
@@ -2455,7 +2471,7 @@ Wiki.prototype.toggle_editor_options = function ( event, editor ) {
 connect( window, "onload", function ( event ) { new Wiki( new Invoker() ); } );
 
 
-function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to ) {
+function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemeral ) {
   this.wiki = wiki;
   this.notebook_id = notebook_id;
   this.div = createDOM( "div", { "id": pulldown_id, "class": "pulldown" } );
@@ -2463,6 +2479,7 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to ) {
   this.init_time = new Date();
   this.anchor = anchor;
   this.relative_to = relative_to;
+  this.ephemeral = ephemeral;
 
   addElementClass( this.div, "invisible" );
 
@@ -2471,6 +2488,15 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to ) {
   setElementPosition( this.div, position );
 
   removeElementClass( this.div, "invisible" );
+
+  if ( this.ephemeral ) {
+    // when the mouse cursor is moved into the pulldown, it becomes non-ephemeral (in other words,
+    // it will no longer disappear in a few seconds)
+    var self = this;
+    connect( this.div, "onmouseover", function ( event ) {
+      self.ephemeral = false;
+    } );
+  }
 }
 
 function calculate_position( anchor, relative_to ) {
@@ -2608,11 +2634,11 @@ Changes_pulldown.prototype.shutdown = function () {
 }
 
 
-function Link_pulldown( wiki, notebook_id, invoker, editor, link ) {
+function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe );
+  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;
@@ -2772,11 +2798,11 @@ Link_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
-function Upload_pulldown( wiki, notebook_id, invoker, editor, link ) {
+function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   this.link = link || editor.find_link_at_cursor();
   this.link.pulldown = this;
 
-  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe );
+  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe, ephemeral );
   wiki.down_image_button( "attachFile" );
 
   this.invoker = invoker;
@@ -2822,6 +2848,10 @@ Upload_pulldown.prototype.init_frame = function () {
       withDocument( doc, function () {
         self.upload_started( getElement( "file_id" ).value );
       } );
+    } );
+
+    connect( doc.body, "onmouseover", function ( event ) {
+      self.ephemeral = false;
     } );
   } );
 }
@@ -2914,17 +2944,18 @@ Upload_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
-function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
+function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.iframe );
+  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.iframe, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;
   this.filename_field = createDOM( "input", { "class": "text_field", "size": "30", "maxlength": "256" } );
   this.file_size = createDOM( "span", {} );
   this.previous_filename = "";
+  this.link_title = null;
 
   var self = this;
   connect( this.filename_field, "onclick", function ( event ) { self.filename_field_clicked( event ); } );
@@ -2948,17 +2979,31 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   else
     var quote_filename = false;
 
-  appendChildNodes( this.div, createDOM( "span", {},
+  this.thumbnail_span = createDOM( "span", {},
     createDOM( "a", { href: "/files/download?file_id=" + this.file_id + "&quote_filename=" + quote_filename, target: "_new" },
       createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id, "class": "file_thumbnail" } )
     )
-  ) );
+  );
+  appendChildNodes( this.div, this.thumbnail_span );
+
+  // if the link is an image thumbnail link, update the contents of the file link pulldown accordingly
+  if ( getElementsByTagAndClassName( "img", null, this.link ).length > 0 ) {
+    this.embed_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox", "id": "embed_checkbox", "checked": "true" } );
+    addElementClass( this.thumbnail_span, "undisplayed" );
+  } else {
+    this.embed_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox", "id": "embed_checkbox" } );
+  }
+
+  var embed_label = createDOM( "label", { "for": "embed_checkbox", "class": "pulldown_label", "title": "Embed this image within the note itself." },
+    "show image within note"
+  );
 
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "filename: " ) );
   appendChildNodes( this.div, this.filename_field );
   appendChildNodes( this.div, this.file_size );
   appendChildNodes( this.div, " " );
   appendChildNodes( this.div, delete_button );
+  appendChildNodes( this.div, createDOM( "div", {}, this.embed_checkbox, embed_label ) );
 
   // get the file's name and size from the server
   this.invoker.invoke(
@@ -2977,6 +3022,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link ) {
   );
 
   connect( delete_button, "onclick", function ( event ) { self.delete_button_clicked( event ); } );
+  connect( this.embed_checkbox, "onclick", function ( event ) { self.embed_clicked( event ); } );
 
   // FIXME: when this is called, the text cursor moves to an unexpected location
   editor.focus();
@@ -3025,6 +3071,10 @@ File_link_pulldown.prototype.filename_field_key_pressed = function ( event ) {
 File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
   var self = this;
 
+  // change the embedded image (if any) back into a plain file link before deletion
+  if ( getElementsByTagAndClassName( "img", null, this.link ).length > 0 )
+    this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
+
   this.invoker.invoke(
     "/files/delete", "POST", {
       "file_id": this.file_id
@@ -3036,6 +3086,21 @@ File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
   this.editor.focus();
 
   this.wiki.display_message( 'The file "' + strip( this.filename_field.value ) + '" has been deleted.' );
+}
+
+File_link_pulldown.prototype.embed_clicked = function ( event ) {
+  if ( this.embed_checkbox.checked ) {
+    var image = createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id, "class": "thumbnail_left" } );
+    var image_span = createDOM( "span", {}, image );
+    this.link_title = link_title( this.link );
+    this.link.innerHTML = image_span.innerHTML;
+    addElementClass( this.thumbnail_span, "undisplayed" );
+  } else {
+    removeElementClass( this.thumbnail_span, "undisplayed" );
+    this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
+  }
+
+  this.update_position( this.link, this.editor.iframe );
 }
 
 File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {

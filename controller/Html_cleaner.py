@@ -143,7 +143,7 @@ class Html_cleaner(HTMLParser):
     self.allowed_attributes = {
       'a': [ 'href', 'target' ],
       'p': [ 'align' ],
-      'img': [ 'alt', 'border', 'title' ],
+      'img': [ 'src', 'alt', 'border', 'title', "class" ],
       'table': [ 'cellpadding', 'cellspacing', 'border', 'width', 'height' ],
       'font': [ 'color', 'size', 'face' ],
       'td': [ 'rowspan', 'colspan', 'width', 'height' ],
