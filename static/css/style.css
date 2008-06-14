@@ -795,3 +795,17 @@ h1 {
   vertical-align: middle;
   border: 0;
 }
+
+#justify_table td {
+  padding-right: 1em;
+}
+
+.radio_label {
+  color: #000000;
+}
+
+.radio_label:hover {
+  color: #ff6600;
+  cursor: pointer;
+}
+

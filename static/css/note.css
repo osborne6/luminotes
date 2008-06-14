@@ -44,25 +44,19 @@ img {
   border-width: 0;
 }
 
-img .thumbnail_left {
+.left_justified {
   float: left;
-  padding-right: 1.5em;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
+  margin: 0.5em 1.5em 0.5em 0;
 }
 
-img .thumbnail_center {
+.center_justified {
   display: block;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0.5em;
+  margin: 0.5em auto 0.5em auto;
 }
 
-img .thumbnail_right {
+.right_justified {
   float: right;
-  padding-left: 1.5em;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
+  margin: 0.5em 0 0.5em 1.5em;
 }
 
 hr {

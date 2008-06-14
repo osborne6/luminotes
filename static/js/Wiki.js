@@ -395,8 +395,12 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
-  if ( !hasElementClass( event.target(), "pulldown_checkbox" ) && !hasElementClass( event.target(), "pulldown_label" ) )
-    this.clear_pulldowns();
+  var tag_name = event.target().tagName.toLowerCase();
+
+  if ( tag_name == "input" || tag_name == "label" )
+    return;
+
+  this.clear_pulldowns();
 }
 
 Wiki.prototype.create_blank_editor = function ( event ) {
@@ -2500,6 +2504,14 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
 }
 
 function calculate_position( anchor, relative_to ) {
+  var anchor_dimensions = getElementDimensions( anchor );
+
+  // if the anchor has no height, use its first child (if any) instead
+  if ( anchor_dimensions.h == 0 && anchor.firstChild ) {
+    anchor = anchor.firstChild;
+    anchor_dimensions = getElementDimensions( anchor );
+  }
+
   // position the pulldown under the anchor
   var position = getElementPosition( anchor );
 
@@ -2517,9 +2529,7 @@ function calculate_position( anchor, relative_to ) {
     }
   }
 
-  var anchor_dimensions = getElementDimensions( anchor );
-
-  // if the anchor has no height, move the position down a bit by an arbitrary amount
+  // if we still don't have a height, move the position down a bit by an arbitrary amount
   if ( anchor_dimensions.h == 0 )
     position.y += 8;
   else
@@ -2964,7 +2974,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   connect( this.filename_field, "onblur", function ( event ) { self.filename_field_changed( event ); } );
   connect( this.filename_field, "onkeydown", function ( event ) { self.filename_field_key_pressed( event ); } );
 
-  var delete_button = createDOM( "input", {
+  this.delete_button = createDOM( "input", {
     "type": "button",
     "class": "button",
     "value": "delete",
@@ -2987,23 +2997,68 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   appendChildNodes( this.div, this.thumbnail_span );
 
   // if the link is an image thumbnail link, update the contents of the file link pulldown accordingly
-  if ( getElementsByTagAndClassName( "img", null, this.link ).length > 0 ) {
-    this.embed_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox", "id": "embed_checkbox", "checked": "true" } );
+  var image = getFirstElementByTagAndClassName( "img", null, this.link );
+  var embed_attributes = { "type": "checkbox", "class": "pulldown_checkbox", "id": "embed_checkbox" };
+  var left_justify_attributes = { "type": "radio", "id": "left_justify_radio", "name": "justify", "value": "left" };
+  var center_justify_attributes = { "type": "radio", "id": "center_justify_radio", "name": "justify", "value": "center" };
+  var right_justify_attributes = { "type": "radio", "id": "right_justify_radio", "name": "justify", "value": "right" };
+
+  if ( image ) {
     addElementClass( this.thumbnail_span, "undisplayed" );
+    embed_attributes[ "checked" ] = "true";
+
+    if ( hasElementClass( image, "left_justified" ) )
+      left_justify_attributes[ "checked" ] = "true";
+    else if ( hasElementClass( image, "center_justified" ) )
+      center_justify_attributes[ "checked" ] = "true";
+    else if ( hasElementClass( image, "right_justified" ) )
+      right_justify_attributes[ "checked" ] = "true";
   } else {
-    this.embed_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox", "id": "embed_checkbox" } );
+    left_justify_attributes[ "checked" ] = "true";
   }
+
+  this.embed_checkbox = createDOM( "input", embed_attributes );
+  this.left_justify_radio = createDOM( "input", left_justify_attributes );
+  this.center_justify_radio = createDOM( "input", center_justify_attributes );
+  this.right_justify_radio = createDOM( "input", right_justify_attributes );
 
   var embed_label = createDOM( "label", { "for": "embed_checkbox", "class": "pulldown_label", "title": "Embed this image within the note itself." },
     "show image within note"
   );
 
+  var left_justify_label = createDOM( "label",
+    { "for": "left_justify_radio", "class": "radio_label", "title": "Left justify this image within the note." },
+    "left justify"
+  );
+  var center_justify_label = createDOM( "label",
+    { "for": "center_justify_radio", "class": "radio_label", "title": "Center this image horizontally within the note." },
+    "center"
+  );
+  var right_justify_label = createDOM( "label",
+    { "for": "right_justify_radio", "class": "radio_label", "title": "Right justify this image within the note." },
+    "right justify"
+  );
+
+  this.image_justify_area = createDOM( "div", { "class": "undisplayed" },
+    createDOM( "table" , { "id": "justify_table" },
+      createDOM( "tr", {},
+        createDOM( "td", {}, this.left_justify_radio, left_justify_label ),
+        createDOM( "td", {}, this.center_justify_radio, center_justify_label ),
+        createDOM( "td", {}, this.right_justify_radio, right_justify_label )
+      )
+    )
+  );
+
+  if ( image )
+    removeElementClass( this.image_justify_area, "undisplayed" );
+
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "filename: " ) );
   appendChildNodes( this.div, this.filename_field );
   appendChildNodes( this.div, this.file_size );
   appendChildNodes( this.div, " " );
-  appendChildNodes( this.div, delete_button );
+  appendChildNodes( this.div, this.delete_button );
   appendChildNodes( this.div, createDOM( "div", {}, this.embed_checkbox, embed_label ) );
+  appendChildNodes( this.div, this.image_justify_area );
 
   // get the file's name and size from the server
   this.invoker.invoke(
@@ -3021,8 +3076,11 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
     }
   );
 
-  connect( delete_button, "onclick", function ( event ) { self.delete_button_clicked( event ); } );
+  connect( this.delete_button, "onclick", function ( event ) { self.delete_button_clicked( event ); } );
   connect( this.embed_checkbox, "onclick", function ( event ) { self.embed_clicked( event ); } );
+  connect( this.left_justify_radio, "onclick", function ( event ) { self.justify_image( event, "left" ); } );
+  connect( this.center_justify_radio, "onclick", function ( event ) { self.justify_image( event, "center" ); } );
+  connect( this.right_justify_radio, "onclick", function ( event ) { self.justify_image( event, "right" ); } );
 
   // FIXME: when this is called, the text cursor moves to an unexpected location
   editor.focus();
@@ -3072,7 +3130,7 @@ File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
   var self = this;
 
   // change the embedded image (if any) back into a plain file link before deletion
-  if ( getElementsByTagAndClassName( "img", null, this.link ).length > 0 )
+  if ( getFirstElementByTagAndClassName( "img", null, this.link ) )
     this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
 
   this.invoker.invoke(
@@ -3090,17 +3148,34 @@ File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
 
 File_link_pulldown.prototype.embed_clicked = function ( event ) {
   if ( this.embed_checkbox.checked ) {
-    var image = createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id, "class": "thumbnail_left" } );
+    var image = createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id, "class": "left_justified" } );
     var image_span = createDOM( "span", {}, image );
     this.link_title = link_title( this.link );
     this.link.innerHTML = image_span.innerHTML;
     addElementClass( this.thumbnail_span, "undisplayed" );
+    removeElementClass( this.image_justify_area, "undisplayed" );
   } else {
     removeElementClass( this.thumbnail_span, "undisplayed" );
+    addElementClass( this.image_justify_area, "undisplayed" );
     this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
   }
 
   this.update_position( this.link, this.editor.iframe );
+  this.editor.resize();
+}
+
+File_link_pulldown.prototype.justify_image = function ( event, position ) {
+  var image = getFirstElementByTagAndClassName( "img", null, this.link );
+  if ( !image )
+    return;
+
+  removeElementClass( image, "left_justified" );
+  removeElementClass( image, "center_justified" );
+  removeElementClass( image, "right_justified" );
+  addElementClass( image, position + "_justified" );
+
+  this.update_position( this.link, this.editor.iframe );
+  this.editor.resize();
 }
 
 File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {
@@ -3113,6 +3188,12 @@ File_link_pulldown.prototype.shutdown = function () {
   disconnectAll( this.filename_field );
   if ( this.link )
     this.link.pulldown = null;
+
+  disconnectAll( this.delete_button );
+  disconnectAll( this.embed_checkbox );
+  disconnectAll( this.left_justify_radio );
+  disconnectAll( this.center_justify_radio );
+  disconnectAll( this.right_justify_radio );
 }
 
 function Note_tree( wiki, notebook_id, invoker ) {
