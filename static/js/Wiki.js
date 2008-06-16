@@ -3041,10 +3041,12 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
 
   this.image_justify_area = createDOM( "div", { "class": "undisplayed" },
     createDOM( "table" , { "id": "justify_table" },
-      createDOM( "tr", {},
-        createDOM( "td", {}, this.left_justify_radio, left_justify_label ),
-        createDOM( "td", {}, this.center_justify_radio, center_justify_label ),
-        createDOM( "td", {}, this.right_justify_radio, right_justify_label )
+      createDOM( "tbody", {},
+        createDOM( "tr", {},
+          createDOM( "td", {}, this.left_justify_radio, left_justify_label ),
+          createDOM( "td", {}, this.center_justify_radio, center_justify_label ),
+          createDOM( "td", {}, this.right_justify_radio, right_justify_label )
+        )
       )
     )
   );
@@ -3155,6 +3157,8 @@ File_link_pulldown.prototype.embed_clicked = function ( event ) {
     addElementClass( this.thumbnail_span, "undisplayed" );
     removeElementClass( this.image_justify_area, "undisplayed" );
   } else {
+    this.justify_image( "left" );
+    this.left_justify_radio.checked = true;
     removeElementClass( this.thumbnail_span, "undisplayed" );
     addElementClass( this.image_justify_area, "undisplayed" );
     this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
