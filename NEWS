@@ -1,7 +1,9 @@
-1.4.1: June ?, 2008:
+1.4.1: June 16, 2008:
  * Implemented support for embedded images within wiki notes.
  * You can now open a link pulldown by simply hovering the mouse over a link
    for a few seconds.
+ * Tweaked the popup positioning code to prevent popups from getting smashed
+   into the right side of the page.
  * Updated tools/set_plan.py to automatically update a user's group
    membership.
  * Removed Google AdWords <script> tag from distributed Luminotes tarball,

@@ -2488,10 +2488,6 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
   addElementClass( this.div, "invisible" );
 
   appendChildNodes( document.body, this.div );
-  var position = calculate_position( anchor, relative_to );
-  setElementPosition( this.div, position );
-
-  removeElementClass( this.div, "invisible" );
 
   if ( this.ephemeral ) {
     // when the mouse cursor is moved into the pulldown, it becomes non-ephemeral (in other words,
@@ -2503,7 +2499,12 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
   }
 }
 
-function calculate_position( anchor, relative_to ) {
+Pulldown.prototype.finish_init = function () {
+  Pulldown.prototype.update_position.call( this );
+  removeElementClass( this.div, "invisible" );
+}
+
+function calculate_position( node, anchor, relative_to ) {
   var anchor_dimensions = getElementDimensions( anchor );
 
   // if the anchor has no height, use its first child (if any) instead
@@ -2525,8 +2526,16 @@ function calculate_position( anchor, relative_to ) {
       // position based on how far the page is scrolled.
       if ( /MSIE/.test( navigator.userAgent ) )
         position.y -= getElement( "html" ).scrollTop;
-
     }
+  }
+
+  var node_dimensions = getElementDimensions( node );
+
+  // if the position is on the right half of the page, then align the right edge of the node with
+  // the right edge of the anchor
+  if ( position.x > getViewportDimensions().w * 0.5 ) {
+    if ( node_dimensions )
+      position.x = position.x - node_dimensions.w + anchor_dimensions.w;
   }
 
   // if we still don't have a height, move the position down a bit by an arbitrary amount
@@ -2539,7 +2548,7 @@ function calculate_position( anchor, relative_to ) {
 }
 
 Pulldown.prototype.update_position = function () {
-  var position = calculate_position( this.anchor, this.relative_to );
+  var position = calculate_position( this.div, this.anchor, this.relative_to );
   setElementPosition( this.div, position );
 }
 
@@ -2564,6 +2573,8 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
 
   var self = this;
   connect( this.startup_checkbox, "onclick", function ( event ) { self.startup_clicked( event ); } );
+
+  Pulldown.prototype.finish_init.call( this );
 }
 
 Options_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
@@ -2593,6 +2604,7 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
   
   if ( !editor.user_revisions || editor.user_revisions.length == 0 ) {
     appendChildNodes( this.div, createDOM( "span", "This note has no previous changes." ) );
+    Pulldown.prototype.finish_init.call( this );
     return;
   }
 
@@ -2624,6 +2636,8 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
     appendChildNodes( this.div, link );
     appendChildNodes( this.div, createDOM( "br" ) );
   }
+
+  Pulldown.prototype.finish_init.call( this );
 }
 
 Changes_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
@@ -2671,6 +2685,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   if ( link.target ) {
     this.title_field.value = link.href;
     replaceChildNodes( this.note_summary, "web link" );
+    Pulldown.prototype.finish_init.call( this );
     return;
   }
 
@@ -2683,18 +2698,21 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
     if ( title == "search results" ) {
       this.title_field.value = title;
       this.display_summary( title, "current search results" );
+      Pulldown.prototype.finish_init.call( this );
       return;
     }
 
     if ( title == "share this notebook" ) {
       this.title_field.value = title;
       this.display_summary( title, "share this notebook with others" );
+      Pulldown.prototype.finish_init.call( this );
       return;
     }
 
     if ( title == "account settings" ) {
       this.title_field.value = title;
       this.display_summary( title, "account settings" );
+      Pulldown.prototype.finish_init.call( this );
       return;
     }
 
@@ -2706,8 +2724,10 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
       },
       function ( result ) {
         // if the user has already started typing something, don't overwrite it
-        if ( self.title_field.value.length != 0 )
+        if ( self.title_field.value.length != 0 ) {
+          Pulldown.prototype.finish_init.call( self );
           return;
+        }
         if ( result.note ) {
           self.title_field.value = result.note.title;
           self.display_summary( result.note.title, result.note.summary );
@@ -2717,6 +2737,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
         }
       }
     );
+    Pulldown.prototype.finish_init.call( this );
     return;
   }
 
@@ -2726,6 +2747,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   if ( iframe ) {
     this.title_field.value = iframe.editor.title;
     this.display_summary( iframe.editor.title, iframe.editor.summarize() );
+    Pulldown.prototype.finish_init.call( this );
     return;
   }
 
@@ -2739,8 +2761,10 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
     },
     function ( result ) {
       // if the user has already started typing something, don't overwrite it
-      if ( self.title_field.value.length != 0 )
+      if ( self.title_field.value.length != 0 ) {
+        Pulldown.prototype.finish_init.call( self );
         return;
+      }
       if ( result.note ) {
         self.title_field.value = result.note.title;
         self.display_summary( result.note.title, result.note.summary );
@@ -2750,6 +2774,8 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
       }
     }
   );
+
+  Pulldown.prototype.finish_init.call( this );
 }
 
 Link_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
@@ -2844,6 +2870,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   addElementClass( this.progress_iframe, "undisplayed" );
 
   appendChildNodes( this.div, this.progress_iframe );
+  Pulldown.prototype.finish_init.call( this );
 }
 
 Upload_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
@@ -3086,6 +3113,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
 
   // FIXME: when this is called, the text cursor moves to an unexpected location
   editor.focus();
+  Pulldown.prototype.finish_init.call( this );
 }
 
 File_link_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
