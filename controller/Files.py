@@ -206,7 +206,7 @@ cherrypy._cpcgifs.FieldStorage = FieldStorage
 
 
 class Files( object ):
-  FILE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*/files/download\?file_id=([^"&]+)(&[^"]*)?">.+</a>', re.IGNORECASE )
+  FILE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*/files/download\?file_id=([^"&]+)(&[^"]*)?">(<img )?[^<]+</a>', re.IGNORECASE )
 
   """
   Controller for dealing with uploaded files, corresponding to the "/files" URL.

@@ -875,8 +875,10 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
 }
 
 Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
-  // if the mouse is hovering over a link, open a link pulldown
-  if ( target.nodeName == "A" )
+  var pulldowns = getElementsByTagAndClassName( "div", "pulldown" );
+
+  // if the mouse is hovering over a link, and no pulldowns are open, open a link pulldown
+  if ( target.nodeName == "A" && pulldowns.length == 0 )
     this.display_link_pulldown( editor, target, true );
   // the mouse is hovering over something else, so clear all ephemeral pulldowns
   else
