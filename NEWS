@@ -1,3 +1,9 @@
+1.4.3: June 16, 2008:
+ * Fixed a bug in which an image thumbnail could not be loaded unless
+   you had a valid session. This prevented thumbnails from showing up
+   if, for instance, you were reading the Luminotes blog from an RSS
+   reader that didn't establish a session.
+
 1.4.2: June 16, 2008:
  * Fixed a bug that caused image files to get deleted if there were multiple
    images embedded within a single note.
