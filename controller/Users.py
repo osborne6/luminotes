@@ -1317,7 +1317,7 @@ class Users( object ):
     # verify period3
     period3 = params.get( u"period3" )
     if mc_amount3 == yearly_fee:
-      if period3 and period3 != u"12 M": # one-year subscription
+      if period3 and period3 != u"1 Y": # one-year subscription
         raise Payment_error( u"invalid period3", params )
     else:
       if period3 and period3 != u"1 M": # one-month subscription
