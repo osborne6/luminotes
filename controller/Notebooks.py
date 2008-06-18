@@ -25,8 +25,9 @@ from view.Update_link_page import Update_link_page
 
 class Notebooks( object ):
   WHITESPACE_PATTERN = re.compile( u"\s+" )
-  LINK_PATTERN = re.compile( u'<a\s+((?:[^>]+\s)?href="([^"]+)"(?:\s+target="([^"]*)")?[^>]*)>([^<]+)</a>', re.IGNORECASE )
+  LINK_PATTERN = re.compile( u'<a\s+((?:[^>]+\s)?href="([^"]+)"(?:\s+target="([^"]*)")?[^>]*)>(<img [^>]+>)?([^<]*)</a>', re.IGNORECASE )
   FILE_PATTERN = re.compile( u'/files/' )
+  NEW_FILE_PATTERN = re.compile( u'/files/new' )
 
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
@@ -585,7 +586,7 @@ class Notebooks( object ):
     items = []
 
     for match in self.LINK_PATTERN.finditer( note.contents ):
-      ( attributes, href, target, title ) = match.groups()
+      ( attributes, href, target, embedded_image, title ) = match.groups()
 
       # if it has a link target, it's a link to an external web site
       if target:
@@ -594,7 +595,10 @@ class Notebooks( object ):
 
       # if it has '/files/' in its path, it's an uploaded file link
       if self.FILE_PATTERN.search( href ):
-        items.append( Note_tree_area.make_item( title, attributes, u"note_tree_file_link", target = u"_new" ) )
+        if not self.NEW_FILE_PATTERN.search( href ): # ignore files that haven't been uploaded yet
+          if embedded_image:
+            title = u"embedded image"
+          items.append( Note_tree_area.make_item( title, attributes, u"note_tree_file_link", target = u"_new" ) )
         continue
 
       # if it has a note_id, load that child note and see whether it has any children of its own

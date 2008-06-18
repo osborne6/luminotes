@@ -1,3 +1,8 @@
+1.4.4: June 17, 2008:
+ * Links to embedded images now show up within the note tree's list of links.
+ * Links to files that have not yet been uploaded (or have been deleted) are
+   now excluded from the note tree's list of links.
+
 1.4.3: June 16, 2008:
  * Fixed a bug in which an image thumbnail could not be loaded unless
    you had a valid session. This prevented thumbnails from showing up

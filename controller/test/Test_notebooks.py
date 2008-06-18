@@ -1353,6 +1353,40 @@ class Test_notebooks( Test_controller ):
     assert link % u' target="_new" class="note_tree_file_link"' in html
     assert u"tree_expander_empty" in html
 
+  def test_load_note_links_with_embedded_image_file_link( self ):
+    self.login()
+
+    link = u'<a href="../../files/fileid?blah"%s><img src="/blah"></a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert u'<a href="../../files/fileid?blah" target="_new" class="note_tree_file_link">embedded image</a>' in html
+    assert u"tree_expander_empty" in html
+
+  def test_load_note_links_with_new_file_link( self ):
+    self.login()
+
+    link = u'<a href="../../files/new"%s>link to new file</a>'
+    self.note.contents = u"<h3>blah</h3> this is a %s" % ( link % "" )
+    self.database.save( self.note )
+
+    result = self.http_post( "/notebooks/load_note_links/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    html = result.get( "tree_html" )
+    assert u"<table"
+    assert link % u' target="_new" class="note_tree_file_link"' not in html
+    assert u"tree_expander_empty" not in html
+
   def test_load_note_links_with_note_link( self ):
     self.login()
 
