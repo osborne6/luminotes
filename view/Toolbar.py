@@ -23,7 +23,7 @@ class Toolbar( Div ):
           ) ),
           Div( Input(
             type = u"image",
-            id = u"attachFile", title = u"attach file",
+            id = u"attachFile", title = u"attach file or image",
             src = u"/static/images/toolbar/attach_button.png",
             width = u"40", height = u"40",
             class_ = "image_button",

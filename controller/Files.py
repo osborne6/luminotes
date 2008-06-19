@@ -333,15 +333,18 @@ class Files( object ):
   @grab_user_id
   @validate(
     file_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
+    max_size = Valid_int( min = 10, max = 1000, none_okay = True ),
+    user_id = Valid_id( none_okay = True )
   )
-  def thumbnail( self, file_id, user_id = None ):
+  def thumbnail( self, file_id, max_size = None, user_id = None ):
     """
     Return a thumbnail for a file that a user has previously uploaded. If a thumbnail cannot be
     generated for the given file, return a default thumbnail image.
 
     @type file_id: unicode
     @param file_id: id of the file to return a thumbnail for
+    @type max_size: int or NoneType
+    @param max_size: maximum thumbnail width or height in pixels (optional, defaults to a small size)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: generator
@@ -360,14 +363,17 @@ class Files( object ):
 
     cherrypy.response.headerMap[ u"Content-Type" ] = u"image/png"
 
+    DEFAULT_MAX_THUMBNAIL_SIZE = 125
+    if not max_size:
+      max_size = DEFAULT_MAX_THUMBNAIL_SIZE
+
     # attempt to open the file as an image
     image_buffer = None
     try:
       image = Upload_file.open_image( file_id )
 
       # scale the image down into a thumbnail
-      THUMBNAIL_MAX_SIZE = ( 125, 125 ) # in pixels
-      image.thumbnail( THUMBNAIL_MAX_SIZE, Image.ANTIALIAS )
+      image.thumbnail( ( max_size, max_size ), Image.ANTIALIAS )
 
       # save the image into a memory buffer
       image_buffer = StringIO()

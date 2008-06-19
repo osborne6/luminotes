@@ -1,3 +1,8 @@
+1.4.5: June 18, 2008:
+ * You can now resize embedded images (small, medium, or large).
+ * Fixed a bug that potentially caused link pulldowns to open in the wrong
+   location when the page was scrolled past the top.
+
 1.4.4: June 17, 2008:
  * Links to embedded images now show up within the note tree's list of links.
  * Links to files that have not yet been uploaded (or have been deleted) are

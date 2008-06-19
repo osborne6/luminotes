@@ -566,6 +566,82 @@ class Test_files( Test_controller ):
     assert image
     assert image.size == ( 125, 50 )
 
+  def test_thumbnail_with_max_size( self ):
+    self.login()
+
+    # make the test image big enough to require scaling down
+    image = Image.open( StringIO( self.IMAGE_DATA ) )
+    image = image.transform( ( 250, 250 ), Image.QUAD, range( 8 ) )
+
+    image_data = StringIO()
+    image.save( image_data, "PNG" )
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = image_data.getvalue(),
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    max_size = 225
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s&max_size=%s" % ( self.file_id, max_size ),
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    file_data = "".join( result[ u"body" ] )
+    image = Image.open( StringIO( file_data ) )
+    assert image
+    assert image.size == ( max_size, max_size )
+
+  def test_thumbnail_with_max_size_without_scaling( self ):
+    self.login()
+
+    # make the test image big enough to require scaling down
+    image = Image.open( StringIO( self.IMAGE_DATA ) )
+    image = image.transform( ( 250, 250 ), Image.QUAD, range( 8 ) )
+
+    image_data = StringIO()
+    image.save( image_data, "PNG" )
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = image_data.getvalue(),
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    max_size = 300
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s&max_size=%s" % ( self.file_id, max_size ),
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+
+    file_data = "".join( result[ u"body" ] )
+    image = Image.open( StringIO( file_data ) )
+    assert image
+    assert image.size == ( 250, 250 )
+
   def test_thumbnail_with_non_image( self ):
     self.login()
 
@@ -619,6 +695,28 @@ class Test_files( Test_controller ):
     headers = result.get( "headers" )
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_thumbnail_with_invalid_max_size( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data, # not a valid image
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/thumbnail?file_id=%s&max_size=0" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"max size" in result[ u"body" ][ 0 ]
 
   def test_thumbnail_without_access( self ):
     self.login()

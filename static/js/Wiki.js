@@ -2524,10 +2524,8 @@ function calculate_position( node, anchor, relative_to ) {
       position.x += relative_pos.x;
       position.y += relative_pos.y;
 
-      // Work around an IE "feature" in which an element within an iframe changes its absolute
-      // position based on how far the page is scrolled.
-      if ( /MSIE/.test( navigator.userAgent ) )
-        position.y -= getElement( "html" ).scrollTop;
+      // adjust the vertical position based on how far the page has scrolled
+      position.y -= getElement( "html" ).scrollTop;
     }
   }
 
@@ -2983,6 +2981,12 @@ Upload_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
+
+SMALL_MAX_IMAGE_SIZE = 125;
+MEDIUM_MAX_IMAGE_SIZE = 300;
+LARGE_MAX_IMAGE_SIZE = 500;
+
+
 function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   link.pulldown = this;
   this.link = link;
@@ -3028,6 +3032,9 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   // if the link is an image thumbnail link, update the contents of the file link pulldown accordingly
   var image = getFirstElementByTagAndClassName( "img", null, this.link );
   var embed_attributes = { "type": "checkbox", "class": "pulldown_checkbox", "id": "embed_checkbox" };
+  var small_size_attributes = { "type": "radio", "id": "small_size_radio", "name": "size", "value": "small" };
+  var medium_size_attributes = { "type": "radio", "id": "medium_size_radio", "name": "size", "value": "medium" };
+  var large_size_attributes = { "type": "radio", "id": "large_size_radio", "name": "size", "value": "large" };
   var left_justify_attributes = { "type": "radio", "id": "left_justify_radio", "name": "justify", "value": "left" };
   var center_justify_attributes = { "type": "radio", "id": "center_justify_radio", "name": "justify", "value": "center" };
   var right_justify_attributes = { "type": "radio", "id": "right_justify_radio", "name": "justify", "value": "right" };
@@ -3036,17 +3043,30 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
     addElementClass( this.thumbnail_span, "undisplayed" );
     embed_attributes[ "checked" ] = "true";
 
-    if ( hasElementClass( image, "left_justified" ) )
-      left_justify_attributes[ "checked" ] = "true";
-    else if ( hasElementClass( image, "center_justified" ) )
+    var src = parseQueryString( image.src.split( "?" ).pop() );
+    var max_size = src[ "max_size" ];
+    if ( max_size == LARGE_MAX_IMAGE_SIZE )
+      large_size_attributes[ "checked" ] = "true";
+    else if ( max_size == MEDIUM_MAX_IMAGE_SIZE )
+      medium_size_attributes[ "checked" ] = "true";
+    else
+      small_size_attributes[ "checked" ] = "true";
+
+    if ( hasElementClass( image, "center_justified" ) )
       center_justify_attributes[ "checked" ] = "true";
     else if ( hasElementClass( image, "right_justified" ) )
       right_justify_attributes[ "checked" ] = "true";
+    else
+      left_justify_attributes[ "checked" ] = "true";
   } else {
+    small_size_attributes[ "checked" ] = "true";
     left_justify_attributes[ "checked" ] = "true";
   }
 
   this.embed_checkbox = createDOM( "input", embed_attributes );
+  this.small_size_radio = createDOM( "input", small_size_attributes );
+  this.medium_size_radio = createDOM( "input", medium_size_attributes );
+  this.large_size_radio = createDOM( "input", large_size_attributes );
   this.left_justify_radio = createDOM( "input", left_justify_attributes );
   this.center_justify_radio = createDOM( "input", center_justify_attributes );
   this.right_justify_radio = createDOM( "input", right_justify_attributes );
@@ -3055,9 +3075,22 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
     "show image within note"
   );
 
+  var small_size_label = createDOM( "label",
+    { "for": "small_size_radio", "class": "radio_label", "title": "Display a small thumbnail of this image." },
+    "small"
+  );
+  var medium_size_label = createDOM( "label",
+    { "for": "medium_size_radio", "class": "radio_label", "title": "Display a medium thumbnail of this image." },
+    "medium"
+  );
+  var large_size_label = createDOM( "label",
+    { "for": "large_size_radio", "class": "radio_label", "title": "Display a large thumbnail of this image." },
+    "large"
+  );
+
   var left_justify_label = createDOM( "label",
     { "for": "left_justify_radio", "class": "radio_label", "title": "Left justify this image within the note." },
-    "left justify"
+    "left"
   );
   var center_justify_label = createDOM( "label",
     { "for": "center_justify_radio", "class": "radio_label", "title": "Center this image horizontally within the note." },
@@ -3065,13 +3098,20 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   );
   var right_justify_label = createDOM( "label",
     { "for": "right_justify_radio", "class": "radio_label", "title": "Right justify this image within the note." },
-    "right justify"
+    "right"
   );
 
-  this.image_justify_area = createDOM( "div", { "class": "undisplayed" },
-    createDOM( "table" , { "id": "justify_table" },
+  this.image_settings_area = createDOM( "div", { "class": "undisplayed" },
+    createDOM( "table" , { "id": "image_settings_table" },
       createDOM( "tbody", {},
         createDOM( "tr", {},
+          createDOM( "td", { "class": "field_label" }, "size: " ),
+          createDOM( "td", {}, this.small_size_radio, small_size_label ),
+          createDOM( "td", {}, this.medium_size_radio, medium_size_label ),
+          createDOM( "td", {}, this.large_size_radio, large_size_label )
+        ),
+        createDOM( "tr", {},
+          createDOM( "td", { "class": "field_label" }, "position: " ),
           createDOM( "td", {}, this.left_justify_radio, left_justify_label ),
           createDOM( "td", {}, this.center_justify_radio, center_justify_label ),
           createDOM( "td", {}, this.right_justify_radio, right_justify_label )
@@ -3081,7 +3121,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   );
 
   if ( image )
-    removeElementClass( this.image_justify_area, "undisplayed" );
+    removeElementClass( this.image_settings_area, "undisplayed" );
 
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "filename: " ) );
   appendChildNodes( this.div, this.filename_field );
@@ -3089,7 +3129,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   appendChildNodes( this.div, " " );
   appendChildNodes( this.div, this.delete_button );
   appendChildNodes( this.div, createDOM( "div", {}, this.embed_checkbox, embed_label ) );
-  appendChildNodes( this.div, this.image_justify_area );
+  appendChildNodes( this.div, this.image_settings_area );
 
   // get the file's name and size from the server
   this.invoker.invoke(
@@ -3109,6 +3149,9 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
 
   connect( this.delete_button, "onclick", function ( event ) { self.delete_button_clicked( event ); } );
   connect( this.embed_checkbox, "onclick", function ( event ) { self.embed_clicked( event ); } );
+  connect( this.small_size_radio, "onclick", function ( event ) { self.resize_image( event, "small" ); } );
+  connect( this.medium_size_radio, "onclick", function ( event ) { self.resize_image( event, "medium" ); } );
+  connect( this.large_size_radio, "onclick", function ( event ) { self.resize_image( event, "large" ); } );
   connect( this.left_justify_radio, "onclick", function ( event ) { self.justify_image( event, "left" ); } );
   connect( this.center_justify_radio, "onclick", function ( event ) { self.justify_image( event, "center" ); } );
   connect( this.right_justify_radio, "onclick", function ( event ) { self.justify_image( event, "right" ); } );
@@ -3180,22 +3223,47 @@ File_link_pulldown.prototype.delete_button_clicked = function ( event ) {
 
 File_link_pulldown.prototype.embed_clicked = function ( event ) {
   if ( this.embed_checkbox.checked ) {
-    var image = createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id, "class": "left_justified" } );
+    var image = createDOM( "img", { "src": "/files/thumbnail?file_id=" + this.file_id + "&max_size=" + SMALL_MAX_IMAGE_SIZE, "class": "left_justified" } );
     var image_span = createDOM( "span", {}, image );
     this.link_title = link_title( this.link );
     this.link.innerHTML = image_span.innerHTML;
     addElementClass( this.thumbnail_span, "undisplayed" );
-    removeElementClass( this.image_justify_area, "undisplayed" );
+    removeElementClass( this.image_settings_area, "undisplayed" );
   } else {
     this.justify_image( "left" );
     this.left_justify_radio.checked = true;
+    this.small_size_radio.checked = true;
     removeElementClass( this.thumbnail_span, "undisplayed" );
-    addElementClass( this.image_justify_area, "undisplayed" );
+    addElementClass( this.image_settings_area, "undisplayed" );
     this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
   }
 
   this.update_position( this.link, this.editor.iframe );
   this.editor.resize();
+}
+
+File_link_pulldown.prototype.resize_image = function ( event, position ) {
+  var image = getFirstElementByTagAndClassName( "img", null, this.link );
+  if ( !image )
+    return;
+
+  if ( position == "large" ) {
+    var max_size = LARGE_MAX_IMAGE_SIZE;
+  } else if ( position == "medium" ) {
+    var max_size = MEDIUM_MAX_IMAGE_SIZE;
+  } else {
+    var max_size = SMALL_MAX_IMAGE_SIZE;
+  }
+
+  // when the newly resized image finishes loading, update the pulldown position and resize the
+  // editor
+  var self = this;
+  connect( image, "onload", function () {
+    self.update_position( self.link, self.editor.iframe );
+    self.editor.resize();
+  } );
+
+  image.setAttribute( "src", "/files/thumbnail?file_id=" + this.file_id + "&max_size=" + max_size );
 }
 
 File_link_pulldown.prototype.justify_image = function ( event, position ) {
