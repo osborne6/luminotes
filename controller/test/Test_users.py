@@ -3098,7 +3098,7 @@ class Test_users( Test_controller ):
     data[ u"custom" ] = self.user.object_id
     data[ u"amount3" ] = u"90.00"
     data[ u"mc_amount3" ] = u"90.00"
-    data[ u"period3" ] = u"12 M"
+    data[ u"period3" ] = u"1 Y"
     result = self.http_post( "/users/paypal_notify", data );
 
     assert len( result ) == 1
@@ -3268,7 +3268,7 @@ class Test_users( Test_controller ):
   def test_paypal_notify_signup_yearly_period3_with_monthly_amount( self ):
     data = dict( self.SUBSCRIPTION_DATA )
     data[ u"custom" ] = self.user.object_id
-    data[ u"period3" ] = u"12 M"
+    data[ u"period3" ] = u"1 Y"
     result = self.http_post( "/users/paypal_notify", data );
 
     assert result.get( u"error" )
@@ -3374,7 +3374,7 @@ class Test_users( Test_controller ):
     data[ u"custom" ] = self.user.object_id
     data[ u"amount3" ] = u"90.00"
     data[ u"mc_amount3" ] = u"90.00"
-    data[ u"period3" ] = u"12 M"
+    data[ u"period3" ] = u"1 Y"
     result = self.http_post( "/users/paypal_notify", data );
 
     assert len( result ) == 1
@@ -3702,7 +3702,7 @@ class Test_users( Test_controller ):
     data[ u"custom" ] = self.user.object_id
     data[ u"amount3" ] = u"90.00"
     data[ u"mc_amount3" ] = u"90.00"
-    data[ u"period3" ] = u"12 M"
+    data[ u"period3" ] = u"1 Y"
     result = self.http_post( "/users/paypal_notify", data );
 
     assert len( result ) == 1
