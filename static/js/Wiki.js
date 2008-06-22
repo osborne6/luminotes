@@ -337,14 +337,6 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     } );
   }
 
-  var add_notebook_link = getElement( "add_notebook_link" );
-  if ( add_notebook_link ) {
-    connect( add_notebook_link, "onclick", function ( event ) {
-      self.invoker.invoke( "/notebooks/create", "POST" );
-      event.stop();
-    } );
-  }
-
   var rename_notebook_link = getElement( "rename_notebook_link" );
   if ( rename_notebook_link ) {
     connect( rename_notebook_link, "onclick", function ( event ) {
@@ -391,6 +383,16 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       self.declutter_clicked();
       event.stop();
     } );
+  }
+
+  var new_notebook_button = getElement( "new_notebook" );
+  if ( new_notebook_button ) {
+    connect( new_notebook_button, "onclick", function ( event ) {
+      self.invoker.invoke( "/notebooks/create", "POST" );
+      event.stop();
+    } );
+
+    this.make_image_button( "new_notebook", "new_note", true );
   }
 }
 
@@ -945,9 +947,9 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   }
 }
 
-Wiki.prototype.get_toolbar_image_dir = function () {
+Wiki.prototype.get_toolbar_image_dir = function ( always_small ) {
   var toolbar_image_dir = IMAGE_DIR + "toolbar/";
-  if ( this.small_toolbar )
+  if ( always_small || this.small_toolbar )
     toolbar_image_dir += "small/";
 
   return toolbar_image_dir;
@@ -959,7 +961,7 @@ Wiki.prototype.resize_toolbar_button = function ( button ) {
 
   var button_size = getElementDimensions( button );
   
-  if ( this.small_toolbar ) {
+  if ( this.small_toolbar || button.always_small ) {
     if ( button_size.w == SMALL_BUTTON_SIZE ) return false;
     setElementDimensions( button, { "w": SMALL_BUTTON_SIZE, "h": SMALL_BUTTON_SIZE } );
   } else {
@@ -970,15 +972,16 @@ Wiki.prototype.resize_toolbar_button = function ( button ) {
   return true;
 }
 
-Wiki.prototype.make_image_button = function ( name, filename_prefix ) {
+Wiki.prototype.make_image_button = function ( name, filename_prefix, always_small ) {
   var button = getElement( name );
-  var toolbar_image_dir = this.get_toolbar_image_dir();
+  var toolbar_image_dir = this.get_toolbar_image_dir( always_small );
 
   if ( !filename_prefix )
     filename_prefix = name;
 
   button.name = name;
   button.filename_prefix = filename_prefix;
+  button.always_small = always_small;
 
   this.resize_toolbar_button( button );
   this.connect_image_button( button );
@@ -988,7 +991,7 @@ Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
   var self = this;
 
   connect( button, "onmouseover", function ( event ) {
-    var toolbar_image_dir = self.get_toolbar_image_dir();
+    var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
     if ( /_down/.test( button.src ) )
       button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
     else
@@ -996,23 +999,23 @@ Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
   } );
 
   connect( button, "onmouseout", function ( event ) {
-    var toolbar_image_dir = self.get_toolbar_image_dir();
+    var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
     if ( /_down/.test( button.src ) )
       button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
     else
       button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
   } );
 
-  if ( button.name == "newNote" ) {
+  if ( button.name == "newNote" || button.name == "new_notebook" ) {
     connect( button, "onmousedown", function ( event ) {
-      var toolbar_image_dir = self.get_toolbar_image_dir();
+      var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
       if ( /_hover/.test( button.src ) )
         button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
       else
         button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
     } );
     connect( button, "onmouseup", function ( event ) {
-      var toolbar_image_dir = self.get_toolbar_image_dir();
+      var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
       if ( /_hover/.test( button.src ) )
         button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
       else
@@ -1023,7 +1026,7 @@ Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
 
 Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
-  var toolbar_image_dir = this.get_toolbar_image_dir();
+  var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
 
   if ( !this.resize_toolbar_button( button ) && /_down/.test( button.src ) )
     return;
@@ -1037,7 +1040,7 @@ Wiki.prototype.down_image_button = function ( name ) {
 
 Wiki.prototype.up_image_button = function ( name ) {
   var button = getElement( name );
-  var toolbar_image_dir = this.get_toolbar_image_dir();
+  var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
 
   if ( !this.resize_toolbar_button( button ) && !/_down/.test( button.src ) )
     return;
@@ -1050,7 +1053,7 @@ Wiki.prototype.up_image_button = function ( name ) {
 
 Wiki.prototype.toggle_image_button = function ( name ) {
   var button = getElement( name );
-  var toolbar_image_dir = this.get_toolbar_image_dir();
+  var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
 
   if ( /_down/.test( button.src ) ) {
     if ( /_hover/.test( button.src ) )

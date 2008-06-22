@@ -39,7 +39,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             A(
-              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"rss_image" ),
+              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image" ),
               href = u"%s?rss" % notebook_path,
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
@@ -52,7 +52,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for this notebook.",
             ),
             A(
-              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"rss_image" ),
+              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image" ),
               href = updates_path,
               title = u"Subscribe to the RSS feed for this notebook.",
             ),
@@ -79,16 +79,6 @@ class Link_area( Div ):
               ),
               class_ = u"link_area_item",
             ) or None,
-
-            Div(
-              A(
-                u"add new notebook",
-                href = u"#",
-                id = u"add_notebook_link",
-                title = u"Create a new wiki notebook.",
-              ),
-              class_ = u"link_area_item",
-            ),
 
             Div(
               A(
@@ -136,7 +126,17 @@ class Link_area( Div ):
         ),
 
         Div(
-          ( len( linked_notebooks ) > 0 ) and H4( u"notebooks", id = u"notebooks_area_title" ) or None,
+          ( len( linked_notebooks ) > 0 ) and H4(
+            u"notebooks",
+            Img(
+              src = u"/static/images/toolbar/small/new_note_button.png",
+              width = u"20", height = u"20",
+              id = "new_notebook",
+              class_ = u"middle_image",
+              title = u"Create a new wiki notebook."
+            ),
+            id = u"notebooks_area_title",
+          ) or None,
           [ ( nb.object_id == notebook.object_id ) and Rounded_div(
             u"current_notebook",
             A(

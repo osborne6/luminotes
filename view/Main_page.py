@@ -171,7 +171,7 @@ class Main_page( Page ):
               and (
                 len( notes ) == 1 and A( Strong( notebook.name ), href = notebook_path ) or Strong( notebook.name )
               ) \
-              or Span( Strong( notebook.name ), id = u"notebook_header_name" ),
+              or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
             parent_id and Span(
               u" | ",
               A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),

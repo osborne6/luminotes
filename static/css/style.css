@@ -791,9 +791,10 @@ h1 {
   cursor: pointer;
 }
 
-.rss_image {
+.middle_image {
   vertical-align: middle;
   border: 0;
+  padding-left: 0.5em;
 }
 
 #justify_table td {
