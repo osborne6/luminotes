@@ -60,26 +60,6 @@ class Link_area( Div ):
           ) or None ),
 
           notebook.read_write and Span(
-            ( notebook.owner and notebook.name != u"trash" ) and Div(
-              A(
-                u"rename notebook",
-                href = u"#",
-                id = u"rename_notebook_link",
-                title = u"Change the name of this notebook.",
-              ),
-              class_ = u"link_area_item",
-            ) or None,
-
-            ( notebook.owner and notebook.name != u"trash" ) and Div(
-              A(
-                u"delete notebook",
-                href = u"#",
-                id = u"delete_notebook_link",
-                title = u"Move this notebook to the trash.",
-              ),
-              class_ = u"link_area_item",
-            ) or None,
-
             Div(
               A(
                 u"nothing but notes",
@@ -89,6 +69,26 @@ class Link_area( Div ):
               ),
               class_ = u"link_area_item",
             ),
+
+            ( notebook.owner and notebook.name != u"trash" ) and Div(
+              A(
+                u"rename",
+                href = u"#",
+                id = u"rename_notebook_link",
+                title = u"Change the name of this notebook.",
+              ),
+              class_ = u"link_area_item",
+            ) or None,
+
+            ( notebook.owner and notebook.name != u"trash" ) and Div(
+              A(
+                u"delete",
+                href = u"#",
+                id = u"delete_notebook_link",
+                title = u"Move this notebook to the trash.",
+              ),
+              class_ = u"link_area_item",
+            ) or None,
 
             ( notebook.owner and user.username ) and Div(
               A(

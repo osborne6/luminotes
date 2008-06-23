@@ -2357,7 +2357,7 @@ Wiki.prototype.end_notebook_rename = function () {
   // rename the notebook in the header
   var notebook_header_name = createDOM(
     "span",
-    { "id": "notebook_header_name" },
+    { "id": "notebook_header_name", "title": "Rename this notebook." },
     createDOM( "strong", {}, new_notebook_name )
   );
   replaceChildNodes( "notebook_header_area", notebook_header_name );
