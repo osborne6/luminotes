@@ -365,7 +365,7 @@ class Test_controller( object ):
 
       for ( object_id, obj_list ) in database.objects.items():
         obj = obj_list[ -1 ]
-        if isinstance( obj, Note ) and obj.notebook_id == self.object_id and obj.title == title:
+        if isinstance( obj, Note ) and obj.notebook_id == self.object_id and obj.title.lower() == title.lower():
           notes.append( obj )
 
       return notes

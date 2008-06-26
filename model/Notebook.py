@@ -159,12 +159,13 @@ class Notebook( Persistent ):
 
   def sql_load_note_by_title( self, title ):
     """
-    Return a SQL string to load a particular note within this notebook by the note's title.
+    Return a SQL string to load a particular note within this notebook by the note's title. The
+    title lookup is performed case-insensitively.
 
     @type note_id: unicode
     @param note_id: title of note to load
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and title = %s;" % ( quote( self.object_id ), quote( title ) )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and lower( title ) = lower( %s );" % ( quote( self.object_id ), quote( title ) )
 
   @staticmethod
   def sql_search_notes( user_id, first_notebook_id, search_text ):

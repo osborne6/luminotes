@@ -378,7 +378,8 @@ class Notebooks( object ):
   )
   def load_note_by_title( self, notebook_id, note_title, summarize = False, user_id = None ):
     """
-    Return the information on a particular note by its title.
+    Return the information on a particular note by its title. The lookup by title is performed
+    case-insensitively.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook the note is in
@@ -469,7 +470,8 @@ class Notebooks( object ):
   )
   def lookup_note_id( self, notebook_id, note_title, user_id ):
     """
-    Return a note's id by looking up its title.
+    Return a note's id by looking up its title. The lookup by title is performed
+    case-insensitively.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook the note is in

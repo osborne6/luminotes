@@ -8,7 +8,7 @@ function Wiki( invoker ) {
   this.notebook_id = getElement( "notebook_id" ).value;
   this.parent_id = getElement( "parent_id" ).value; // id of the notebook containing this one
   this.startup_notes = new Array();  // map of startup notes: note id to bool
-  this.open_editors = new Array();   // map of open notes: note title to editor
+  this.open_editors = new Array();   // map of open notes: lowercase note title to editor
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
@@ -272,7 +272,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
         this.notebook.read_write, false, focus
       );
 
-      this.open_editors[ startup_note.title ] = editor;
+      if ( startup_note.title )
+        this.open_editors[ startup_note.title.toLowerCase() ] = editor;
       focus = false;
     }
   }
@@ -477,9 +478,11 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
   // if there's not a valid destination note id, then load by title instead of by id
   var self = this;
   if ( pulldown_title || note_id == undefined || note_id == "new" || note_id == "null" ) {
+    var lower_note_title = note_title.toLowerCase();
+  
     // if the note_title corresponds to a "magic" note's title, then dynamically highlight or create the note
-    if ( note_title == "search results" ) {
-      var editor = this.open_editors[ note_title ];
+    if ( lower_note_title == "search results" ) {
+      var editor = this.open_editors[ lower_note_title ];
       if ( editor ) {
         editor.highlight();
         return;
@@ -488,8 +491,8 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       this.display_search_results();
       return;
     }
-    if ( note_title == "share this notebook" ) {
-      var editor = this.open_editors[ note_title ];
+    if ( lower_note_title == "share this notebook" ) {
+      var editor = this.open_editors[ lower_note_title ];
       if ( editor ) {
         editor.highlight();
         return;
@@ -498,8 +501,8 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       this.share_notebook();
       return;
     }
-    if ( note_title == "account settings" ) {
-      var editor = this.open_editors[ note_title ];
+    if ( lower_note_title == "account settings" ) {
+      var editor = this.open_editors[ lower_note_title ];
       if ( editor ) {
         editor.highlight();
         return;
@@ -511,7 +514,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
 
     // but if the note corresponding to the link's title is already open, highlight it and bail
     if ( !revision ) {
-      var editor = this.open_editors[ note_title ];
+      var editor = this.open_editors[ lower_note_title ];
       if ( editor ) {
         editor.highlight();
         if ( link )
@@ -578,7 +581,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
     return;
 
   // if the note corresponding to the link's title is already open, resolve the link and bail
-  var editor = this.open_editors[ note_title ];
+  var editor = this.open_editors[ note_title.toLowerCase() ];
   if ( editor ) {
     if ( link )
       link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
@@ -799,10 +802,12 @@ Wiki.prototype.editor_state_changed = function ( editor, link_clicked ) {
 }
 
 Wiki.prototype.editor_title_changed = function ( editor, old_title, new_title ) {
-  delete this.open_editors[ old_title ];
+  if ( old_title )
+    delete this.open_editors[ old_title.toLowerCase() ];
 
   if ( new_title != null && !editor.empty() ) {
-    this.open_editors[ new_title ] = editor;
+    if ( new_title )
+      this.open_editors[ new_title.toLowerCase() ] = editor;
     signal( this, "note_renamed", editor, new_title );
   }
 }

@@ -1,3 +1,7 @@
+1.4.9: June 25, 2008:
+ * When linking to a note by title, the note resolution is now
+   case-insensitive instead of case-sensitive.
+
 1.4.8: June 23, 2008:
  * Replaced "add new notebook" link with new notebook button next to
    "notebooks" heading.

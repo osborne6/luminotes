@@ -1152,6 +1152,22 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_load_note_by_title_case_insensitive( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = self.note.title.upper(),
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_load_note_by_title_without_login( self ):
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -1251,6 +1267,18 @@ class Test_notebooks( Test_controller ):
     result = self.http_post( "/notebooks/lookup_note_id/", dict(
       notebook_id = self.notebook.object_id,
       note_title = self.note.title,
+    ), session_id = self.session_id )
+
+    assert result.get( "note_id" ) == self.note.object_id
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_lookup_note_id_case_insensitive( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/lookup_note_id/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = self.note.title.upper(),
     ), session_id = self.session_id )
 
     assert result.get( "note_id" ) == self.note.object_id
