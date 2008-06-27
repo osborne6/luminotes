@@ -1,7 +1,7 @@
 import re
 from copy import copy
 from Note import Note
-from Persistent import Persistent, quote
+from Persistent import Persistent, quote, quote_fuzzy
 
 
 class Notebook( Persistent ):
@@ -199,6 +199,33 @@ class Notebook( Persistent ):
       ) as sub;
       """ % ( quote( search_text ), quote( user_id ),
               quote( first_notebook_id ) )
+
+  @staticmethod
+  def sql_search_titles( notebook_id, search_text ):
+    """
+    Return a SQL string to perform a search for notes within the given notebook whose titles contain
+    the given search_text. This is a case-insensitive search.
+
+    @type search_text: unicode
+    @param search_text: text to search for within the notes
+    """
+    # strip out all search operators
+    search_text = Notebook.SEARCH_OPERATORS.sub( u"", search_text ).strip()
+
+    return \
+      """
+      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
+             title as summary
+      from
+        note_current
+      where
+        notebook_id = %s and
+        deleted_from_id is null and
+        title ilike %s
+      order by
+        revision desc limit 20;
+      """ % ( quote( notebook_id ), 
+              quote_fuzzy( search_text ) )
 
   def sql_highest_note_rank( self ):
     """

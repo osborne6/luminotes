@@ -913,6 +913,52 @@ class Notebooks( object ):
     search_text = unicode,
     user_id = Valid_id( none_okay = True ),
   )
+  def search_titles( self, notebook_id, search_text, user_id ):
+    """
+    Search the note titles within the given notebook for the given search text, and return matching
+    notes. The search is case-insensitive. The returned notes include title summaries with the
+    search term highlighted and are ordered by descending revision timestamp.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to search
+    @type search_text: unicode
+    @param search_text: search term
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: { 'notes': [ matching notes ] }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    @raise Search_error: the provided search_text is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
+    MAX_SEARCH_TEXT_LENGTH = 256
+    if len( search_text ) > MAX_SEARCH_TEXT_LENGTH:
+      raise Validation_error( u"search_text", None, unicode, message = u"is too long" )
+
+    if len( search_text ) == 0:
+      raise Validation_error( u"search_text", None, unicode, message = u"is missing" )
+
+    notes = self.__database.select_many( Note, Notebook.sql_search_titles( notebook_id, search_text ) )
+
+    for note in notes:
+      note.summary = note.summary.replace( search_text, u"<b>%s</b>" % search_text )
+
+    return dict(
+      notes = notes,
+    )
+
+  @expose( view = Json )
+  @strongly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    search_text = unicode,
+    user_id = Valid_id( none_okay = True ),
+  )
   def search( self, notebook_id, search_text, user_id ):
     """
     Search the notes within all notebooks that the user has access to for the given search text.

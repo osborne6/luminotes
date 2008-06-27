@@ -85,3 +85,13 @@ def quote( value ):
 
   value = unicode( value )
   return "'%s'" % value.replace( "'", "''" ).replace( "\\", "\\\\" )
+
+
+def quote_fuzzy( value ):
+  if value is None:
+    return "null"
+
+  value = unicode( value )
+
+  value = value.replace( "'", "''" ).replace( "\\", "\\\\" )
+  return "'%" + value + "%'"

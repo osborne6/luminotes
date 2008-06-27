@@ -445,7 +445,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
   if ( link ) {
     var pulldown = link.pulldown;
     var pulldown_title = undefined;
-    if ( pulldown ) {
+    if ( pulldown && pulldown.title_field ) {
       pulldown_title = strip( pulldown.title_field.value );
       if ( pulldown_title )
         note_title = pulldown_title;
@@ -823,16 +823,44 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !link )
     link = editor.find_link_at_cursor();
 
-  // if there's no link at the current cursor location, or there is a link but it was just started,
-  // bail
-  if ( !link || link == editor.link_started ) {
+  // if there's no link at the current cursor location, bail
+  if ( !link ) {
     this.clear_pulldowns();
     return;
   }
 
   var pulldown = link.pulldown;
-  if ( pulldown )
-    pulldown.update_position();
+  var query = parse_query( link );
+  var title = link_title( link, query );
+
+  // display a Suggest_pulldown once something is typed for the link title, as long as the link
+  // doesn't yet have a note_id
+  if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
+    this.clear_pulldowns();
+    var self = this;
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook_id, this.invoker, editor, link, title, editor.document );
+    connect( suggest_pulldown, "suggestion_selected", function ( note ) {
+      self.update_link_with_suggestion( editor, link, note )
+    } );
+    return;
+  }
+
+  // if there is a link but it was just started, bail
+  if ( link == editor.link_started && !pulldown ) {
+    this.clear_pulldowns();
+    return;
+  }
+
+  if ( pulldown ) {
+    // if a Suggest_pulldown is open for the link, update the pulldown and bail
+    if ( pulldown.update_suggestions ) {
+      pulldown.update_suggestions( title );
+      return;
+    // otherwise, just update the pulldown's position
+    } else {
+      pulldown.update_position();
+    }
+  }
 
   var link_contains_image = getElementsByTagAndClassName( "img", null, link );
 
@@ -851,6 +879,26 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
       }
     }
   }
+}
+
+Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
+  link.innerHTML = note.title;
+
+  // manually position the text cursor at the end of the link title
+  if ( editor.iframe.contentWindow && editor.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = editor.iframe.contentWindow.getSelection();
+    selection.selectAllChildren( link );
+    selection.collapseToEnd();
+  }
+
+  link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id;
+
+  link.pulldown.shutdown();
+  link.pulldown = null;
+  editor.focus();
+  editor.end_link();
+
+  this.display_link_pulldown( editor, link );
 }
 
 Wiki.prototype.editor_focused = function ( editor, synchronous ) {
@@ -1181,6 +1229,7 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
 
     if ( existing_div ) {
       existing_div.pulldown.shutdown();
+      existing_div.pulldown = null;
       return;
     }
 
@@ -1477,7 +1526,6 @@ Wiki.prototype.submit_form = function ( form ) {
   } else if ( url == "/users/signup_group_member" ) {
     callback = function ( result ) {
       var group_id = getFirstElementByTagAndClassName( "input", "group_id", form ).value;
-      console.log( form, group_id );
       self.invoker.invoke( "/groups/load_users", "GET", {
         "group_id": group_id
       }, function ( result ) {
@@ -2189,6 +2237,7 @@ Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
         continue;
 
       result.pulldown.shutdown();
+      result.pulldown = null;
     }
   }
 }
@@ -2443,6 +2492,7 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
   var existing_div = getElement( pulldown_id );
   if ( existing_div ) {
     existing_div.pulldown.shutdown();
+    existing_div.pulldown = null;
     return;
   }
 
@@ -2475,6 +2525,7 @@ Wiki.prototype.toggle_editor_options = function ( event, editor ) {
   var existing_div = getElement( pulldown_id );
   if ( existing_div ) {
     existing_div.pulldown.shutdown();
+    existing_div.pulldown = null;
     return;
   }
 
@@ -3305,6 +3356,149 @@ File_link_pulldown.prototype.shutdown = function () {
   disconnectAll( this.center_justify_radio );
   disconnectAll( this.right_justify_radio );
 }
+
+
+function Suggest_pulldown( wiki, notebook_id, invoker, editor, anchor, search_text, key_press_node ) {
+  anchor.pulldown = this;
+  this.anchor = anchor;
+  this.previous_search_text = "";
+
+  Pulldown.call( this, wiki, notebook_id, "suggest_" + editor.id, anchor, editor.iframe );
+
+  this.invoker = invoker;
+  this.editor = editor;
+  this.update_suggestions( search_text );
+
+  var self = this;
+  this.key_handler = connect( key_press_node, "onkeydown", function ( event ) { self.key_pressed( event ); } );
+
+  Pulldown.prototype.update_position.call( this );
+}
+
+Suggest_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Suggest_pulldown.prototype.constructor = Suggest_pulldown;
+
+Suggest_pulldown.prototype.update_suggestions = function ( search_text ) {
+  // if the search text hasn't changed since last time, bail
+  if ( this.previous_search_text == search_text )
+    return;
+
+  // if there is no search text, hide the pulldown and bail
+  if ( !search_text ) {
+    addElementClass( this.div, "invisible" );
+    return;
+  }
+
+  var self = this;
+  this.previous_search_text = search_text;
+
+  this.invoker.invoke( "/notebooks/search_titles", "GET", {
+      "notebook_id": this.notebook_id,
+      "search_text": search_text
+    },
+    function( result ) { self.display_suggestions( result, search_text ); }
+  );
+}
+
+Suggest_pulldown.prototype.display_suggestions = function ( result, search_text ) {
+  if ( result.notes.length == 0 ) {
+    addElementClass( this.div, "invisible" );
+    return;
+  }
+
+  removeElementClass( this.div, "invisible" );
+  var results_list = createDOM( "div" );
+  var self = this;
+
+  function connect_link( suggest_link, note ) {
+    connect( suggest_link, "onclick", function ( event ) { self.suggestion_selected( event, note ); } );
+  }
+
+  for ( var i in result.notes ) {
+    var note = result.notes[ i ];
+    if ( !note.title ) continue;
+
+    var suggest_link = createDOM( "a", { "href": "#", "class": "pulldown_link" } );
+    suggest_link.innerHTML = note.summary;
+    suggest_link.note = note;
+
+    appendChildNodes( results_list, createDOM( "div", { "class": "suggestion" }, suggest_link ) );
+    connect_link( suggest_link, note );
+  }
+
+  replaceChildNodes( this.div, results_list );
+}
+
+Suggest_pulldown.prototype.suggestion_selected = function ( event, note ) {
+  event.stop();
+
+  signal( this, "suggestion_selected", note );
+}
+
+Suggest_pulldown.prototype.key_pressed = function ( event ) {
+  // an invisible Suggest_pulldown shouldn't grab keypresses
+  if ( hasElementClass( this.div, "invisible" ) )
+    return;
+
+  var code = event.key().code;
+
+  // up arrow: move up to the previous suggestion
+  if ( code == 38 ) {
+    var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
+
+    // if something is selected and there's a previous suggestion in the list, move the selection up
+    if ( selected && selected.previousSibling ) {
+      removeElementClass( selected, "selected_suggestion" );
+      addElementClass( selected.previousSibling, "selected_suggestion" );
+    // otherwise, hide the Suggest_pulldown
+    } else {
+      addElementClass( this.div, "invisible" );
+    }
+  // down arrow: move down to the previous suggestion
+  } else if ( code == 40 ) {
+    var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
+
+    // if something is selected and there's a next suggestion in the list, move the selection down
+    if ( selected ) {
+      if ( selected.nextSibling ) {
+        removeElementClass( selected, "selected_suggestion" );
+        addElementClass( selected.nextSibling, "selected_suggestion" );
+      }
+    // if nothing is selected yet, then just select the first link
+    } else {
+      var suggest_link = getFirstElementByTagAndClassName( "a", "pulldown_link", this.div );
+      addElementClass( suggest_link.parentNode, "selected_suggestion" );
+    }
+  // enter: select current suggestion
+  } else if ( code == 13 ) {
+    var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
+    var suggest_link = getFirstElementByTagAndClassName( "a", "pulldown_link", selected );
+
+    if ( selected )
+      this.suggestion_selected( event, suggest_link.note );
+  // escape: hide the suggestions
+  } else if ( code == 27 ) {
+    addElementClass( this.div, "invisible" );
+  // otherwise, not a key this method handles
+  } else {
+    return;
+  }
+
+  event.stop();
+}
+
+Suggest_pulldown.prototype.update_position = function ( anchor, relative_to ) {
+  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+}
+
+Suggest_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
+  this.anchor.pulldown = null;
+  disconnectAll( this );
+  disconnect( this.key_handler );
+}
+
 
 function Note_tree( wiki, notebook_id, invoker ) {
   this.wiki = wiki;

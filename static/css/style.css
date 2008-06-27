@@ -514,6 +514,7 @@ h1 {
 
 .pulldown {
   position: absolute;
+  font-size: 72%;
   text-align: left;
   max-height: 20em;
   overflow: auto;
@@ -530,6 +531,14 @@ h1 {
 .pulldown_link:hover {
   color: #ff6600;
   text-decoration: none;
+}
+
+.suggestion {
+  padding: 0.25em 0.5em 0.25em 0.5em;
+}
+
+.selected_suggestion {
+  background-color: #d0e0f0;
 }
 
 .pulldown_label {
