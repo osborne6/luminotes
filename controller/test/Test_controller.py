@@ -401,6 +401,27 @@ class Test_controller( object ):
     Notebook.sql_search_notes = staticmethod( lambda user_id, first_notebook_id, search_text: \
       lambda database: sql_search_notes( user_id, first_notebook_id, search_text, database ) )
 
+    def sql_search_titles( notebook_id, search_text, database ):
+      notes = []
+      search_text = search_text.lower()
+
+      for ( object_id, obj_list ) in database.objects.items():
+        obj = obj_list[ -1 ]
+
+        if not isinstance( obj, Note ):
+          continue
+
+        if obj.deleted_from_id == None and \
+           obj.notebook_id == notebook_id and \
+           search_text in obj.title:
+          obj.summary = obj.title
+          notes.append( obj )
+
+      return notes
+
+    Notebook.sql_search_titles = staticmethod( lambda notebook_id, search_text: \
+      lambda database: sql_search_titles( notebook_id, search_text, database ) )
+
     def sql_highest_note_rank( self, database ):
       max_rank = -1
 

@@ -2695,7 +2695,7 @@ class Test_notebooks( Test_controller ):
     note2 = result.get( "note" )
     assert note2.object_id == self.note2.object_id
 
-  def test_search_titles( self ):
+  def test_search_note_titles( self ):
     self.login()
 
     search_text = u"other"
@@ -2735,7 +2735,20 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" )
 
-  def test_case_insensitive_search( self ):
+  def test_search_without_access( self ):
+    self.login2()
+    self.make_extra_notebooks()
+
+    search_text = u"other"
+
+    result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook2.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+  def test_search_case_insensitive( self ):
     self.login()
 
     search_text = u"bLA"
@@ -2750,7 +2763,7 @@ class Test_notebooks( Test_controller ):
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == self.note.object_id
 
-  def test_empty_search( self ):
+  def test_search_empty( self ):
     self.login()
 
     search_text = ""
@@ -2765,7 +2778,7 @@ class Test_notebooks( Test_controller ):
     assert result[ "error" ]
     assert u"missing" in result[ "error" ]
 
-  def test_long_search( self ):
+  def test_search_long( self ):
     self.login()
 
     search_text = "w" * 257
@@ -2794,7 +2807,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notes ) == 0
 
-  def test_search_title_and_contents( self ):
+  def test_search_note_title_and_contents( self ):
     self.login()
 
     # ensure that notes with titles matching the search text show up before notes with only
@@ -2824,6 +2837,145 @@ class Test_notebooks( Test_controller ):
     search_text = "oo: b"
 
     result = self.http_post( "/notebooks/search/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == note3.object_id
+
+  def test_search_titles( self ):
+    self.login()
+
+    search_text = u"other"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note2.object_id
+    assert notes[ 0 ].title == self.note2.title
+    assert notes[ 0 ].summary == self.note2.title.replace( search_text, u"<b>%s</b>" % search_text )
+
+  def test_search_titles_without_login( self ):
+    search_text = u"other"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ) )
+
+    assert result.get( "error" )
+
+  def test_search_titles_without_access( self ):
+    self.login2()
+    self.make_extra_notebooks()
+
+    search_text = u"other"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook2.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+  def test_search_titles_multiple( self ):
+    self.login()
+
+    search_text = u"itl"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 2
+    assert notes[ 0 ].object_id == self.note2.object_id
+    assert notes[ 0 ].title == self.note2.title
+    assert notes[ 0 ].summary == self.note2.title.replace( search_text, u"<b>%s</b>" % search_text )
+    assert notes[ 1 ].object_id == self.note.object_id
+    assert notes[ 1 ].title == self.note.title
+    assert notes[ 1 ].summary == self.note.title.replace( search_text, u"<b>%s</b>" % search_text )
+
+  def test_search_titles_case_insensitive( self ):
+    self.login()
+
+    search_text = u"oTHer"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note2.object_id
+    assert notes[ 0 ].title == self.note2.title
+    assert notes[ 0 ].summary == self.note2.title.replace( search_text, u"<b>%s</b>" % search_text )
+
+  def test_search_titles_empty( self ):
+    self.login()
+
+    search_text = ""
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert result[ "error" ]
+    assert u"missing" in result[ "error" ]
+
+  def test_search_titles_long( self ):
+    self.login()
+
+    search_text = "w" * 257
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert result[ "error" ]
+    assert u"too long" in result[ "error" ]
+
+  def test_search_titles_with_no_results( self ):
+    self.login()
+
+    search_text = "doesn't match anything"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
+      notebook_id = self.notebook.object_id,
+      search_text = search_text,
+    ), session_id = self.session_id )
+
+    notes = result.get( "notes" )
+
+    assert len( notes ) == 0
+
+  def test_search_titles_character_refs( self ):
+    self.login()
+
+    note3 = Note.create( "55", u"<h3>foo: bar</h3>baz", notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+
+    search_text = "oo: b"
+
+    result = self.http_post( "/notebooks/search_titles/", dict(
       notebook_id = self.notebook.object_id,
       search_text = search_text,
     ), session_id = self.session_id )
