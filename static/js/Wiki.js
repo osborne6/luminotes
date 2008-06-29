@@ -995,9 +995,14 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   } else if ( ( code == 32 || code == 9 ) && editor.document.selection && editor.state_enabled( "a" ) ) {
     if ( code == 32 ) {
       var range = editor.document.selection.createRange();
-      var text = range.parentElement().firstChild;
-      text.nodeValue += " ";
+      range.text = " ";
     }
+    event.stop();
+  // IE: hitting backspace while making a link shouldn't end the link
+  } else if ( code == 8 && editor.document.selection && editor.state_enabled( "a" ) ) {
+    var range = editor.document.selection.createRange();
+    range.moveStart( "character", -1 );
+    range.text = "";
     event.stop();
   }
 }

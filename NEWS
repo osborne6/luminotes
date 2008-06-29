@@ -1,5 +1,8 @@
 1.4.10: June ?, 2008:
  * New suggest-as-you-type feature for creating links.
+ * Fixed a bug where typing a space within a link in IE caused the space
+   to be added to the end of the link.
+ * Backspacing at the end of a link in IE no longer ends the link.
 
 1.4.9: June 25, 2008:
  * When linking to a note by title, the note resolution is now
