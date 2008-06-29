@@ -3443,37 +3443,16 @@ Suggest_pulldown.prototype.key_pressed = function ( event ) {
     return;
 
   var code = event.key().code;
+  var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
 
   // up arrow or shift-tab: move up to the previous suggestion
   if ( code == 38 || ( code == 9 && event.modifier().shift ) ) {
-    var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
-
-    // if something is selected and there's a previous suggestion in the list, move the selection up
-    if ( selected && selected.previousSibling ) {
-      removeElementClass( selected, "selected_suggestion" );
-      addElementClass( selected.previousSibling, "selected_suggestion" );
-    // otherwise, hide the Suggest_pulldown
-    } else {
-      addElementClass( this.div, "invisible" );
-    }
+    this.previous_suggestion( selected );
   // down arrow or tab: move down to the previous suggestion
   } else if ( code == 40 || code == 9 ) {
-    var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
-
-    // if something is selected and there's a next suggestion in the list, move the selection down
-    if ( selected ) {
-      if ( selected.nextSibling ) {
-        removeElementClass( selected, "selected_suggestion" );
-        addElementClass( selected.nextSibling, "selected_suggestion" );
-      }
-    // if nothing is selected yet, then just select the first link
-    } else {
-      var suggest_link = getFirstElementByTagAndClassName( "a", "pulldown_link", this.div );
-      addElementClass( suggest_link.parentNode, "selected_suggestion" );
-    }
+    this.next_suggestion( selected );
   // enter: select current suggestion
   } else if ( code == 13 ) {
-    var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
     var suggest_link = getFirstElementByTagAndClassName( "a", "pulldown_link", selected );
 
     if ( selected )
@@ -3487,6 +3466,31 @@ Suggest_pulldown.prototype.key_pressed = function ( event ) {
   }
 
   event.stop();
+}
+
+Suggest_pulldown.prototype.previous_suggestion = function ( selected ) {
+  // if something is selected and there's a previous suggestion in the list, move the selection up
+  if ( selected && selected.previousSibling ) {
+    removeElementClass( selected, "selected_suggestion" );
+    addElementClass( selected.previousSibling, "selected_suggestion" );
+  // otherwise, hide the Suggest_pulldown
+  } else {
+    addElementClass( this.div, "invisible" );
+  }
+}
+
+Suggest_pulldown.prototype.next_suggestion = function ( selected ) {
+  // if something is selected and there's a next suggestion in the list, move the selection down
+  if ( selected ) {
+    if ( selected.nextSibling ) {
+      removeElementClass( selected, "selected_suggestion" );
+      addElementClass( selected.nextSibling, "selected_suggestion" );
+    }
+  // if nothing is selected yet, then just select the first link
+  } else {
+    var suggest_link = getFirstElementByTagAndClassName( "a", "pulldown_link", this.div );
+    addElementClass( suggest_link.parentNode, "selected_suggestion" );
+  }
 }
 
 Suggest_pulldown.prototype.update_position = function ( anchor, relative_to ) {
