@@ -1,3 +1,6 @@
+1.4.10: June ?, 2008:
+ * New suggest-as-you-type feature for creating links.
+
 1.4.9: June 25, 2008:
  * When linking to a note by title, the note resolution is now
    case-insensitive instead of case-sensitive.

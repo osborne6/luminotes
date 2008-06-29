@@ -993,9 +993,11 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     }
   // IE: hitting space or tab while making a link shouldn't end the link
   } else if ( ( code == 32 || code == 9 ) && editor.document.selection && editor.state_enabled( "a" ) ) {
-    var range = editor.document.selection.createRange();
-    var text = range.parentElement().firstChild;
-    text.nodeValue += " ";
+    if ( code == 32 ) {
+      var range = editor.document.selection.createRange();
+      var text = range.parentElement().firstChild;
+      text.nodeValue += " ";
+    }
     event.stop();
   }
 }
@@ -3442,8 +3444,8 @@ Suggest_pulldown.prototype.key_pressed = function ( event ) {
 
   var code = event.key().code;
 
-  // up arrow: move up to the previous suggestion
-  if ( code == 38 ) {
+  // up arrow or shift-tab: move up to the previous suggestion
+  if ( code == 38 || ( code == 9 && event.modifier().shift ) ) {
     var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
 
     // if something is selected and there's a previous suggestion in the list, move the selection up
@@ -3454,8 +3456,8 @@ Suggest_pulldown.prototype.key_pressed = function ( event ) {
     } else {
       addElementClass( this.div, "invisible" );
     }
-  // down arrow: move down to the previous suggestion
-  } else if ( code == 40 ) {
+  // down arrow or tab: move down to the previous suggestion
+  } else if ( code == 40 || code == 9 ) {
     var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
 
     // if something is selected and there's a next suggestion in the list, move the selection down
