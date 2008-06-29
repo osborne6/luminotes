@@ -999,7 +999,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     }
     event.stop();
   // IE: hitting backspace while making a link shouldn't end the link
-  } else if ( code == 8 && editor.document.selection && editor.state_enabled( "a" ) ) {
+  } else if ( code == 8 && editor.document.selection ) {
     var range = editor.document.selection.createRange();
     range.moveStart( "character", -1 );
     range.text = "";
