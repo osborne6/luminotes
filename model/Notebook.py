@@ -209,8 +209,7 @@ class Notebook( Persistent ):
     @type search_text: unicode
     @param search_text: text to search for within the notes
     """
-    # strip out all search operators
-    search_text = Notebook.SEARCH_OPERATORS.sub( u"", search_text ).strip()
+    search_text = search_text.strip()
 
     return \
       """
