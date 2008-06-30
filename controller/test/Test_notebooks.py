@@ -2921,7 +2921,7 @@ class Test_notebooks( Test_controller ):
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == self.note2.object_id
     assert notes[ 0 ].title == self.note2.title
-    assert notes[ 0 ].summary == self.note2.title.replace( search_text, u"<b>%s</b>" % search_text )
+    assert notes[ 0 ].summary == u"<b>other</b> title"
 
   def test_search_titles_empty( self ):
     self.login()

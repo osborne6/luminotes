@@ -1,3 +1,7 @@
+1.4.11: June 29, 2008:
+ * Fixed bug in which bolding of suggest-as-you-type search text was case
+   sensitive. Now it's case insensitive.
+
 1.4.10: June 29, 2008:
  * New suggest-as-you-type feature for creating a new link, setting a link's
    destination, and even for searching a notebook.

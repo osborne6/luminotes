@@ -944,7 +944,9 @@ class Notebooks( object ):
     notes = self.__database.select_many( Note, Notebook.sql_search_titles( notebook_id, search_text ) )
 
     for note in notes:
-      note.summary = note.summary.replace( search_text, u"<b>%s</b>" % search_text )
+      # do a case-insensitive replace to wrap the search term with bold
+      search_text_pattern = re.compile( u"(%s)" % re.escape( search_text ), re.I )
+      note.summary = search_text_pattern.sub( r"<b>\1</b>", note.summary )
 
     return dict(
       notes = notes,
