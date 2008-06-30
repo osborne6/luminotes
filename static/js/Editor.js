@@ -674,11 +674,17 @@ Editor.prototype.shutdown = function( event ) {
 }
 
 Editor.prototype.summarize = function () {
-  var summary = strip( scrapeText( this.document.body ) );
+  return summarize_html( scrapeText( this.document.body ), this.title );
+}
 
-  // remove the title from the scraped summary text
-  if ( summary.indexOf( this.title ) == 0 )
-    summary = summary.substr( this.title.length );
+function summarize_html( html, title ) {
+  var span = createDOM( "span", {} );
+  span.innerHTML = html;
+  var summary = strip( scrapeText( span ) );
+
+  // remove the title (if any) from the summary text
+  if ( title && summary.indexOf( title ) == 0 )
+    summary = summary.substr( title.length );
 
   if ( summary.length == 0 )
     return null;
@@ -716,7 +722,7 @@ Editor.prototype.summarize = function () {
 }
 
 // return the given html in a normal form. this makes html string comparisons more accurate
-normalize_html = function ( html ) {
+function normalize_html( html ) {
   if ( !html ) return html;
 
   // remove any "pulldown" attributes, which get added in IE whenever link.pulldown is set

@@ -838,7 +838,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
     this.clear_pulldowns();
     var self = this;
-    var suggest_pulldown = new Suggest_pulldown( this, this.notebook_id, this.invoker, editor, link, title, editor.document );
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook_id, this.invoker, editor, link, title, editor.document, true );
     connect( suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_link_with_suggestion( editor, link, note )
     } );
@@ -2735,6 +2735,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   this.title_field = createDOM( "input", { "class": "text_field", "size": "30", "maxlength": "256" } );
   this.note_summary = createDOM( "span", {} );
   this.previous_title = "";
+  this.suggest_pulldown = null;
 
   var self = this;
   connect( this.title_field, "onclick", function ( event ) { self.title_field_clicked( event ); } );
@@ -2742,6 +2743,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   connect( this.title_field, "onchange", function ( event ) { self.title_field_changed( event ); } );
   connect( this.title_field, "onblur", function ( event ) { self.title_field_changed( event ); } );
   connect( this.title_field, "onkeydown", function ( event ) { self.title_field_key_pressed( event ); } );
+  connect( this.title_field, "onkeyup", function ( event ) { self.title_field_key_released( event ); } );
 
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "links to: " ) );
   appendChildNodes( this.div, this.title_field );
@@ -2864,7 +2866,17 @@ Link_pulldown.prototype.title_field_focused = function ( event ) {
   this.title_field.select();
 }
 
-Link_pulldown.prototype.title_field_changed = function ( event ) {
+Link_pulldown.prototype.update_title_field_with_suggestion = function ( note ) {
+  this.title_field.value = note.title;
+  this.title_field_changed( null, note );
+
+  if ( this.suggest_pulldown ) {
+    this.suggest_pulldown.shutdown();
+    this.suggest_pulldown = null;
+  }
+}
+
+Link_pulldown.prototype.title_field_changed = function ( event, note ) {
   // if the title is actually unchanged, then bail
   var title = strip( this.title_field.value );
   if ( title == this.previous_title )
@@ -2872,27 +2884,58 @@ Link_pulldown.prototype.title_field_changed = function ( event ) {
 
   replaceChildNodes( this.note_summary, "" );
   this.previous_title = title;
-
   var self = this;
-  this.wiki.resolve_link( title, this.link, function ( summary ) {
-    self.display_summary( title, summary );
-  } );
+
+  // if a destination note is given, then update the link to point to it
+  if ( note ) {
+    this.link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id;
+    this.suggest_pulldown.shutdown();
+    this.suggest_pulldown = null;
+    this.editor.end_link();
+
+    this.display_summary( note.title, summarize_html( note.contents, note.title ) );
+  // otherwise, try to resolve the link title
+  } else {
+    this.wiki.resolve_link( title, this.link, function ( summary ) {
+      self.display_summary( title, summary );
+    } );
+  }
 }
 
 Link_pulldown.prototype.title_field_key_pressed = function ( event ) {
   // if enter is pressed, consider the title field altered. this is necessary because IE neglects
   // to issue an onchange event when enter is pressed in an input field
-  if ( event.key().code == 13 ) {
+  if ( event.key().code == 13 &&
+       ( this.suggest_pulldown == null || this.suggest_pulldown.something_selected() == false ) ) {
     this.title_field_changed();
     event.stop();
   }
 }
 
+Link_pulldown.prototype.title_field_key_released = function ( event ) {
+  var self = this;
+
+  if ( this.suggest_pulldown ) {
+    this.suggest_pulldown.update_suggestions( this.title_field.value );
+  } else if ( event.key().code != 13 ) {
+    this.suggest_pulldown = new Suggest_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.title_field, this.title_field.value, this.title_field, false );
+    connect( this.suggest_pulldown, "suggestion_selected", function ( note ) {
+      self.update_title_field_with_suggestion( note )
+    } );
+  }
+}
+
 Link_pulldown.prototype.update_position = function ( anchor, relative_to ) {
   Pulldown.prototype.update_position.call( this, anchor, relative_to );
+
+  if ( this.suggest_pulldown )
+    this.suggest_pulldown.update_position();
 }
 
 Link_pulldown.prototype.shutdown = function () {
+  if ( this.suggest_pulldown )
+    this.suggest_pulldown.shutdown();
+
   Pulldown.prototype.shutdown.call( this );
 
   disconnectAll( this.title_field );
@@ -3365,12 +3408,12 @@ File_link_pulldown.prototype.shutdown = function () {
 }
 
 
-function Suggest_pulldown( wiki, notebook_id, invoker, editor, anchor, search_text, key_press_node ) {
+function Suggest_pulldown( wiki, notebook_id, invoker, editor, anchor, search_text, key_press_node, relative_to_editor ) {
   anchor.pulldown = this;
   this.anchor = anchor;
   this.previous_search_text = "";
 
-  Pulldown.call( this, wiki, notebook_id, "suggest_" + editor.id, anchor, editor.iframe );
+  Pulldown.call( this, wiki, notebook_id, "suggest_" + editor.id, anchor, relative_to_editor && editor.iframe || null );
 
   this.invoker = invoker;
   this.editor = editor;
@@ -3462,6 +3505,8 @@ Suggest_pulldown.prototype.key_pressed = function ( event ) {
 
     if ( selected )
       this.suggestion_selected( event, suggest_link.note );
+    else // if nothing is selected, don't handle enter
+      return;
   // escape: hide the suggestions
   } else if ( code == 27 ) {
     addElementClass( this.div, "invisible" );
@@ -3500,6 +3545,17 @@ Suggest_pulldown.prototype.next_suggestion = function ( selected ) {
 
 Suggest_pulldown.prototype.update_position = function ( anchor, relative_to ) {
   Pulldown.prototype.update_position.call( this, anchor, relative_to );
+}
+
+Suggest_pulldown.prototype.something_selected = function () {
+  if ( hasElementClass( this.div, "invisible" ) )
+    return false;
+
+  var selected = getFirstElementByTagAndClassName( "div", "selected_suggestion", this.div );
+  if ( selected )
+    return true;
+
+  return false;
 }
 
 Suggest_pulldown.prototype.shutdown = function () {
