@@ -77,6 +77,7 @@ function Wiki( invoker ) {
   connect( "search_form", "onsubmit", this, "search" );
   connect( "search_text", "onfocus", this, "search_focused" );
   connect( "search_text", "onblur", this, "search_blurred" );
+  connect( "search_text", "onkeyup", this, "search_key_released" );
   connect( "html", "onclick", this, "background_clicked" );
   connect( "html", "onkeydown", this, "key_pressed" );
   connect( window, "onresize", this, "resize_editors" );
@@ -838,7 +839,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
     this.clear_pulldowns();
     var self = this;
-    var suggest_pulldown = new Suggest_pulldown( this, this.notebook_id, this.invoker, editor, link, title, editor.document, true );
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook_id, this.invoker, link, editor.iframe, title, editor.document );
     connect( suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_link_with_suggestion( editor, link, note )
     } );
@@ -1614,6 +1615,32 @@ Wiki.prototype.search_blurred = function ( event ) {
 
   if ( search_text.value == '' )
     search_text.value = 'search';
+}
+
+Wiki.prototype.search_key_released = function ( event ) {
+  var search_text = getElement( "search_text" );
+  var self = this;
+
+  if ( search_text.pulldown ) {
+    search_text.pulldown.update_suggestions( search_text.value );
+  } else if ( event.key().code != 13 ) {
+    search_text.pulldown = new Suggest_pulldown( this.wiki, this.notebook_id, this.invoker, search_text, null, search_text.value, search_text );
+    connect( search_text.pulldown, "suggestion_selected", function ( note ) {
+      self.load_search_suggestion( note )
+    } );
+  }
+}
+
+Wiki.prototype.load_search_suggestion = function ( note ) {
+  var search_text = getElement( "search_text" );
+  search_text.value = note.title;
+
+  this.load_editor( note.title, note.object_id );
+
+  if ( search_text.pulldown ) {
+    search_text.pulldown.shutdown();
+    search_text.pulldown = null;
+  }
 }
 
 Wiki.prototype.display_search_results = function ( result ) {
@@ -2572,7 +2599,7 @@ Pulldown.prototype.finish_init = function () {
   removeElementClass( this.div, "invisible" );
 }
 
-function calculate_position( node, anchor, relative_to ) {
+function calculate_position( node, anchor, relative_to, always_left_align ) {
   var anchor_dimensions = getElementDimensions( anchor );
 
   // if the anchor has no height, use its first child (if any) instead
@@ -2599,7 +2626,7 @@ function calculate_position( node, anchor, relative_to ) {
 
   // if the position is on the right half of the page, then align the right edge of the node with
   // the right edge of the anchor
-  if ( position.x > getViewportDimensions().w * 0.5 ) {
+  if ( !always_left_align && position.x > getViewportDimensions().w * 0.5 ) {
     if ( node_dimensions )
       position.x = position.x - node_dimensions.w + anchor_dimensions.w;
   }
@@ -2613,8 +2640,8 @@ function calculate_position( node, anchor, relative_to ) {
   return position;
 }
 
-Pulldown.prototype.update_position = function () {
-  var position = calculate_position( this.div, this.anchor, this.relative_to );
+Pulldown.prototype.update_position = function ( always_left_align ) {
+  var position = calculate_position( this.div, this.anchor, this.relative_to, always_left_align );
   setElementPosition( this.div, position );
 }
 
@@ -2917,18 +2944,18 @@ Link_pulldown.prototype.title_field_key_released = function ( event ) {
   if ( this.suggest_pulldown ) {
     this.suggest_pulldown.update_suggestions( this.title_field.value );
   } else if ( event.key().code != 13 ) {
-    this.suggest_pulldown = new Suggest_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.title_field, this.title_field.value, this.title_field, false );
+    this.suggest_pulldown = new Suggest_pulldown( this.wiki, this.notebook_id, this.invoker, this.title_field, null, this.title_field.value, this.title_field );
     connect( this.suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_title_field_with_suggestion( note )
     } );
   }
 }
 
-Link_pulldown.prototype.update_position = function ( anchor, relative_to ) {
-  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+Link_pulldown.prototype.update_position = function ( always_left_align ) {
+  Pulldown.prototype.update_position.call( this, always_left_align );
 
   if ( this.suggest_pulldown )
-    this.suggest_pulldown.update_position();
+    this.suggest_pulldown.update_position( always_left_align );
 }
 
 Link_pulldown.prototype.shutdown = function () {
@@ -3048,8 +3075,8 @@ Upload_pulldown.prototype.upload_complete = function () {
   this.shutdown();
 }
 
-Upload_pulldown.prototype.update_position = function ( anchor, relative_to ) {
-  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+Upload_pulldown.prototype.update_position = function ( always_left_align ) {
+  Pulldown.prototype.update_position.call( this, always_left_align );
 }
 
 Upload_pulldown.prototype.cancel_due_to_click = function () {
@@ -3346,7 +3373,7 @@ File_link_pulldown.prototype.embed_clicked = function ( event ) {
     this.link.innerHTML = this.link_title || this.filename_field.value || this.previous_filename;
   }
 
-  this.update_position( this.link, this.editor.iframe );
+  this.update_position();
   this.editor.resize();
 }
 
@@ -3367,7 +3394,7 @@ File_link_pulldown.prototype.resize_image = function ( event, position ) {
   // editor
   var self = this;
   connect( image, "onload", function () {
-    self.update_position( self.link, self.editor.iframe );
+    self.update_position();
     self.editor.resize();
   } );
 
@@ -3384,12 +3411,12 @@ File_link_pulldown.prototype.justify_image = function ( event, position ) {
   removeElementClass( image, "right_justified" );
   addElementClass( image, position + "_justified" );
 
-  this.update_position( this.link, this.editor.iframe );
+  this.update_position();
   this.editor.resize();
 }
 
-File_link_pulldown.prototype.update_position = function ( anchor, relative_to ) {
-  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+File_link_pulldown.prototype.update_position = function ( always_left_align ) {
+  Pulldown.prototype.update_position.call( this, always_left_align );
 }
 
 File_link_pulldown.prototype.shutdown = function () {
@@ -3407,21 +3434,20 @@ File_link_pulldown.prototype.shutdown = function () {
 }
 
 
-function Suggest_pulldown( wiki, notebook_id, invoker, editor, anchor, search_text, key_press_node, relative_to_editor ) {
+function Suggest_pulldown( wiki, notebook_id, invoker, anchor, relative_to, search_text, key_press_node ) {
   anchor.pulldown = this;
   this.anchor = anchor;
   this.previous_search_text = "";
 
-  Pulldown.call( this, wiki, notebook_id, "suggest_" + editor.id, anchor, relative_to_editor && editor.iframe || null );
+  Pulldown.call( this, wiki, notebook_id, "suggest_pulldown", anchor, relative_to );
 
   this.invoker = invoker;
-  this.editor = editor;
   this.update_suggestions( search_text );
 
   var self = this;
   this.key_handler = connect( key_press_node, "onkeydown", function ( event ) { self.key_pressed( event ); } );
 
-  Pulldown.prototype.update_position.call( this );
+  Pulldown.prototype.update_position.call( this, true );
 }
 
 Suggest_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
@@ -3435,6 +3461,7 @@ Suggest_pulldown.prototype.update_suggestions = function ( search_text ) {
   // if there is no search text, hide the pulldown and bail
   if ( !search_text ) {
     addElementClass( this.div, "invisible" );
+    this.previous_search_text = "";
     return;
   }
 
@@ -3542,8 +3569,10 @@ Suggest_pulldown.prototype.next_suggestion = function ( selected ) {
   }
 }
 
-Suggest_pulldown.prototype.update_position = function ( anchor, relative_to ) {
-  Pulldown.prototype.update_position.call( this, anchor, relative_to );
+Suggest_pulldown.prototype.update_position = function ( always_left_align ) {
+  // ignore the requested always_left_align value and force it to true, since Suggest_pulldown
+  // looks better that way
+  Pulldown.prototype.update_position.call( this, true );
 }
 
 Suggest_pulldown.prototype.something_selected = function () {
