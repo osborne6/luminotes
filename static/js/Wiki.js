@@ -2891,7 +2891,6 @@ Link_pulldown.prototype.title_field_changed = function ( event, note ) {
     this.link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id;
     this.suggest_pulldown.shutdown();
     this.suggest_pulldown = null;
-    this.editor.end_link();
 
     this.display_summary( note.title, summarize_html( note.contents, note.title ) );
   // otherwise, try to resolve the link title
