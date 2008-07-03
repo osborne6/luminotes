@@ -229,6 +229,8 @@ class Root( object ):
     @param start: index of recent note to start with (defaults to 0, the most recent note)
     @type count: int or NoneType
     @param count: number of recent notes to display (defaults to 10 notes)
+    @type note_id: unicode or NoneType
+    @param note_id: id of single note to load (optional)
     @rtype: unicode
     @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid
@@ -250,12 +252,15 @@ class Root( object ):
   @end_transaction
   @grab_user_id
   @validate(
+    note_id = Valid_id( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def guide( self, user_id = None ):
+  def guide( self, note_id = None, user_id = None ):
     """
     Provide the information necessary to display the Luminotes user guide.
 
+    @type note_id: unicode or NoneType
+    @param note_id: id of single note to load (optional)
     @rtype: unicode
     @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid
@@ -264,6 +269,10 @@ class Root( object ):
     guide_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes user guide" ]
 
     result.update( self.__notebooks.contents( guide_notebooks[ 0 ].object_id, user_id = user_id ) )
+
+    # if a single note was requested, just return that one note
+    if note_id:
+      result[ "startup_notes" ] = [ note for note in result[ "startup_notes" ] if note.object_id == note_id ]
 
     return result
 

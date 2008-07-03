@@ -347,6 +347,15 @@ class Test_root( Test_controller ):
     assert u"error" not in result
     assert result[ u"notebook" ].object_id == self.guide_notebook.object_id
 
+  def test_guide_with_note_id( self ):
+    result = self.http_get(
+      "/guide?note_id=%s" % self.guide_note.object_id,
+    )
+
+    assert result
+    assert u"error" not in result
+    assert result[ u"notebook" ].object_id == self.guide_notebook.object_id
+
   def test_privacy( self ):
     result = self.http_get(
       "/privacy",

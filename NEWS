@@ -1,6 +1,7 @@
 1.4.11: June 29, 2008:
  * Fixed bug in which bolding of suggest-as-you-type search text was case
    sensitive. Now it's case insensitive.
+ * controller.Root.guide() now accepts an optional note_id parameter.
 
 1.4.10: June 29, 2008:
  * New suggest-as-you-type feature for creating a new link, setting a link's
