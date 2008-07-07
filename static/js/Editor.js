@@ -674,7 +674,10 @@ Editor.prototype.shutdown = function( event ) {
 }
 
 Editor.prototype.summarize = function () {
-  return summarize_html( scrapeText( this.document.body ), this.title );
+  if ( this.document && this.document.body )
+    return summarize_html( scrapeText( this.document.body ), this.title );
+
+  return "";
 }
 
 function summarize_html( html, title ) {

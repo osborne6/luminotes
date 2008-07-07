@@ -2773,10 +2773,16 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   var self = this;
   connect( this.title_field, "onclick", function ( event ) { self.title_field_clicked( event ); } );
   connect( this.title_field, "onfocus", function ( event ) { self.title_field_focused( event ); } );
-  connect( this.title_field, "onchange", function ( event ) { self.title_field_changed( event ); } );
-  connect( this.title_field, "onblur", function ( event ) { self.title_field_changed( event ); } );
   connect( this.title_field, "onkeydown", function ( event ) { self.title_field_key_pressed( event ); } );
   connect( this.title_field, "onkeyup", function ( event ) { self.title_field_key_released( event ); } );
+
+  // the timeout prevents a race condition between these handlers and a suggesting being clicked
+  connect( this.title_field, "onchange", function ( event ) {
+    setTimeout( function () { self.title_field_changed( event ); }, 250 );
+  } );
+  connect( this.title_field, "onblur", function ( event ) {
+    setTimeout( function () { self.title_field_changed( event ); }, 250 );
+  } );
 
   appendChildNodes( this.div, createDOM( "span", { "class": "field_label" }, "links to: " ) );
   appendChildNodes( this.div, this.title_field );
