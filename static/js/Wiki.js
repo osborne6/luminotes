@@ -3450,6 +3450,7 @@ function Suggest_pulldown( wiki, notebook_id, invoker, anchor, relative_to, sear
   anchor.pulldown = this;
   this.anchor = anchor;
   this.previous_search_text = "";
+  this.sequence_number = 0;
 
   Pulldown.call( this, wiki, notebook_id, "suggest_pulldown", anchor, relative_to );
 
@@ -3479,12 +3480,21 @@ Suggest_pulldown.prototype.update_suggestions = function ( search_text ) {
 
   var self = this;
   this.previous_search_text = search_text;
+  this.sequence_number += 1;
+  var sequence_number = this.sequence_number;
 
   this.invoker.invoke( "/notebooks/search_titles", "GET", {
       "notebook_id": this.notebook_id,
       "search_text": search_text
     },
-    function( result ) { self.display_suggestions( result, search_text ); }
+    function( result ) {
+      // if the sequence number is not what we expect, then this must not be most recent suggests
+      // update, so bail without displaying the result
+      if ( self.sequence_number != sequence_number )
+        return;
+
+      self.display_suggestions( result, search_text );
+    }
   );
 }
 
