@@ -744,6 +744,99 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
+    revision = Valid_revision(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def revert_note( self, notebook_id, note_id, revision, user_id ):
+    """
+    Revert the contents of a note to that of an earlier revision, thereby creating a new revision.
+    The timestamp of the new revision is returned.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook the note is in
+    @type note_id: unicode
+    @param note_id: id of note to revert
+    @type revision: unicode or NoneType
+    @param revision: revision timestamp to revert to for the provided note
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: json dict
+    @return: {
+      'new_revision': User_revision of the reverted note
+      'previous_revision': User_revision immediately before new_revision
+      'storage_bytes': current storage usage by user,
+    }
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if not user or not notebook:
+      raise Access_error()
+
+    note = self.__database.load( Note, note_id )
+
+    # check whether the provided note contents have been changed since the previous revision
+    def update_note( current_notebook, old_note, user ):
+      # if the revision to revert to is already the newest revision, bail without updating the note
+      if old_note.revision == note.revision:
+        new_revision = None
+      # otherwise, revert the note's contents to that of the older revision
+      else:
+        note.contents = old_note.contents
+        note.user_id = user.object_id
+        new_revision = User_revision( note.revision, note.user_id, user.username )
+
+        self.__files.purge_unused( note )
+
+      return new_revision
+
+    previous_user = self.__database.load( User, note.user_id )
+    previous_revision = User_revision( note.revision, note.user_id, previous_user and previous_user.username or None )
+
+    # if the note is already in the given notebook, load it and revert it
+    if note and note.notebook_id == notebook.object_id:
+      old_note = self.__database.load( Note, note_id, revision )
+      new_revision = update_note( notebook, old_note, user )
+
+    # the note is not already in the given notebook, so look for it in the trash
+    elif note and notebook.trash_id and note.notebook_id == notebook.trash_id:
+      old_note = self.__database.load( Note, note_id, revision )
+
+      # undelete the note, putting it back in the given notebook
+      note.notebook_id = notebook.object_id
+      note.deleted_from_id = None
+
+      new_revision = update_note( notebook, old_note, user )
+    # otherwise, the note doesn't exist
+    else:
+      raise Access_error()
+
+    if new_revision:
+      self.__database.save( note, commit = False )
+      user = self.__users.update_storage( user_id, commit = False )
+      self.__database.commit()
+      user.group_storage_bytes = self.__users.calculate_group_storage( user )
+    else:
+      user = None
+
+    return dict(
+      new_revision = new_revision,
+      previous_revision = previous_revision,
+      storage_bytes = user and user.storage_bytes or 0,
+      contents = note.contents,
+    )
+
+  @expose( view = Json )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
   def delete_note( self, notebook_id, note_id, user_id ):

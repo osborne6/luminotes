@@ -718,7 +718,14 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   // for read-only notes within read-write notebooks, tack the revision timestamp onto the start of the note text
   if ( !read_write && this.notebook.read_write && revision ) {
     var short_revision = this.brief_revision( revision );
-    note_text = "<p>Previous revision from " + short_revision + "</p>" + note_text;
+    var note_id = id.split( ' ' )[ 0 ];
+    note_text = '<p>Previous revision from ' + short_revision + '</p>' +
+      '<form id="revert_form" target="/notebooks/revert_note">' +
+      '<input type="hidden" name="notebook_id" value="' + this.notebook_id + '">' +
+      '<input type="hidden" name="note_id" value="' + note_id + '">' +
+      '<input type="hidden" name="revision" value="' + revision + '">' +
+      '<input type="submit" class="button" value="revert to this revision" title="Return to this earlier version of the note.">' + 
+      '</form>' + note_text;
   }
 
   if ( !read_write && creation ) {
@@ -1545,6 +1552,26 @@ Wiki.prototype.submit_form = function ( form ) {
       }, function ( result ) {
         self.display_group_settings( result );
       } );
+    }
+  } else if ( url == "/notebooks/revert_note" ) {
+    callback = function ( result ) {
+      self.display_message( "The note has been reverted to an earlier revision." );
+      var frame = getElement( "note_" + form.note_id.value );
+
+      if ( frame ) {
+        var editor = frame.editor;
+        self.update_editor_revisions( result, editor );
+        editor.mark_clean();
+
+        if ( result.new_revision ) {
+          editor.document.body.innerHTML = result.contents;
+          editor.resize();
+        }
+
+        signal( self, "note_saved", editor );
+      }
+
+      self.display_storage_usage( result.storage_bytes );
     }
   }
 
