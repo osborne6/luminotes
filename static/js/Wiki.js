@@ -1555,7 +1555,11 @@ Wiki.prototype.submit_form = function ( form ) {
     }
   } else if ( url == "/notebooks/revert_note" ) {
     callback = function ( result ) {
-      self.display_message( "The note has been reverted to an earlier revision." );
+      if ( result.new_revision )
+        self.display_message( "The note has been reverted to an earlier revision." );
+      else
+        self.display_message( "The note is already at that revision." );
+
       var frame = getElement( "note_" + form.note_id.value );
 
       if ( frame ) {
