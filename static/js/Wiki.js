@@ -1498,7 +1498,7 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
     } );
     this.display_error(
       'Your changes to the note titled "' + editor.title +
-      '" have overwritten changes made in another window by ' + result.previous_revision.username + '.',
+      '" have overwritten changes made in another window by ' + ( result.previous_revision.username || 'you' ) + '.',
       [ compare_button ], editor.iframe
     );
 
