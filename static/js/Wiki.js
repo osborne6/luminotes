@@ -1004,7 +1004,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   } else if ( event.modifier().shift && code == 9 ) {
     // ignore shift-tab here if a Suggest_pulldown is open
     var link = editor.find_link_at_cursor();
-    if ( link && link.pulldown && link.pulldown.update_suggestions )
+    if ( link && link.pulldown && link.pulldown.visible && link.pulldown.visible() )
       return;
 
     editor.exec_command( "outdent" );
@@ -1013,7 +1013,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   } else if ( code == 9 ) {
     // ignore tab here if a Suggest_pulldown is open
     var link = editor.find_link_at_cursor();
-    if ( link && link.pulldown && link.pulldown.update_suggestions )
+    if ( link && link.pulldown && link.pulldown.visible && link.pulldown.visible() )
       return;
     
     editor.exec_command( "indent" );
@@ -3649,6 +3649,10 @@ Suggest_pulldown.prototype.something_selected = function () {
     return true;
 
   return false;
+}
+
+Suggest_pulldown.prototype.visible = function () {
+  return !hasElementClass( this.div, "invisible" );
 }
 
 Suggest_pulldown.prototype.shutdown = function () {
