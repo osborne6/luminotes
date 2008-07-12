@@ -780,6 +780,9 @@ class Notebooks( object ):
 
     note = self.__database.load( Note, note_id )
 
+    if not note:
+      raise Access_error()
+
     # check whether the provided note contents have been changed since the previous revision
     def update_note( current_notebook, old_note, user ):
       # if the revision to revert to is already the newest revision, bail without updating the note

@@ -2294,6 +2294,327 @@ class Test_notebooks( Test_controller ):
   def test_save_two_new_startup_notes( self ):
     self.test_save_two_new_notes( startup = True )
 
+  def test_revert_note( self ):
+    self.login()
+
+    # save over an existing note, supplying new contents and a new title
+    first_revision = self.note.revision
+    original_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    second_revision = result[ "new_revision" ].revision
+
+    # revert the note to the earlier revision
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = first_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != first_revision
+    assert result[ "new_revision" ].revision != second_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == second_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "contents" ] == original_contents
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 0 ].revision == first_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == second_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+
+  def test_revert_note_by_different_user( self ):
+    self.login()
+
+    # save over an existing note, supplying new contents and a new title
+    first_revision = self.note.revision
+    original_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    second_revision = result[ "new_revision" ].revision
+
+    self.login2()
+
+    # as a different user, revert the note to the earlier revision
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = first_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != first_revision
+    assert result[ "new_revision" ].revision != second_revision
+    assert result[ "new_revision" ].user_id == self.user2.object_id
+    assert result[ "new_revision" ].username == self.username2
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == second_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "contents" ] == original_contents
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 0 ].revision == first_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == second_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user2.object_id
+    assert revisions[ 2 ].username == self.username2
+
+  def test_revert_note_without_login( self ):
+    self.login()
+
+    # save over an existing note, supplying new contents and a new title
+    first_revision = self.note.revision
+    original_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    second_revision = result[ "new_revision" ].revision
+
+    # revert the note to the earlier revision, but without logging in
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = first_revision,
+    ) )
+
+    assert result.get( "error" )
+
+    # make sure that a new revision wasn't saved
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 2
+    assert revisions[ 0 ].revision == first_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == second_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+
+  def test_revert_deleted_note( self ):
+    self.login()
+
+    # delete an existing note
+    first_revision = self.note.revision
+    result = self.http_post( "/notebooks/delete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = self.database.load( Note, self.note.object_id )
+    second_revision = note.revision
+
+    # revert the note to the earlier, non-deleted revision
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = first_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != first_revision
+    assert result[ "new_revision" ].revision != second_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == second_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "contents" ] == self.note.contents
+
+    # make sure that the reverted note is not in the trash anymore
+    note = self.database.load( Note, self.note.object_id )
+    assert note.notebook_id == self.note.notebook_id
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 0 ].revision == first_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == second_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+
+  def test_revert_note_with_unknown_notebook( self ):
+    self.login()
+
+    # save over an existing note, supplying new contents and a new title
+    first_revision = self.note.revision
+    original_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    second_revision = result[ "new_revision" ].revision
+
+    # revert the note to the earlier revision, but with an unknown notebook
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.unknown_notebook_id,
+      note_id = self.note.object_id,
+      revision = first_revision,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+
+    # make sure that a new revision wasn't saved
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 2
+    assert revisions[ 0 ].revision == first_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == second_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+
+  def test_revert_unknown_note( self ):
+    self.login()
+
+    # revert a new (unsaved) note
+    new_note = Note.create( "55", u"<h3>newest title</h3>foo" )
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = new_note.object_id,
+      revision = new_note.revision,
+    ), session_id = self.session_id )
+
+    assert "access" in result.get( "error" )
+
+    note = self.database.load( Note, new_note.object_id )
+    assert note == None
+
+  def test_revert_note_to_newest_revision( self ):
+    self.login()
+
+    # save over an existing note, supplying new contents and a new title
+    first_revision = self.note.revision
+    original_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    second_revision = result[ "new_revision" ].revision
+
+    # "revert" the note to the most recent revision
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = second_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ] is None
+    assert result[ "previous_revision" ].revision == second_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "contents" ] == new_note_contents
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 2
+    assert revisions[ 0 ].revision == first_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == second_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+
   def test_delete_note( self ):
     self.login()
 
