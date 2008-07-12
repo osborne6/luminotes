@@ -1,3 +1,6 @@
+1.4.13: July 11, 2008:
+ * New "revert" button to roll back a note's contents to an earlier revision.
+
 1.4.12: July 7, 2008:
  * Fixed a bug in which tab/shift-tab for indending/outdenting nested lists
    no longer worked. Also made it work in IE as well (which it never has).

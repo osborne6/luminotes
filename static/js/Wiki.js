@@ -724,7 +724,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
       '<input type="hidden" name="notebook_id" value="' + this.notebook_id + '">' +
       '<input type="hidden" name="note_id" value="' + note_id + '">' +
       '<input type="hidden" name="revision" value="' + revision + '">' +
-      '<input type="submit" class="button" value="revert to this revision" title="Return to this earlier version of the note.">' + 
+      '<input type="submit" class="button" value="revert to this revision" title="Roll back to this earlier version of the note.">' + 
       '</form>' + note_text;
   }
 
@@ -1570,6 +1570,7 @@ Wiki.prototype.submit_form = function ( form ) {
         if ( result.new_revision ) {
           editor.document.body.innerHTML = result.contents;
           editor.resize();
+          editor.scrape_title();
         }
 
         signal( self, "note_saved", editor );
