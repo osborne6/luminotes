@@ -962,6 +962,7 @@ Wiki.prototype.key_pressed = function ( event ) {
 
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   var code = event.key().code;
+
   if ( event.modifier().ctrl ) {
     // ctrl-backtick: alert with frame HTML contents (temporary for debugging)
     if ( code == 192 || code == 96 ) {
@@ -1001,10 +1002,20 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     }
   // shift-tab: outdent
   } else if ( event.modifier().shift && code == 9 ) {
+    // ignore shift-tab here if a Suggest_pulldown is open
+    var link = editor.find_link_at_cursor();
+    if ( link && link.pulldown && link.pulldown.update_suggestions )
+      return;
+
     editor.exec_command( "outdent" );
     event.stop();
   // tab: outdent
   } else if ( code == 9 ) {
+    // ignore tab here if a Suggest_pulldown is open
+    var link = editor.find_link_at_cursor();
+    if ( link && link.pulldown && link.pulldown.update_suggestions )
+      return;
+    
     editor.exec_command( "indent" );
     event.stop();
   // IE: hitting space while making a link shouldn't end the link
