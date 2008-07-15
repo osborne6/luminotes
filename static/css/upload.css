@@ -6,6 +6,10 @@ html, body {
   background-color: #ffff99;
 }
 
+body {
+  font-size: 72%;
+}
+
 form {
   margin-bottom: 0.5em;
 }
