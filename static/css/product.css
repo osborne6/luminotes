@@ -257,8 +257,13 @@
   padding-bottom: 0.5em;
 }
 
+.upgrade_question {
+  text-align: left;
+}
+
 .upgrade_text {
   text-align: left;
+  line-height: 140%;
 }
 
 .upgrade_area {
@@ -352,6 +357,10 @@
 }
 
 #upgrade_table_small .feature_value {
+  font-size: 82%;
+}
+
+.yearly_link {
   font-size: 82%;
 }
 

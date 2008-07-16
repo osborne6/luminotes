@@ -1,5 +1,5 @@
 from Product_page import Product_page
-from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script
+from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script, H4, B
 
 
 class Upgrade_page( Product_page ):
@@ -213,26 +213,106 @@ class Upgrade_page( Product_page ):
             user_plan[ u"name" ].capitalize(),
             ( user.rate_plan > 0 ) and unsubscribe_button or None,
           ) or None,
+
+          P(
+            u"Get two months free with a ", A( u"yearly subscription", href = "#yearly" ), u"!",
+            separator = "",
+            class_ = u"yearly_link",
+          ),
           class_ = u"upgrade_area",
         ),
 
         Div(
           Div(
-            Img(
-              src = u"/static/images/zero_hassle.png",
-              width = u"122", height = u"29",
-              alt = u"Zero hassle",
-            ),
-            Ul(
-              Li( u"Cancel online anytime without losing access to your wiki." ),
-              Li( u"60-day money-back guarantee. No questions asked." ),
-              Li( u"No lock-in: Download your entire wiki anytime." ),
+            H4( u"Which plan is right for me?", class_ = u"upgrade_question" ),
+            P(
+              u"The", B( u"Standard" ), u"and", B( u"Basic" ),
+              u"""
+              plans are designed for individuals, allowing you to invite as
+              many people as you like to view or edit your wiki. They only need free Luminotes
+              accounts.
+              """,
               class_ = u"upgrade_text",
             ),
-            class_= u"center_area",
+            P(
+              u"The", B( u"Premium" ), u"and", B( u"Plus" ),
+              u"""
+              plans are designed for teams and organizations, allowing you to create and manage your
+              own user accounts. In addition, you can invite as many people as you like to view or
+              edit your wiki, whether they're a user you created or they just have a free
+              Luminotes account.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            H4( u"Is my wiki private?", class_ = u"upgrade_question" ),
+            P(
+              u"""
+              Absolutely. Your personal wiki is protected by industry-standard SSL encryption, and
+              your wiki is never shared with anyone unless you explicitly invite them to view or
+              edit it. There is a complete
+              """,
+              A( u"Luminotes privacy policy", href = "/privacy" ),
+              u"""
+              on the subject, so please check that out if you're interested in how Luminotes
+              protects your privacy.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            H4( u"Do you backup my wiki?", class_ = u"upgrade_question" ),
+            P(
+              """
+              Your wiki is fully backed up every day, and you can even download the entire contents
+              of your wiki by clicking "download as html" whenever you want.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            H4( u"How does upgrading work?", class_ = u"upgrade_question" ),
+            P(
+              """
+              When you upgrade your Luminotes account, you'll be presented with a simple PayPal
+              checkout page. If you already have a PayPal account, you can upgrade your Luminotes
+              account in a matter of seconds. If you don't yet have a PayPal account, no problem.
+              Just enter your payment information. It's fast and secure.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            P(
+              """
+              After you subscribe, your Luminotes account will be upgraded automatically so you can
+              start enjoying your new plan's benefits right away.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            H4( u"Once I subscribe, can I cancel anytime?", class_ = u"upgrade_question" ),
+            P(
+              """
+              Of course. This isn't a cell phone plan. There are no contracts or cancellation fees.
+              You can upgrade, downgrade, or cancel your account anytime. Simply login to your
+              account and return to this pricing page.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            H4( u"What is your refund policy?", class_ = u"upgrade_question" ),
+            P(
+              """
+              It's this simple: Luminotes comes with a 60-day money-back guarantee. No questions asked.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            H4( u"What happens to my wiki if I cancel my subscription?", class_ = u"upgrade_question" ),
+            P(
+              """
+              There is no lock-in with Luminotes. So if you cancel your subscription, you're simply
+              returned to the free account level without losing access to your wiki. And of course
+              you can download your entire wiki whenever you like.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            class_= u"wide_center_area",
           ),
 
           P(
+            A( name = "yearly" ),
             Table(
               Tr( Td(
                 u"Get two months free with a yearly subscription!",
