@@ -1,3 +1,10 @@
+1.4.15: July 15, 2008:
+ * Reduced the size of the font within the upload pulldown to match the other
+   pulldowns.
+ * Added some frequently asked questions (and answers) to the pricing & sign
+   up page.
+ * Updated the original FAQ page accordingly.
+
 1.4.14: July 12, 2008:
  * Fixed a bug in which pressing tab/shift-tab when a suggest pulldown was
    open caused the current text to indent/outdent.
