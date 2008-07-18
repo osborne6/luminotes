@@ -1,3 +1,10 @@
+1.4.6:
+ * Slightly increased the size of the file upload pulldown to look better in
+   various browsers (and not cut off text within the frame).
+ * When you invite other people to view or edit your notebook, you can now
+   see the invite link they'll receive in case you want to copy and paste it
+   to them yourself.
+
 1.4.15: July 15, 2008:
  * Reduced the size of the font within the upload pulldown to match the other
    pulldowns.

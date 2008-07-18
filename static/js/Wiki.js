@@ -1885,11 +1885,18 @@ Wiki.prototype.display_invites = function ( invite_area ) {
 
     appendChildNodes(
       add_invite_to, createDOM( "div", { "class": "invite indented" },
-      invite.email_address, " ",
-      createDOM( "span", { "class": "invite_status" },
-        invite.redeemed_username ? "(invite accepted by " + invite.redeemed_username + ")" : "(waiting for invite to be accepted)"
-      ),
-      " ", revoke_button )
+        invite.email_address, " ",
+        createDOM( "span", { "class": "invite_status" },
+          invite.redeemed_username ? "(invite accepted by " + invite.redeemed_username + ")" : "(waiting for invite to be accepted)"
+        ),
+        " ", revoke_button,
+        !invite.redeemed_username && createDOM( "span", {},
+          createDOM( "br" ),
+          createDOM( "span", { "class": "invite_link_area" },
+            "invite link: " + location.protocol + "//" + location.host + "/i/" + invite.object_id
+          )
+        ) || ""
+      )
     );
 
     addresses[ invite.email_address ] = true;

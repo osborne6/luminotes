@@ -1096,12 +1096,12 @@ class Users( object ):
 
     if email_count == 1:
       return dict(
-        message = u"An invitation has been sent.",
+        message = u"An invitation has been sent. The person you invited will receive an invite link (shown above) by email. (Feel free to copy and paste the invite link to them yourself.)",
         invites = invites,
       )
     else:
       return dict(
-        message = u"%s invitations have been sent." % email_count,
+        message = u"%s invitations have been sent. The people you invited will each receive an invite link (shown above) by email. (Feel free to copy and paste the invite links to them yourself.)" % email_count,
         invites = invites,
       )
 
