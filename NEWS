@@ -1,4 +1,4 @@
-1.4.6:
+1.4.16: July 18, 2008:
  * Slightly increased the size of the file upload pulldown to look better in
    various browsers (and not cut off text within the frame).
  * When you invite other people to view or edit your notebook, you can now
