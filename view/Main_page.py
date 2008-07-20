@@ -93,11 +93,11 @@ class Main_page( Page ):
     else:
       notebook_path = u"/notebooks/%s" % notebook.object_id
 
-    conversion_html = None
+    conversion_js = None
 
     if conversion:
       try:
-        conversion_html = file( u"static/html/%s_conversion.html" % conversion ).read()
+        conversion_js = file( u"static/js/%s_conversion.js" % conversion ).read()
       except IOError:
         pass
 
@@ -222,10 +222,6 @@ class Main_page( Page ):
             class_ = ( notebook.name == u"trash" ) and u"trash_notebook_color" or u"current_notebook_color",
           ),
           id = u"center_area",
-        ),
-        Div(
-          conversion_html,
-          id = u"conversion_area",
         ),
         id = u"everything_area",
       ),
