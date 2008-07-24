@@ -40,7 +40,7 @@ class Front_page( Product_page ):
               Td(
                 Li( u"Gather all of your ideas into one place." ),
                 Li( u"Easily link together related concepts." ),
-                Li( u"Share your wiki with anyone." ),
+                Li( u"As simple to use as index cards." ),
                 align = u"left",
               ),
               align = u"center",

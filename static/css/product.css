@@ -236,11 +236,15 @@
   border: 1px solid #999999;
 }
 
+.tour_card {
+  margin: 1em 1em 0.25em 1em;
+}
+
 .tour_text {
   text-align: left;
   font-weight: bold;
   width: 500px;
-  margin: 0 auto;
+  margin: 1em auto;
 }
 
 .tour_list {

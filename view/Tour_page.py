@@ -21,6 +21,40 @@ class Tour_page( Product_page ):
           ),
         ),
         Div(
+          Img( src = u"/static/images/tour_card1.png", width = u"400", height = u"243", class_ = u"tour_card" ),
+          P(
+            u"Using index cards to take notes is really easy. You just write a title at the top and then jot down some notes.",
+            class_ = u"tour_text",
+          ),
+        ),
+        Div(
+          Img( src = u"/static/images/tour_card2.png", width = u"400", height = u"243", class_ = u"tour_card" ),
+          P(
+            u"And if you make one index card per subject, you can keep your notes organized.",
+            class_ = u"tour_text",
+          ),
+          P(
+            u"""
+            But when your stack of cards grows larger than a few dozen, it becomes difficult to find the notes you're looking for.
+            """,
+            class_ = u"tour_text",
+          ),
+        ),
+        Div(
+          Img( src = u"/static/images/tour_card3.png", width = u"430", height = u"366", class_ = u"tour_card" ),
+          P(
+            u"""
+            If only there was something as simple for taking notes as index cards, but online, searchable, and with some way to make
+            links between your notes!
+            """,
+            class_ = u"tour_text",
+          ),
+          P(
+            u"Introducing Luminotes...",
+            class_ = u"tour_text",
+          ),
+        ),
+        Div(
           Img( src = u"/static/images/tour_screenshot1.png", width = u"725", height = u"560", class_ = u"tour_screenshot" ),
           Div(
             Div(
