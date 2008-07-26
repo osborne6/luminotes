@@ -140,7 +140,7 @@ def grab_user_id( function ):
       if cherrypy.session.get( "user_id" ) is None and cherrypy.request.method == "GET":
         original_path = cherrypy.request.path + \
           ( cherrypy.request.query_string and u"?%s" % cherrypy.request.query_string or "" )
-        raise cherrypy.HTTPRedirect( u"/login?after_login=%s" % urllib.quote( original_path ) )
+        raise cherrypy.HTTPRedirect( u"%s/login?after_login=%s" % ( cherrypy.request.base, urllib.quote( original_path ) ) )
       else:
         raise
   

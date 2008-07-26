@@ -1544,6 +1544,7 @@ Wiki.prototype.submit_form = function ( form ) {
     args[ "yearly" ] = this.yearly;
   } else if ( url == "/users/login" ) {
     args[ "invite_id" ] = this.invite_id;
+    args[ "after_login" ] = this.after_login;
   } else if ( url == "/users/send_invites" ) {
     callback = function ( result ) {
       if ( !result.invites ) return;
