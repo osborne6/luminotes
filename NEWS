@@ -1,7 +1,8 @@
-1.4.18: ???
+1.4.18: July 28, 2008:
  * Fixed a bug where clicking the link for an updated note in an RSS feed did
    not properly redirect to that note after login.
  * "Nothing but notes" mode now hides the toolbar as well.
+ * Rephrased some of the links to the signup page.
 
 1.4.17: July 24, 2008:
  * Updated the product tour with an analogy to index cards.
