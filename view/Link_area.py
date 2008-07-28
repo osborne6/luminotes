@@ -14,11 +14,6 @@ class Link_area( Div ):
     Div.__init__(
       self,
       Div(
-        (user.username is None ) and P(
-          A( u"Sign up for free", href = u"/pricing", class_ = u"hook_action"  ),
-          class_ = u"hook_action_area",
-          separator = u"",
-        ) or None,
         Div(
           H4( u"this notebook", id = u"this_notebook_area_title" ),
           Div(
@@ -167,6 +162,12 @@ class Link_area( Div ):
           ) for nb in linked_notebooks ],
           id = u"notebooks_area"
         ),
+
+        ( user.username is None ) and P(
+          A( u"Sign up for free", href = u"/pricing", class_ = u"hook_action"  ),
+          class_ = u"hook_action_area",
+          separator = u"",
+        ) or None,
 
         Div(
           id = u"storage_usage_area",
