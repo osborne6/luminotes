@@ -2,7 +2,7 @@ from urllib import urlencode
 from cgi import escape
 from Page import Page
 from Header import Header
-from Tags import Link, Input, Div, Span, H2, H4, A, Br, Strong, Script, Img
+from Tags import Link, Input, Div, Span, H2, H4, A, Br, Strong, Script, Img, P, Noscript
 from Note_tree_area import Note_tree_area
 from Link_area import Link_area
 from Toolbar import Toolbar
@@ -165,6 +165,14 @@ class Main_page( Page ):
         ),
         Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user ),
         Div(
+          notebook.read_write and Noscript(
+            P( Strong(
+              u"""
+              Luminotes requires JavaScript to be enabled in your web browser in order to edit
+              your wiki. Please <a href="/enable_javascript">enable JavaScript</a> before continuing.
+              """
+            ) ),
+          ) or None,
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
             ( notebook.name == u"trash" or not notebook.read_write ) \
