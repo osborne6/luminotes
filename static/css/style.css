@@ -829,3 +829,8 @@ h1 {
 .hook_action {
   font-size: 105%;
 }
+
+.hook_action_detail {
+  font-size: 72%;
+  font-weight: normal;
+}
