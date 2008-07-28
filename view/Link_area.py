@@ -1,4 +1,4 @@
-from Tags import Div, Span, H4, A, Strong, Img
+from Tags import Div, P, Span, H4, A, Strong, Img
 from Rounded_div import Rounded_div
 from Search_form import Search_form
 
@@ -14,6 +14,11 @@ class Link_area( Div ):
     Div.__init__(
       self,
       Div(
+        (user.username is None ) and P(
+          A( u"Sign up for free", href = u"/pricing", class_ = u"hook_action"  ),
+          class_ = u"hook_action_area",
+          separator = u"",
+        ) or None,
         Div(
           H4( u"this notebook", id = u"this_notebook_area_title" ),
           Div(

@@ -13,8 +13,8 @@ class Header( Div ):
       Div(
         ( note_title == u"home" ) and title_image or A( title_image, href = u"/" ),   
         ( login_url and user.username == u"anonymous" ) and Div(
-          ( note_title == u"pricing" ) and Span( u"pricing &amp sign up", class_ = u"bold_link" ) or \
-          A( u"pricing &amp; sign up", href = u"/pricing", class_ = u"bold_link" ), u" | ",
+          ( note_title == u"pricing" ) and Span( u"sign up for free", class_ = u"bold_link" ) or \
+          A( u"sign up for free", href = u"/pricing", class_ = u"bold_link" ), u" | ",
           A(
             u"login",
             href = login_url,
@@ -50,9 +50,9 @@ class Header( Div ):
             ),
             " | ",
           ) or Span(
-            ( note_title == u"pricing" ) and Span( u"pricing &amp sign up", class_ = u"bold_link" ) or \
+            ( note_title == u"pricing" ) and Span( u"sign up for free", class_ = u"bold_link" ) or \
             A(
-              u"pricing &amp; sign up",
+              u"sign up for free",
               href = u"/pricing",
               title = u"Sign up for a real Luminotes account.",
               class_ = u"bold_link",

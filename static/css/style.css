@@ -819,3 +819,13 @@ h1 {
   cursor: pointer;
 }
 
+.hook_action_area {
+  background-color: #ffff99;
+  font-weight: bold;
+  padding: 1em;
+  text-align: center;
+}
+
+.hook_action {
+  font-size: 105%;
+}
