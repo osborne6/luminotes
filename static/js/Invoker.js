@@ -23,7 +23,12 @@ Invoker.prototype.invoke = function ( url, http_type, args, callback, form, sync
 
   if ( !fire_and_forget ) {
     if ( this.pending_count == 0 ) {
-      var loading = createDOM( "span", { "class": "status_text" }, "loading" );
+      if ( http_type == 'POST' )
+        var status_text = "saving"
+      else
+        var status_text = "loading"
+
+      var loading = createDOM( "span", { "class": "status_text" }, status_text );
       replaceChildNodes( "status_area", loading );
     }
     this.pending_count += 1;
