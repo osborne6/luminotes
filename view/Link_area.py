@@ -163,7 +163,7 @@ class Link_area( Div ):
           id = u"notebooks_area"
         ),
 
-        ( user.username is None ) and P(
+        ( user.username is None and notebook_path != "/" ) and P(
           A( u"Sign up for free", href = u"/pricing", class_ = u"hook_action"  ),
           class_ = u"hook_action_area",
           separator = u"",
