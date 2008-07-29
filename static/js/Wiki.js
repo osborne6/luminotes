@@ -2287,7 +2287,7 @@ Wiki.prototype.scroll_to = function ( node ) {
   var viewport_position = getViewportPosition();
   if ( getElementPosition( node ).y < viewport_position.y ||
        getElementPosition( node ).y + getElementDimensions( node ).h > viewport_position.y + getViewportDimensions().h )
-    new ScrollTo( node );
+    new ScrollTo( node, { "duration": 0.5 } );
 }
 
 Wiki.prototype.clear_messages = function () {

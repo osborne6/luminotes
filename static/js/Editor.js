@@ -214,22 +214,30 @@ Editor.prototype.highlight = function ( scroll ) {
   if ( scroll == undefined )
     scroll = true;
 
+  var self = this;
+
+  function do_highlight() {
+    if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight for iframes is broken in Opera
+      pulsate( self.iframe, options = { "pulses": 1, "duration": 0.5 } );
+    } else if ( self.iframe.contentDocument ) { // browsers such as Firefox
+      Highlight( self.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
+    } else { // browsers such as IE
+      if ( self.document && self.document.body )
+        Highlight( self.document.body, options = { "queue": { "scope": "highlight", "limit": 1 } } );
+    }
+  }
+
   if ( scroll ) {
     // if the editor is already completely on-screen, then there's no need to scroll
     var viewport_position = getViewportPosition();
     if ( getElementPosition( this.note_controls ).y < viewport_position.y ||
-         getElementPosition( this.iframe ).y + getElementDimensions( this.iframe ).h > viewport_position.y + getViewportDimensions().h )
-      new ScrollTo( this.note_controls );
+         getElementPosition( this.iframe ).y + getElementDimensions( this.iframe ).h > viewport_position.y + getViewportDimensions().h ) {
+      new ScrollTo( this.note_controls, { "afterFinish": do_highlight, "duration": 0.5 } );
+      return;
+    }
   }
 
-  if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight for iframes is broken in Opera
-    pulsate( this.iframe, options = { "pulses": 1, "duration": 0.5 } );
-  } else if ( this.iframe.contentDocument ) { // browsers such as Firefox
-    Highlight( this.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
-  } else { // browsers such as IE
-    if ( this.document && this.document.body )
-      Highlight( this.document.body, options = { "queue": { "scope": "highlight", "limit": 1 } } );
-  }
+  do_highlight();
 }
 
 Editor.prototype.exec_command = function ( command, parameter ) {

@@ -1,3 +1,9 @@
+1.4.19: 
+ * When scrolling to and then highlighting a note, do so serially instead of
+   in parallel.
+ * Made speed of scrolling to a note or message slightly faster.
+ * Removed big yellow "sign up for free" box from the sign up page itself.
+
 1.4.18: July 28, 2008:
  * Fixed a bug where clicking the link for an updated note in an RSS feed did
    not properly redirect to that note after login.
