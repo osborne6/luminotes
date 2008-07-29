@@ -1,4 +1,4 @@
-1.4.19: 
+1.4.19: July 29, 2008:
  * When scrolling to and then highlighting a note, do so serially instead of
    in parallel.
  * Made speed of scrolling to a note or message slightly faster.
