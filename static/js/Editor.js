@@ -232,7 +232,7 @@ Editor.prototype.highlight = function ( scroll ) {
     var viewport_position = getViewportPosition();
     if ( getElementPosition( this.note_controls ).y < viewport_position.y ||
          getElementPosition( this.iframe ).y + getElementDimensions( this.iframe ).h > viewport_position.y + getViewportDimensions().h ) {
-      new ScrollTo( this.note_controls, { "afterFinish": do_highlight, "duration": 0.5 } );
+      new ScrollTo( this.note_controls, { "afterFinish": do_highlight, "duration": 0.25 } );
       return;
     }
   }
