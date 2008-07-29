@@ -332,6 +332,14 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     );
   }
 
+  var save_button = getElement( "save_button" );
+  if ( save_button ) {
+    connect( save_button, "onclick", function ( event ) {
+      self.save_editor( null );
+    } );
+    save_button.disabled = true;
+  }
+
   var download_html_link = getElement( "download_html_link" );
   if ( download_html_link ) {
     connect( download_html_link, "onclick", function ( event ) {
@@ -805,6 +813,14 @@ Wiki.prototype.editor_state_changed = function ( editor, link_clicked ) {
 
   if ( !link_clicked )
     this.display_link_pulldown( editor );
+
+  if ( editor.dirty() ) {
+    var save_button = getElement( "save_button" );
+    if ( save_button && save_button.disabled ) {
+      save_button.disabled = false;
+      save_button.value = "save";
+    }
+  }
 
   signal( this, "note_state_changed", editor );
 }
@@ -1473,6 +1489,12 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       self.update_editor_revisions( result, editor );
       self.display_storage_usage( result.storage_bytes );
       editor.mark_clean();
+
+      var save_button = getElement( "save_button" );
+      if ( save_button ) {
+        save_button.disabled = true;
+        save_button.value = "saved";
+      }
 
       if ( editor.startup )
         self.startup_notes[ editor.id ] = true;

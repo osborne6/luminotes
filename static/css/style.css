@@ -477,6 +477,14 @@ h1 {
   background-color: #ffcc66;
 }
 
+.note_button[disabled]:hover {
+  background-color: #d0e0f0;
+}
+
+#save_button {
+  margin-left: 0.5em;
+}
+
 .note_frame {
   margin: 0em;
   padding: 0em;

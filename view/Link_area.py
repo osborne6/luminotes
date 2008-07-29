@@ -1,4 +1,4 @@
-from Tags import Div, P, Span, H4, A, Strong, Img
+from Tags import Div, P, Span, H4, A, Strong, Img, Input
 from Rounded_div import Rounded_div
 from Search_form import Search_form
 
@@ -15,7 +15,18 @@ class Link_area( Div ):
       self,
       Div(
         Div(
-          H4( u"this notebook", id = u"this_notebook_area_title" ),
+          H4(
+            u"this notebook",
+            notebook.read_write and Input(
+              type = u"button",
+              class_ = u"note_button small_text",
+              id = u"save_button",
+              value = u"saved",
+              disabled = u"true",
+              title = u"save your work",
+            ) or None,
+            id = u"this_notebook_area_title",
+          ),
           Div(
             Search_form(),
             class_ = u"link_area_item",
