@@ -1507,6 +1507,12 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
         signal( self, "note_saved", editor );
     }, null, synchronous, fire_and_forget );
   } else {
+    var save_button = getElement( "save_button" );
+    if ( save_button ) {
+      save_button.disabled = true;
+      save_button.value = "saved";
+    }
+
     if ( callback )
       callback();
   }
