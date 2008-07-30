@@ -2146,9 +2146,9 @@ Wiki.prototype.declutter_clicked = function () {
   if ( link_area_holder )
     addElementClass( link_area_holder, "undisplayed" );
 
-  var left_area = getElement( "left_area" );
-  if ( left_area )
-    addElementClass( left_area, "undisplayed" );
+  var note_tree_area = getElement( "note_tree_area" );
+  if ( note_tree_area )
+    addElementClass( note_tree_area, "undisplayed" );
 
   var clutter_link = getElement( "clutter_link" );
   if ( clutter_link ) {
@@ -2179,9 +2179,9 @@ Wiki.prototype.clutter_clicked = function () {
   if ( link_area_holder )
     removeElementClass( link_area_holder, "undisplayed" );
 
-  var left_area = getElement( "left_area" );
-  if ( left_area )
-    removeElementClass( left_area, "undisplayed" );
+  var note_tree_area = getElement( "note_tree_area" );
+  if ( note_tree_area )
+    removeElementClass( note_tree_area, "undisplayed" );
 
   var clutter_link = getElement( "clutter_link" );
   if ( clutter_link )

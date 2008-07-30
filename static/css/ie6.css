@@ -2,21 +2,33 @@
   background: #fafafa url(/static/images/1x1.png) fixed;
 }
 
-#toolbar {
-  position: absolute;
-  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 60 ) || 0 ) );
-  text-align: right;
+#left_area {
+  width: auto;
+  margin-left: expression( eval( document.all.everything_area && ( -document.all.everything_area.offsetLeft ) || 0 ) );
 }
 
 #note_tree_area {
-  left: 0;
-  width: expression( eval( document.all.center_area && ( document.all.center_area.offsetLeft - 60 ) || 0 ) );
   position: absolute;
-  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 80 : document.body.scrollTop + 80 );
+  width: expression( eval( document.all.everything_area && ( document.all.everything_area.offsetLeft - 60 ) || 0 ) );
+  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 30 : document.body.scrollTop + 30 );
 }
 
 #note_tree_area_holder {
-  overflow: auto;
+  height: expression( eval( documentElement.offsetHeight - 100 ) );
+}
+
+#right_area {
+  width: auto;
+  margin-left: auto;
+}
+
+#link_area {
+  position: absolute;
+  width: expression( eval( document.all.everything_area && ( document.all.everything_area.offsetLeft ) || 0 ) );
+  top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 30 : document.body.scrollTop + 30 );
+}
+
+#link_area_holder {
   height: expression( eval( documentElement.offsetHeight - 100 ) );
 }
 
@@ -32,17 +44,9 @@
 }
 
 #everything_area {
-  width:expression( 
-    document.body.clientWidth < ( 1300 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "100%": "80em"
-  );
-}
-
-#center_area {
-  float: right;
-  width:expression( 
-    document.body.clientWidth < ( 1300 / 12 ) * 
-    parseInt( document.body.currentStyle.fontSize ) ?  "56%": "45em"
+  width:expression(
+    document.body.clientWidth < ( 1300 / 12 ) *
+    parseInt( document.body.currentStyle.fontSize ) ?  "60%": "45em"
   );
 }
 
@@ -55,6 +59,10 @@
   width: expression( this.scrollHeight > 200 ? "12em" : "auto" );
 }
 
+#toolbar {
+  margin-right: 1em;
+}
+
 #toolbar .button_wrapper {
   position: absolute;
 }
@@ -62,14 +70,4 @@
 .link_area_item {
   margin-bottom: 0.25em;
   padding: 0.25em 0.25em 0 0.5em;
-}
-
-#this_notebook_area_title {
-  margin-top: 1.5em;
-}
-
-#clutter_link {
-  position: relative;
-  top: 1.25em;
-  margin-left: 1em;
 }

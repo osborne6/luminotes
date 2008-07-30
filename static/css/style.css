@@ -31,20 +31,24 @@ h1 {
 }
 
 #everything_area {
-  margin: 0 auto;
   text-align: center;
-  max-width: 80em;
+  width: 45em;
+  max-width: 60%;
+  margin: 0 auto;
 }
 
 #left_area {
+  position: relative;
   float: left;
-  width: 17em;
-  max-width: 20%;
+  width: 20em;
+  max-width: 33%; /* 33% of 60% (everything_area's max-width) = about 20% */
+  margin-left: -33%;
 }
 
 #toolbar {
   text-align: right;
   z-index: 1;
+  margin-right: 0.5em;
 }
 
 #toolbar .button_wrapper {
@@ -273,7 +277,7 @@ h1 {
 
 #note_tree_area {
   position: fixed;
-  width: 17em;
+  width: 15em;
   max-width: 20%;
   text-align: left;
   line-height: 140%;
@@ -341,20 +345,33 @@ h1 {
   padding-left: 20px;
 }
 
+#right_area {
+  position: relative;
+  float: left;
+  width: 20em;
+  max-width: 33%; /* 33% of 60% (everything_area's max-width) = about 20% */
+  margin-left: 100%;
+}
+
 #link_area {
-  float: right;
+  position: fixed;
   text-align: left;
   line-height: 140%;
-  width: 20%;
+  top: 80px;
+  bottom: 1em;
+  width: 20em;
+  max-width: 20%;
 }
 
 #link_area_holder {
-  padding-left: 1em;
-  padding-right: 1em;
+  max-height: 100%;
+  overflow: auto;
+  margin-left: 1em;
+  margin-right: 1em;
 }
 
 #this_notebook_area_title {
-  margin-top: 0;
+  margin-top: 0.5em;
   margin-bottom: 0.25em;
 }
 
@@ -368,6 +385,13 @@ h1 {
   text-align: center;
   width: 45em;
   max-width: 60%;
+}
+
+#center_content_area {
+  position: relative;
+  float: left;
+  text-align: center;
+  width: 100%;
 }
 
 #status_area {
@@ -386,7 +410,12 @@ h1 {
 #search_text {
   padding: 0.25em;
   border: #999999 1px solid;
-  width: 100%;
+  width: 95%;
+}
+
+#clutter_link {
+  position: relative;
+  margin-left: 1em;
 }
 
 #notebook_header_area {

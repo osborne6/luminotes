@@ -1,24 +1,22 @@
-#note_tree_area {
-  float: right;
-  margin-left: -6em;
-}
-
 #note_tree_area_holder {
   overflow: auto;
   height: expression( eval( documentElement.offsetHeight - 100 ) );
 }
 
-#center_area {
-  float: right;
-  max-width: 59%;
+#link_area_holder {
+  overflow: auto;
+  height: expression( eval( documentElement.offsetHeight - 100 ) );
 }
 
-#this_notebook_area_title {
-  margin-top: 1.5em;
+#left_area {
+  width: auto;
+}
+
+#right_area {
+  width: auto;
 }
 
 #clutter_link {
-  position: relative;
   top: 1.25em;
   margin-left: 1em;
 }

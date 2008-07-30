@@ -163,7 +163,6 @@ class Main_page( Page ):
           ),
           id = u"left_area",
         ),
-        Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user ),
         Div(
           notebook.read_write and Noscript(
             P( Strong(
@@ -229,7 +228,11 @@ class Main_page( Page ):
             id = u"notebook_border",
             class_ = ( notebook.name == u"trash" ) and u"trash_notebook_color" or u"current_notebook_color",
           ),
-          id = u"center_area",
+          id = u"center_content_area",
+        ),
+        Div(
+          Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user ),
+          id = u"right_area",
         ),
         id = u"everything_area",
       ),
