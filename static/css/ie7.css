@@ -10,11 +10,12 @@
 
 #left_area {
   width: auto;
-  margin-left: expression( eval( document.all.everything_area && -document.all.everything_area.offsetLeft || 0 ) );
+  margin-left: auto;
 }
 
 #note_tree_area {
   width: auto;
+  margin-left: -20%;
 }
 
 #right_area {

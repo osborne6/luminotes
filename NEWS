@@ -1,3 +1,8 @@
+1.4.21: July 30, 2008:
+ * Fixed bug in IE 7 in which there was too much horizontal spacing at very
+   wide resolutions.
+ * Increased speed of note hiding animations.
+
 1.4.20: July 30, 2008:
  * By popular demand, added a "save" button that becomes grayed out when
    everything is saved.
