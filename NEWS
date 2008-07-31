@@ -1,3 +1,7 @@
+1.4.22:
+ * Skipping clearing of messages/errors if they haven't been open long enough
+   to read.
+
 1.4.21: July 30, 2008:
  * Fixed bug in IE 7 in which there was too much horizontal spacing at very
    wide resolutions.

@@ -2257,6 +2257,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
 
   var div = DIV( { "class": "message" }, inner_div );
   div.nodes = nodes;
+  div.init_time = new Date();
 
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
@@ -2297,6 +2298,7 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
 
   var div = DIV( { "class": "error" }, inner_div );
   div.nodes = nodes;
+  div.init_time = new Date();
 
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
@@ -2323,6 +2325,11 @@ Wiki.prototype.clear_messages = function () {
 
   for ( var i in results ) {
     var result = results[ i ];
+
+    // only close the message if it's been open at least a quarter second
+    if ( new Date() - result.init_time < 250 )
+      continue
+
     blindUp( result, options = { "duration": 0.25, afterFinish: function () {
       try {
         for ( var j in result.nodes )
@@ -2336,6 +2343,10 @@ Wiki.prototype.clear_messages = function () {
 
   for ( var i in results ) {
     var result = results[ i ];
+
+    if ( new Date() - result.init_time < 250 )
+      continue
+
     blindUp( result, options = { "duration": 0.25, afterFinish: function () {
       try {
         removeElement( result );
@@ -2350,14 +2361,14 @@ Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
   for ( var i in results ) {
     var result = results[ i ];
 
-    // close the pulldown if it's been open at least a quarter second
-    if ( new Date() - result.pulldown.init_time >= 250 ) {
-      if ( ephemeral_only && !result.pulldown.ephemeral )
-        continue;
+    // only close the pulldown if it's been open at least a quarter second
+    if ( new Date() - result.pulldown.init_time < 250 )
+      continue
+    if ( ephemeral_only && !result.pulldown.ephemeral )
+      continue;
 
-      result.pulldown.shutdown();
-      result.pulldown = null;
-    }
+    result.pulldown.shutdown();
+    result.pulldown = null;
   }
 }
 
