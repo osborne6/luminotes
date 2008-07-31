@@ -673,7 +673,7 @@ Editor.prototype.shutdown = function( event ) {
     disconnectAll( this.document );
   }
 
-  blindUp( iframe, options = { "duration": 0.5, afterFinish: function () {
+  blindUp( iframe, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( note_controls );
       removeElement( iframe );

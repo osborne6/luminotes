@@ -2323,7 +2323,7 @@ Wiki.prototype.clear_messages = function () {
 
   for ( var i in results ) {
     var result = results[ i ];
-    blindUp( result, options = { "duration": 0.5, afterFinish: function () {
+    blindUp( result, options = { "duration": 0.25, afterFinish: function () {
       try {
         for ( var j in result.nodes )
           disconnectAll( result.nodes[ j ] );
@@ -2336,7 +2336,7 @@ Wiki.prototype.clear_messages = function () {
 
   for ( var i in results ) {
     var result = results[ i ];
-    blindUp( result, options = { "duration": 0.5, afterFinish: function () {
+    blindUp( result, options = { "duration": 0.25, afterFinish: function () {
       try {
         removeElement( result );
       } catch ( e ) { }
