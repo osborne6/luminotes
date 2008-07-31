@@ -10,13 +10,14 @@
 
 #left_area {
   width: auto;
+  margin-left: expression( eval( document.all.everything_area && -document.all.everything_area.offsetLeft || 0 ) );
+}
+
+#note_tree_area {
+  width: auto;
 }
 
 #right_area {
   width: auto;
-}
-
-#clutter_link {
-  top: 1.25em;
-  margin-left: 1em;
+  margin-left: auto;
 }

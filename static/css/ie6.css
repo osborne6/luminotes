@@ -4,7 +4,7 @@
 
 #left_area {
   width: auto;
-  margin-left: expression( eval( document.all.everything_area && ( -document.all.everything_area.offsetLeft ) || 0 ) );
+  margin-left: expression( eval( document.all.everything_area && -document.all.everything_area.offsetLeft || 0 ) );
 }
 
 #note_tree_area {
@@ -24,7 +24,7 @@
 
 #link_area {
   position: absolute;
-  width: expression( eval( document.all.everything_area && ( document.all.everything_area.offsetLeft ) || 0 ) );
+  width: expression( eval( document.all.everything_area && document.all.everything_area.offsetLeft || 0 ) );
   top: expression( eval( document.compatMode && document.compatMode == 'CSS1Compat' ) ? documentElement.scrollTop + 30 : document.body.scrollTop + 30 );
 }
 

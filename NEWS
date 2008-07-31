@@ -1,7 +1,9 @@
-1.4.20:
+1.4.20: July 30, 2008:
  * By popular demand, added a "save" button that becomes grayed out when
    everything is saved.
  * Now displaying "saving" status text in addition to "loading".
+ * Made both left and right navigation areas of the page have a fixed
+   position, so they stay in one spot even when you scroll your notes.
 
 1.4.19: July 29, 2008:
  * When scrolling to and then highlighting a note, do so serially instead of
