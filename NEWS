@@ -1,6 +1,8 @@
-1.4.22:
+1.4.22: August 1, 2008:
  * Skipping clearing of messages/errors if they haven't been open long enough
    to read.
+ * Fixed a bug in which renaming a link title and then pressing ctrl-L would
+   replace the link destination.
 
 1.4.21: July 30, 2008:
  * Fixed bug in IE 7 in which there was too much horizontal spacing at very

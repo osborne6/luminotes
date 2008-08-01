@@ -554,7 +554,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
   );
 }
 
-Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
+Wiki.prototype.resolve_link = function ( note_title, link, force, callback ) {
   // if the title looks like a URL, then make it a link to an external site
   if ( /^\w+:\/\//.test( note_title ) )
     var title_looks_like_url = true;
@@ -583,8 +583,11 @@ Wiki.prototype.resolve_link = function ( note_title, link, callback ) {
   var id = parse_query( link ).note_id;
 
   // if the link already has a valid-looking id, it's already resolved, so bail
-  if ( !callback && id != undefined && id != "new" && id != "null" )
+  if ( !force && id != undefined && id != "new" && id != "null" ) {
+    if ( callback )
+      callback( null );
     return;
+  }
 
   if ( note_title.length == 0 )
     return;
@@ -1248,7 +1251,7 @@ Wiki.prototype.toggle_link_button = function ( event ) {
 
     if ( link && link.parentNode != null ) {
       var self = this;
-      this.resolve_link( link_title( link ), link, function ( summary ) {
+      this.resolve_link( link_title( link ), link, false, function ( summary ) {
         self.display_link_pulldown( self.focused_editor, link );
       } );
     } else {
@@ -3024,7 +3027,7 @@ Link_pulldown.prototype.title_field_changed = function ( event, note ) {
     this.display_summary( note.title, summarize_html( note.contents, note.title ) );
   // otherwise, try to resolve the link title
   } else {
-    this.wiki.resolve_link( title, this.link, function ( summary ) {
+    this.wiki.resolve_link( title, this.link, true, function ( summary ) {
       self.display_summary( title, summary );
     } );
   }
