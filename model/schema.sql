@@ -344,9 +344,6 @@ CREATE TRIGGER search_update
     EXECUTE PROCEDURE tsearch2('search', 'drop_html_tags', 'title', 'contents');
 
 
-UPDATE pg_ts_cfg SET locale = 'en_US.UTF-8' WHERE ts_name = 'default';
-
-
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
