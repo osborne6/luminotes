@@ -1,3 +1,8 @@
+1.4.23:
+ * Enforcing maximum note length after stripping the note of any disallowed
+   HTML tags instead of before. This makes Luminotes work better when cutting
+   and pasting lots of text from MS Word.
+
 1.4.22: August 1, 2008:
  * Skipping clearing of messages/errors if they haven't been open long enough
    to read.

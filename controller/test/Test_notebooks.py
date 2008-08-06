@@ -1725,12 +1725,14 @@ class Test_notebooks( Test_controller ):
 
   def test_save_note_without_login( self, startup = False ):
     # save over an existing note supplying new contents and a new title
+    previous_revision = self.note.revision
     new_note_contents = u"<h3>new title</h3>new blah"
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
       contents = new_note_contents,
       startup = startup,
+      previous_revision = previous_revision,
     ), session_id = self.session_id )
 
     assert result.get( "error" )
@@ -1739,6 +1741,95 @@ class Test_notebooks( Test_controller ):
 
   def test_save_startup_note_without_login( self ):
     self.test_save_note_without_login( startup = True )
+
+  def test_save_note_too_long( self, startup = False ):
+    self.login()
+
+    # save over an existing note supplying new (too long) contents and a new title
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah" * 962
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_save_note_too_long_before_cleaning( self, startup = False ):
+    self.login()
+
+    # save over an existing note supplying new contents and a new title. the contents
+    # should be too long before they're cleaned/stripped, but short enough after
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3><span>ha" * 962
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = startup,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+
+    # make sure the old title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents.replace( u"<span>", "" )
+    assert note.startup == startup
+    assert note.user_id == self.user.object_id
+
+    if startup:
+      assert note.rank == 0 
+    else:
+      assert note.rank is None
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 2
+    assert revisions[ 0 ].revision == previous_revision
+    assert revisions[ 0 ].user_id == self.user.object_id
+    assert revisions[ 0 ].username == self.username
+    assert revisions[ 1 ].revision == current_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
 
   def test_save_deleted_note( self ):
     self.login()
@@ -2098,12 +2189,14 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     # save over an existing note supplying new contents and a new title
+    previous_revision = self.note.revision
     new_note_contents = u"<h3>new title</h3>new blah"
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.unknown_notebook_id,
       note_id = self.note.object_id,
       contents = new_note_contents,
       startup = False,
+      previous_revision = previous_revision,
     ), session_id = self.session_id )
 
     assert result.get( "error" )

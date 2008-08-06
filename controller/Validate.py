@@ -94,17 +94,21 @@ class Valid_string( object ):
       else:
         self.message = u"must be at least %s characters long" % self.min
       raise ValueError()
-    elif self.max is not None and len( value ) > self.max:
-      self.message = u"must be no longer than %s characters" % self.max
-      raise ValueError()
 
     # either escape all html completely or just clean up the html, stripping out everything that's
     # not on a tag/attribute whitelist
     if self.escape_html:
-      return escape( value, quote = True )
+      value = escape( value, quote = True )
     else:
       cleaner = Html_cleaner()
-      return cleaner.strip( value )
+      value = cleaner.strip( value )
+
+    # check for max length after cleaning html, as cleaning can reduce the html's size
+    if self.max is not None and len( value ) > self.max:
+      self.message = u"must be no longer than %s characters" % self.max
+      raise ValueError()
+
+    return value
 
   def __demoronize( self, value ):
     """
