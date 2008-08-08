@@ -9,11 +9,13 @@ from Users import grab_user_id, Access_error
 from Expire import strongly_expire, weakly_expire
 from Html_nuker import Html_nuker
 from Html_differ import Html_differ
+from Files import Upload_file
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Invite import Invite
 from model.User import User
 from model.User_revision import User_revision
+from model.File import File
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
@@ -21,6 +23,20 @@ from view.Note_tree_area import Note_tree_area
 from view.Notebook_rss import Notebook_rss
 from view.Updates_rss import Updates_rss
 from view.Update_link_page import Update_link_page
+
+
+class Import_error( Exception ):
+  def __init__( self, message = None ):
+    if message is None:
+      message = u"An error occurred when trying to import your file. Please try a different file, or contact support for help."
+
+    Exception.__init__( self, message )
+    self.__message = message
+
+  def to_dict( self ):
+    return dict(
+      error = self.__message
+    )
 
 
 class Notebooks( object ):
@@ -1183,7 +1199,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype dict
-    @return { "redirect": notebookurl }
+    @return { 'redirect': new_notebook_url }
     @raise Access_error: the current user doesn't have access to create a notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -1286,7 +1302,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype dict
-    @return { "redirect": remainingnotebookurl }
+    @return { 'redirect': remaining_notebook_url }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -1385,7 +1401,7 @@ class Notebooks( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype dict
-    @return { "redirect": notebookurl }
+    @return { 'redirect': notebook_url }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -1631,3 +1647,101 @@ class Notebooks( object ):
     result[ "count" ] = count
 
     return result
+
+  @expose( view = Json )
+  @strongly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    content_column = Valid_int( min = 0 ),
+    title_column = Valid_int( min = 0, none_okay = True ),
+    plaintext = Valid_bool(),
+    import_button = unicode,
+    user_id = Valid_id( none_okay = True ),
+  )
+  def import_csv( self, file_id, content_column, title_column, plaintext, import_button, user_id = None ):
+    """
+    Import a previously uploaded CSV file of notes as a new notebook. Delete the file once the
+    import is complete.
+
+    Plaintext contents are left mostly untouched, just stripping HTML and converting newlines to
+    <br> tags. HTML contents are cleaned of any disallowed/harmful HTML tags, and target="_new"
+    attributes are added to all links without targets.
+
+    @type file_id: unicode
+    @param file_id: id of the previously uploaded CSV file to import
+    @type content_column: int
+    @param content_column: zero-based index of the column containing note contents
+    @type title_column: int or NoneType
+    @param title_column: zero-based index of the column containing note titles (None indicates
+                         the lack of any such column, in which case titles are derived from the
+                         first few words of each note's contents)
+    @type plaintext: bool
+    @param plaintext: True if the note contents are plaintext, or False if they're HTML
+    @type import_button: unicode
+    @param import_button: ignored
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: { 'redirect': new_notebook_url }
+    @raise Access_error: the current user doesn't have access to the given file
+    @raise Files.Parse_error: there was an error in parsing the given file
+    @raise Import_error: there was an error in importing the notes from the file
+    """
+    TRUNCATED_TITLE_WORD_COUNT = 5
+    TRUNCATED_TITLE_CHAR_LENGTH = 60
+    WHITESPACE_PATTERN = re.compile( "\s+" )
+
+    if user_id is None:
+      raise Access_error()
+
+    user = self.__database.load( User, user_id )
+    if user is None:
+      raise Access_error()
+
+    db_file = self.__database.load( File, file_id )
+    if not self.__users.check_access( user_id, db_file.notebook_id ):
+      raise Access_error()
+
+    parser = self.__files.parse_csv( file_id, skip_header = True )
+
+    # create a new notebook for the imported notes
+    notebook = self.__create_notebook( u"imported notebook", user, commit = False )
+
+    # import the notes into the new notebook
+    for row in parser:
+      row_length = len( row )
+      if content_column >= row_length:
+        raise Import_error()
+      if title_column is not None and title_column >= row_length:
+        raise Import_error()
+
+      # if there's no title column, then just use the first several words of the content column
+      if title_column is None or title_column == content_column or len( row[ title_column ].strip() ) == 0:
+        title = row[ content_column ].strip()
+        title_words = WHITESPACE_PATTERN.split( title )[ : TRUNCATED_TITLE_WORD_COUNT ]
+        title = u" ".join( title_words )[ : TRUNCATED_TITLE_CHAR_LENGTH ]
+      else:
+        title = row[ title_column ].strip()[ : TRUNCATED_TITLE_CHAR_LENGTH ]
+
+      contents = u"<h3>%s</h3>%s" % (
+        Html_nuker().nuke( title ),
+        Valid_string( max = 25000, escape_html = plaintext, require_link_target = True )( row[ content_column ] ),
+      )
+
+      if plaintext:
+        contents = contents.replace( u"\n", u"<br />" )
+
+      note_id = self.__database.next_id( Note, commit = False )
+      note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = False, rank = None, user_id = user_id )
+      self.__database.save( note, commit = False )
+
+    # delete the CSV file now that it's been imported
+    self.__database.execute( db_file.sql_delete(), commit = False )
+    self.__database.commit()
+    Upload_file.delete_file( file_id )
+
+    return dict(
+      redirect = u"/notebooks/%s?rename=true" % notebook.object_id,
+    )

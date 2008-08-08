@@ -36,6 +36,20 @@ class Upload_error( Exception ):
     )
 
 
+class Parse_error( Exception ):
+  def __init__( self, message = None ):
+    if message is None:
+      message = u"Sorry, I can't figure out how to read that file. Please try a different file, or contact support for help."
+
+    Exception.__init__( self, message )
+    self.__message = message
+
+  def to_dict( self ):
+    return dict(
+      error = self.__message
+    )
+
+
 # map of upload id to Upload_file
 current_uploads = {}
 current_uploads_lock = Lock()
@@ -471,6 +485,42 @@ class Files( object ):
       notebook_id = notebook_id,
       note_id = note_id,
       file_id = file_id,
+      label_text = u"attach file",
+      instructions_text = u"Please select a file to upload.",
+    )
+
+  @expose( view = Upload_page )
+  @strongly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def import_page( self, notebook_id, user_id ):
+    """
+    Provide the information necessary to display the file import page, including the generation of a
+    unique file id.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook that the upload will be to
+    @type note_id: unicode
+    @param user_id: id of current logged-in user (if any)
+    @rtype: unicode
+    @return: rendered HTML page
+    @raise Access_error: the current user doesn't have access to the given notebook
+    """
+    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+      raise Access_error()
+
+    file_id = self.__database.next_id( File )
+
+    return dict(
+      notebook_id = notebook_id,
+      note_id = None,
+      file_id = file_id,
+      label_text = u"import file",
+      instructions_text = u"Please select a CSV file of notes to import into a new notebook.",
     )
 
   @expose( view = Blank_page )
@@ -480,7 +530,7 @@ class Files( object ):
   @validate(
     upload = (),
     notebook_id = Valid_id(),
-    note_id = Valid_id(),
+    note_id = Valid_id( none_okay = True ),
     file_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
@@ -493,8 +543,8 @@ class Files( object ):
     @param upload: file handle to uploaded file
     @type notebook_id: unicode
     @param notebook_id: id of the notebook that the upload is to
-    @type note_id: unicode
-    @param note_id: id of the note that the upload is to
+    @type note_id: unicode or NoneType
+    @param note_id: id of the note that the upload is to (if any)
     @type file_id: unicode
     @param file_id: id of the file being uploaded
     @type user_id: unicode or NoneType
@@ -721,6 +771,118 @@ class Files( object ):
     self.__database.save( db_file )
 
     return dict()
+
+  def parse_csv( self, file_id, skip_header = False ):
+    """
+    Attempt to parse a previously uploaded file as a table or spreadsheet. Generate rows as they're
+    requested.
+
+    @type file_id: unicode
+    @param file_id: id of the file to parse
+    @type skip_header: bool
+    @param skip_header: if a line of header labels is detected, don't include it in the generated
+                        rows (defaults to False)
+    @rtype: generator
+    @return: rows of data from the parsed file. each row is a list of elements
+    @raise Parse_error: there was an error in parsing the given file
+    """
+    APPROX_SNIFF_SAMPLE_SIZE_BYTES = 1024 * 1024
+
+    try:
+      import csv
+
+      table_file = Upload_file.open_file( file_id )
+      sniffer = csv.Sniffer()
+
+      # attempt to determine the presence of a header
+      lines = table_file.readlines( APPROX_SNIFF_SAMPLE_SIZE_BYTES )
+      sniff_sample = "\n".join( lines )
+
+      has_header = sniffer.has_header( sniff_sample )
+
+      table_file.seek( 0 )
+      reader = csv.reader( table_file )
+
+      # skip the header if requested to do so
+      if has_header and skip_header:
+        reader.next()
+
+      expected_row_length = None
+
+      for row in reader:
+        # all rows must have the same number of elements
+        current_row_length = len( row )
+        if current_row_length == 0:
+          continue
+
+        if expected_row_length and current_row_length != expected_row_length:
+          raise Parse_error()
+        else:
+          expected_row_length = current_row_length
+
+        yield row
+    except ( csv.Error, IOError, TypeError ):
+      raise Parse_error()
+
+  @expose( view = Json )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    file_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def csv_head( self, file_id, user_id = None ):
+    """
+    Attempt to parse a previously uploaded file as a table or spreadsheet. Return the first few rows
+    of that table, with each element truncated to a maximum length if necessary.
+
+    Currently, only a CSV file format is supported.
+
+    @type file_id: unicode
+    @param file_id: id of the file to parse
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: {
+      'file_id': file id,
+      'rows': list of parsed rows, each of which is a list of elements,
+    }
+    @raise Access_error: the current user doesn't have access to the notebook that the file is in
+    @raise Parse_error: there was an error in parsing the given file
+    """
+    MAX_ROW_COUNT = 4
+    MAX_ELEMENT_LENGTH = 30
+    MAX_ROW_ELEMENT_COUNT = 50
+
+    db_file = self.__database.load( File, file_id )
+
+    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+      raise Access_error()
+
+    parser = self.parse_csv( file_id )
+    rows = []
+
+    def truncate( element ):
+      if len( element ) > MAX_ELEMENT_LENGTH:
+        return "%s ..." % element[ : MAX_ELEMENT_LENGTH ]
+
+      return element
+
+    for row in parser:
+      if len( row ) == 0:
+        continue
+
+      rows.append( [ truncate( element ) for element in row ][ : MAX_ROW_ELEMENT_COUNT ] )
+      if len( rows ) == MAX_ROW_COUNT:
+        break
+
+    if len( rows ) == 0:
+      raise Parse_error()
+
+    return dict(
+      file_id = file_id,
+      rows = rows,
+    )
 
   def purge_unused( self, note, purge_all_links = False ):
     """

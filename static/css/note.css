@@ -142,8 +142,23 @@ ol li {
   margin-left: 1em;
 }
 
-#access_table td {
+.radio_table td {
   padding-right: 1em;
+}
+
+#import_notebook_table {
+  font-size: 72%;
+  border-collapse: collapse;
+  border: 1px solid #999999;
+}
+
+#import_notebook_table td {
+  border: 1px solid #999999;
+  padding: 0.5em;
+}
+
+#import_notebook_table .heading_row {
+  font-weight: bold;
 }
 
 .thumbnail_left {

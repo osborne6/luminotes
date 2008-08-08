@@ -4,6 +4,7 @@ import time
 import types
 import urllib
 import cherrypy
+from nose.tools import raises
 from threading import Thread
 from StringIO import StringIO
 from PIL import Image
@@ -15,7 +16,7 @@ from model.Invite import Invite
 from model.File import File
 from controller.Notebooks import Access_error
 import controller.Files
-from controller.Files import Upload_file
+from controller.Files import Upload_file, Parse_error
 
 
 class Test_files( Test_controller ):
@@ -873,9 +874,33 @@ class Test_files( Test_controller ):
     assert result.get( u"notebook_id" ) == self.notebook.object_id
     assert result.get( u"note_id" ) == self.note.object_id
     assert result.get( u"file_id" )
+    assert u"attach" in result.get( u"label_text" )
+    assert u"upload" in result.get( u"instructions_text" )
 
   def test_upload_page_without_login( self ):
     path = "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id )
+    result = self.http_get( path )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_import_page( self ):
+    self.login()
+
+    result = self.http_get(
+      "/files/import_page?notebook_id=%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    assert result.get( u"notebook_id" ) == self.notebook.object_id
+    assert result.get( u"note_id" ) == None
+    assert result.get( u"file_id" )
+    assert u"import" in result.get( u"label_text" )
+    assert u"import" in result.get( u"instructions_text" )
+
+  def test_upload_page_without_login( self ):
+    path = "/files/import_page?notebook_id=%s" % self.notebook.object_id
     result = self.http_get( path )
 
     headers = result.get( "headers" )
@@ -1573,6 +1598,273 @@ class Test_files( Test_controller ):
     )
 
     assert u"access" in result[ u"error" ]
+
+  def test_parse_csv( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+    ]
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+
+    for ( index, row ) in enumerate( parser ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  @raises( Parse_error )
+  def test_parse_csv_empty( self ):
+    self.login()
+
+    csv_data = ""
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+    parser.next()
+
+  @raises( Parse_error )
+  def test_parse_csv_invalid_text( self ):
+    self.login()
+
+    csv_data = '"See, Vera? Dress yourself up, you get taken out somewhere fun. -- Jayne'
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+    parser.next()
+
+  @raises( Parse_error )
+  def test_parse_csv_invalid_binary( self ):
+    self.login()
+
+    csv_data = self.file_data + "\x00"
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+    parser.next()
+
+  def test_parse_csv_embedded_quotes( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah ""and"" stuff",3.3\n"8","whee","hmm\nfoo"'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", 'blah "and" stuff', "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+    ]
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+
+    for ( index, row ) in enumerate( parser ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  @raises( Parse_error )
+  def test_parse_csv_different_row_element_counts( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff"\n"8","whee","hmm\nfoo",4.4'
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+
+    for row in parser:
+      pass
+
+  def test_parse_csv_empty_rows( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n\n'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+    ]
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+
+    for ( index, row ) in enumerate( parser ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  @raises( Parse_error )
+  def test_parse_csv_unknown_file_id( self ):
+    parser = cherrypy.root.files.parse_csv( u"unknownfileid" )
+
+    for row in parser:
+      pass
+
+  def test_parse_csv_without_header( self ):
+    self.login()
+
+    csv_data = '5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    expected_rows = [
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+    ]
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id )
+
+    for ( index, row ) in enumerate( parser ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  def test_parse_csv_skip_header( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    expected_rows = [
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+    ]
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id, skip_header = True )
+
+    for ( index, row ) in enumerate( parser ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  def test_parse_csv_skip_header_without_header( self ):
+    self.login()
+
+    csv_data = '5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    expected_rows = [
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+    ]
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    parser = cherrypy.root.files.parse_csv( self.file_id, skip_header = True )
+
+    for ( index, row ) in enumerate( parser ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  def test_csv_head( self ):
+    raise NotImplementedError()
 
   def test_purge_unused( self ):
     self.login()

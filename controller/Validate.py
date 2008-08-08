@@ -79,10 +79,11 @@ class Valid_string( object ):
     u"\u2122": u"(tm)",
   }
 
-  def __init__( self, min = None, max = None, escape_html = True ):
+  def __init__( self, min = None, max = None, escape_html = True, require_link_target = False ):
     self.min = min
     self.max = max
     self.escape_html = escape_html
+    self.require_link_target = require_link_target
     self.message = None
 
   def __call__( self, value ):
@@ -100,7 +101,7 @@ class Valid_string( object ):
     if self.escape_html:
       value = escape( value, quote = True )
     else:
-      cleaner = Html_cleaner()
+      cleaner = Html_cleaner( self.require_link_target )
       value = cleaner.strip( value )
 
     # check for max length after cleaning html, as cleaning can reduce the html's size

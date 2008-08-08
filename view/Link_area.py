@@ -81,6 +81,17 @@ class Link_area( Div ):
               class_ = u"link_area_item",
             ),
 
+            ( notebook.name != u"Luminotes" ) and Div(
+              A(
+                u"import",
+                href = u"#",
+                id = u"import_link",
+                title = u"Import notes from other software into Luminotes.",
+              ),
+              Span( "beta", class_ = "new_feature_text" ),
+              class_ = u"link_area_item",
+            ) or None,
+
             ( notebook.owner and notebook.name != u"trash" ) and Div(
               A(
                 u"rename",

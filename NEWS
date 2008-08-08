@@ -1,4 +1,5 @@
 1.4.23:
+ * New notebook import feature for importing notes from a CSV file. (Beta.)
  * Enforcing maximum note length after stripping the note of any disallowed
    HTML tags instead of before. This makes Luminotes work better when cutting
    and pasting lots of text from MS Word.

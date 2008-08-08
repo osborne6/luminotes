@@ -347,6 +347,14 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     } );
   }
 
+  var import_link = getElement( "import_link" );
+  if ( import_link ) {
+    connect( import_link, "onclick", function ( event ) {
+      self.import_clicked();
+      event.stop();
+    } );
+  }
+
   var rename_notebook_link = getElement( "rename_notebook_link" );
   if ( rename_notebook_link ) {
     connect( rename_notebook_link, "onclick", function ( event ) {
@@ -1819,7 +1827,7 @@ Wiki.prototype.share_notebook = function () {
   if ( this.rate_plan.notebook_collaboration ) {
     var access_area = createDOM( "p", { "id": "access_choices" },
       createDOM( "p", {}, "Invite these people as:" ),
-      createDOM( "table" , { "id": "access_table" },
+      createDOM( "table" , { "id": "access_table", "class": "radio_table" },
         createDOM( "tr", {},
           createDOM( "td", {}, collaborators_radio, collaborators_label ),
           createDOM( "td", {}, viewers_radio, viewers_label ),
@@ -2138,6 +2146,111 @@ Wiki.prototype.display_group_settings = function ( result ) {
     appendChildNodes( user_list, createDOM( "div", { "class": "indented" }, "This group has no members." ) );
 
   this.create_editor( "group_" + result.group.object_id, "<h3>group admin settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "note_settings" ) );
+}
+
+Wiki.prototype.display_import_notebook = function ( result ) {
+  this.clear_messages();
+  this.clear_pulldowns();
+
+  var import_frame = getElement( "note_import" );
+  if ( import_frame )
+    import_frame.editor.shutdown();
+
+  var form = createDOM( "form", { "id": "import_notebook_form", "target": "/notebooks/import_csv" },
+    createDOM( "input",
+      { "type": "hidden", "name": "file_id", "value": result.file_id }
+    )
+  );
+
+  appendChildNodes( form, createDOM( "p", {}, "Here are the first few lines of the file:" ) );
+
+  var tbody = createDOM( "tbody", {} );
+  var table = createDOM( "table" , { "id": "import_notebook_table" }, tbody );
+
+  appendChildNodes( form, table );
+
+  for ( var i in result.rows ) {
+    var row = result.rows[ i ];
+    var row_node = createDOM( "tr", {} );
+
+    for ( var j in row ) {
+      var element = row[ j ];
+      appendChildNodes( row_node, createDOM( "td", {}, element ) );
+    }
+
+    appendChildNodes( tbody, row_node );
+  }
+
+  var contents_select = createDOM( "select", { "name": "content_column" } );
+  var column_number = 1;
+
+  for ( i in result.rows[ 0 ] ) {
+    var element = result.rows[ 0 ][ i ];
+    appendChildNodes( contents_select, createDOM( "option", { "value": i }, "column " + column_number + " - " + element ) );
+    column_number += 1;
+  }
+
+  appendChildNodes( form, createDOM( "p", { "target": "/notebooks/import" },
+    createDOM( "b", {}, "Which column contains the note contents text?" ),
+    createDOM( "br", {} ),
+    contents_select
+  ) );
+
+  var titles_select = createDOM( "select", { "name": "title_column" } );
+  column_number = 1;
+
+  appendChildNodes( titles_select, createDOM( "option", { "value": "None" }, "There isn't a title column." ) );
+  for ( i in result.rows[ 0 ] ) {
+    var element = result.rows[ 0 ][ i ];
+    appendChildNodes( titles_select, createDOM( "option", { "value": i }, "column " + column_number + " - " + element ) );
+    column_number += 1;
+  }
+
+  appendChildNodes( form, createDOM( "p", {},
+    createDOM( "b", {}, "Which column contains the note titles (if any)?" ),
+    createDOM( "br", {} ),
+    titles_select
+  ) );
+
+  var plaintext_label = createDOM( "label",
+    { "for": "plaintext_radio", "class": "radio_label", "title": "The note contents are just plain text." },
+    "plain text"
+  );
+  var html_label = createDOM( "label",
+    { "for": "html_radio", "class": "radio_label", "title": "The note contents are formatted as HTML." },
+    "HTML"
+  );
+
+  var plaintext_radio = createDOM( "input",
+    { "type": "radio", "id": "plaintext_radio", "name": "plaintext", "value": "True", "checked": "true" }
+  );
+  var html_radio = createDOM( "input",
+    { "type": "radio", "id": "html_radio", "name": "plaintext", "value": "False" }
+  );
+
+  appendChildNodes( form, createDOM( "p", {},
+    createDOM( "b", {}, "Should the note contents be treated as plain text or HTML?" ),
+    createDOM( "br", {} ),
+    createDOM( "table" , { "id": "plaintext_table", "class": "radio_table" },
+      createDOM( "tr", {},
+        createDOM( "td", {}, plaintext_radio, plaintext_label ),
+        createDOM( "td", {}, html_radio, html_label )
+      )
+    )
+  ) );
+
+  appendChildNodes( form, createDOM( "p", {},
+    createDOM( "input",
+      { "type": "submit", "name": "import_button", "id": "import_button", "class": "button", "value": "import notebook" }
+    )
+  ) );
+
+  var div = createDOM( "div", {},
+    createDOM( "p", {}, "Almost done. I just need a little information about your file before I can complete the import and create a new notebook." ),
+    form
+  );
+  
+  this.create_editor( "import", "<h3>import a notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, undefined );
 }
 
 Wiki.prototype.declutter_clicked = function () {
@@ -2472,6 +2585,18 @@ Wiki.prototype.zero_total_notes_count = function () {
   this.total_notes_count = 0;
   replaceChildNodes( "total_notes_count", this.total_notes_count );
   signal( this, "total_notes_count_updated", this.total_notes_count );
+}
+
+Wiki.prototype.import_clicked = function () {
+  var pulldown_id = "import_pulldown";
+  var existing_div = getElement( pulldown_id );
+  if ( existing_div ) {
+    existing_div.pulldown.shutdown();
+    existing_div.pulldown = null;
+    return;
+  }
+
+  new Import_pulldown( this, this.notebook_id, this.invoker, getElement( "import_link" ) );
 }
 
 Wiki.prototype.start_notebook_rename = function () {
@@ -3074,6 +3199,19 @@ Link_pulldown.prototype.shutdown = function () {
     this.link.pulldown = null;
 }
 
+
+function base_upload_filename() {
+  // get the basename of the file
+  var filename = getElement( "upload" ).value;
+  var pieces = filename.split( "/" );
+  filename = pieces[ pieces.length - 1 ];
+  pieces = filename.split( "\\" );
+  filename = pieces[ pieces.length - 1 ];
+
+  return filename;
+}
+
+
 function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   this.link = link || editor.find_link_at_cursor();
   this.link.pulldown = this;
@@ -3133,21 +3271,10 @@ Upload_pulldown.prototype.init_frame = function () {
   } );
 }
 
-Upload_pulldown.prototype.base_filename = function () {
-  // get the basename of the file
-  var filename = getElement( "upload" ).value;
-  var pieces = filename.split( "/" );
-  filename = pieces[ pieces.length - 1 ];
-  pieces = filename.split( "\\" );
-  filename = pieces[ pieces.length - 1 ];
-
-  return filename;
-}
-
 Upload_pulldown.prototype.upload_started = function ( file_id ) {
   this.file_id = file_id;
   this.uploading = true;
-  var filename = this.base_filename();
+  var filename = base_upload_filename();
 
   // make the upload iframe invisible but still present so that the upload continues
   setElementDimensions( this.iframe, { "h": "0" } );
@@ -3219,6 +3346,130 @@ Upload_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
     this.link.pulldown = null;
+}
+
+
+function Import_pulldown( wiki, notebook_id, invoker, anchor ) {
+  anchor.pulldown = this;
+
+  Pulldown.call( this, wiki, notebook_id, "import_pulldown", anchor, null, false );
+
+  this.invoker = invoker;
+  this.iframe = createDOM( "iframe", {
+    "src": "/files/import_page?notebook_id=" + notebook_id,
+    "frameBorder": "0",
+    "scrolling": "no",
+    "id": "upload_frame",
+    "name": "upload_frame",
+    "class": "upload_frame"
+  } );
+  this.iframe.pulldown = this;
+  this.file_id = null;
+  this.uploading = false;
+
+  var self = this;
+  connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
+
+  appendChildNodes( this.div, this.iframe );
+
+  this.progress_iframe = createDOM( "iframe", {
+    "frameBorder": "0",
+    "scrolling": "no",
+    "id": "progress_frame",
+    "name": "progress_frame",
+    "class": "upload_frame"
+  } );
+  addElementClass( this.progress_iframe, "undisplayed" );
+
+  appendChildNodes( this.div, this.progress_iframe );
+  Pulldown.prototype.finish_init.call( this );
+}
+
+Import_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Import_pulldown.prototype.constructor = Import_pulldown;
+
+Import_pulldown.prototype.init_frame = function () {
+  var self = this;
+  var doc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+
+  withDocument( doc, function () {
+    connect( "upload_button", "onclick", function ( event ) {
+      withDocument( doc, function () {
+        self.upload_started( getElement( "file_id" ).value );
+      } );
+    } );
+  } );
+}
+
+Import_pulldown.prototype.upload_started = function ( file_id ) {
+  this.file_id = file_id;
+  this.uploading = true;
+  var filename = base_upload_filename();
+
+  // make the upload iframe invisible but still present so that the upload continues
+  setElementDimensions( this.iframe, { "h": "0" } );
+
+  removeElementClass( this.progress_iframe, "undisplayed" );
+  var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
+
+  if ( frames[ "progress_frames" ] )
+    frames[ "progress_frame" ].location.href = progress_url;
+  else
+    this.progress_iframe.src = progress_url;
+}
+
+Import_pulldown.prototype.upload_complete = function () {
+  this.uploading = false;
+  var wiki = this.wiki;
+
+  this.invoker.invoke(
+    "/files/csv_head", "GET", {
+      "file_id": this.file_id
+    },
+    function ( result ) { wiki.display_import_notebook( result ); }
+  );
+  this.shutdown();
+}
+
+Import_pulldown.prototype.update_position = function ( always_left_align ) {
+  Pulldown.prototype.update_position.call( this, always_left_align );
+}
+
+Import_pulldown.prototype.cancel_due_to_click = function () {
+  this.uploading = false;
+  this.wiki.display_message( "The file import has been cancelled." )
+  this.shutdown();
+}
+
+Import_pulldown.prototype.cancel_due_to_quota = function () {
+  this.uploading = false;
+  this.shutdown();
+
+  this.wiki.display_error(
+    "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
+    [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
+  );
+}
+
+Import_pulldown.prototype.cancel_due_to_error = function ( message ) {
+  this.uploading = false;
+  this.wiki.display_error( message )
+  this.shutdown();
+}
+
+Import_pulldown.prototype.shutdown = function () {
+  if ( this.uploading )
+    return;
+
+  // in Internet Explorer, the upload won't actually cancel without an explicit Stop command
+  if ( !this.iframe.contentDocument && this.iframe.contentWindow ) {
+    this.iframe.contentWindow.document.execCommand( 'Stop' );
+    this.progress_iframe.contentWindow.document.execCommand( 'Stop' );
+  }
+
+  Pulldown.prototype.shutdown.call( this );
+  if ( this.anchor )
+    this.anchor.pulldown = null;
 }
 
 
@@ -3712,6 +3963,7 @@ Suggest_pulldown.prototype.shutdown = function () {
   disconnectAll( this );
   disconnect( this.key_handler );
 }
+
 
 
 function Note_tree( wiki, notebook_id, invoker ) {

@@ -4266,6 +4266,9 @@ class Test_notebooks( Test_controller ):
 
     assert u"access" in result[ "error" ]
 
+  def test_import( self ):
+    raise NotImplementedError()
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,

@@ -17,7 +17,7 @@ class Html_cleaner(HTMLParser):
   """
   Cleans HTML of any tags not matching a whitelist.
   """
-  def __init__( self ):
+  def __init__( self, require_link_target = False ):
     HTMLParser.__init__( self, AbstractFormatter( NullWriter() ) )
     self.result = []
     self.open_tags = []
@@ -154,6 +154,9 @@ class Html_cleaner(HTMLParser):
     # Adding "javascript" or "vbscript" to this list would not be smart.
     self.allowed_schemes = ['http','https','ftp', 'irc', '']
 
+    # Boolean indicating whether links need to have a target attribute.
+    self.require_link_target = require_link_target
+
   def handle_data(self, data):
     if data:
       self.result.append( xssescape(data) )
@@ -191,6 +194,8 @@ class Html_cleaner(HTMLParser):
           else:
             bt += ' %s=%s' % \
                (xssescape(attribute), quoteattr(attrs[attribute]))
+        if self.require_link_target and tag == "a" and not attrs.get( 'target' ):
+          bt += ' target="_new"'
       if bt == "<a" or bt == "<img":
         return
       if tag in self.requires_no_close:
