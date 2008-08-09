@@ -2199,7 +2199,7 @@ Wiki.prototype.display_import_notebook = function ( result ) {
   var titles_select = createDOM( "select", { "name": "title_column" } );
   column_number = 1;
 
-  appendChildNodes( titles_select, createDOM( "option", { "value": "None" }, "There isn't a title column." ) );
+  appendChildNodes( titles_select, createDOM( "option", { "value": "None" }, "There is no title column." ) );
   for ( i in result.rows[ 0 ] ) {
     var element = result.rows[ 0 ][ i ];
     appendChildNodes( titles_select, createDOM( "option", { "value": i }, "column " + column_number + " - " + element ) );
