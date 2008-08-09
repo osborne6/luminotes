@@ -1602,11 +1602,12 @@ class Test_files( Test_controller ):
   def test_parse_csv( self ):
     self.login()
 
-    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
     expected_rows = [
       [ "label 1", "label 2", "label 3" ],
       [ "5", "blah and stuff", "3.3" ],
       [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
     ]
 
     result = self.http_upload(
@@ -1694,11 +1695,12 @@ class Test_files( Test_controller ):
   def test_parse_csv_embedded_quotes( self ):
     self.login()
 
-    csv_data = '"label 1","label 2","label 3"\n5,"blah ""and"" stuff",3.3\n"8","whee","hmm\nfoo"'
+    csv_data = '"label 1","label 2","label 3"\n5,"blah ""and"" stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
     expected_rows = [
       [ "label 1", "label 2", "label 3" ],
       [ "5", 'blah "and" stuff', "3.3" ],
       [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
     ]
 
     result = self.http_upload(
@@ -1724,7 +1726,7 @@ class Test_files( Test_controller ):
   def test_parse_csv_different_row_element_counts( self ):
     self.login()
 
-    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff"\n"8","whee","hmm\nfoo",4.4'
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff"\n"8","whee","hmm\nfoo",4.4\n3,4,5'
 
     result = self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
@@ -1746,11 +1748,12 @@ class Test_files( Test_controller ):
   def test_parse_csv_empty_rows( self ):
     self.login()
 
-    csv_data = '"label 1","label 2","label 3"\n\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n\n'
+    csv_data = '"label 1","label 2","label 3"\n\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n\n3,4,5'
     expected_rows = [
       [ "label 1", "label 2", "label 3" ],
       [ "5", "blah and stuff", "3.3" ],
       [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
     ]
 
     result = self.http_upload(
@@ -1782,10 +1785,11 @@ class Test_files( Test_controller ):
   def test_parse_csv_without_header( self ):
     self.login()
 
-    csv_data = '5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    csv_data = '5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
     expected_rows = [
       [ "5", "blah and stuff", "3.3" ],
       [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
     ]
 
     result = self.http_upload(
@@ -1810,10 +1814,11 @@ class Test_files( Test_controller ):
   def test_parse_csv_skip_header( self ):
     self.login()
 
-    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
     expected_rows = [
       [ "5", "blah and stuff", "3.3" ],
       [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
     ]
 
     result = self.http_upload(
@@ -1838,10 +1843,11 @@ class Test_files( Test_controller ):
   def test_parse_csv_skip_header_without_header( self ):
     self.login()
 
-    csv_data = '5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"'
+    csv_data = '5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
     expected_rows = [
       [ "5", "blah and stuff", "3.3" ],
       [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
     ]
 
     result = self.http_upload(

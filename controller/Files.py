@@ -796,7 +796,7 @@ class Files( object ):
 
       # attempt to determine the presence of a header
       lines = table_file.readlines( APPROX_SNIFF_SAMPLE_SIZE_BYTES )
-      sniff_sample = "\n".join( lines )
+      sniff_sample = "".join( lines )
 
       has_header = sniffer.has_header( sniff_sample )
 
