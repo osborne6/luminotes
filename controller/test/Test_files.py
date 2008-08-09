@@ -1610,7 +1610,7 @@ class Test_files( Test_controller ):
       [ "3", "4", "5" ],
     ]
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1635,7 +1635,7 @@ class Test_files( Test_controller ):
 
     csv_data = ""
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1656,7 +1656,7 @@ class Test_files( Test_controller ):
 
     csv_data = '"See, Vera? Dress yourself up, you get taken out somewhere fun. -- Jayne'
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1677,7 +1677,7 @@ class Test_files( Test_controller ):
 
     csv_data = self.file_data + "\x00"
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1703,7 +1703,7 @@ class Test_files( Test_controller ):
       [ "3", "4", "5" ],
     ]
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1728,7 +1728,7 @@ class Test_files( Test_controller ):
 
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff"\n"8","whee","hmm\nfoo",4.4\n3,4,5'
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1756,7 +1756,7 @@ class Test_files( Test_controller ):
       [ "3", "4", "5" ],
     ]
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1792,7 +1792,7 @@ class Test_files( Test_controller ):
       [ "3", "4", "5" ],
     ]
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1821,7 +1821,7 @@ class Test_files( Test_controller ):
       [ "3", "4", "5" ],
     ]
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1850,7 +1850,7 @@ class Test_files( Test_controller ):
       [ "3", "4", "5" ],
     ]
 
-    result = self.http_upload(
+    self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -1870,7 +1870,203 @@ class Test_files( Test_controller ):
     assert index == len( expected_rows ) - 1
 
   def test_csv_head( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/csv_head?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+
+    for ( index, row ) in enumerate( result[ u"rows" ] ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  def test_csv_head_without_login( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    path = "/files/csv_head?file_id=%s" % self.file_id
+    result = self.http_get( path )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_csv_head_without_access( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.login2()
+
+    result = self.http_get(
+      "/files/csv_head?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
+
+  def test_csv_head_unknown_file_id( self ):
+    self.login()
+
+    result = self.http_get(
+      "/files/csv_head?file_id=unknownfileid",
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
+
+  def test_csv_head_few_rows( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", "blah and stuff", "3.3" ],
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/csv_head?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+
+    for ( index, row ) in enumerate( result[ u"rows" ] ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  def test_csv_head_large_elements( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"Yes. Yes, this is a fertile land, and we will thrive. We will rule over all this land, and we will call it... This Land.",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", "Yes. Yes, this is a fertile la ...", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/csv_head?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+
+    for ( index, row ) in enumerate( result[ u"rows" ] ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
+
+  def test_csv_head_many_elements_per_row( self ):
+    self.login()
+
+    row0 = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22'
+    row1 = 'a,b,c,d,e,f,g,h,i,i,j,k,l,m,n,o,p,q,r,s,t,u'
+    csv_data = '%s\n%s\n' % ( row0, row1 )
+
+    expected_rows = [
+      row0.split( ',' )[ : 20 ],
+      row1.split( ',' )[ : 20 ],
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/csv_head?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+
+    for ( index, row ) in enumerate( result[ u"rows" ] ):
+      assert row == expected_rows[ index ]
+
+    assert index == len( expected_rows ) - 1
 
   def test_purge_unused( self ):
     self.login()

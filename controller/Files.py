@@ -852,7 +852,7 @@ class Files( object ):
     """
     MAX_ROW_COUNT = 4
     MAX_ELEMENT_LENGTH = 30
-    MAX_ROW_ELEMENT_COUNT = 50
+    MAX_ROW_ELEMENT_COUNT = 20
 
     db_file = self.__database.load( File, file_id )
 
