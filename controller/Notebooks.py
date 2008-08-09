@@ -1648,6 +1648,9 @@ class Notebooks( object ):
 
     return result
 
+  WHITESPACE_PATTERN = re.compile( "\s+" )
+  NEWLINE_PATTERN = re.compile( "\r?\n" )
+
   @expose( view = Json )
   @strongly_expire
   @end_transaction
@@ -1689,9 +1692,7 @@ class Notebooks( object ):
     @raise Files.Parse_error: there was an error in parsing the given file
     @raise Import_error: there was an error in importing the notes from the file
     """
-    TRUNCATED_TITLE_WORD_COUNT = 5
-    TRUNCATED_TITLE_CHAR_LENGTH = 60
-    WHITESPACE_PATTERN = re.compile( "\s+" )
+    TRUNCATED_TITLE_CHAR_LENGTH = 80
 
     if user_id is None:
       raise Access_error()
@@ -1717,16 +1718,28 @@ class Notebooks( object ):
       if title_column is not None and title_column >= row_length:
         raise Import_error()
 
-      # if there's no title column, then just use the first several words of the content column
-      if title_column is None or title_column == content_column or len( row[ title_column ].strip() ) == 0:
-        title = row[ content_column ].strip()
-        title_words = WHITESPACE_PATTERN.split( title )[ : TRUNCATED_TITLE_WORD_COUNT ]
-        title = u" ".join( title_words )[ : TRUNCATED_TITLE_CHAR_LENGTH ]
+      # if there is a title column, use it. otherwise, use the first line of the content column as
+      # the title
+      if title_column and title_column != content_column and len( row[ title_column ].strip() ) > 0:
+        title = Html_nuker().nuke( row[ title_column ].strip() )
       else:
-        title = row[ title_column ].strip()[ : TRUNCATED_TITLE_CHAR_LENGTH ]
+        title = Html_nuker().nuke( row[ content_column ].strip() )
+        title = [ line for line in self.NEWLINE_PATTERN.split( title ) if line.strip() ][ 0 ]
+
+        # truncate the makeshift title to a reasonable length, but truncate on a word boundary
+        if len( title ) > TRUNCATED_TITLE_CHAR_LENGTH:
+          title_words = self.WHITESPACE_PATTERN.split( title )
+
+          for i in range( 1, len( title_words ) ):
+            title_candidate = u" ".join( title_words[ : i ] )
+
+            if len( title_candidate ) <= TRUNCATED_TITLE_CHAR_LENGTH:
+              title = title_candidate
+            else:
+              break
 
       contents = u"<h3>%s</h3>%s" % (
-        Html_nuker().nuke( title ),
+        title,
         Valid_string( max = 25000, escape_html = plaintext, require_link_target = True )( row[ content_column ] ),
       )
 
