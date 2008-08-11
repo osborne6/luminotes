@@ -1,13 +1,16 @@
 import cherrypy
 import urllib
 from nose.tools import raises
+from StringIO import StringIO
 from urllib import quote
 from Test_controller import Test_controller
 from model.Notebook import Notebook
 from model.Note import Note
 from model.User import User
 from model.Invite import Invite
+from model.File import File
 from controller.Notebooks import Access_error
+from controller.Files import Upload_file
 
 
 class Test_notebooks( Test_controller ):
@@ -29,6 +32,53 @@ class Test_notebooks( Test_controller ):
     self.invite = None
     self.anonymous = None
     self.session_id = None
+    self.file_id = "22"
+    self.filename = "file.csv"
+    self.content_type = "text/csv"
+
+    # make Upload_file deal in fake files rather than actually using the filesystem
+    Upload_file.fake_files = {} # map of file_id to fake file object
+
+    @staticmethod
+    def open_file( file_id, mode = None ):
+      fake_file = Upload_file.fake_files.get( file_id )
+
+      if fake_file:
+        return fake_file
+
+      fake_file = StringIO()
+      Upload_file.fake_files[ file_id ] = fake_file
+      return fake_file
+
+    @staticmethod
+    def open_image( file_id ):
+      fake_file = Upload_file.fake_files.get( file_id )
+
+      return Image.open( fake_file )
+
+    @staticmethod
+    def delete_file( file_id ):
+      fake_file = Upload_file.fake_files.get( file_id )
+
+      if fake_file is None:
+        raise IOError()
+
+      del( Upload_file.fake_files[ file_id ] )
+
+    @staticmethod
+    def exists( file_id ):
+      fake_file = Upload_file.fake_files.get( file_id )
+
+      return fake_file is not None
+
+    def close( self ):
+      self.complete()
+
+    Upload_file.open_file = open_file
+    Upload_file.open_image = open_image
+    Upload_file.delete_file = delete_file
+    Upload_file.exists = exists
+    Upload_file.close = close
 
     self.make_users()
     self.make_notebooks()
@@ -4266,7 +4316,131 @@ class Test_notebooks( Test_controller ):
 
     assert u"access" in result[ "error" ]
 
-  def test_import( self ):
+  def test_import_csv( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
+    expected_notes = [
+      ( "blah and stuff", "3.3" ), # ( title, contents )
+      ( "whee", "hmm\nfoo" ),
+      ( "4", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    assert result[ u"redirect" ].startswith( u"/notebooks/" )
+
+    # make sure that a notebook has been created with the imported notes
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
+    notebook = self.database.load( Notebook, new_notebook_id )
+
+    assert notebook.name == u"imported notebook"
+    assert notebook.trash_id
+    assert notebook.read_write is True
+    assert notebook.owner is True
+    assert notebook.deleted is False
+    assert notebook.user_id == self.user.object_id
+    assert notebook.rank is None
+
+    result = self.http_get(
+      "/notebooks/%s" % notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    recent_notes = result.get( "recent_notes" )
+    assert recent_notes
+    assert len( recent_notes ) == len( expected_notes )
+
+    # reverse the recent notes because they're in reverse chronological order
+    recent_notes.reverse()
+
+    for ( note, ( title, contents ) ) in zip( recent_notes, expected_notes ):
+      assert note.title == title
+      contents = u"<h3>%s</h3>%s" % ( title, contents.replace( u"\n", u"<br />" ) )
+      assert note.contents == contents
+
+    # make sure the CSV data file has been deleted from the database and filesystem
+    db_file = self.database.load( File, self.file_id )
+    assert db_file is None
+    assert not Upload_file.exists( self.file_id )
+
+    orig_storage_bytes = self.user.storage_bytes
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > orig_storage_bytes
+
+  def test_import_csv_unknown_file_id( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_content_column_too_high( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_title_column_too_high( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_same_title_and_content_columns( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_html_title( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_no_title_column( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_no_title_column_and_html_first_line( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_no_title_column_and_long_first_line( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_no_title_column_and_long_first_line_without_spaces( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_no_title_column_and_blank_first_line( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_plaintext_content_with_newline( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_plaintext_content_with_html( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_long_content( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_html_content( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_html_content_with_link( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_html_content_with_link_and_target( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_without_login( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_without_access( self ):
+    raise NotImplementedError()
+
+  def test_import_csv_invalid( self ):
     raise NotImplementedError()
 
   def login( self ):

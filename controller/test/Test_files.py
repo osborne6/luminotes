@@ -15,7 +15,6 @@ from model.User import User
 from model.Invite import Invite
 from model.File import File
 from controller.Notebooks import Access_error
-import controller.Files
 from controller.Files import Upload_file, Parse_error
 
 

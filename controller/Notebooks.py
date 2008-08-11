@@ -190,6 +190,7 @@ class Notebooks( object ):
       'startup_notes': notelist,
       'total_notes_count': notecount,
       'notes': notelist,
+      'invites': invitelist
     }
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
@@ -1702,7 +1703,7 @@ class Notebooks( object ):
       raise Access_error()
 
     db_file = self.__database.load( File, file_id )
-    if not self.__users.check_access( user_id, db_file.notebook_id ):
+    if db_file is None or not self.__users.check_access( user_id, db_file.notebook_id ):
       raise Access_error()
 
     parser = self.__files.parse_csv( file_id, skip_header = True )
