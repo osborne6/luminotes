@@ -1,4 +1,4 @@
-1.4.23:
+1.4.23: August 11, 2008:
  * New notebook import feature for importing notes from a CSV file. (Beta.)
  * Enforcing maximum note length after stripping the note of any disallowed
    HTML tags instead of before. This makes Luminotes work better when cutting
