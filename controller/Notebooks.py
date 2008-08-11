@@ -1722,10 +1722,16 @@ class Notebooks( object ):
       # if there is a title column, use it. otherwise, use the first line of the content column as
       # the title
       if title_column and title_column != content_column and len( row[ title_column ].strip() ) > 0:
-        title = Html_nuker( allow_refs = True ).nuke( Valid_string( escape_html = True )( row[ title_column ].strip() ) )
+        title = Html_nuker( allow_refs = True ).nuke( Valid_string( escape_html = plaintext )( row[ title_column ].strip() ) )
       else:
-        title = Html_nuker( allow_refs = True ).nuke( Valid_string( escape_html = True )( row[ content_column ].strip() ) )
-        title = [ line for line in self.NEWLINE_PATTERN.split( title ) if line.strip() ][ 0 ]
+        content_text = Html_nuker( allow_refs = True ).nuke( Valid_string( escape_html = plaintext )( row[ content_column ].strip() ) )
+        content_lines = [ line for line in self.NEWLINE_PATTERN.split( content_text ) if line.strip() ]
+
+        # skip notes with empty contents
+        if len( content_lines ) == 0:
+          continue
+
+        title = content_lines[ 0 ]
 
         # truncate the makeshift title to a reasonable length, but truncate on a word boundary
         if len( title ) > TRUNCATED_TITLE_CHAR_LENGTH:
