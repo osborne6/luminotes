@@ -4346,6 +4346,9 @@ class Test_notebooks( Test_controller ):
       import_button = u"import",
     ), session_id = self.session_id )
 
+    self.__assert_imported_notebook( expected_notes, result )
+
+  def __assert_imported_notebook( self, expected_notes, result ):
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
     # make sure that a notebook has been created with the imported notes
@@ -4387,25 +4390,199 @@ class Test_notebooks( Test_controller ):
     assert user.storage_bytes > orig_storage_bytes
 
   def test_import_csv_unknown_file_id( self ):
-    raise NotImplementedError()
+    self.login()
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = u"unknownfileid",
+      content_column = 2,
+      title_column = 1,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
 
   def test_import_csv_content_column_too_high( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 5,
+      title_column = 1,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    assert u"import" in result[ u"error" ]
 
   def test_import_csv_title_column_too_high( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 5,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    assert u"import" in result[ u"error" ]
 
   def test_import_csv_same_title_and_content_columns( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
+    expected_notes = [
+      ( "3.3", "3.3" ), # ( title, contents )
+      ( "hmm", "hmm\nfoo" ),
+      ( "5", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 2,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result )
 
   def test_import_csv_html_title( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah <i>and</i>&nbsp; stuff<br />",3.3\n"8","whee<p>","hmm\nfoo"\n3,4,5'
+    expected_notes = [
+      ( "blah &lt;i&gt;and&lt;/i&gt;&amp;nbsp; stuff&lt;br /&gt;", "3.3" ), # ( title, contents )
+      ( "whee&lt;p&gt;", "hmm\nfoo" ),
+      ( "4", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result )
 
   def test_import_csv_no_title_column( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
+    expected_notes = [
+      ( "3.3", "3.3" ), # ( title, contents )
+      ( "hmm", "hmm\nfoo" ),
+      ( "5", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = None,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result )
 
   def test_import_csv_no_title_column_and_html_first_line( self ):
-    raise NotImplementedError()
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","3 < 4<img>"\n"8","whee","<b>hmm</b>\nfoo"\n3,4,5'
+    expected_notes = [
+      ( "3 &lt; 4&lt;img&gt;", "3 &lt; 4&lt;img&gt;" ), # ( title, contents )
+      ( "&lt;b&gt;hmm&lt;/b&gt;", "&lt;b&gt;hmm&lt;/b&gt;\nfoo" ),
+      ( "5", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = None,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result )
 
   def test_import_csv_no_title_column_and_long_first_line( self ):
     raise NotImplementedError()
