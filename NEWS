@@ -1,3 +1,7 @@
+1.4.24:
+ * Added a light gray line under note title text to make it clearer that it's
+   a title as opposed to just bold text.
+
 1.4.23: August 11, 2008:
  * New notebook import feature for importing notes from a CSV file. (Beta.)
  * Enforcing maximum note length after stripping the note of any disallowed
