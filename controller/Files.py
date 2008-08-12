@@ -8,6 +8,7 @@ import cherrypy
 from PIL import Image
 from cStringIO import StringIO
 from threading import Lock, Event
+from chardet.universaldetector import UniversalDetector
 from Expose import expose
 from Validate import validate, Valid_int, Valid_bool, Validation_error
 from Database import Valid_id, end_transaction
@@ -786,7 +787,7 @@ class Files( object ):
     @return: rows of data from the parsed file. each row is a list of elements
     @raise Parse_error: there was an error in parsing the given file
     """
-    APPROX_SNIFF_SAMPLE_SIZE_BYTES = 1024 * 1024
+    APPROX_SNIFF_SAMPLE_SIZE_BYTES = 1024 * 50
 
     try:
       import csv
@@ -799,6 +800,15 @@ class Files( object ):
       sniff_sample = "".join( lines )
 
       has_header = sniffer.has_header( sniff_sample )
+
+      # attempt to determine the file's character encoding
+      detector = UniversalDetector()
+      for line in lines:
+        detector.feed( line )
+        if detector.done: break
+
+      detector.close()
+      encoding = detector.result.get( "encoding" )
 
       table_file.seek( 0 )
       reader = csv.reader( table_file )
@@ -820,7 +830,7 @@ class Files( object ):
         else:
           expected_row_length = current_row_length
 
-        yield row
+        yield [ element.decode( encoding ) for element in row ]
     except ( csv.Error, IOError, TypeError ):
       raise Parse_error()
 

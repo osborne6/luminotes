@@ -1,3 +1,9 @@
+1.4.25: August 11, 2008:
+ * Fixed a bug in which the character encoding of uploaded CSV files was not
+   properly detected and used to decode the file. Note that this fix
+   introduces a new dependency: http://chardet.feedparser.org/ found in the
+   python-chardet package.
+
 1.4.24: August 11, 2008:
  * Added a light gray line under note title text to make it clearer that it's
    a title as opposed to just bold text.

@@ -2247,7 +2247,8 @@ Wiki.prototype.display_import_notebook = function ( result ) {
 
   var div = createDOM( "div", {},
     createDOM( "p", {}, "Almost done. I just need a little information about your file before I can complete the import and create a new notebook." ),
-    form
+    form,
+    createDOM( "p", {}, "Once you begin the import, it may take several seconds to complete." )
   );
   
   this.create_editor( "import", "<h3>import a notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, undefined );

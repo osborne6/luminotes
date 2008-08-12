@@ -11,13 +11,14 @@ First, install the prerequisites:
  * simplejson 1.3
  * pytz 2006p
  * Python Imaging Library 1.1
+ * Python Universal Encoding Detector 1.0
 
 In Debian GNU/Linux, you can issue the following command to install these
 packages:
 
   apt-get install python2.4 python-cherrypy postgresql-8.1 \
           postgresql-contrib-8.1 python-psycopg2 python-simplejson \
-          python-tz python-imaging
+          python-tz python-imaging python-chardet
 
 
 database setup
