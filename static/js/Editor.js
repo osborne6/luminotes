@@ -191,8 +191,10 @@ Editor.prototype.finish_init = function () {
   }
 
   // browsers such as Firefox, but not Opera
-  if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.edit_enabled )
+  if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.edit_enabled ) {
     this.exec_command( "styleWithCSS", false );
+    this.exec_command( "insertbronreturn", true );
+  }
 
   this.resize();
   if ( this.init_highlight ) self.highlight();
@@ -245,7 +247,7 @@ Editor.prototype.exec_command = function ( command, parameter ) {
 
   if ( command == "h3" ) {
     if ( this.state_enabled( "h3" ) )
-      this.document.execCommand( "formatblock", false, "normal" );
+      this.document.execCommand( "formatblock", false, "<p>" );
     else
       this.document.execCommand( "formatblock", false, "<h3>" );
     return;

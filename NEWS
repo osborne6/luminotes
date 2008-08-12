@@ -1,6 +1,10 @@
-1.4.24:
+1.4.24: August 11, 2008:
  * Added a light gray line under note title text to make it clearer that it's
    a title as opposed to just bold text.
+ * Fixed a bug in Firefox 3 in which disabling title text did not work.
+ * Fixed a bug in Firefox 2 and 3 in which pasting a paragraph tag into a
+   note caused the enter key to change from inserting a line break tag to
+   inserting a paragraph tag.
 
 1.4.23: August 11, 2008:
  * New notebook import feature for importing notes from a CSV file. (Beta.)
