@@ -2478,6 +2478,9 @@ Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
   for ( var i in results ) {
     var result = results[ i ];
 
+    if ( !result.pulldown )
+      continue;
+
     // only close the pulldown if it's been open at least a quarter second
     if ( new Date() - result.pulldown.init_time < 250 )
       continue
