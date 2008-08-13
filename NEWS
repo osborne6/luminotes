@@ -1,3 +1,7 @@
+1.4.26:
+ * Fixed a rare bug in which undeleting a note via "undo" sometimes does not
+   show the undeleted note even if the undelete is successful.
+
 1.4.25: August 11, 2008:
  * Fixed a bug in which the character encoding of uploaded CSV files was not
    properly detected and used to decode the file. Note that this fix

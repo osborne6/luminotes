@@ -96,7 +96,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     this.hide_button ? this.hide_button : null
   );
 
-  if ( position_after ) {
+  if ( position_after && position_after.parentNode ) {
     insertSiblingNodesAfter( position_after, this.note_controls );
     insertSiblingNodesAfter( this.note_controls, this.iframe );
   } else {
