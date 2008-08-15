@@ -419,6 +419,11 @@ class Test_root( Test_controller ):
 
     assert result.get( "next_id" )
 
+  def test_ping( self ):
+    result = self.http_get( "/ping" )
+
+    assert result.get( "response" ) == u"pong"
+
   def test_404( self ):
     result = self.http_get( "/four_oh_four" )
 

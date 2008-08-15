@@ -343,6 +343,12 @@ class Root( object ):
       next_id = next_id,
     )
 
+  @expose( view = Json )
+  def ping( self ):
+    return dict(
+      response = u"pong",
+    )
+
   def _cp_on_http_error( self, status, message ):
     """
     CherryPy HTTP error handler, used to display page not found and generic error pages.

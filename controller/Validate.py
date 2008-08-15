@@ -106,7 +106,7 @@ class Valid_string( object ):
 
     # check for max length after cleaning html, as cleaning can reduce the html's size
     if self.max is not None and len( value ) > self.max:
-      self.message = u"must be no longer than %s characters" % self.max
+      self.message = u"must be no longer than %s characters. Please try removing some of the text" % self.max
       raise ValueError()
 
     return value
