@@ -6,8 +6,9 @@ settings = {
   "global": {
     "server.thread_pool": 1,
     "static_filter.root": os.getcwd(),
-    "server.log_to_screen": False,
+    "server.log_to_screen": True,
     "luminotes.launch_browser": True,
+    "luminotes.db_host": None, # use local SQLite database
   },
   "/static": {
     "static_filter.on": True,

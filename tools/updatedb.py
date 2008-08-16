@@ -26,8 +26,9 @@ class Updater( object ):
     ( u"enable JavaScript.html", False ),
   ]
 
-  def __init__( self, database ):
+  def __init__( self, database, settings ):
     self.database = database
+    self.settings = settings
 
     self.update_main_notebook()
     self.database.commit()
@@ -57,7 +58,7 @@ class Updater( object ):
 
   def update_note( self, filename, startup, main_notebook, note_ids, note = None ):
     full_filename = os.path.join( self.HTML_PATH, filename )
-    contents = fix_note_contents( file( full_filename ).read(), main_notebook.object_id, note_ids )
+    contents = fix_note_contents( file( full_filename ).read(), main_notebook.object_id, note_ids, self.settings )
 
     if note:
       if note.contents == contents:
@@ -71,8 +72,27 @@ class Updater( object ):
     self.database.save( note, commit = False )
 
 def main( args ):
-  database = Database()
-  initializer = Updater( database )
+  import cherrypy
+  from config import Common
+
+  cherrypy.config.update( Common.settings )
+
+  if args and "-d" in args:
+    from config import Development
+    settings = Development.settings
+  if args and "-l" in args:
+    from config import Desktop
+    settings = Desktop.settings
+  else:
+    from config import Production
+    settings = Production.settings
+
+  cherrypy.config.update( settings )
+  database = Database(
+    host = settings[ u"global" ].get( u"luminotes.db_host" ),
+    ssl_mode = settings[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+  )
+  initializer = Updater( database, settings )
 
 
 if __name__ == "__main__":

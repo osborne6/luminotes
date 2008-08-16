@@ -17,10 +17,10 @@ SOCKET_TIMEOUT_SECONDS = 60
 def main( args ):
   cherrypy.config.update( Common.settings )
 
-  if len( args ) > 0 and args[ 0 ] == "-d":
+  if args and "-d" in args:
     from config import Development
     settings = Development.settings
-  elif len( args ) > 0 and args[ 0 ] == "-l":
+  if args and "-l" in args:
     from config import Desktop
     settings = Desktop.settings
   else:

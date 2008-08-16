@@ -2,8 +2,6 @@ import re
 import os
 import sha
 import cherrypy
-import psycopg2 as psycopg
-from psycopg2.pool import PersistentConnectionPool
 import random
 from model.Persistent import Persistent
 from model.Notebook import Notebook
@@ -33,6 +31,11 @@ class Database( object ):
     @param connection: database connection to use (optional, defaults to making a connection pool)
     @type cache: cmemcache.Client or something with a similar API, or NoneType
     @param cache: existing memory cache to use (optional, defaults to making a cache)
+    @type host: unicode or NoneType
+    @param host: hostname of PostgreSQL database, or None to use a local SQLite database
+    @type ssl_mode: unicode
+    @param ssl_mode: SSL mode for the database connection, one of "disallow", "allow", "prefer", or
+                     "require". ignored if host is None
     @rtype: Database
     @return: newly constructed Database
     """
@@ -40,29 +43,39 @@ class Database( object ):
     # makes SQLite angry.
     os.putenv( "PGTZ", "UTC" )
 
-    # forcibly replace psycopg's connect() function with another function that returns the psycopg
-    # connection wrapped in a class with a pending_saves member, used in save() and commit() below
-    original_connect = psycopg.connect
+    if host is None:
+      from pysqlite2 import dbapi2 as sqlite
 
-    def connect( *args, **kwargs ):
-      return Connection_wrapper( original_connect( *args, **kwargs ) )
-
-    psycopg.connect = connect
-
-    if connection:
-      self.__connection = connection
+      self.__connection = connection or \
+        Connection_wrapper( sqlite.connect( "luminotes.db", detect_types = 0 ) )
       self.__pool = None
     else:
-      self.__connection = None
-      self.__pool = PersistentConnectionPool(
-        1,  # minimum connections
-        50, # maximum connections
-        "host=%s sslmode=%s dbname=luminotes user=luminotes password=%s" % (
-          host or "localhost",
-          ssl_mode or "allow",
-          os.getenv( "PGPASSWORD", "dev" )
-        ),
-      )
+      import psycopg2 as psycopg
+      from psycopg2.pool import PersistentConnectionPool
+
+      # forcibly replace psycopg's connect() function with another function that returns the psycopg
+      # connection wrapped in a class with a pending_saves member, used in save() and commit() below
+      original_connect = psycopg.connect
+
+      def connect( *args, **kwargs ):
+        return Connection_wrapper( original_connect( *args, **kwargs ) )
+
+      psycopg.connect = connect
+
+      if connection:
+        self.__connection = connection
+        self.__pool = None
+      else:
+        self.__connection = None
+        self.__pool = PersistentConnectionPool(
+          1,  # minimum connections
+          50, # maximum connections
+          "host=%s sslmode=%s dbname=luminotes user=luminotes password=%s" % (
+            host or "localhost",
+            ssl_mode or "allow",
+            os.getenv( "PGPASSWORD", "dev" )
+          ),
+        )
 
     self.__cache = cache
 
@@ -262,6 +275,23 @@ class Database( object ):
     cursor = connection.cursor()
 
     cursor.execute( sql_command )
+
+    if commit:
+      connection.commit()
+
+  def execute_script( self, sql_commands, commit = True ):
+    """
+    Execute the given sql_commands.
+
+    @type sql_command: unicode
+    @param sql_command: multiple SQL commands to execute
+    @type commit: bool
+    @param commit: True to automatically commit after the command
+    """
+    connection = self.__get_connection()
+    cursor = connection.cursor()
+
+    cursor.executescript( sql_commands )
 
     if commit:
       connection.commit()

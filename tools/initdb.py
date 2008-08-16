@@ -25,15 +25,19 @@ class Initializer( object ):
     ( u"enable JavaScript.html", False ),
   ]
 
-  def __init__( self, database, nuke = False ):
+  def __init__( self, database, host, settings, nuke = False ):
     self.database = database
+    self.settings = settings
     self.main_notebook = None
     self.anonymous = None
 
     if nuke is True:
       self.database.execute( file( "model/drop.sql" ).read(), commit = False )
 
-    self.database.execute( file( "model/schema.sql" ).read(), commit = False )
+    if host:
+      self.database.execute( file( "model/schema.sql" ).read(), commit = False )
+    else:
+      self.database.execute_script( file( "model/schema.sqlite" ).read(), commit = False )
 
     self.create_main_notebook()
     self.create_anonymous_user()
@@ -53,7 +57,7 @@ class Initializer( object ):
     rank = 0
     for ( filename, startup ) in self.NOTE_FILES:
       full_filename = os.path.join( self.HTML_PATH, filename )
-      contents = fix_note_contents( file( full_filename ).read(), main_notebook_id, note_ids )
+      contents = fix_note_contents( file( full_filename ).read(), main_notebook_id, note_ids, self.settings )
 
       if startup:
         rank += 1
@@ -74,6 +78,23 @@ class Initializer( object ):
 def main( args = None ):
   nuke = False
 
+  import cherrypy
+  from config import Common
+
+  cherrypy.config.update( Common.settings )
+
+  if args and "-d" in args:
+    from config import Development
+    settings = Development.settings
+  if args and "-l" in args:
+    from config import Desktop
+    settings = Desktop.settings
+  else:
+    from config import Production
+    settings = Production.settings
+
+  cherrypy.config.update( settings )
+
   if args and ( "-n" in args or "--nuke" in args ):
     nuke = True
     print "This will nuke the contents of the database before initializing it with default data. Continue (y/n)? ",
@@ -85,13 +106,16 @@ def main( args = None ):
       return
 
   print "Initializing the database with default data."
-  database = Database()
-  initializer = Initializer( database, nuke )
+  host = settings[ u"global" ].get( u"luminotes.db_host" )
+  database = Database(
+    host = host,
+    ssl_mode = settings[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+  )
+  initializer = Initializer( database, host, settings, nuke )
 
 
-def fix_note_contents( contents, notebook_id, note_ids ):
+def fix_note_contents( contents, notebook_id, note_ids, settings ):
   import re
-  from config.Common import settings
 
   LINK_PATTERN = re.compile( '(<a\s+href=")([^"]+note_id=)([^"]*)("[^>]*>)(.*?)(</a>)' )
   TITLE_PATTERN = re.compile( ' title="(.*?)"' )
