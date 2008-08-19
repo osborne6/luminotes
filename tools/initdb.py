@@ -86,7 +86,7 @@ def main( args = None ):
   if args and "-d" in args:
     from config import Development
     settings = Development.settings
-  if args and "-l" in args:
+  elif args and "-l" in args:
     from config import Desktop
     settings = Desktop.settings
   else:
