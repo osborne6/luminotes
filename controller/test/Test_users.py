@@ -87,7 +87,7 @@ class Test_users( Test_controller ):
 
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
-    self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ), commit = False )
+    self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ), commit = False )
 
     self.database.commit()
 
@@ -149,6 +149,9 @@ class Test_users( Test_controller ):
 
     assert u"error" in result
 
+  def __get_recent_user( self ):
+    return self.database.select_one( User, "select * from luminotes_user order by revision desc limit 1;" );
+
   def test_current_after_signup( self ):
     result = self.http_post( "/users/signup", dict(
       username = self.new_username,
@@ -161,7 +164,7 @@ class Test_users( Test_controller ):
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    user = self.database.last_saved_obj
+    user = self.__get_recent_user()
     assert isinstance( user, User )
     result = cherrypy.root.users.current( user.object_id )
 
@@ -171,6 +174,15 @@ class Test_users( Test_controller ):
 
     notebooks = result[ u"notebooks" ]
     notebook = notebooks[ 0 ]
+    assert notebook.object_id == notebooks[ 1 ].trash_id
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == None
+
+    notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
@@ -178,15 +190,6 @@ class Test_users( Test_controller ):
     assert notebook.read_write == True
     assert notebook.owner == True
     assert notebook.rank == 0
-
-    notebook = notebooks[ 1 ]
-    assert notebook.object_id == notebooks[ 0 ].trash_id
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == True
-    assert notebook.owner == True
-    assert notebook.rank == None
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -237,7 +240,7 @@ class Test_users( Test_controller ):
     invite_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
     assert invite_notebook_id == self.notebooks[ 0 ].object_id
 
-    user = self.database.last_saved_user
+    user = self.__get_recent_user()
     assert isinstance( user, User )
     result = cherrypy.root.users.current( user.object_id )
 
@@ -298,7 +301,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"redirect" ] == u"/users/subscribe?rate_plan=2&yearly=False"
 
-    user = self.database.last_saved_obj
+    user = self.__get_recent_user()
     assert isinstance( user, User )
     result = cherrypy.root.users.current( user.object_id )
 
@@ -308,6 +311,15 @@ class Test_users( Test_controller ):
 
     notebooks = result[ u"notebooks" ]
     notebook = notebooks[ 0 ]
+    assert notebook.object_id == notebooks[ 1 ].trash_id
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == None
+
+    notebook = notebooks[ 1 ]
     assert notebook.object_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
@@ -315,15 +327,6 @@ class Test_users( Test_controller ):
     assert notebook.read_write == True
     assert notebook.owner == True
     assert notebook.rank == 0
-
-    notebook = notebooks[ 1 ]
-    assert notebook.object_id == notebooks[ 0 ].trash_id
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == True
-    assert notebook.owner == True
-    assert notebook.rank == None
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -619,7 +622,7 @@ class Test_users( Test_controller ):
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    user = self.database.last_saved_obj
+    user = self.__get_recent_user()
     assert isinstance( user, User )
     result = cherrypy.root.users.current( user.object_id )
 
@@ -630,6 +633,15 @@ class Test_users( Test_controller ):
     notebooks = result[ u"notebooks" ]
     assert len( notebooks ) == 3
     notebook = notebooks[ 0 ]
+    assert notebook.object_id == notebooks[ 1 ].trash_id
+    assert notebook.revision
+    assert notebook.name == u"trash"
+    assert notebook.trash_id == None
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == None
+
+    notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
@@ -637,15 +649,6 @@ class Test_users( Test_controller ):
     assert notebook.read_write == True
     assert notebook.owner == True
     assert notebook.rank == 0
-
-    notebook = notebooks[ 1 ]
-    assert notebook.object_id == notebooks[ 0 ].trash_id
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == True
-    assert notebook.owner == True
-    assert notebook.rank == None
 
     notebook = notebooks[ 2 ]
     assert notebook.object_id == self.anon_notebook.object_id
@@ -671,7 +674,7 @@ class Test_users( Test_controller ):
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
 
-    user = self.database.last_saved_obj
+    user = self.__get_recent_user()
     assert isinstance( user, User )
     result = cherrypy.root.users.current( user.object_id )
 
@@ -733,26 +736,26 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].object_id == self.user.object_id
     assert result[ u"user" ].username == self.user.username
     assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == u"trash"
     assert result[ u"notebooks" ][ 0 ].read_write == True
     assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == 0
+    assert result[ u"notebooks" ][ 0 ].rank == None
     assert result[ u"notebooks" ][ 1 ].object_id
     assert result[ u"notebooks" ][ 1 ].name == u"trash"
     assert result[ u"notebooks" ][ 1 ].read_write == True
     assert result[ u"notebooks" ][ 1 ].owner == True
     assert result[ u"notebooks" ][ 1 ].rank == None
-    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 1 ].object_id
-    assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 1 ].name
+    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 2 ].read_write == True
     assert result[ u"notebooks" ][ 2 ].owner == True
-    assert result[ u"notebooks" ][ 2 ].rank == 1
-    assert result[ u"notebooks" ][ 3 ].object_id
-    assert result[ u"notebooks" ][ 3 ].name == u"trash"
+    assert result[ u"notebooks" ][ 2 ].rank == 0
+    assert result[ u"notebooks" ][ 3 ].object_id == self.notebooks[ 1 ].object_id
+    assert result[ u"notebooks" ][ 3 ].name == self.notebooks[ 1 ].name
     assert result[ u"notebooks" ][ 3 ].read_write == True
     assert result[ u"notebooks" ][ 3 ].owner == True
-    assert result[ u"notebooks" ][ 3 ].rank == None
+    assert result[ u"notebooks" ][ 3 ].rank == 1
     assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 4 ].read_write == False
@@ -878,17 +881,17 @@ class Test_users( Test_controller ):
     assert self.user.revision == original_revision
 
   def test_update_storage_without_quota( self ):
-    original_revision = self.user.revision
     self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 0 ][ u"storage_bytes" ] = None
+    previous_revision = self.user.revision
 
     cherrypy.root.users.update_storage( self.user.object_id )
 
     expected_size = cherrypy.root.users.calculate_storage( self.user )
 
     user = self.database.load( User, self.user.object_id )
-    assert self.user.storage_bytes == 0
-    assert self.user.group_storage_bytes == 0
-    assert self.user.revision == original_revision
+    assert user.storage_bytes == expected_size
+    assert user.group_storage_bytes == 0
+    assert user.revision > previous_revision
 
   def test_check_access( self ):
     access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id )
@@ -1417,10 +1420,7 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invites = self.database.objects.get( invite_id )
-    assert invites
-    assert len( invites ) == 1
-    invite = invites[ -1 ]
+    invite = self.database.load( Invite, invite_id )
     assert invite
     assert invite.read_write is False
     assert invite.owner is False
@@ -1470,10 +1470,7 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invites = self.database.objects.get( invite_id )
-    assert invites
-    assert len( invites ) == 1
-    invite = invites[ -1 ]
+    invite = self.database.load( Invite, invite_id )
     assert invite
     assert invite.read_write is False
     assert invite.owner is False
@@ -1515,10 +1512,7 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invites = self.database.objects.get( invite_id )
-    assert invites
-    assert len( invites ) == 1
-    invite = invites[ -1 ]
+    invite = self.database.load( Invite, invite_id )
     assert invite
     assert invite.read_write is True
     assert invite.owner is False
@@ -1560,10 +1554,7 @@ class Test_users( Test_controller ):
     assert invite_id
 
     # assert that the invite has the read_write / owner flags set appropriately
-    invites = self.database.objects.get( invite_id )
-    assert invites
-    assert len( invites ) == 1
-    invite = invites[ -1 ]
+    invite = self.database.load( Invite, invite_id )
     assert invite
     assert invite.read_write is True
     assert invite.owner is True
@@ -1681,8 +1672,12 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
     
     invites = result[ u"invites" ]
-    assert len( invites ) == 1
+    assert len( invites ) == 2
     invite = invites[ 0 ]
+    assert invite
+    assert invite.read_write is True
+    assert invite.owner is True
+    invite = invites[ 1 ]
     assert invite
     assert invite.read_write is True
     assert invite.owner is True
@@ -1692,18 +1687,12 @@ class Test_users( Test_controller ):
     assert invite_id2
 
     # assert that both invites have the read_write / owner flags set to True now
-    invite1_list = self.database.objects.get( invite_id1 )
-    assert invite1_list
-    assert len( invite1_list ) >= 2
-    invite1 = invite1_list[ -1 ]
+    invite1 = self.database.load( Invite, invite_id1 )
     assert invite1
     assert invite1.read_write is True
     assert invite1.owner is True
 
-    invite2_list = self.database.objects.get( invite_id2 )
-    assert invite2_list
-    assert len( invite2_list ) >= 1
-    invite2 = invite2_list[ -1 ]
+    invite2 = self.database.load( Invite, invite_id2 )
     assert invite2
     assert invite2.read_write is True
     assert invite2.owner is True
@@ -1758,9 +1747,14 @@ class Test_users( Test_controller ):
       invite_button = u"send invites",
     ), session_id = self.session_id )
     
+    print result
     invites = result[ u"invites" ]
-    assert len( invites ) == 1
+    assert len( invites ) == 2
     invite = invites[ 0 ]
+    assert invite
+    assert invite.read_write is False
+    assert invite.owner is False
+    invite = invites[ 1 ]
     assert invite
     assert invite.read_write is False
     assert invite.owner is False
@@ -1770,18 +1764,12 @@ class Test_users( Test_controller ):
     assert invite_id2
 
     # assert that both invites have the read_write / owner flags set to False now
-    invite1_list = self.database.objects.get( invite_id1 )
-    assert invite1_list
-    assert len( invite1_list ) >= 2
-    invite1 = invite1_list[ -1 ]
+    invite1 = self.database.load( Invite, invite_id1 )
     assert invite1
     assert invite1.read_write is False
     assert invite1.owner is False
 
-    invite2_list = self.database.objects.get( invite_id2 )
-    assert invite2_list
-    assert len( invite2_list ) >= 1
-    invite2 = invite2_list[ -1 ]
+    invite2 = self.database.load( Invite, invite_id2 )
     assert invite2
     assert invite2.read_write is False
     assert invite2.owner is False
@@ -1934,10 +1922,9 @@ class Test_users( Test_controller ):
     assert "access" in result[ u"error" ]
 
   def test_send_invites_without_any_access( self ):
-    self.login()
+    self.login2()
 
-    self.database.user_notebook = {}
-    self.user.rate_plan = 1
+    self.user2.rate_plan = 1
     self.database.save( self.user )
 
     email_addresses_list = [ u"foo@example.com" ]
@@ -1957,8 +1944,7 @@ class Test_users( Test_controller ):
   def test_send_invites_without_read_write_access( self ):
     self.login()
 
-    self.database.user_notebook = {}
-    self.database.execute( self.user.sql_save_notebook( self.notebooks[ 0 ].object_id, read_write = False, owner = True ) )
+    self.database.execute( self.user.sql_update_access( self.notebooks[ 0 ].object_id, read_write = False, owner = True ) )
     self.user.rate_plan = 1
     self.database.save( self.user )
 
@@ -1979,8 +1965,7 @@ class Test_users( Test_controller ):
   def test_send_invites_without_owner_access( self ):
     self.login()
 
-    self.database.user_notebook = {}
-    self.database.execute( self.user.sql_save_notebook( self.notebooks[ 0 ].object_id, read_write = True, owner = False ) )
+    self.database.execute( self.user.sql_update_access( self.notebooks[ 0 ].object_id, read_write = True, owner = False ) )
     self.user.rate_plan = 1
     self.database.save( self.user )
 
@@ -2236,7 +2221,7 @@ class Test_users( Test_controller ):
       access = u"viewer",
       invite_button = u"send invites",
     ), session_id = self.session_id )
-    
+
     assert len( result[ u"invites" ] ) == 1
     matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
     invite_id = matches.group( 2 )
@@ -2457,6 +2442,8 @@ class Test_users( Test_controller ):
 
     matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
     invite_id = matches.group( 2 )
+
+    self.login2()
     
     self.http_post( "/users/redeem_invite", dict(
       invite_id = invite_id,
@@ -2469,94 +2456,10 @@ class Test_users( Test_controller ):
     assert result[ u"error" ]
     assert u"already" in result[ u"error" ]
 
-  def test_redeem_invite_already_redeemed( self ):
-    self.login()
-
-    self.user.rate_plan = 1
-    self.database.save( self.user )
-
-    email_addresses_list = [ u"foo@example.com" ]
-    email_addresses = email_addresses_list[ 0 ]
-
-    self.http_post( "/users/send_invites", dict(
-      notebook_id = self.notebooks[ 0 ].object_id,
-      email_addresses = email_addresses,
-      access = u"viewer",
-      invite_button = u"send invites",
-    ), session_id = self.session_id )
-
-    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
-    invite_id = matches.group( 2 )
-    
-    del( self.database.objects[ self.notebooks[ 0 ].object_id ] )
-
-    result = self.http_post( "/users/redeem_invite", dict(
-      invite_id = invite_id,
-    ) )
-
-    assert result[ u"error" ]
-    assert u"unknown" in result[ u"error" ]
-
-  def test_redeem_invite_missing_anonymous_user( self ):
-    self.login()
-
-    self.user.rate_plan = 1
-    self.database.save( self.user )
-
-    email_addresses_list = [ u"foo@example.com" ]
-    email_addresses = email_addresses_list[ 0 ]
-
-    self.http_post( "/users/send_invites", dict(
-      notebook_id = self.notebooks[ 0 ].object_id,
-      email_addresses = email_addresses,
-      access = u"viewer",
-      invite_button = u"send invites",
-    ), session_id = self.session_id )
-
-    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
-    invite_id = matches.group( 2 )
-    
-    del( self.database.objects[ self.anonymous.object_id ] )
-
-    result = self.http_post( "/users/redeem_invite", dict(
-      invite_id = invite_id,
-    ) )
-
-    assert result[ u"error" ]
-
-  def test_redeem_invite_missing_invite_notebook( self ):
-    self.login()
-
-    self.user.rate_plan = 1
-    self.database.save( self.user )
-
-    email_addresses_list = [ u"foo@example.com" ]
-    email_addresses = email_addresses_list[ 0 ]
-
-    self.http_post( "/users/send_invites", dict(
-      notebook_id = self.notebooks[ 0 ].object_id,
-      email_addresses = email_addresses,
-      access = u"viewer",
-      invite_button = u"send invites",
-    ), session_id = self.session_id )
-
-    matches = self.INVITE_LINK_PATTERN.search( smtplib.SMTP.message )
-    invite_id = matches.group( 2 )
-    
-    del( self.database.objects[ self.notebooks[ 0 ].object_id ] )
-
-    result = self.http_post( "/users/redeem_invite", dict(
-      invite_id = invite_id,
-    ) )
-
-    assert result[ u"error" ]
-
   def test_convert_invite_to_access( self ):
     # start the invitee out with access to one notebook
     self.database.execute( self.user2.sql_save_notebook( self.notebooks[ 1 ].object_id, read_write = True, owner = False, rank = 7 ), commit = False )
-
-
-
+    self.database.commit()
 
     self.login()
 
@@ -2595,7 +2498,6 @@ class Test_users( Test_controller ):
     ) )
     assert access is True
 
-    self.user.sql_load_notebooks()
     notebooks = self.database.select_many( Notebook, self.user2.sql_load_notebooks() )
     new_notebook = [ notebook for notebook in notebooks if notebook.object_id == invite.notebook_id ][ 0 ]
     assert new_notebook.rank == 8 # one higher than the other notebook this user has access to
@@ -3065,46 +2967,26 @@ class Test_users( Test_controller ):
 
     self.__assert_has_admin_group()
 
+  def __load_admin_groups( self ):
+    groups = self.database.select_many( Group, self.user.sql_load_groups() )
+
+    return [ group for group in groups if group.admin ]
+
   def __assert_has_admin_group( self, exactly_one = False ):
-    user_group_infos = self.database.user_group.get( self.user.object_id )
-    found_admin_count = 0
-    group_id = None
+    groups = self.__load_admin_groups()
 
-    # look through the user's groups and try to find at least one admin group
-    for user_group_info in user_group_infos:
-      assert user_group_info
-      assert len( user_group_info ) == 2
-      ( group_id, admin ) = user_group_info
-      assert group_id
-      if admin is True:
-        found_admin_count += 1
-
-    assert found_admin_count > 0
+    assert len( groups ) > 0
     if exactly_one is True:
-      assert found_admin_count == 1
+      assert len( groups ) == 1
 
-    # load the group itself and make sure it looks kosher
-    group = self.database.load( Group, group_id )
-    assert group
-    assert group.name == u"my group"
-    assert group.admin is True
+    assert groups[ 0 ]
+    assert groups[ 0 ].name == u"my group"
+    assert groups[ 0 ].admin is True
 
   def __assert_no_admin_group( self ):
-    user_group_infos = self.database.user_group.get( self.user.object_id )
-    found_admin = False
-    group_id = None
+    groups = self.__load_admin_groups()
 
-    # look through the user's groups and make sure there are no admin groups
-    for user_group_info in user_group_infos:
-      assert user_group_info
-      assert len( user_group_info ) == 2
-      ( group_id, admin ) = user_group_info
-      assert group_id
-      if admin is True:
-        found_admin = True
-        break
-
-    assert found_admin is False
+    assert len( groups ) == 0
 
   def test_paypal_notify_signup_yearly( self ):
     data = dict( self.SUBSCRIPTION_DATA )
@@ -3698,10 +3580,10 @@ class Test_users( Test_controller ):
     group_id = self.database.next_id( Group, commit = False )
     group = Group.create( group_id, name = u"my group", admin = True )
     self.database.save( group, commit = False )
-    self.database.user_group[ self.user.object_id ].append( ( group_id, True ) )
+    self.database.execute( self.user.sql_save_group( group_id, admin = True ) )
 
     if add_non_admin_user is True:
-      self.database.user_group [ self.user2.object_id ].append( ( group_id, False ) )
+      self.database.execute( self.user2.sql_save_group( group_id, admin = False ) )
 
     self.database.commit()
 
@@ -4064,11 +3946,12 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 0 ].read_write == True
-    assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == 0
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -4104,11 +3987,12 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 0 ].read_write == True
-    assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == 0
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -4142,12 +4026,12 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 0 ].read_write == True
-    assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == 0
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -4182,11 +4066,12 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 0 ].read_write == True
-    assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == 0
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -4219,11 +4104,12 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
     assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 0 ].read_write == True
-    assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == 0
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
 
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"

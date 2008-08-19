@@ -659,7 +659,7 @@ class Users( object ):
     @rtype: int
     @return: total bytes used for storage
     """
-    return sum( self.__database.select_one( tuple, user.sql_calculate_storage() ), 0 )
+    return sum( self.__database.select_one( tuple, user.sql_calculate_storage( self.__database.backend ) ), 0 )
 
   def calculate_group_storage( self, user ):
     """
@@ -674,8 +674,7 @@ class Users( object ):
 
   def update_storage( self, user_id, commit = True ):
     """
-    If there is a storage quota for the user's rate plan, calculate and record total storage
-    utilization for the given user. If there isn't a storage quota, then bail.
+    Calculate and record total storage utilization for the given user.
 
     @type user_id: unicode
     @param user_id: id of user for which to calculate storage utilization
@@ -688,10 +687,6 @@ class Users( object ):
 
     if user is None:
       return None
-
-    plan = self.__rate_plans[ user.rate_plan ]
-    if not plan[ "storage_quota_bytes" ]:
-      return user
 
     user.storage_bytes = self.calculate_storage( user )
     self.__database.save( user, commit )
@@ -1212,7 +1207,7 @@ class Users( object ):
     result = self.current( anonymous.object_id )
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
-    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes(), use_cache = True )
+    result[ "total_notes_count" ] = self.__database.select_one( int, main_notebook.sql_count_notes(), use_cache = True )
     result[ "note_read_write" ] = False
     result[ "notes" ] = [ Note.create(
       object_id = u"redeem_invite",

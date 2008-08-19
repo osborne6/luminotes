@@ -7,3 +7,7 @@ class Stub_cache( object ):
 
   def set( self, key, value ):
     self.__objects[ key ] = value
+
+  def delete( self, key ):
+    if key in self.__objects:
+      del( self.__objects[ key ] )

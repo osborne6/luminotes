@@ -908,6 +908,7 @@ class Test_files( Test_controller ):
 
   def test_upload( self, filename = None ):
     self.login()
+    orig_storage_bytes = self.user.storage_bytes
 
     result = self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
@@ -937,7 +938,6 @@ class Test_files( Test_controller ):
     assert Upload_file.open_file( self.file_id ).read() == self.file_data
 
     # assert that storage bytes increased
-    orig_storage_bytes = self.user.storage_bytes
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > orig_storage_bytes
 
@@ -1279,6 +1279,7 @@ class Test_files( Test_controller ):
 
   def test_stats( self ):
     self.login()
+    orig_storage_bytes = self.user.storage_bytes
 
     self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
@@ -1300,7 +1301,6 @@ class Test_files( Test_controller ):
     assert result[ u"filename" ] == self.filename
     assert result[ u"size_bytes" ] == len( self.file_data )
 
-    orig_storage_bytes = self.user.storage_bytes
     user = self.database.load( User, self.user.object_id )
     assert result[ u"storage_bytes" ] == user.storage_bytes
     assert user.storage_bytes > orig_storage_bytes
@@ -1376,6 +1376,8 @@ class Test_files( Test_controller ):
       session_id = self.session_id,
     )
 
+    orig_storage_bytes = self.user.storage_bytes
+
     result = self.http_post(
       "/files/delete",
       dict(
@@ -1388,7 +1390,6 @@ class Test_files( Test_controller ):
     assert db_file is None
     assert not Upload_file.exists( self.file_id )
 
-    orig_storage_bytes = self.user.storage_bytes
     user = self.database.load( User, self.user.object_id )
     assert result[ u"storage_bytes" ] == user.storage_bytes
     assert user.storage_bytes != orig_storage_bytes
@@ -2070,7 +2071,7 @@ class Test_files( Test_controller ):
   def test_purge_unused( self ):
     self.login()
 
-    self.http_upload(
+    result = self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
@@ -2081,6 +2082,9 @@ class Test_files( Test_controller ):
       content_type = self.content_type,
       session_id = self.session_id,
     )
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
 
     # the file is not linked to from the note's contents, so this should delete it
     cherrypy.root.files.purge_unused( self.note )
