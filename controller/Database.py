@@ -45,9 +45,28 @@ class Database( object ):
 
     if host is None:
       from pysqlite2 import dbapi2 as sqlite
+      from datetime import datetime
+      from pytz import utc
+
+      TIMESTAMP_PATTERN = re.compile( "^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d).(\d+)\+\d\d:\d\d$" )
+
+      def convert_timestamp( value ):
+        ( year, month, day, hours, minutes, seconds, fractional_seconds ) = \
+          TIMESTAMP_PATTERN.search( value ).groups( 0 )
+        microseconds = int( float ( "0." + fractional_seconds ) * 1000000 )
+
+        # ignore time zone in timestamp and assume UTC
+        return datetime(
+          int( year ), int( month ), int( day ),
+          int( hours ), int( minutes ), int( seconds ), int( microseconds ),
+          utc,
+        )
+
+      sqlite.register_converter( "boolean", lambda value: value in ( "t", "True", "true" ) and True or False )
+      sqlite.register_converter( "timestamp", convert_timestamp )
 
       self.__connection = connection or \
-        Connection_wrapper( sqlite.connect( "luminotes.db", detect_types = 0 ) )
+        Connection_wrapper( sqlite.connect( "luminotes.db", detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
       self.__pool = None
     else:
       import psycopg2 as psycopg
