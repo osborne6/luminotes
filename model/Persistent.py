@@ -83,7 +83,11 @@ def quote( value ):
   if value is None:
     return "null"
 
-  value = unicode( value )
+  if isinstance( value, bool ):
+    value = value and "t" or "f"
+  else:
+    value = unicode( value )
+
   return "'%s'" % value.replace( "'", "''" ).replace( "\\", "\\\\" )
 
 
