@@ -20,6 +20,9 @@ class Database( object ):
   ID_BITS = 128 # number of bits within an id
   ID_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
+  POSTGRESQL_BACKEND = 0
+  SQLITE_BACKEND = 1
+
   # caching Notebooks causes problems because different users have different read_write/owner values
   CLASSES_NOT_TO_CACHE = ( Notebook, )
 
@@ -48,7 +51,7 @@ class Database( object ):
       from datetime import datetime
       from pytz import utc
 
-      TIMESTAMP_PATTERN = re.compile( "^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d).(\d+)\+\d\d:\d\d$" )
+      TIMESTAMP_PATTERN = re.compile( "^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d).(\d+)(?:\+\d\d:\d\d$)?" )
 
       def convert_timestamp( value ):
         ( year, month, day, hours, minutes, seconds, fractional_seconds ) = \
@@ -68,6 +71,7 @@ class Database( object ):
       self.__connection = connection or \
         Connection_wrapper( sqlite.connect( "luminotes.db", detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
       self.__pool = None
+      self.__backend = Database.SQLITE_BACKEND
     else:
       import psycopg2 as psycopg
       from psycopg2.pool import PersistentConnectionPool
@@ -95,6 +99,8 @@ class Database( object ):
             os.getenv( "PGPASSWORD", "dev" )
           ),
         )
+
+      self.__backend = Database.POSTGRESQL_BACKEND
 
     self.__cache = cache
 
@@ -377,6 +383,8 @@ class Database( object ):
 
     if self.__pool:
       self.__pool.closeall()
+
+  backend = property( lambda self: self.__backend )
 
 
 def end_transaction( function ):
