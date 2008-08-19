@@ -732,6 +732,7 @@ class Files( object ):
 
     self.__database.execute( db_file.sql_delete(), commit = False )
     user = self.__users.update_storage( user_id, commit = False )
+    self.__database.uncache( db_file )
     self.__database.commit()
     user.group_storage_bytes = self.__users.calculate_group_storage( user )
 
@@ -919,6 +920,7 @@ class Files( object ):
     # filesystem
     for ( file_id, db_file ) in files_to_delete.items():
       self.__database.execute( db_file.sql_delete(), commit = False )
+      self.__database.uncache( db_file )
       Upload_file.delete_file( file_id )
 
     self.__database.commit()

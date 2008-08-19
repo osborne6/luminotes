@@ -328,6 +328,12 @@ class Database( object ):
     cache_key = sha.new( sql_command ).hexdigest()
     cache.delete( cache_key )
 
+  def uncache( self, obj ):
+    cache = self.__get_cache_connection()
+    if not cache: return
+
+    cache.delete( obj.cache_key )
+
   @staticmethod
   def generate_id():
     int_id = random.getrandbits( Database.ID_BITS )
