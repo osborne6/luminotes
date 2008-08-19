@@ -9,7 +9,7 @@ from controller.Database import Database, Connection_wrapper
 class Test_database( object ):
   def setUp( self ):
     # make an in-memory sqlite database to use in place of PostgreSQL during testing
-    self.connection = Connection_wrapper( sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES | sqlite.PARSE_COLNAMES ) )
+    self.connection = Connection_wrapper( sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES ) )
     self.cache = Stub_cache()
     cursor = self.connection.cursor()
     cursor.execute( Stub_object.sql_create_table() )
@@ -188,3 +188,6 @@ class Test_database( object ):
     self.database.commit()
     assert next_id
     assert self.database.load( Stub_object, next_id )
+
+  def test_backend( self ):
+    assert self.database.backend == Database.SQLITE_BACKEND
