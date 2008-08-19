@@ -877,6 +877,19 @@ class Test_users( Test_controller ):
     assert self.user.group_storage_bytes == 0
     assert self.user.revision == original_revision
 
+  def test_update_storage_without_quota( self ):
+    original_revision = self.user.revision
+    self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 0 ][ u"storage_bytes" ] = None
+
+    cherrypy.root.users.update_storage( self.user.object_id )
+
+    expected_size = cherrypy.root.users.calculate_storage( self.user )
+
+    user = self.database.load( User, self.user.object_id )
+    assert self.user.storage_bytes == 0
+    assert self.user.group_storage_bytes == 0
+    assert self.user.revision == original_revision
+
   def test_check_access( self ):
     access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id )
 

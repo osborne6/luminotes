@@ -674,7 +674,8 @@ class Users( object ):
 
   def update_storage( self, user_id, commit = True ):
     """
-    Calculate and record total storage utilization for the given user.
+    If there is a storage quota for the user's rate plan, calculate and record total storage
+    utilization for the given user. If there isn't a storage quota, then bail.
 
     @type user_id: unicode
     @param user_id: id of user for which to calculate storage utilization
@@ -685,9 +686,15 @@ class Users( object ):
     """
     user = self.__database.load( User, user_id )
 
-    if user:
-      user.storage_bytes = self.calculate_storage( user )
-      self.__database.save( user, commit )
+    if user is None:
+      return None
+
+    plan = self.__rate_plans[ user.rate_plan ]
+    if not plan[ "storage_quota_bytes" ]:
+      return user
+
+    user.storage_bytes = self.calculate_storage( user )
+    self.__database.save( user, commit )
 
     return user
 
