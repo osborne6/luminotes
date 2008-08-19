@@ -9,6 +9,18 @@ settings = {
     "server.log_to_screen": True,
     "luminotes.launch_browser": True,
     "luminotes.db_host": None, # use local SQLite database
+    "luminotes.rate_plans": [
+      {
+        "name": "desktop",
+        "designed_for": "individuals",
+        "storage_quota_bytes": None, # None indicates that there is no storage quota
+        "included_users": 1,
+        "notebook_collaboration": False,
+        "user_admin": False,
+        "fee": None,
+        "yearly_fee": None,
+      },
+    ],
   },
   "/static": {
     "static_filter.on": True,
