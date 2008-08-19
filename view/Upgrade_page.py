@@ -81,7 +81,7 @@ class Upgrade_page( Product_page ):
                   class_ = u"feature_name",
                 ),
                 [ Td(
-                  plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
+                  plan[ u"storage_quota_bytes" ] and "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ) or u"unlimited",
                 ) for plan in rate_plans ],
               ),
               Tr(
@@ -328,7 +328,7 @@ class Upgrade_page( Product_page ):
               ),
               Tr(
                 [ Td(
-                  plan[ u"storage_quota_bytes" ] // MEGABYTE, " MB",
+                  plan[ u"storage_quota_bytes" ] and "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ) or u"unlimited",
                 ) for plan in rate_plans ],
               ),
               border = u"1",
