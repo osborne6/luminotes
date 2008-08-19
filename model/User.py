@@ -2,13 +2,14 @@ import sha
 import random
 from copy import copy
 from Persistent import Persistent, quote
+from controller.Database import Database
 
 
 class User( Persistent ):
   """
   A Luminotes user.
   """
-  SALT_CHARS = [ chr( c ) for c in range( ord( "!" ), ord( "~" ) + 1 ) ]
+  SALT_CHARS = [ chr( c ) for c in range( ord( "!" ), ord( "~" ) + 1 ) if c != ord( "\\" ) ]
   SALT_SIZE = 12
 
   def __init__( self, object_id, revision = None, username = None, salt = None, password_hash = None,
@@ -296,17 +297,29 @@ class User( Persistent ):
         );
       """ % ( quote( notebook_id ), quote( trash_id ), quote( notebook_id ), quote( email_address ) )
 
-  def sql_calculate_storage( self ):
+  def sql_calculate_storage( self, database_backend ):
     """
     Return a SQL string to calculate the total bytes of storage usage by this user. This includes
     storage for all the user's notes (including past revisions) and their uploaded files. It does
     not include storage for the notebooks themselves.
     """
+    if database_backend == Database.POSTGRESQL_BACKEND:
+      # this counts bytes for the contents of each column
+      note_size_clause = "pg_column_size( note.* )"
+    else:
+      # this isn't perfect, because length() counts UTF-8 characters instead of bytes
+      note_size_clause = \
+        """
+        length( note.id ) + length( note.revision ) + length( note.title ) + length( note.contents ) +
+        length( note.notebook_id ) + length( note.startup ) + length( note.deleted_from_id ) +
+        length( note.rank ) + length( note.search ) + length( note.user_id )
+        """
+
     return \
       """
       select * from (
         select
-          coalesce( sum( pg_column_size( note.* ) ), 0 )
+          coalesce( sum( %s ), 0 )
         from
           user_notebook, note
         where
@@ -324,7 +337,7 @@ class User( Persistent ):
           user_notebook.owner = 't' and
           file.notebook_id = user_notebook.notebook_id
       ) as file_storage;
-      """ % ( quote( self.object_id ), quote( self.object_id ) )
+      """ % ( note_size_clause, quote( self.object_id ), quote( self.object_id ) )
 
   def sql_calculate_group_storage( self ):
     """
