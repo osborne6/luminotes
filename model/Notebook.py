@@ -145,8 +145,8 @@ class Notebook( Persistent ):
         notebook_id = %s and note_current.id = note_creation.id
       order by
         creation desc
-      offset %d limit %d;
-      """ % ( quote( self.object_id ), quote( self.object_id ), start, count )
+      limit %d offset %d;
+      """ % ( quote( self.object_id ), quote( self.object_id ), count, start )
 
   def sql_load_note_by_id( self, note_id ):
     """
