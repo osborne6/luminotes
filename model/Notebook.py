@@ -109,7 +109,7 @@ class Notebook( Persistent ):
     else:
       limit_clause = ""
 
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc offset %s%s;" % ( quote( self.object_id ), start, limit_clause )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc%s offset %s;" % ( quote( self.object_id ), limit_clause, start )
 
   def sql_load_non_startup_notes( self ):
     """
