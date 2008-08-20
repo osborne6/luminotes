@@ -103,13 +103,20 @@ class Notebook( Persistent ):
   def sql_load_notes( self, start = 0, count = None ):
     """
     Return a SQL string to load a list of all the notes within this notebook.
+    Note: If the database backend is SQLite, a start parameter cannot be given without also
+    providing a count parameter.
     """
     if count is not None:
       limit_clause = " limit %s" % count
     else:
       limit_clause = ""
 
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc%s offset %s;" % ( quote( self.object_id ), limit_clause, start )
+    if start:
+      offset_clause = " offset %s" % start
+    else:
+      offset_clause = ""
+
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by revision desc%s%s;" % ( quote( self.object_id ), limit_clause, offset_clause )
 
   def sql_load_non_startup_notes( self ):
     """
@@ -168,7 +175,7 @@ class Notebook( Persistent ):
     return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and lower( title ) = lower( %s );" % ( quote( self.object_id ), quote( title ) )
 
   @staticmethod
-  def sql_search_notes( user_id, first_notebook_id, search_text ):
+  def sql_search_notes( user_id, first_notebook_id, search_text, database_backend ):
     """
     Return a SQL string to perform a full-text search for notes within notebooks readable by the
     given user whose contents contain the given search_text. This is a case-insensitive search.
@@ -176,29 +183,44 @@ class Notebook( Persistent ):
     @type search_text: unicode
     @param search_text: text to search for within the notes
     """
-    # strip out all search operators
-    search_text = Notebook.SEARCH_OPERATORS.sub( u"", search_text ).strip()
+    if database_backend == Persistent.POSTGRESQL_BACKEND:
+      # strip out all search operators
+      search_text = Notebook.SEARCH_OPERATORS.sub( u"", search_text ).strip()
 
-    # join all words with boolean "and" operator
-    search_text = u"&".join( Notebook.WHITESPACE_PATTERN.split( search_text ) )
+      # join all words with boolean "and" operator
+      search_text = u"&".join( Notebook.WHITESPACE_PATTERN.split( search_text ) )
 
-    return \
-      """
-      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
-             headline( drop_html_tags( contents ), query ) as summary from (
+      return \
+        """
+        select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
+               headline( drop_html_tags( contents ), query ) as summary from (
+          select
+            note_current.id, note_current.revision, note_current.title, note_current.contents,
+            note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
+            rank_cd( search, query ) as rank, note_current.user_id, null, query
+          from
+            note_current, user_notebook, to_tsquery( 'default', %s ) query
+          where
+            note_current.notebook_id = user_notebook.notebook_id and user_notebook.user_id = %s and
+            note_current.deleted_from_id is null and
+            query @@ search order by note_current.notebook_id = %s desc, rank desc limit 20
+        ) as sub;
+        """ % ( quote( search_text ), quote( user_id ),
+                quote( first_notebook_id ) )
+    else:
+      # TODO: use SQLite's FTS (full text search) support instead
+      return \
+        """
         select
-          note_current.id, note_current.revision, note_current.title, note_current.contents,
-          note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
-          rank_cd( search, query ) as rank, note_current.user_id, null, query
+          note_current.*
         from
-          note_current, user_notebook, to_tsquery( 'default', %s ) query
+          note_current, user_notebook
         where
           note_current.notebook_id = user_notebook.notebook_id and user_notebook.user_id = %s and
           note_current.deleted_from_id is null and
-          query @@ search order by note_current.notebook_id = %s desc, rank desc limit 20
-      ) as sub;
-      """ % ( quote( search_text ), quote( user_id ),
-              quote( first_notebook_id ) )
+          lower( note_current.contents ) like %s
+          order by note_current.notebook_id = %s desc, rank desc limit 20
+        """ % ( quote( user_id ), quote_fuzzy( search_text ), quote( first_notebook_id ) )
 
   @staticmethod
   def sql_search_titles( notebook_id, search_text ):
@@ -220,11 +242,11 @@ class Notebook( Persistent ):
       where
         notebook_id = %s and
         deleted_from_id is null and
-        title ilike %s
+        lower( title ) like %s
       order by
         revision desc limit 20;
       """ % ( quote( notebook_id ), 
-              quote_fuzzy( search_text ) )
+              quote_fuzzy( search_text.lower() ) )
 
   def sql_highest_note_rank( self ):
     """

@@ -3,6 +3,9 @@ from pytz import utc
 
 
 class Persistent( object ):
+  POSTGRESQL_BACKEND = 0
+  SQLITE_BACKEND = 1
+
   """
   A persistent database object with a unique id.
   """

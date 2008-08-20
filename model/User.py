@@ -2,7 +2,6 @@ import sha
 import random
 from copy import copy
 from Persistent import Persistent, quote
-from controller.Database import Database
 
 
 class User( Persistent ):
@@ -303,16 +302,16 @@ class User( Persistent ):
     storage for all the user's notes (including past revisions) and their uploaded files. It does
     not include storage for the notebooks themselves.
     """
-    if database_backend == Database.POSTGRESQL_BACKEND:
+    if database_backend == Persistent.POSTGRESQL_BACKEND:
       # this counts bytes for the contents of each column
       note_size_clause = "pg_column_size( note.* )"
     else:
-      # this isn't perfect, because length() counts UTF-8 characters instead of bytes
+      # this isn't perfect, because length() counts UTF-8 characters instead of bytes.
+      # some columns are left out because they can be null, which screws up the addition
       note_size_clause = \
         """
         length( note.id ) + length( note.revision ) + length( note.title ) + length( note.contents ) +
-        length( note.notebook_id ) + length( note.startup ) + length( note.deleted_from_id ) +
-        length( note.rank ) + length( note.search ) + length( note.user_id )
+        length( note.notebook_id ) + length( note.startup ) + length( note.user_id )
         """
 
     return \
