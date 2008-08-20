@@ -1109,7 +1109,7 @@ class Notebooks( object ):
     if len( search_text ) == 0:
       raise Validation_error( u"search_text", None, unicode, message = u"is missing" )
 
-    notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, notebook_id, search_text ) )
+    notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, notebook_id, search_text, self.__database.backend ) )
 
     return dict(
       notes = notes,
@@ -1759,6 +1759,7 @@ class Notebooks( object ):
 
     # delete the CSV file now that it's been imported
     self.__database.execute( db_file.sql_delete(), commit = False )
+    self.__database.uncache( db_file )
     self.__database.commit()
     Upload_file.delete_file( file_id )
 

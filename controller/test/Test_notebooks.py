@@ -169,9 +169,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
-    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -277,9 +277,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
-    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -375,9 +375,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.anon_notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == False
-    assert result.get( u"notebooks" )[ 2 ].owner == False
+    assert result.get( u"notebooks" )[ 1 ].object_id == self.anon_notebook.object_id
+    assert result.get( u"notebooks" )[ 1 ].read_write == False
+    assert result.get( u"notebooks" )[ 1 ].owner == False
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -462,9 +462,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
-    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -505,9 +505,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
-    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -554,9 +554,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
-    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -596,9 +596,9 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
-    assert result.get( u"notebooks" )[ 0 ].owner == True
+    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -821,10 +821,8 @@ class Test_notebooks( Test_controller ):
 
     invites = result[ "invites" ]
     assert len( invites ) == 2
-    invite = invites[ 0 ]
-    assert invite.object_id == invite.object_id
-    invite = invites[ 1 ]
-    assert invite.object_id == self.invite.object_id
+    assert invites[ 0 ].object_id == self.invite.object_id
+    assert invites[ 1 ].object_id == invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -852,11 +850,10 @@ class Test_notebooks( Test_controller ):
     assert result[ "total_notes_count" ] == 2
     assert result[ "notes" ] == []
 
-    # the two invites should be collapsed down into one
     invites = result[ "invites" ]
-    assert len( invites ) == 1
-    invite = invites[ 0 ]
-    assert invite.object_id == invite.object_id
+    assert len( invites ) == 2
+    assert invites[ 0 ].object_id == self.invite.object_id
+    assert invites[ 1 ].object_id == invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
     assert notebook.read_write == True
@@ -1379,10 +1376,10 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 1
-    assert revisions[ 0 ].revision == self.note.revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
+    assert len( revisions ) == 2
+    assert revisions[ 1 ].revision == self.note.revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
 
   def test_load_note_links( self ):
     self.login()
@@ -1693,13 +1690,13 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 2
-    assert revisions[ 0 ].revision == previous_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == current_revision
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
 
   def test_save_startup_note( self ):
     self.test_save_note( startup = True )
@@ -1765,13 +1762,13 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 2
-    assert revisions[ 0 ].revision == previous_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == current_revision
-    assert revisions[ 1 ].user_id == self.user2.object_id
-    assert revisions[ 1 ].username == self.username2
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user2.object_id
+    assert revisions[ 2 ].username == self.username2
 
   def test_save_note_without_login( self, startup = False ):
     # save over an existing note supplying new contents and a new title
@@ -1873,13 +1870,13 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 2
-    assert revisions[ 0 ].revision == previous_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == current_revision
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
 
   def test_save_deleted_note( self ):
     self.login()
@@ -2302,7 +2299,7 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     # save a completely new note
-    title_with_tags = u"<h3>my title</h3>"
+    title_with_tags = u"<h3>my funny title</h3>"
     junk = u"foo<script>haxx0r</script>"
     more_junk = u"<p style=\"evil\">blah</p>"
     new_note = Note.create( "55", title_with_tags + junk + more_junk )
@@ -2396,7 +2393,7 @@ class Test_notebooks( Test_controller ):
     previous_storage_bytes = user.storage_bytes
 
     # save a completely new note
-    new_note = Note.create( "56", u"<h3>my title</h3>foo" )
+    new_note = Note.create( "56", u"<h3>my new title</h3>foo" )
     previous_revision = new_note.revision
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
@@ -2483,16 +2480,16 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 3
-    assert revisions[ 0 ].revision == first_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == second_revision
+    assert len( revisions ) == 4
+    assert revisions[ 1 ].revision == first_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
-    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].revision == second_revision
     assert revisions[ 2 ].user_id == self.user.object_id
     assert revisions[ 2 ].username == self.username
+    assert revisions[ 3 ].revision == current_revision
+    assert revisions[ 3 ].user_id == self.user.object_id
+    assert revisions[ 3 ].username == self.username
 
   def test_revert_note_by_different_user( self ):
     self.login()
@@ -2529,9 +2526,6 @@ class Test_notebooks( Test_controller ):
     assert result[ "previous_revision" ].revision == second_revision
     assert result[ "previous_revision" ].user_id == self.user.object_id
     assert result[ "previous_revision" ].username == self.username
-    user = self.database.load( User, self.user.object_id )
-    assert user.storage_bytes > 0
-    assert result[ "storage_bytes" ] == user.storage_bytes
     assert result[ "contents" ] == original_contents
 
     # make sure that the correct revisions are returned and are in chronological order
@@ -2542,16 +2536,16 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 3
-    assert revisions[ 0 ].revision == first_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == second_revision
+    assert len( revisions ) == 4
+    assert revisions[ 1 ].revision == first_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
-    assert revisions[ 2 ].revision == current_revision
-    assert revisions[ 2 ].user_id == self.user2.object_id
-    assert revisions[ 2 ].username == self.username2
+    assert revisions[ 2 ].revision == second_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+    assert revisions[ 3 ].revision == current_revision
+    assert revisions[ 3 ].user_id == self.user2.object_id
+    assert revisions[ 3 ].username == self.username2
 
   def test_revert_note_without_login( self ):
     self.login()
@@ -2587,13 +2581,13 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 2
-    assert revisions[ 0 ].revision == first_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == second_revision
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == first_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == second_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
 
   def test_revert_deleted_note( self ):
     self.login()
@@ -2641,16 +2635,16 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 3
-    assert revisions[ 0 ].revision == first_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == second_revision
+    assert len( revisions ) == 4
+    assert revisions[ 1 ].revision == first_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
-    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].revision == second_revision
     assert revisions[ 2 ].user_id == self.user.object_id
     assert revisions[ 2 ].username == self.username
+    assert revisions[ 3 ].revision == current_revision
+    assert revisions[ 3 ].user_id == self.user.object_id
+    assert revisions[ 3 ].username == self.username
 
   def test_revert_note_with_unknown_notebook( self ):
     self.login()
@@ -2686,13 +2680,13 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 2
-    assert revisions[ 0 ].revision == first_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == second_revision
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == first_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == second_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
 
   def test_revert_unknown_note( self ):
     self.login()
@@ -2750,13 +2744,13 @@ class Test_notebooks( Test_controller ):
 
     revisions = result[ "revisions" ]
     assert revisions != None
-    assert len( revisions ) == 2
-    assert revisions[ 0 ].revision == first_revision
-    assert revisions[ 0 ].user_id == self.user.object_id
-    assert revisions[ 0 ].username == self.username
-    assert revisions[ 1 ].revision == second_revision
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == first_revision
     assert revisions[ 1 ].user_id == self.user.object_id
     assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == second_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
 
   def test_delete_note( self ):
     self.login()
@@ -3532,7 +3526,7 @@ class Test_notebooks( Test_controller ):
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
     new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
-    notebook = self.database.last_saved_obj
+    notebook = self.database.load( Notebook, new_notebook_id )
 
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == new_notebook_id
@@ -3654,7 +3648,7 @@ class Test_notebooks( Test_controller ):
 
     # assert that we're redirected to a newly created notebook
     remaining_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
-    notebook = self.database.last_saved_obj
+    notebook = self.database.load( Notebook, remaining_notebook_id )
 
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == remaining_notebook_id
@@ -3708,7 +3702,7 @@ class Test_notebooks( Test_controller ):
 
     # assert that we're redirected to a newly created notebook
     remaining_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
-    notebook = self.database.last_saved_obj
+    notebook = self.database.load( Notebook, remaining_notebook_id )
 
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == remaining_notebook_id
@@ -3853,7 +3847,7 @@ class Test_notebooks( Test_controller ):
 
     # assert that we're redirected to the undeleted notebook
     notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
-    notebook = self.database.last_saved_obj
+    notebook = self.database.load( Notebook, notebook_id )
 
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == notebook_id
@@ -3913,7 +3907,7 @@ class Test_notebooks( Test_controller ):
 
     # assert that we're redirected to the undeleted notebook
     notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
-    notebook = self.database.last_saved_obj
+    notebook = self.database.load( Notebook, notebook_id )
 
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == notebook_id
@@ -4387,9 +4381,8 @@ class Test_notebooks( Test_controller ):
     assert db_file is None
     assert not Upload_file.exists( self.file_id )
 
-    orig_storage_bytes = self.user.storage_bytes
     user = self.database.load( User, self.user.object_id )
-    assert user.storage_bytes > orig_storage_bytes
+    assert user.storage_bytes > 0
 
   def test_import_csv_unknown_file_id( self ):
     self.login()

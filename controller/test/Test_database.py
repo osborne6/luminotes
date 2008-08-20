@@ -3,6 +3,7 @@ from pysqlite2 import dbapi2 as sqlite
 from datetime import datetime
 from Stub_object import Stub_object
 from Stub_cache import Stub_cache
+from model.Persistent import Persistent
 from controller.Database import Database, Connection_wrapper
 
 
@@ -190,4 +191,4 @@ class Test_database( object ):
     assert self.database.load( Stub_object, next_id )
 
   def test_backend( self ):
-    assert self.database.backend == Database.SQLITE_BACKEND
+    assert self.database.backend == Persistent.SQLITE_BACKEND
