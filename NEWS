@@ -1,5 +1,5 @@
 1.4.26:
- * Ported all database code to support SQLite in addition to existing the
+ * Ported all database code to support SQLite in addition to the existing 
    PostgreSQL support. This is a necessary first step for Luminotes Desktop.
  * Updated all unit tests to test against an in-memory SQLite database. This
    increases unit test code coverage to include Luminotes SQL code.
