@@ -218,18 +218,3 @@ package:
 Then you can run unit tests by running:
 
   nosetests
-
-
-JavaScript "unit" tests
------------------------
-
-JsUnit is included with Luminotes, so to kick off tests of the client-side
-JavaScript code, simply run:
-
-  python2.4 static/js/test/run_tests.py
-
-The run_tests.py script runs the tests inside browser windows and presumes
-that you have both Firefox and Internet Explorer 6 installed, and also that
-the Luminotes server is running on the local machine. Edit run_tests.py if you
-need to specify different paths to the browser binaries or want to test with
-additional browsers.
