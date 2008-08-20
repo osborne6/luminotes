@@ -1093,6 +1093,44 @@ class Test_files( Test_controller ):
     assert db_file is None
     assert not Upload_file.exists( self.file_id )
 
+  def test_upload_no_quota( self ):
+    large_file_data = self.file_data * 5
+    self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 0 ][ u"storage_quota_bytes" ] = None
+
+    self.login()
+    orig_storage_bytes = self.user.storage_bytes
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = large_file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    assert u"body" not in result
+    assert u"script" not in result
+
+    # assert that the file metadata was actually stored in the database
+    db_file = self.database.load( File, self.file_id )
+    assert db_file
+    assert db_file.notebook_id == self.notebook.object_id
+    assert db_file.note_id == self.note.object_id
+    assert db_file.filename == self.filename
+    assert db_file.size_bytes == len( large_file_data )
+    assert db_file.content_type == self.content_type
+
+    # assert that the file data was actually stored
+    assert Upload_file.open_file( self.file_id ).read() == large_file_data
+
+    # assert that storage bytes increased
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > orig_storage_bytes
+
   def assert_streaming_error( self, result, error_string ):
     gen = result[ u"body" ]
     assert isinstance( gen, types.GeneratorType )

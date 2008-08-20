@@ -581,7 +581,9 @@ class Files( object ):
 
     # if the uploaded file's size would put the user over quota, bail and inform the user
     rate_plan = self.__users.rate_plan( user.rate_plan )
-    if user.storage_bytes + uploaded_file.total_received_bytes > rate_plan.get( u"storage_quota_bytes", 0 ):
+    storage_quota_bytes = rate_plan.get( u"storage_quota_bytes" )
+
+    if storage_quota_bytes and user.storage_bytes + uploaded_file.total_received_bytes > storage_quota_bytes:
       uploaded_file.delete()
       return dict( script = quota_error_script )
 

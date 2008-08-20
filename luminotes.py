@@ -44,7 +44,7 @@ def main( args ):
   if server_present is True:
     print "Luminotes server is already running. aborting"
 
-    if launch_browser:
+    if launch_browser is True:
       webbrowser.open_new( server_url )
 
     sys.exit( 1 )
