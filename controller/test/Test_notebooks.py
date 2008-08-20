@@ -3182,6 +3182,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == self.note.object_id
+    assert notes[ 0 ].summary
 
   def test_search_without_login( self ):
     search_text = u"bla"
@@ -3220,6 +3221,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == self.note.object_id
+    assert notes[ 0 ].summary
 
   def test_search_empty( self ):
     self.login()
@@ -3230,8 +3232,6 @@ class Test_notebooks( Test_controller ):
       notebook_id = self.notebook.object_id,
       search_text = search_text,
     ), session_id = self.session_id )
-
-    notes = result.get( "notes" )
 
     assert result[ "error" ]
     assert u"missing" in result[ "error" ]
@@ -3245,8 +3245,6 @@ class Test_notebooks( Test_controller ):
       notebook_id = self.notebook.object_id,
       search_text = search_text,
     ), session_id = self.session_id )
-
-    notes = result.get( "notes" )
 
     assert result[ "error" ]
     assert u"too long" in result[ "error" ]
@@ -3284,7 +3282,9 @@ class Test_notebooks( Test_controller ):
 
     assert len( notes ) == 2
     assert notes[ 0 ].object_id == note3.object_id
+    assert notes[ 0 ].summary
     assert notes[ 1 ].object_id == self.note.object_id
+    assert notes[ 1 ].summary
 
   def test_search_character_refs( self ):
     self.login()
@@ -3303,6 +3303,7 @@ class Test_notebooks( Test_controller ):
 
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == note3.object_id
+    assert notes[ 0 ].summary
 
   def test_search_titles( self ):
     self.login()

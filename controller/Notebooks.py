@@ -426,18 +426,30 @@ class Notebooks( object ):
       note = summarize and self.summarize_note( note ) or note,
     )
 
-  def summarize_note( self, note ):
+  def summarize_note( self, note, max_summary_length = None, word_count = None ):
     """
-    Create a truncated note summary for the given note, and then return the note with its summary
-    set.
+    Create a truncated, HTML-free note summary for the given note, and then return the note with
+    its summary set.
 
     @type note: model.Note or NoneType
     @param note: note to summarize, or None
+    @type max_summary_length: int or NoneType
+    @param max_summary_length: the length to which the summary is truncated (optional, defaults
+                               to a reasonable length)
+    @type word_count: int or NoneType
+    @param word_count: the number of words to which the summary is truncated (optional, defaults
+                       to a reasonable number of words)
     @rtype: model.Note or NoneType
     @return: note with its summary member set, or None if no note was provided
     """
-    MAX_SUMMARY_LENGTH = 40
-    word_count = 10
+    DEFAULT_MAX_SUMMARY_LENGTH = 40
+    DEFAULT_WORD_COUNT = 10
+
+    if not max_summary_length:
+      max_summary_length = DEFAULT_MAX_SUMMARY_LENGTH
+
+    if not word_count:
+      word_count = DEFAULT_WORD_COUNT
 
     if note is None:
       return None
@@ -460,13 +472,13 @@ class Notebooks( object ):
     truncated = False
     summary = first_words( words, word_count )
 
-    while len( summary ) > MAX_SUMMARY_LENGTH:
+    while len( summary ) > max_summary_length:
       word_count -= 1
       summary = first_words( words, word_count )
 
       # if the first word is just ridiculously long, truncate it without finding a word boundary
       if word_count == 1:
-        summary = summary[ : MAX_SUMMARY_LENGTH ]
+        summary = summary[ : max_summary_length ]
         truncated = True
         break
 
@@ -1110,6 +1122,9 @@ class Notebooks( object ):
       raise Validation_error( u"search_text", None, unicode, message = u"is missing" )
 
     notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, notebook_id, search_text, self.__database.backend ) )
+
+    # make a summary for each note that doesn't have one
+    notes = [ note.summary and note or self.summarize_note( note, max_summary_length = 80, word_count = 30 ) for note in notes ]
 
     return dict(
       notes = notes,
