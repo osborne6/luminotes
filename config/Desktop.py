@@ -4,7 +4,7 @@ import cherrypy
 
 settings = { 
   "global": {
-    "server.thread_pool": 1,
+    "server.thread_pool": 4,
     "static_filter.root": os.getcwd(),
     "server.log_to_screen": True,
     "luminotes.launch_browser": True,
