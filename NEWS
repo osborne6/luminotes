@@ -1,4 +1,4 @@
-1.4.26:
+1.4.26: August 20, 2008:
  * Ported all database code to support SQLite in addition to the existing 
    PostgreSQL support. This is a necessary first step for Luminotes Desktop.
  * Updated all unit tests to test against an in-memory SQLite database. This
