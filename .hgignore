@@ -1,6 +1,10 @@
 syntax: glob
 *.pyc
 *.swp
+*~
 luminotes.log
+luminotes.db
 session/*
 files/*
+build/*
+dist/*
