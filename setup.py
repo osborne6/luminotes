@@ -17,9 +17,12 @@ def files( path ):
 
 class Luminotes( Distribution ):
   def __init__( self, attrs ):
+    self.ctypes_com_server = []
     self.com_server = []
     self.services = []
     self.windows = []
+    self.service = []
+    self.isapi = []
     self.console = [ "luminotes.py" ]
     self.zipfile = "luminotes.zip"
     Distribution.__init__( self, attrs )
