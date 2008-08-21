@@ -1,7 +1,11 @@
 import sys
-#import py2exe
 from glob import glob
 from distutils.core import setup, Distribution
+
+try:
+  import py2exe
+except ImportError:
+  pass
 
 
 def files( path ):
@@ -13,7 +17,11 @@ def files( path ):
 
 class Luminotes( Distribution ):
   def __init__( self, attrs ):
+    self.com_server = []
+    self.services = []
+    self.windows = []
     self.console = [ "luminotes.py" ]
+    self.zipfile = "luminotes.zip"
     Distribution.__init__( self, attrs )
 
 
