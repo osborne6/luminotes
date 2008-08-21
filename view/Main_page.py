@@ -152,7 +152,7 @@ class Main_page( Page ):
       Div(
         id = u"status_area",
       ),
-      Header( user, header_notebook, login_url, logout_url, header_note_title ),
+      Header( user, header_notebook, login_url, logout_url, header_note_title, rate_plan ),
       Div(
         Div(
           Note_tree_area(

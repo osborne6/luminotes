@@ -44,6 +44,7 @@ class Initializer( object ):
     self.create_anonymous_user()
     if desktop is True:
       self.create_desktop_user()
+
     self.database.commit()
 
   def create_main_notebook( self ):
@@ -51,6 +52,10 @@ class Initializer( object ):
     main_notebook_id = self.database.next_id( Notebook )
     self.main_notebook = Notebook.create( main_notebook_id, u"Luminotes" )
     self.database.save( self.main_notebook, commit = False )
+
+    # no need to create default notes for the desktop version
+    if self.desktop is True:
+      return
 
     # create an id for each note
     note_ids = {}

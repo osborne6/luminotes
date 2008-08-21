@@ -1,12 +1,30 @@
 from Tags import Div, A, Img, Span
 
 class Header( Div ):
-  def __init__( self, user, first_notebook, login_url, logout_url, note_title ):
+  def __init__( self, user, first_notebook, login_url, logout_url, note_title, rate_plan = None ):
     title_image = Img(
       src ="/static/images/luminotes_title.png",
       class_ = u"luminotes_title", width = u"193", height = u"60",
       alt = u"Luminotes",
     )
+
+    if rate_plan and rate_plan.get( u"name" ) == u"desktop":
+      Div.__init__(
+        self,
+        Div(
+          ( note_title == u"home" ) and title_image or
+            A( title_image, href = u"http://luminotes.com/", target = "_new" ),
+          Div(
+            A( u"support", href = u"http://luminotes.com/support", target = "_new" ), u" | ",
+            A( u"blog", href = u"http://luminotes.com/blog", target = "_new" ),
+            class_ = u"header_links",
+          ),
+          class_ = u"wide_center_area",
+        ),
+        id = u"header",
+        class_ = u"header",
+      )
+      return
 
     Div.__init__(
       self,
