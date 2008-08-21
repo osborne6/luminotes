@@ -1457,7 +1457,8 @@ class Test_users( Test_controller ):
     assert smtplib.SMTP.connected == False
     assert len( smtplib.SMTP.emails ) == 1
 
-    from email.Message import Message, Charset
+    from email.Message import Message
+    from email import Charset
     ( from_address, to_addresses, message ) = smtplib.SMTP.emails[ 0 ]
 
     assert self.email_address in from_address
