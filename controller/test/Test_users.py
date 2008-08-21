@@ -1143,9 +1143,9 @@ class Test_users( Test_controller ):
     password_reset_id = matches.group( 2 )
     assert password_reset_id
 
-    # to trigger expiration, pretend that the password reset was made 25 hours ago
+    # to trigger expiration, pretend that the password reset was made 26 hours ago
     password_reset = self.database.load( Password_reset, password_reset_id )
-    password_reset._Persistent__revision = datetime.now( tz = utc ) - timedelta( hours = 25 )
+    password_reset._Persistent__revision = datetime.now( tz = utc ) - timedelta( hours = 26 )
     self.database.save( password_reset )
 
     result = self.http_get( "/users/redeem_reset/%s" % password_reset_id )
@@ -1270,9 +1270,9 @@ class Test_users( Test_controller ):
     password_reset_id = matches.group( 2 )
     assert password_reset_id
 
-    # to trigger expiration, pretend that the password reset was made 25 hours ago
+    # to trigger expiration, pretend that the password reset was made 26 hours ago
     password_reset = self.database.load( Password_reset, password_reset_id )
-    password_reset._Persistent__revision = datetime.now( tz = utc ) - timedelta( hours = 25 )
+    password_reset._Persistent__revision = datetime.now( tz = utc ) - timedelta( hours = 26 )
     self.database.save( password_reset )
 
     new_password = u"newpass"
