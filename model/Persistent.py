@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from pytz import utc
 
@@ -71,7 +72,15 @@ class Persistent( object ):
     )
 
   def update_revision( self ):
-    self.__revision = datetime.now( tz = utc )
+    revision = datetime.now( tz = utc )
+
+    # if the revision didn't change, then we must be using a low-precision timer on a platform like
+    # Windows. so, replace the microseconds with a value from a higher-precision timer
+    if revision == self.__revision:
+      MICROSECONDS = 1000000
+      revision = revision.replace( microsecond = time.clock() * MICROSECONDS % MICROSECONDS )
+
+    self.__revision = revision
 
   @staticmethod
   def make_cache_key( Object_type, object_id ):
