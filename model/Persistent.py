@@ -78,7 +78,7 @@ class Persistent( object ):
     # Windows. so, replace the microseconds with a value from a higher-precision timer
     if revision == self.__revision:
       MICROSECONDS = 1000000
-      revision = revision.replace( microsecond = time.clock() * MICROSECONDS % MICROSECONDS )
+      revision = revision.replace( microsecond = int( time.clock() * MICROSECONDS ) % MICROSECONDS )
 
     self.__revision = revision
 
