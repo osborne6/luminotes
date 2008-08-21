@@ -135,6 +135,62 @@ class Test_root( Test_controller ):
     assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
     assert result[ u"rate_plan" ]
 
+  def test_index_auto_login( self ):
+    self.settings[ u"global" ][ u"luminotes.auto_login_username" ] = self.username
+
+    result = self.http_get(
+      "/",
+    )
+
+    assert result
+    assert result.get( u"redirect" ) == u"/notebooks/%s" % self.notebook.object_id
+
+    # confirm that we're now logged in and can access the user's notebook without an error
+    result = self.http_get(
+      result.get( u"redirect" ),
+      session_id = self.session_id,
+    )
+
+    assert u"error" not in result
+
+  def test_index_auto_login_while_already_logged_in( self ):
+    self.login()
+
+    self.settings[ u"global" ][ u"luminotes.auto_login_username" ] = self.username
+
+    result = self.http_get(
+      "/",
+      session_id = self.session_id,
+    )
+
+    assert result
+    assert result.get( u"redirect" ) == u"/notebooks/%s" % self.notebook.object_id
+
+    # confirm that we're now logged in and can access the user's notebook without an error
+    result = self.http_get(
+      result.get( u"redirect" ),
+      session_id = self.session_id,
+    )
+
+    assert u"error" not in result
+
+  def test_index_auto_login_with_unknown_username( self ):
+    self.settings[ u"global" ][ u"luminotes.auto_login_username" ] = u"unknownusername"
+
+    result = self.http_get(
+      "/",
+    )
+
+    assert result
+    assert result.get( u"redirect" ) is None
+
+    result = self.http_get(
+      u"/notebooks/%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    assert result.get( "status" ) == "302 Found" # redirect to login page
+
   def test_tour( self ):
     result = self.http_get( u"/tour" )
 
