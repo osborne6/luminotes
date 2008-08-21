@@ -25,9 +25,10 @@ class Initializer( object ):
     ( u"enable JavaScript.html", False ),
   ]
 
-  def __init__( self, database, host, settings, nuke = False ):
+  def __init__( self, database, host, settings, desktop, nuke = False ):
     self.database = database
     self.settings = settings
+    self.desktop = desktop
     self.main_notebook = None
     self.anonymous = None
 
@@ -41,6 +42,8 @@ class Initializer( object ):
 
     self.create_main_notebook()
     self.create_anonymous_user()
+    if desktop is True:
+      self.create_desktop_user()
     self.database.commit()
 
   def create_main_notebook( self ):
@@ -74,6 +77,19 @@ class Initializer( object ):
     # give the anonymous user read-only access to the main notebook
     self.database.execute( self.anonymous.sql_save_notebook( self.main_notebook.object_id, read_write = False, owner = False ), commit = False )
 
+  def create_desktop_user( self ):
+    from controller.Users import Users
+    users = Users(
+      self.database,
+      self.settings[ u"global" ].get( u"luminotes.http_url", u"" ),
+      self.settings[ u"global" ].get( u"luminotes.https_url", u"" ),
+      self.settings[ u"global" ].get( u"luminotes.support_email", u"" ),
+      self.settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
+      self.settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
+    )
+
+    users.create_user( u"desktopuser" )
+
 
 def main( args = None ):
   nuke = False
@@ -82,6 +98,7 @@ def main( args = None ):
   from config import Common
 
   cherrypy.config.update( Common.settings )
+  desktop = False
 
   if args and "-d" in args:
     from config import Development
@@ -89,6 +106,7 @@ def main( args = None ):
   elif args and "-l" in args:
     from config import Desktop
     settings = Desktop.settings
+    desktop = True
   else:
     from config import Production
     settings = Production.settings
@@ -111,7 +129,7 @@ def main( args = None ):
     host = host,
     ssl_mode = settings[ u"global" ].get( u"luminotes.db_ssl_mode" ),
   )
-  initializer = Initializer( database, host, settings, nuke )
+  initializer = Initializer( database, host, settings, desktop, nuke )
 
 
 def fix_note_contents( contents, notebook_id, note_ids, settings ):

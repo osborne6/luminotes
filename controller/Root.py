@@ -9,6 +9,7 @@ from Groups import Groups
 from Files import Files
 from Forums import Forums
 from Database import Valid_id, end_transaction
+from Users import update_auth
 from model.Note import Note
 from model.Notebook import Notebook
 from model.User import User
@@ -157,22 +158,39 @@ class Root( object ):
   @strongly_expire
   @end_transaction
   @grab_user_id
+  @update_auth
   @validate(
     user_id = Valid_id( none_okay = True ),
   )
   def index( self, user_id ):
     """
     Provide the information necessary to display the web site's front page, potentially performing
-    a redirect to the https version of the page.
+    a redirect to the https version of the page or the user's first notebook.
     """
     https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
     https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
-    
+
+    # if the server is configured to auto-login a particular user, log that user in and redirect to
+    # their first notebook
+    auto_login_username = self.__settings[ u"global" ].get( u"luminotes.auto_login_username" )
+    if auto_login_username:
+      user = self.__database.select_one( User, User.sql_load_by_username( auto_login_username ), use_cache = True )
+
+      if user and user.username:
+        first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
+        if first_notebook:
+          return dict(
+            redirect = u"/notebooks/%s" % first_notebook.object_id,
+            authenticated = user,
+          )
+
+    # if the user is logged in and the HTTP request has no referrer, then redirect to the user's
+    # first notebook
     if user_id:
-      # if the user is logged in and the HTTP request has no referrer, then redirect to the user's first notebook
       referer = cherrypy.request.headerMap.get( u"Referer" )
       if not referer:
         user = self.__database.load( User, user_id )
+
         if user and user.username:
           first_notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( parents_only = True, undeleted_only = True ) )
           if first_notebook:

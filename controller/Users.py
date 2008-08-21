@@ -207,19 +207,19 @@ class Users( object ):
     self.__payment_email = payment_email
     self.__rate_plans = rate_plans
 
-  def __create_user( self, username, password, password_repeat, email_address, initial_rate_plan = None ):
+  def create_user( self, username, password = None, password_repeat = None, email_address = None, initial_rate_plan = None ):
     """
     Create a new User based on the given information. Start that user with their own Notebook and a
     "welcome to your wiki" Note. This method does not commit the transaction to the database.
 
     @type username: unicode (alphanumeric only)
     @param username: username to use for this new user
-    @type password: unicode
-    @param password: password to use
-    @type password_repeat: unicode
-    @param password_repeat: password to use, again
-    @type email_address: unicode
-    @param email_address: user's email address
+    @type password: unicode or NoneType
+    @param password: password to use (optional, defaults to None)
+    @type password_repeat: unicode or NoneType
+    @param password_repeat: password to use, again (optional, defaults to None)
+    @type email_address: unicode or NoneType
+    @param email_address: user's email address (optional, defaults to None)
     @type initial_rate_plan: int or NoneType
     @param initial_rate_plan: index of rate plan to start the user with before they even subscribe
                               (defaults to None)
@@ -236,7 +236,7 @@ class Users( object ):
     if user is not None:
       raise Signup_error( u"Sorry, that username is not available. Please try something else." )
 
-    if len( email_address ) > 0:
+    if email_address:
       try:
         email_address = valid_email_address( email_address )
       except ValueError:
@@ -308,7 +308,7 @@ class Users( object ):
     @raise Signup_error: passwords don't match or the username is unavailable
     @raise Validation_error: one of the arguments is invalid
     """
-    ( user, notebook ) = self.__create_user( username, password, password_repeat, email_address )
+    ( user, notebook ) = self.create_user( username, password, password_repeat, email_address )
     self.__database.commit()
 
     # if there's an invite_id, then redeem that invite and redirect to the invite's notebook
@@ -401,7 +401,7 @@ class Users( object ):
       raise Signup_error( 'Your current rate plan includes a maximum of %s users. Please upgrade your account for additional users.' % included_users_count )
 
     # create a new user with the same rate plan as the currently logged-in user
-    ( created_user, notebook ) = self.__create_user(
+    ( created_user, notebook ) = self.create_user(
       username,
       password,
       password_repeat,
