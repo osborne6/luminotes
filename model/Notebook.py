@@ -208,6 +208,8 @@ class Notebook( Persistent ):
         """ % ( quote( search_text ), quote( user_id ),
                 quote( first_notebook_id ) )
     else:
+      search_text = search_text.strip().lower()
+
       # TODO: use SQLite's FTS (full text search) support instead
       return \
         """
@@ -219,7 +221,7 @@ class Notebook( Persistent ):
           note_current.notebook_id = user_notebook.notebook_id and user_notebook.user_id = %s and
           note_current.deleted_from_id is null and
           lower( note_current.contents ) like %s
-          order by note_current.notebook_id = %s desc, rank desc limit 20
+          order by note_current.notebook_id = %s desc, note_current.rank desc limit 20
         """ % ( quote( user_id ), quote_fuzzy( search_text ), quote( first_notebook_id ) )
 
   @staticmethod
