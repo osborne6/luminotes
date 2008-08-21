@@ -1,3 +1,4 @@
+import sys
 import time
 from datetime import datetime
 from pytz import utc
@@ -74,9 +75,9 @@ class Persistent( object ):
   def update_revision( self ):
     revision = datetime.now( tz = utc )
 
-    # if the revision didn't change, then we must be using a low-precision timer on a platform like
-    # Windows. so, replace the microseconds with a value from a higher-precision timer
-    if revision == self.__revision:
+    # as a work around for the low-precision timer on Windows, replace the microseconds with a value
+    # from a higher-precision timer
+    if sys.platform.startswith( "win" ):
       MICROSECONDS = 1000000
       revision = revision.replace( microsecond = int( time.clock() * MICROSECONDS ) % MICROSECONDS )
 
