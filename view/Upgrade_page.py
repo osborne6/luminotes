@@ -142,7 +142,8 @@ class Upgrade_page( Product_page ):
                   class_ = u"feature_name",
                 ),
                 [ Td(
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
+                  plan[ u"notebook_sharing" ] and
+                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
                 ) for plan in rate_plans ],
               ),
               Tr(

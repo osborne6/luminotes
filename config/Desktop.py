@@ -15,6 +15,7 @@ settings = {
         "designed_for": "individuals",
         "storage_quota_bytes": None, # None indicates that there is no storage quota
         "included_users": 1,
+        "notebook_sharing": False,
         "notebook_collaboration": False,
         "user_admin": False,
         "fee": None,

@@ -4,7 +4,7 @@ from Search_form import Search_form
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, parent_id, notebook_path, updates_path, user ):
+  def __init__( self, notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan ):
     linked_notebooks = [ nb for nb in notebooks if
       ( nb.read_write or not nb.name.startswith( u"Luminotes" ) ) and
       nb.name not in ( u"trash" ) and
@@ -42,7 +42,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          ( notebook.name == u"Luminotes blog" ) and Div(
+          ( rate_plan.get( u"notebook_sharing" ) and notebook.name == u"Luminotes blog" ) and Div(
             A(
               u"subscribe to rss",
               href = u"%s?rss" % notebook_path,
@@ -55,7 +55,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             class_ = u"link_area_item",
-          ) or ( updates_path and Div(
+          ) or ( updates_path and rate_plan.get( u"notebook_sharing" ) and Div(
             A(
               u"subscribe to rss",
               href = updates_path,
@@ -112,7 +112,7 @@ class Link_area( Div ):
               class_ = u"link_area_item",
             ) or None,
 
-            ( notebook.owner and user.username ) and Div(
+            ( notebook.owner and user.username and rate_plan.get( u"notebook_sharing" ) ) and Div(
               A(
                 u"share",
                 href = u"#",

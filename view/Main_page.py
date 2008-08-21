@@ -78,10 +78,13 @@ class Main_page( Page ):
     else:
       title = None
 
-    updates_path = u"/notebooks/updates/%s?rss&%s" % (
-      notebook.object_id,
-      urlencode( [ ( u"notebook_name", notebook.name.encode( "utf8" ) ) ] ),
-    )
+    if rate_plan.get( u"notebook_sharing" ):
+      updates_path = u"/notebooks/updates/%s?rss&%s" % (
+        notebook.object_id,
+        urlencode( [ ( u"notebook_name", notebook.name.encode( "utf8" ) ) ] ),
+      )
+    else:
+      updates_path = None
 
     if notebook.name == u"Luminotes":
       notebook_path = u"/"
@@ -231,7 +234,7 @@ class Main_page( Page ):
           id = u"center_content_area",
         ),
         Div(
-          Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user ),
+          Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan ),
           id = u"right_area",
         ),
         id = u"everything_area",
