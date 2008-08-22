@@ -132,9 +132,9 @@ def main( args = None ):
   host = settings[ u"global" ].get( u"luminotes.db_host" )
   database = Database(
     host = host,
-    ssl_mode = settings[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
   )
-  initializer = Initializer( database, host, settings, desktop, nuke )
+  initializer = Initializer( database, host, cherrypy.config.configMap, desktop, nuke )
 
 
 def fix_note_contents( contents, notebook_id, note_ids, settings ):

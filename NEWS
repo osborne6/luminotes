@@ -1,5 +1,7 @@
-1.4.27:
- *
+1.4.27: August 22, 2008
+ * Fixed a bug in tools/initdb.py and tools/updatedb.py that caused them to
+   only use some of the configured settings.
+ * Progress on Luminotes Desktop, including the Windows installer.
 
 1.4.26: August 20, 2008:
  * Ported all database code to support SQLite in addition to the existing 

@@ -88,11 +88,12 @@ def main( args ):
     settings = Production.settings
 
   cherrypy.config.update( settings )
+
   database = Database(
-    host = settings[ u"global" ].get( u"luminotes.db_host" ),
-    ssl_mode = settings[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
+    ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
   )
-  initializer = Updater( database, settings )
+  initializer = Updater( database, cherrypy.config.configMap )
 
 
 if __name__ == "__main__":
