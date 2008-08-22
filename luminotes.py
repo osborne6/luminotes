@@ -20,7 +20,8 @@ def main( args ):
   if args and "-d" in args:
     from config import Development
     settings = Development.settings
-  elif args and "-l" in args:
+  # sys.frozen is from py2exe
+  elif args and "-l" in args or hasattr( sys, "frozen" ):
     from config import Desktop
     settings = Desktop.settings
   else:
