@@ -28,6 +28,8 @@ def change_to_main_dir():
 
 
 def main( args ):
+  change_to_main_dir()
+
   cherrypy.config.update( Common.settings )
 
   if args and "-d" in args:
@@ -64,8 +66,6 @@ def main( args ):
     sys.exit( 1 )
 
   socket.setdefaulttimeout( SOCKET_TIMEOUT_SECONDS )
-
-  change_to_main_dir()
 
   database = Database(
     host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
