@@ -19,10 +19,10 @@ class Luminotes( Distribution ):
     self.ctypes_com_server = []
     self.com_server = []
     self.services = []
-    self.windows = []
+    self.windows = [ "luminotes.py" ]
+    self.console = []
     self.service = []
     self.isapi = []
-    self.console = [ "luminotes.py" ]
     self.zipfile = "lib\luminotes.zip"
     Distribution.__init__( self, attrs )
 
@@ -158,7 +158,7 @@ try:
       script = InnoScript("Luminotes",
                 lib_dir,
                 dist_dir,
-                self.console_exe_files,
+                self.windows_exe_files,
                 self.lib_files,
                             version = VERSION)
       print "*** creating the inno setup script***"
