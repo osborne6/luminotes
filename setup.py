@@ -19,7 +19,10 @@ class Luminotes( Distribution ):
     self.ctypes_com_server = []
     self.com_server = []
     self.services = []
-    self.windows = [ "luminotes.py" ]
+    self.windows = [ dict(
+      script = "luminotes.py",
+      icon_resources = [ ( 0, "static\\images\\luminotes.ico" ) ],
+    ) ]
     self.console = []
     self.service = []
     self.isapi = []

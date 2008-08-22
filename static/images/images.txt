@@ -29,6 +29,7 @@ http://groups-beta.google.com/groups/roundedcorners?c=b0d0ff&bc=fafafa&w=6&h=6&a
 The title image is in a 50 pt Qlassik medium font, with a 25 pt sub-heading
 and a manually modified "k" character.
 
-The luminotes.ico Windows icon was created with the following command:
+The luminotes.ico Windows icon was created by converting favicon*.xcf to PNG with
+the Gimp and then running the following command on the resulting PNGs:
 
 icotool -c -t 0 favicon.png favicon_large.png favicon_quite_large.png -o luminotes.ico

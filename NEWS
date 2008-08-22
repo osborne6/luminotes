@@ -1,3 +1,8 @@
+1.?
+ * Created a Windows application icon and embedded it into generated
+   Luminotes executable.
+ * 
+
 1.4.27: August 22, 2008
  * Fixed a bug in tools/initdb.py and tools/updatedb.py that caused them to
    only use some of the configured settings.
