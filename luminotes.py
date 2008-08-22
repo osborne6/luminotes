@@ -2,6 +2,7 @@
 
 import sys
 import socket
+import os.path
 import urllib2 as urllib
 import cherrypy
 import webbrowser
@@ -12,6 +13,18 @@ from config import Common
 
 INITIAL_SOCKET_TIMEOUT_SECONDS = 1
 SOCKET_TIMEOUT_SECONDS = 60
+
+
+def change_to_main_dir():
+  """
+  Change to the directory where the executable / main script is located.
+  """
+  if hasattr( sys, "frozen" ):
+    path = os.path.dirname( unicode( sys.executable, sys.getfilesystemencoding() ) )
+  else:
+    path = os.path.dirname( unicode( __file__, sys.getfilesystemencoding() ) )
+
+  os.chdir( path )
 
 
 def main( args ):
@@ -51,6 +64,8 @@ def main( args ):
     sys.exit( 1 )
 
   socket.setdefaulttimeout( SOCKET_TIMEOUT_SECONDS )
+
+  change_to_main_dir()
 
   database = Database(
     host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
