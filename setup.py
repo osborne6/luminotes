@@ -3,12 +3,6 @@ import sys
 from glob import glob
 from distutils.core import setup, Distribution
 
-try:
-  import py2exe
-  from py2exe.build_exe import py2exe
-except ImportError:
-  pass
-
 
 VERSION = "1.5.0"
 
@@ -137,30 +131,44 @@ class InnoScript:
 
 
 
-class Build_installer(py2exe):
-  # This class first builds the exe file(s), then creates a Windows installer.
-  # You need InnoSetup for it.
-  def run(self):
-    # TODO: run initdb.py -l to generate a luminotes.db
+try:
+  import py2exe
+  from py2exe.build_exe import py2exe
 
-    # First, let py2exe do it's work.
-    py2exe.run(self)
+  class Build_installer(py2exe):
+    # This class first builds the exe file(s), then creates a Windows installer.
+    # You need InnoSetup for it.
+    def run(self):
+      # generate an initial database file
+      try:
+        os.remove( "luminotes.db" )
+      except OSError:
+        pass
 
-    lib_dir = self.lib_dir
-    dist_dir = self.dist_dir
-    
-    # create the Installer, using the files py2exe has created.
-    script = InnoScript("Luminotes",
-              lib_dir,
-              dist_dir,
-              self.console_exe_files,
-              self.lib_files,
-			  version = VERSION)
-    print "*** creating the inno setup script***"
-    script.create()
-    print "*** compiling the inno setup script***"
-    script.compile()
-    # Note: By default the final setup.exe will be in an Output subdirectory.
+      from tools import initdb
+      initdb.main( ( "-l", ) )
+
+      # First, let py2exe do it's work.
+      py2exe.run(self)
+
+      lib_dir = self.lib_dir
+      dist_dir = self.dist_dir
+      
+      # create the Installer, using the files py2exe has created.
+      script = InnoScript("Luminotes",
+                lib_dir,
+                dist_dir,
+                self.console_exe_files,
+                self.lib_files,
+                            version = VERSION)
+      print "*** creating the inno setup script***"
+      script.create()
+      print "*** compiling the inno setup script***"
+      script.compile()
+      # Note: By default the final setup.exe will be in an Output subdirectory.
+except ImportError:
+  class Build_installer:
+    pass
 
 
 setup(
