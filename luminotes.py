@@ -24,7 +24,8 @@ def change_to_main_dir():
   else:
     path = os.path.dirname( unicode( __file__, sys.getfilesystemencoding() ) )
 
-  os.chdir( path )
+  if path:
+    os.chdir( path )
 
 
 def main( args ):
