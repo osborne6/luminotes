@@ -8,7 +8,10 @@ settings = {
     "session_filter.storage_type": "ram",
     "session_filter.timeout": 60 * 24 * 365, # one year
     "static_filter.root": os.getcwd(),
-    "server.log_to_screen": True,
+    "server.log_to_screen": False,
+    "server.log_file": "luminotes.log",
+    "server.log_access_file": "luminotes.log",
+    "server.log_tracebacks": True,
     "luminotes.launch_browser": True,
     "luminotes.db_host": None, # use local SQLite database
     "luminotes.auto_login_username": "desktopuser",

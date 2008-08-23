@@ -31,6 +31,9 @@ def change_to_main_dir():
 def main( args ):
   change_to_main_dir()
 
+  if sys.platform.startswith( "win" ):
+    sys.stderr = sys.stdout
+
   cherrypy.config.update( Common.settings )
 
   if args and "-d" in args:

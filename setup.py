@@ -108,6 +108,10 @@ class InnoScript:
     print >> ofi, 'Name: "{group}\Uninstall %s"; Filename: "{uninstallexe}"' % self.name
     print >> ofi
 
+    print >> ofi, r"[UninstallDelete]"
+    print >> ofi, r'Type: files; Name: "{app}\luminotes.log"'
+    print >> ofi
+
     print >> ofi, r"[UninstallRun]"
     print >> ofi, r'Filename: "{app}\luminotes.exe"; Parameters: "-k"; RunOnceId: LuminotesShutdown'
 
