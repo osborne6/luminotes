@@ -93,6 +93,7 @@ class InnoScript:
     print >> ofi, r"AppVerName=%s %s" % (self.name, self.version)
     print >> ofi, r"DefaultDirName={pf}\%s" % self.name
     print >> ofi, r"DefaultGroupName=%s" % self.name
+    print >> ofi, r"SetupIconFile=static\images\luminotes.ico"
     print >> ofi
 
     print >> ofi, r"[Files]"
