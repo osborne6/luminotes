@@ -201,7 +201,7 @@ setup(
   options = dict(
     py2exe = dict(
       packages = "cherrypy.filters",
-      includes = "email.header",
+      includes = "email.header,simplejson",
       compressed = 1,
       optimize = 2,
     )
