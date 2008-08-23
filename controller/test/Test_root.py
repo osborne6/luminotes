@@ -482,6 +482,28 @@ class Test_root( Test_controller ):
 
     assert result.get( "response" ) == u"pong"
 
+  def test_shutdown( self ):
+    self.settings[ u"global" ][ u"luminotes.allow_shutdown_command" ] = True
+
+    assert cherrypy.server._is_ready() is True
+    result = self.http_get( "/shutdown" )
+
+    assert cherrypy.server._is_ready() is False
+
+  def test_shutdown_disallowed_explicitly( self ):
+    self.settings[ u"global" ][ u"luminotes.allow_shutdown_command" ] = False
+
+    assert cherrypy.server._is_ready() is True
+    result = self.http_get( "/shutdown" )
+
+    assert cherrypy.server._is_ready() is True
+
+  def test_shutdown_disallowed_implicitly( self ):
+    assert cherrypy.server._is_ready() is True
+    result = self.http_get( "/shutdown" )
+
+    assert cherrypy.server._is_ready() is True
+
   def test_404( self ):
     result = self.http_get( "/four_oh_four" )
 

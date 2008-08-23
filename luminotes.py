@@ -47,11 +47,19 @@ def main( args ):
 
   launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
 
-  # check to see if the server is already running
   socket.setdefaulttimeout( INITIAL_SOCKET_TIMEOUT_SECONDS )
   server_url = u"http://localhost:%d/" % cherrypy.config.configMap[ u"global" ].get( u"server.socket_port" )
   server_present = True
 
+  # if requested, attempt to shutdown an existing server and exit
+  if args and "-k" in args:
+    try:
+      urllib.urlopen( "%sshutdown" % server_url )
+    except urllib.URLError:
+      pass
+    sys.exit( 0 )
+
+  # check to see if the server is already running
   try:
     urllib.urlopen( "%sping" % server_url )
   except urllib.URLError:

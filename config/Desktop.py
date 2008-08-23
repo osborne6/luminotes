@@ -12,6 +12,7 @@ settings = {
     "luminotes.launch_browser": True,
     "luminotes.db_host": None, # use local SQLite database
     "luminotes.auto_login_username": "desktopuser",
+    "luminotes.allow_shutdown_command": True, # used to stop the process during uninstall
     "luminotes.rate_plans": [
       {
         "name": "desktop",

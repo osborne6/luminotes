@@ -367,6 +367,16 @@ class Root( object ):
       response = u"pong",
     )
 
+  @expose( view = Json )
+  def shutdown( self ):
+    # this is typically only allowed in the desktop configuration
+    if self.__settings[ u"global" ].get( u"luminotes.allow_shutdown_command" ) is not True:
+      return dict()
+
+    cherrypy.server.stop()
+
+    return dict()
+
   def _cp_on_http_error( self, status, message ):
     """
     CherryPy HTTP error handler, used to display page not found and generic error pages.
