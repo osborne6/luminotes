@@ -106,6 +106,10 @@ class InnoScript:
       print >> ofi, r'Name: "{group}\%s"; Filename: "{app}\%s"' % \
           (self.name, path)
     print >> ofi, 'Name: "{group}\Uninstall %s"; Filename: "{uninstallexe}"' % self.name
+    print >> ofi
+
+    print >> ofi, r"[UninstallRun]"
+    print >> ofi, r'Filename: "{app}\luminotes.exe"; Parameters: "-k"; RunOnceId: LuminotesShutdown'
 
   def compile(self):
     try:
