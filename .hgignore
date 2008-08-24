@@ -5,6 +5,8 @@ syntax: glob
 luminotes.log
 luminotes_error.log
 luminotes.db
+README.txt
+COPYING.txt
 session/*
 files/*
 build/*

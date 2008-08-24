@@ -94,11 +94,15 @@ class InnoScript:
     print >> ofi, r"DefaultDirName={pf}\%s" % self.name
     print >> ofi, r"DefaultGroupName=%s" % self.name
     print >> ofi, r"SetupIconFile=static\images\luminotes.ico"
+    print >> ofi, r"UninstallIconFile=static\images\luminotes.ico"
     print >> ofi
 
     print >> ofi, r"[Files]"
     for path in self.windows_exe_files + self.lib_files:
-      print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion' % (path, os.path.dirname(path))
+      if "readme" in path.lower():
+        print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion isreadme' % (path, os.path.dirname(path))
+      else:
+        print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion' % (path, os.path.dirname(path))
     print >> ofi
 
     print >> ofi, r"[Icons]"
@@ -148,10 +152,10 @@ try:
   import py2exe
   from py2exe.build_exe import py2exe
 
-  class Build_installer(py2exe):
+  class Build_installer( py2exe ):
     # This class first builds the exe file(s), then creates a Windows installer.
     # You need InnoSetup for it.
-    def run(self):
+    def run( self ):
       # generate an initial database file
       try:
         os.remove( "luminotes.db" )
@@ -160,6 +164,10 @@ try:
 
       from tools import initdb
       initdb.main( ( "-l", ) )
+
+      # copy the README and COPYING files to have ".txt" extensions and Windows newlines
+      self.copy_doc( "README" )
+      self.copy_doc( "COPYING" )
 
       # First, let py2exe do it's work.
       py2exe.run(self)
@@ -179,6 +187,17 @@ try:
       print "*** compiling the inno setup script***"
       script.compile()
       # Note: By default the final setup.exe will be in an Output subdirectory.
+
+    @staticmethod
+    def copy_doc( path ):
+      out = file( "%s.txt" % path, "w" )
+
+      for line in file( path ).readlines():
+        line = line.rstrip( "\r\n" )
+        out.write( "%s\r\n" % line )
+
+      out.close()
+
 except ImportError:
   class Build_installer:
     pass
@@ -194,6 +213,8 @@ setup(
   distclass = Luminotes,
   cmdclass = { "py2exe": Build_installer }, # override default py2exe class
   data_files = [
+    ( "", [ "README.txt", ] ),
+    ( "", [ "COPYING.txt", ] ),
     ( "", [ "luminotes.db", ] ),
     ( "static/css", files( "static/css/*.*" ) ),
     ( "static/html", files( "static/html/*.*" ) ),
@@ -201,6 +222,7 @@ setup(
     ( "static/images/toolbar", files( "static/images/toolbar/*.*" ) ),
     ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*" ) ),
     ( "static/js", files( "static/js/*.*" ) ),
+    ( "static/js", files( "static/js/*_LICENSE" ) ),
     ( "files", files( "files/.empty" ) ),
   ],
   options = dict(
