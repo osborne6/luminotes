@@ -1,6 +1,8 @@
 1.?
- * Created a Windows application icon and embedded it into generated
+ * Created a Windows application icon and embedded it into the generated
    Luminotes executable.
+ * Improved logging, so tracebacks in production and desktop mode actually go
+   to a file. Also removing logs on startup to prevent endless log growth.
  * 
 
 1.4.27: August 22, 2008
