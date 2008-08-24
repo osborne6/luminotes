@@ -92,9 +92,8 @@ class InnoScript:
     print >> ofi, r"AppName=%s" % self.name
     print >> ofi, r"AppVerName=%s %s" % (self.name, self.version)
     print >> ofi, r"DefaultDirName={pf}\%s" % self.name
-    print >> ofi, r"DefaultGroupName=%s" % self.name
+    print >> ofi, r"DisableProgramGroupPage=yes"
     print >> ofi, r"SetupIconFile=static\images\luminotes.ico"
-    print >> ofi, r"UninstallIconFile=static\images\luminotes.ico"
     print >> ofi
 
     print >> ofi, r"[Files]"
@@ -107,10 +106,8 @@ class InnoScript:
 
     print >> ofi, r"[Icons]"
     for path in self.windows_exe_files:
-      print >> ofi, r'Name: "{group}\%s"; Filename: "{app}\%s"' % \
+      print >> ofi, r'Name: "{commonprograms}\%s"; Filename: "{app}\%s"' % \
           (self.name, path)
-    print >> ofi, 'Name: "{group}\Uninstall %s"; Filename: "{uninstallexe}"' % self.name
-    print >> ofi
 
     print >> ofi, r"[UninstallDelete]"
     print >> ofi, r'Type: files; Name: "{app}\luminotes.log"'
