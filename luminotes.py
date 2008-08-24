@@ -31,9 +31,6 @@ def change_to_main_dir():
 def main( args ):
   change_to_main_dir()
 
-  if sys.platform.startswith( "win" ):
-    sys.stderr = sys.stdout
-
   cherrypy.config.update( Common.settings )
 
   if args and "-d" in args:
@@ -75,7 +72,13 @@ def main( args ):
     if launch_browser is True:
       webbrowser.open_new( server_url )
 
-    sys.exit( 1 )
+    sys.exit( 0 )
+
+  # remove the existing log file, if any
+  try:
+    os.remove( "luminotes.log" )
+  except OSError:
+    pass
 
   socket.setdefaulttimeout( SOCKET_TIMEOUT_SECONDS )
 
