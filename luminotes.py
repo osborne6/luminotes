@@ -1,5 +1,6 @@
 #!/usr/bin/python2.4
 
+import os
 import sys
 import socket
 import os.path
