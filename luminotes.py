@@ -75,9 +75,13 @@ def main( args ):
 
     sys.exit( 0 )
 
-  # remove the existing log file, if any
+  # remove the existing log files, if any
   try:
     os.remove( "luminotes.log" )
+  except OSError:
+    pass
+  try:
+    os.remove( "luminotes_error.log" )
   except OSError:
     pass
 

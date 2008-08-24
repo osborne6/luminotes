@@ -110,6 +110,7 @@ class InnoScript:
 
     print >> ofi, r"[UninstallDelete]"
     print >> ofi, r'Type: files; Name: "{app}\luminotes.log"'
+    print >> ofi, r'Type: files; Name: "{app}\luminotes_error.log"'
     print >> ofi
 
     print >> ofi, r"[UninstallRun]"

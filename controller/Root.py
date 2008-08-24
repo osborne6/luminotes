@@ -391,7 +391,7 @@ class Root( object ):
 
     import traceback
     if not self.__suppress_exceptions:
-      traceback.print_exc()
+      cherrypy.log( traceback.format_exc() )
     self.report_traceback()
 
     import sys

@@ -9,7 +9,7 @@ settings = {
     "session_filter.timeout": 60 * 24 * 365, # one year
     "static_filter.root": os.getcwd(),
     "server.log_to_screen": False,
-    "server.log_file": "luminotes.log",
+    "server.log_file": "luminotes_error.log",
     "server.log_access_file": "luminotes.log",
     "server.log_tracebacks": True,
     "luminotes.launch_browser": True,

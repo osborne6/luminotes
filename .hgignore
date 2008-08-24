@@ -3,6 +3,7 @@ syntax: glob
 *.swp
 *~
 luminotes.log
+luminotes_error.log
 luminotes.db
 session/*
 files/*
