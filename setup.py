@@ -100,9 +100,9 @@ class InnoScript:
 
     print >> ofi, r"[Files]"
     for path in self.windows_exe_files + self.lib_files:
-      if path.endswith( "luminotes.exe" )
+      if path.endswith( "luminotes.exe" ):
         extra = "; BeforeInstall: stop_exe()"
-      elif path.endswith( "luminotes.db" )
+      elif path.endswith( "luminotes.db" ):
         extra = " onlyifdoesntexist"
       else:
         extra = ""
