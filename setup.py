@@ -100,16 +100,17 @@ class InnoScript:
 
     print >> ofi, r"[Files]"
     for path in self.windows_exe_files + self.lib_files:
-      if "readme" in path.lower():
-        print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion isreadme' % (path, os.path.dirname(path))
-      else:
-        print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion' % (path, os.path.dirname(path))
+      print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion' % (path, os.path.dirname(path))
     print >> ofi
 
     print >> ofi, r"[Icons]"
     for path in self.windows_exe_files:
       print >> ofi, r'Name: "{commonprograms}\%s"; Filename: "{app}\%s"' % \
           (self.name, path)
+    print >> ofi
+
+    print >> ofi, r"[Run]"
+    print >> ofi, r'Filename: "{app}\luminotes.exe"; Description: "Run Luminotes now"; Flags: nowait postinstall skipifsilent'
 
     print >> ofi, r"[UninstallDelete]"
     print >> ofi, r'Type: files; Name: "{app}\luminotes.log"'
