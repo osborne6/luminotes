@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os
 import sys
 from glob import glob
@@ -200,6 +202,28 @@ except ImportError:
     pass
 
 
+if "py2exe" in sys.argv[ 1: ]:
+  txt_extension = ".txt"
+else:
+  txt_extension = ""
+
+data_files = [
+  ( "", [ "README%s" % txt_extension, ] ),
+  ( "", [ "COPYING%s" % txt_extension, ] ),
+  ( "", [ "luminotes.db", ] ),
+  ( "static/css", files( "static/css/*.*" ) ),
+  ( "static/html", files( "static/html/*.*" ) ),
+  ( "static/images", files( "static/images/*.*" ) ),
+  ( "static/images/toolbar", files( "static/images/toolbar/*.*" ) ),
+  ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*" ) ),
+  ( "static/js", files( "static/js/*.*" ) ),
+  ( "static/js", files( "static/js/*_LICENSE" ) ),
+  ( "files", files( "files/.empty" ) ),
+]
+
+package_data = { ".": sum( [ pair[ 1 ] for pair in data_files ], [] ) }
+
+
 setup(
   name = "Luminotes",
   version = VERSION,
@@ -209,19 +233,11 @@ setup(
   description = "personal wiki notebook",
   distclass = Luminotes,
   cmdclass = { "py2exe": Build_installer }, # override default py2exe class
-  data_files = [
-    ( "", [ "README.txt", ] ),
-    ( "", [ "COPYING.txt", ] ),
-    ( "", [ "luminotes.db", ] ),
-    ( "static/css", files( "static/css/*.*" ) ),
-    ( "static/html", files( "static/html/*.*" ) ),
-    ( "static/images", files( "static/images/*.*" ) ),
-    ( "static/images/toolbar", files( "static/images/toolbar/*.*" ) ),
-    ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*" ) ),
-    ( "static/js", files( "static/js/*.*" ) ),
-    ( "static/js", files( "static/js/*_LICENSE" ) ),
-    ( "files", files( "files/.empty" ) ),
-  ],
+  scripts = [ "luminotes.py" ],
+  packages = [ ".", "config", "controller", "model", "tools", "view" ],
+  package_dir = { ".": "." },
+  data_files = data_files,     # for py2exe
+  package_data = package_data, # for everything else
   options = dict(
     py2exe = dict(
       packages = "cherrypy.filters",
