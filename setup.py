@@ -100,7 +100,11 @@ class InnoScript:
 
     print >> ofi, r"[Files]"
     for path in self.windows_exe_files + self.lib_files:
-      print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion' % (path, os.path.dirname(path))
+      if "luminotes.exe" in path:
+        extra = "; BeforeInstall: stop_exe()"
+      else:
+        extra = ""
+      print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion%s' % (path, os.path.dirname(path), extra)
     print >> ofi
 
     print >> ofi, r"[Icons]"
@@ -119,6 +123,15 @@ class InnoScript:
 
     print >> ofi, r"[UninstallRun]"
     print >> ofi, r'Filename: "{app}\luminotes.exe"; Parameters: "-k"; RunOnceId: LuminotesShutdown'
+    print >> ofi
+
+    print >> ofi, r"[Code]"
+    print >> ofi, r"procedure stop_exe();"
+    print >> ofi, r"var"
+    print >> ofi, r" result_code: Integer;"
+    print >> ofi, r"begin"
+    print >> ofi, r"  Exec( ExpandConstant('{app}\luminotes.exe'), '-k', '', SW_SHOW, ewWaitUntilTerminated, result_code)"
+    print >> ofi, r"end;"
 
   def compile(self):
     try:
