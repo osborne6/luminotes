@@ -100,8 +100,10 @@ class InnoScript:
 
     print >> ofi, r"[Files]"
     for path in self.windows_exe_files + self.lib_files:
-      if "luminotes.exe" in path:
+      if path.endswith( "luminotes.exe" )
         extra = "; BeforeInstall: stop_exe()"
+      elif path.endswith( "luminotes.db" )
+        extra = " onlyifdoesntexist"
       else:
         extra = ""
       print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion%s' % (path, os.path.dirname(path), extra)
