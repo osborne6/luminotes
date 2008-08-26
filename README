@@ -4,7 +4,8 @@ ideas. For more information, see:
   http://luminotes.com/
 
 To start Luminotes Desktop on Windows XP, just click the Start button, click
-on "All Programs", and then click on "Luminotes".
+on "All Programs", and then click on "Luminotes". If you see a Windows
+Security Alert about blocking Luminotes, click the "Unblock" button.
 
 To start Lumintoes Desktop or Server on Linux or Mac OS X, please see the
 INSTALL file.
