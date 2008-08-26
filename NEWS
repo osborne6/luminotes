@@ -1,9 +1,7 @@
-1.?
- * Created a Windows application icon and embedded it into the generated
-   Luminotes executable.
+1.5.0:
+ * Completed the Luminotes Desktop Windows installer.
  * Improved logging, so tracebacks in production and desktop mode actually go
    to a file. Also removing logs on startup to prevent endless log growth.
- * 
 
 1.4.27: August 22, 2008
  * Fixed a bug in tools/initdb.py and tools/updatedb.py that caused them to

@@ -4,9 +4,7 @@ import os
 import sys
 from glob import glob
 from distutils.core import setup, Distribution
-
-
-VERSION = "1.5.0"
+from config.Version import VERSION
 
 
 def files( path ):
@@ -195,7 +193,7 @@ try:
                 dist_dir,
                 self.windows_exe_files,
                 self.lib_files,
-                            version = VERSION)
+                version = VERSION)
       print "*** creating the inno setup script***"
       script.create()
       print "*** compiling the inno setup script***"

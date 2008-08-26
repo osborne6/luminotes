@@ -1,4 +1,5 @@
 from Tags import Div, A, Img, Span
+from config.Version import VERSION
 
 class Header( Div ):
   def __init__( self, user, first_notebook, login_url, logout_url, note_title, rate_plan = None ):
@@ -15,6 +16,8 @@ class Header( Div ):
           ( note_title == u"home" ) and title_image or
             A( title_image, href = u"http://luminotes.com/", target = "_new" ),
           Div(
+            u"version", VERSION, u" | ",
+            A( u"upgrade", href = u"http://luminotes.com/pricing", target = "_new" ), u" | ",
             A( u"support", href = u"http://luminotes.com/support", target = "_new" ), u" | ",
             A( u"blog", href = u"http://luminotes.com/blog", target = "_new" ),
             class_ = u"header_links",
