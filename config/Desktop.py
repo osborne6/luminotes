@@ -4,6 +4,10 @@ import cherrypy
 from tempfile import gettempdir
 
 
+username_postfix = os.environ.get( "USER" )
+username_postfix = username_postfix and "_%s" % username_postfix or ""
+
+
 settings = { 
   "global": {
     "server.thread_pool": 4,
@@ -11,8 +15,8 @@ settings = {
     "session_filter.timeout": 60 * 24 * 365, # one year
     "static_filter.root": os.getcwd(),
     "server.log_to_screen": False,
-    "server.log_file": os.path.join( gettempdir(), "luminotes_error.log" ),
-    "server.log_access_file": os.path.join( gettempdir(), "luminotes.log" ),
+    "server.log_file": os.path.join( gettempdir(), "luminotes_error%s.log" % username_postfix ),
+    "server.log_access_file": os.path.join( gettempdir(), "luminotes%s.log" % username_postfix ),
     "server.log_tracebacks": True,
     "luminotes.launch_browser": True,
     "luminotes.db_host": None, # use local SQLite database

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import stat
 import socket
 import os.path
 import urllib2 as urllib
@@ -77,11 +78,16 @@ def main( args ):
 
   # remove the existing log files, if any
   try:
-    os.remove( cherrypy.config.configMap[ u"global" ].get( u"server.log_access_file" ) )
+    log_access_file = cherrypy.config.configMap[ u"global" ].get( u"server.log_access_file" )
+    if log_access_file:
+      os.remove( log_access_file )
   except OSError:
     pass
+
   try:
-    os.remove( cherrypy.config.configMap[ u"global" ].get( u"server.log_file" ) )
+    log_file = cherrypy.config.configMap[ u"global" ].get( u"server.log_file" )
+    if log_file:
+      os.remove( log_file )
   except OSError:
     pass
 
@@ -96,10 +102,25 @@ def main( args ):
   root = Root( database, cherrypy.config.configMap )
   cherrypy.root = root
 
-  if launch_browser is True:
-    cherrypy.server.start_with_callback( webbrowser.open_new, ( server_url, ) )
-  else:
-    cherrypy.server.start()
+  cherrypy.server.start_with_callback( callback, ( log_access_file, log_file, server_url, launch_browser ) )
+
+
+def callback( log_access_file, log_file, server_url, launch_browser = False ):
+  # this causes cherrypy to create the access log
+  if log_access_file:
+    try:
+      urllib.urlopen( "%sping" % server_url )
+    except urllib.URLError:
+      pass
+
+  # give the cherrypy log files appropriate permissions
+  if log_access_file and os.path.exists( log_access_file ):
+    os.chmod( log_access_file, stat.S_IRUSR | stat.S_IWUSR )
+  if log_file and os.path.exists( log_file ):
+    os.chmod( log_file, stat.S_IRUSR | stat.S_IWUSR )
+
+  if launch_browser:
+    webbrowser.open_new( server_url )
 
 
 if __name__ == "__main__":
