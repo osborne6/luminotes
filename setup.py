@@ -100,7 +100,9 @@ class InnoScript:
 
     print >> ofi, r"[Files]"
     for path in self.windows_exe_files + self.lib_files:
-      if path.endswith( "luminotes.exe" ):
+      if path.endswith( "README.txt" ):
+        extra = " isreadme"
+      elif path.endswith( "luminotes.exe" ):
         extra = "; BeforeInstall: stop_exe()"
       elif path.endswith( "luminotes.db" ):
         extra = " onlyifdoesntexist"
@@ -113,10 +115,6 @@ class InnoScript:
     for path in self.windows_exe_files:
       print >> ofi, r'Name: "{commonprograms}\%s"; Filename: "{app}\%s"' % \
           (self.name, path)
-    print >> ofi
-
-    print >> ofi, r"[Run]"
-    print >> ofi, r'Filename: "{app}\luminotes.exe"; Description: "Run Luminotes now"; Flags: nowait postinstall skipifsilent'
     print >> ofi
 
     print >> ofi, r"[UninstallDelete]"
