@@ -7,11 +7,26 @@ from distutils.core import setup, Distribution
 from config.Version import VERSION
 
 
-def files( path ):
+def files( path, excludes = None ):
+  if excludes is None:
+    excludes = []
+
   if sys.platform.startswith( "win" ):
     path = path.replace( "/", "\\" )
 
-  return glob( path )
+  files_in_path = glob( path )
+
+  for exclude in excludes:
+    if sys.platform.startswith( "win" ):
+      exclude = exclude.replace( "/", "\\" )
+
+    for file_to_exclude in glob( exclude ):
+      try:
+        files_in_path.remove( file_to_exclude )
+      except ValueError:
+        pass
+
+  return files_in_path
 
 
 class Luminotes( Distribution ):
@@ -226,9 +241,15 @@ data_files = [
   ( "", [ "luminotes.db", ] ),
   ( "static/css", files( "static/css/*.*" ) ),
   ( "static/html", files( "static/html/*.*" ) ),
-  ( "static/images", files( "static/images/*.*" ) ),
-  ( "static/images/toolbar", files( "static/images/toolbar/*.*" ) ),
-  ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*" ) ),
+  ( "static/images", files( "static/images/*.*", excludes = [
+    "static/images/*.xcf",
+    "static/images/*screenshot*",
+    "static/images/*tour*",
+    "static/images/*index_card*",
+    "static/images/*thumb*",
+  ] ) ),
+  ( "static/images/toolbar", files( "static/images/toolbar/*.*", excludes = [ "static/images/toolbar/*.xcf" ] ) ),
+  ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*", excludes = [ "static/images/toolbar/small/*.xcf" ]  ) ),
   ( "static/js", files( "static/js/*.*" ) ),
   ( "static/js", files( "static/js/*_LICENSE" ) ),
   ( "files", files( "files/.empty" ) ),
