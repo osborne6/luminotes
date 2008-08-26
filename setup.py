@@ -109,6 +109,8 @@ class InnoScript:
     print >> ofi, r"DefaultDirName={pf}\%s" % self.name
     print >> ofi, r"DisableProgramGroupPage=yes"
     print >> ofi, r"SetupIconFile=static\images\luminotes.ico"
+    print >> ofi, r"WizardImageFile=static\images\installer.bmp"
+    print >> ofi, r"WizardSmallImageFile=static\images\installer_small.bmp"
     print >> ofi
 
     print >> ofi, r"[Files]"
