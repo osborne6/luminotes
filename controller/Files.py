@@ -134,7 +134,7 @@ class Upload_file( object ):
   def open_file( file_id, mode = None ):
     # force binary mode
     if not mode:
-      mode = "b"
+      mode = "rb"
     elif "b" not in mode:
       mode = "%sb" % mode
 
