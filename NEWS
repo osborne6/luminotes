@@ -1,7 +1,14 @@
 1.4.28:
  * Completed the Luminotes Desktop Windows installer.
  * Improved logging, so tracebacks in production and desktop mode actually go
-   to a file. Also removing logs on startup to prevent endless log growth.
+   to a file. Also removed logs on startup to prevent endless log growth.
+ * Moved "files" directory into ~/.luminotes or %APPDATA%\Luminotes.
+ * NOTE: After upgrading to this release, you must move your Luminotes
+   "files" directory into ~/.luminotes/ or you will not be able to access
+   your uploaded files:
+     mkdir ~/.luminotes
+     chmod 700 ~/.luminotes
+     mv files ~/.luminotes
 
 1.4.27: August 22, 2008
  * Fixed a bug in tools/initdb.py and tools/updatedb.py that caused them to

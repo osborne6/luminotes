@@ -1,8 +1,10 @@
 import os
 import re
+import sys
 import cgi
 import time
 import urllib
+import os.path
 import tempfile
 import cherrypy
 from PIL import Image
@@ -54,6 +56,22 @@ class Parse_error( Exception ):
 # map of upload id to Upload_file
 current_uploads = {}
 current_uploads_lock = Lock()
+
+
+def make_files_dir():
+  if sys.platform.startswith( "win" ):
+    files_dir = os.path.join( os.environ.get( "APPDATA" ), "Luminotes", "files" )
+  else:
+    files_dir = os.path.join( os.environ.get( "HOME", "" ), ".luminotes", "files" )
+
+  if not os.path.exists( files_dir ):
+    import stat
+    os.makedirs( files_dir, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR )
+
+  return files_dir
+
+
+files_dir = make_files_dir()
 
 
 class Upload_file( object ):
@@ -109,13 +127,18 @@ class Upload_file( object ):
 
   @staticmethod
   def make_server_filename( file_id ):
-    return u"files/%s" % file_id
+    global files_dir
+    return os.path.join( files_dir, u"%s" % file_id )
 
   @staticmethod
   def open_file( file_id, mode = None ):
-    if mode:
-      return file( Upload_file.make_server_filename( file_id ), mode )
-    return file( Upload_file.make_server_filename( file_id ) )
+    # force binary mode
+    if not mode:
+      mode = "b"
+    elif "b" not in mode:
+      mode = "%sb" % mode
+
+    return file( Upload_file.make_server_filename( file_id ), mode )
 
   @staticmethod
   def open_image( file_id ):
@@ -142,7 +165,7 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
   """
   Derived from cherrypy._cpcgifs.FieldStorage, which is in turn derived from cgi.FieldStorage, which
   calls make_file() to create a temporary file where file uploads are stored. By wrapping this file
-  object, we can track its progress as its written. Inspired by:
+  object, we can track its progress as it's written. Inspired by:
   http://www.cherrypy.org/attachment/ticket/546/uploadfilter.py
 
   This method relies on a file_id parameter being present in the HTTP query string.

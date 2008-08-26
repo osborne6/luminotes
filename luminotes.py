@@ -77,11 +77,11 @@ def main( args ):
 
   # remove the existing log files, if any
   try:
-    os.remove( "luminotes.log" )
+    os.remove( cherrypy.config.configMap[ u"global" ].get( u"server.log_access_file" ) )
   except OSError:
     pass
   try:
-    os.remove( "luminotes_error.log" )
+    os.remove( cherrypy.config.configMap[ u"global" ].get( u"server.log_file" ) )
   except OSError:
     pass
 
