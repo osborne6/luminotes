@@ -115,10 +115,6 @@ class InnoScript:
           (self.name, path)
     print >> ofi
 
-    print >> ofi, r"[Messages]"
-    print >> ofi, r"ConfirmUninstall=Are you sure you want to completely remove %1, including all of your notebooks and notes?"
-    print >> ofi
-
     print >> ofi, r"[Run]"
     print >> ofi, r'Filename: "{app}\luminotes.exe"; Description: "Run Luminotes now"; Flags: nowait postinstall skipifsilent'
     print >> ofi

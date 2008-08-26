@@ -92,6 +92,7 @@ def main( args ):
   database = Database(
     host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
     ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    data_dir = ".",
   )
   initializer = Updater( database, cherrypy.config.configMap )
 

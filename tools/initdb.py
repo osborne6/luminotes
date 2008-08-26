@@ -133,6 +133,7 @@ def main( args = None ):
   database = Database(
     host = host,
     ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    data_dir = ".",
   )
   initializer = Initializer( database, host, cherrypy.config.configMap, desktop, nuke )
 

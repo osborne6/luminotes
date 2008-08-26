@@ -1,5 +1,7 @@
 import re
 import os
+import os.path
+import sys
 import sha
 import cherrypy
 import random
@@ -23,7 +25,7 @@ class Database( object ):
   # caching Notebooks causes problems because different users have different read_write/owner values
   CLASSES_NOT_TO_CACHE = ( Notebook, )
 
-  def __init__( self, connection = None, cache = None, host = None, ssl_mode = None ):
+  def __init__( self, connection = None, cache = None, host = None, ssl_mode = None, data_dir = None ):
     """
     Create a new database and return it.
 
@@ -33,9 +35,12 @@ class Database( object ):
     @param cache: existing memory cache to use (optional, defaults to making a cache)
     @type host: unicode or NoneType
     @param host: hostname of PostgreSQL database, or None to use a local SQLite database
-    @type ssl_mode: unicode
+    @type ssl_mode: unicode or NoneType
     @param ssl_mode: SSL mode for the database connection, one of "disallow", "allow", "prefer", or
                      "require". ignored if host is None
+    @type data_dir: unicode or NoneType
+    @param data_dir: directory in which to store data (defaults to a reasonable directory). ignored
+                     if host is not None
     @rtype: Database
     @return: newly constructed Database
     """
@@ -65,8 +70,30 @@ class Database( object ):
       sqlite.register_converter( "boolean", lambda value: value in ( "t", "True", "true" ) and True or False )
       sqlite.register_converter( "timestamp", convert_timestamp )
 
-      self.__connection = connection or \
-        Connection_wrapper( sqlite.connect( "luminotes.db", detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
+      if connection:
+        self.__connection = connection
+      else:
+        if data_dir is None:
+          if sys.platform.startswith( "win" ):
+            data_dir = os.path.join( os.environ.get( "APPDATA" ), "Luminotes" )
+          else:
+            data_dir = os.path.join( os.environ.get( "HOME", "" ), ".luminotes" )
+
+        data_filename = os.path.join( data_dir, "luminotes.db" )
+
+        # if the user doesn't yet have their own luminotes.db file, make them an initial copy
+        if os.path.exists( "luminotes.db" ):
+          if not os.path.exists( data_dir ):
+            import stat
+            os.makedirs( data_dir, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR )
+
+          if not os.path.exists( data_filename ):
+            import shutil
+            shutil.copyfile( "luminotes.db", data_filename )
+
+        self.__connection = \
+          Connection_wrapper( sqlite.connect( data_filename, detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
+
       self.__pool = None
       self.__backend = Persistent.SQLITE_BACKEND
     else:
