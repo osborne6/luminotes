@@ -241,6 +241,7 @@ data_files = [
   ( "", [ "README%s" % txt_extension, ] ),
   ( "", [ "COPYING%s" % txt_extension, ] ),
   ( "", [ "luminotes.db", ] ),
+  ( "", [ "tools/usb_luminotes.bat" ] ),
   ( "static/css", files( "static/css/*.*" ) ),
   ( "static/html", files( "static/html/*.*" ) ),
   ( "static/images", files( "static/images/*.*", excludes = [

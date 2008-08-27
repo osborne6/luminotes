@@ -3,12 +3,32 @@ ideas. For more information, see:
 
   http://luminotes.com/
 
+
+Windows XP
+----------
+
 To start Luminotes Desktop on Windows XP, just click the Start button, click
 on "All Programs", and then click on "Luminotes". If you see a Windows
 Security Alert about blocking Luminotes, click the "Unblock" button.
 
+In case you're curious, your notes and attached files are stored within the
+%APPDATA%\Luminotes folder in a database file.
+
+If you'd like to run Luminotes from a USB drive, install Luminotes Desktop and
+then manually copy the whole \Program Files\Luminotes folder to a USB drive.
+Then, run usb_luminotes.bat from the USB drive. Your Luminotes data will be
+stored on the USB drive instead of on the computer itself.
+
+
+Linux / Mac OS X / BSD
+----------------------
+
 To start Lumintoes Desktop or Server on Linux or Mac OS X, please see the
 INSTALL file.
+
+
+User Guide
+----------
 
 The Luminotes User Guide explains how to use Luminotes and even includes some
 tips on creating your wiki. You can check it out at:
@@ -16,6 +36,10 @@ tips on creating your wiki. You can check it out at:
   http://luminotes.com/guide
 
 Enjoy!
+
+
+Copyright
+---------
 
 Luminotes Copyright (C) 2007-2008 Dan Helfman
 

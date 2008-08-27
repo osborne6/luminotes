@@ -47,6 +47,15 @@ This will run the local Luminotes web server and automatically launch a web
 browser so you can use Luminotes. You don't need to create an account or
 login. Just start creating a wiki.
 
+In case you're curious, your notes are stored in the ~/.luminotes directory.
+
+If you'd like to run Luminotes from a USB drive, manually copy the entire
+Luminotes directory to a USB drive.  Then, run usb_luminotes.sh from the USB
+drive. Your Luminotes data will be stored on the USB drive instead of on the
+computer itself:
+
+  tools/usb_luminotes.sh
+
 If you're only interested in Luminotes Desktop, you can stop reading here. The
 rest of this document describes Luminotes Server.
 
