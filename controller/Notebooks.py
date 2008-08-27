@@ -426,7 +426,7 @@ class Notebooks( object ):
       note = summarize and self.summarize_note( note ) or note,
     )
 
-  def summarize_note( self, note, max_summary_length = None, word_count = None ):
+  def summarize_note( self, note, max_summary_length = None, word_count = None, highlight_text = None ):
     """
     Create a truncated, HTML-free note summary for the given note, and then return the note with
     its summary set.
@@ -439,6 +439,8 @@ class Notebooks( object ):
     @type word_count: int or NoneType
     @param word_count: the number of words to which the summary is truncated (optional, defaults
                        to a reasonable number of words)
+    @type highlight_text: unicode or NoneType
+    @param highlight_text: text to emphasize within the summary (optional, defaults to no emphasis)
     @rtype: model.Note or NoneType
     @return: note with its summary member set, or None if no note was provided
     """
@@ -484,6 +486,9 @@ class Notebooks( object ):
 
     if truncated or word_count < len( words ):
       summary += " ..."
+
+    if highlight_text:
+      summary = summary.replace( highlight_text, "<b>%s</b>" % highlight_text )
 
     note.summary = summary
     return note
@@ -1124,7 +1129,11 @@ class Notebooks( object ):
     notes = self.__database.select_many( Note, Notebook.sql_search_notes( user_id, notebook_id, search_text, self.__database.backend ) )
 
     # make a summary for each note that doesn't have one
-    notes = [ note.summary and note or self.summarize_note( note, max_summary_length = 80, word_count = 30 ) for note in notes ]
+    notes = [
+      note.summary and note or
+      self.summarize_note( note, max_summary_length = 80, word_count = 30, highlight_text = search_text )
+      for note in notes
+    ]
 
     return dict(
       notes = notes,

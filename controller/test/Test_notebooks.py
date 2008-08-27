@@ -1308,6 +1308,11 @@ class Test_notebooks( Test_controller ):
 
     assert note == None
 
+  def test_summarize_note_with_highligh_text( self ):
+    note = cherrypy.root.notebooks.summarize_note( self.note, highlight_text = "la" )
+
+    assert note.summary == u"b<b>la</b>h"
+
   def test_lookup_note_id( self ):
     self.login()
 
