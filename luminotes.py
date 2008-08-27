@@ -51,7 +51,10 @@ def main( args ):
   launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
 
   socket.setdefaulttimeout( INITIAL_SOCKET_TIMEOUT_SECONDS )
-  server_url = u"http://localhost:%d/" % cherrypy.config.configMap[ u"global" ].get( u"server.socket_port" )
+  port_filename = cherrypy.config.configMap[ u"global" ].get( u"luminotes.port_file" )
+  socket_port = cherrypy.config.configMap[ u"global" ].get( u"server.socket_port" )
+  existing_socket_port = port_filename and os.path.exists( port_filename ) and file( port_filename ).read() or socket_port
+  server_url = u"http://localhost:%s/" % existing_socket_port
   server_present = True
 
   # if requested, attempt to shutdown an existing server and exit
@@ -75,6 +78,8 @@ def main( args ):
       webbrowser.open_new( server_url )
 
     sys.exit( 0 )
+
+  server_url = u"http://localhost:%s/" % socket_port
 
   # remove the existing log files, if any
   try:
@@ -102,10 +107,16 @@ def main( args ):
   root = Root( database, cherrypy.config.configMap )
   cherrypy.root = root
 
-  cherrypy.server.start_with_callback( callback, ( log_access_file, log_file, server_url, launch_browser ) )
+  cherrypy.server.start_with_callback( callback, ( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser ) )
 
 
-def callback( log_access_file, log_file, server_url, launch_browser = False ):
+def callback( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser = False ):
+  # record our listening socket port
+  if port_filename:
+    port_file = file( port_filename, "w" )
+    port_file.write( "%s" % socket_port )
+    port_file.close()
+
   # this causes cherrypy to create the access log
   if log_access_file:
     try:
