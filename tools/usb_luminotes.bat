@@ -1,4 +1,4 @@
 @echo off
 
 set APPDATA=.
-luminotes.exe -l
+start luminotes.exe -l
