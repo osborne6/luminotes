@@ -44,14 +44,11 @@ To start Luminotes, run:
   python2.4 luminotes.py -l
 
 This will run the local Luminotes web server and automatically launch a web
-browser at the following URL:
-
-  http://localhost:8081/
-
+browser so you can use Luminotes. You don't need to create an account or
+login. Just start creating a wiki.
 
 If you're only interested in Luminotes Desktop, you can stop reading here. The
 rest of this document describes Luminotes Server.
-
 
 
 Luminotes Server
