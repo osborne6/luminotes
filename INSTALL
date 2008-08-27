@@ -51,7 +51,7 @@ In case you're curious, your notes and attached files are stored in the
 ~/.luminotes directory.
 
 If you'd like to run Luminotes from a USB drive, manually copy the entire
-Luminotes directory to a USB drive.  Then, run usb_luminotes.sh from the USB
+Luminotes directory to a USB drive. Then, run usb_luminotes.sh from the USB
 drive. Your Luminotes data will be stored on the USB drive instead of on the
 computer itself:
 

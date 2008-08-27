@@ -1,4 +1,4 @@
-1.4.28:
+1.5.0:
  * Completed the Luminotes Desktop Windows installer.
  * Improved logging, so tracebacks in production and desktop mode actually go
    to a file. Also removed logs on startup to prevent endless log growth.
