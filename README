@@ -11,6 +11,9 @@ To start Luminotes Desktop on Windows XP, just click the Start button, click
 on "All Programs", and then click on "Luminotes". If you see a Windows
 Security Alert about blocking Luminotes, click the "Unblock" button.
 
+Luminotes Desktop runs inside a browser, so when you launch it, it will
+open up in a new browser window or tab.
+
 In case you're curious, your notes and attached files are stored within the
 %APPDATA%\Luminotes folder in a database file.
 
