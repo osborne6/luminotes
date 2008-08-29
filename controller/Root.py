@@ -17,6 +17,7 @@ from view.Main_page import Main_page
 from view.Front_page import Front_page
 from view.Tour_page import Tour_page
 from view.Upgrade_page import Upgrade_page
+from view.Download_page import Download_page
 from view.Forums_page import Forums_page
 from view.Notebook_rss import Notebook_rss
 from view.Json import Json
@@ -343,6 +344,28 @@ class Root( object ):
     return dict(
       redirect = u"/pricing",
     )
+
+  @expose( view = Download_page )
+  @strongly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    user_id = Valid_id( none_okay = True ),
+  )
+  def download( self, user_id = None ):
+    """
+    Provide the information necessary to display the Luminotes download page.
+    """
+    result = self.__users.current( user_id )
+    parents = [ notebook for notebook in result[ u"notebooks" ] if notebook.trash_id and not notebook.deleted ]
+    if len( parents ) > 0:
+      result[ "first_notebook" ] = parents[ 0 ]
+    else:
+      result[ "first_notebook" ] = None
+
+    result[ "download_button" ] = self.__settings[ u"global" ].get( u"luminotes.download_button" )
+
+    return result
 
   # TODO: move this method to controller.Notebooks, and maybe give it a more sensible name
   @expose( view = Json )

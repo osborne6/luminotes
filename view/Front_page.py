@@ -47,11 +47,10 @@ class Front_page( Product_page ):
             ),
             P(
               A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
-              A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
+              A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ", Br(),
+              A( u"Download", href = u"/download", class_ = u"hook_action" ), u", ",
               Span( u" or ", class_ = u"hook_action_or" ),
               A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ),
-              Br(),
-              Span( u"Sign up in seconds. For free.", class_ = u"hook_action_detail" ),
               class_ = u"hook_action_area",
               separator = u"",
             ),
@@ -349,7 +348,8 @@ class Front_page( Product_page ):
             P(
               Span( u"Sound interesting?", class_ = u"hook_action_question" ), Br(),
               A( u"Take a tour", href = u"/tour", class_ = u"hook_action" ), u", ",
-              A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
+              A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ", Br(),
+              A( u"Download", href = u"/download", class_ = u"hook_action" ), u", ",
               Span( u" or ", class_ = u"hook_action_or" ),
               A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ),
               class_ = u"hook_action_area",

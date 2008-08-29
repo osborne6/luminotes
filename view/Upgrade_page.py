@@ -245,6 +245,16 @@ class Upgrade_page( Product_page ):
               """,
               class_ = u"upgrade_text",
             ),
+            H4( u"Do you have a desktop version I can download?", class_ = u"upgrade_question" ),
+            P(
+              u"""
+              Yes! If you want to download Luminotes and take notes locally instead of on the web,
+              check out
+              """,
+              A( u"Luminotes Desktop", href = "/download" ), ".",
+              separator = u"",
+              class_ = u"upgrade_text",
+            ),
             H4( u"Is my wiki private?", class_ = u"upgrade_question" ),
             P(
               u"""

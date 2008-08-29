@@ -1,4 +1,7 @@
-1.5.0:
+1.5.0 beta 2: 
+ * 
+
+1.5.0 beta 1: August 27, 2008
  * Completed the Luminotes Desktop Windows installer.
  * Improved logging, so tracebacks in production and desktop mode actually go
    to a file. Also removed logs on startup to prevent endless log growth.

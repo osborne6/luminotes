@@ -106,9 +106,10 @@ class Tour_page( Product_page ):
       Div(
         P(
           Span( u"Like what you've seen so far?", class_ = u"hook_action_question" ), Br(),
-          A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ),
+          A( u"Try the demo", href = u"/users/demo", class_ = u"hook_action" ), u", ",
+          A( u"Download", href = u"/download", class_ = u"hook_action"  ), u", ",
           Span( u" or ", class_ = u"hook_action_or" ),
-          A( u"Sign up for free", href = u"/pricing", class_ = u"hook_action"  ),
+          A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ),
           class_ = u"hook_action_area",
           separator = u"",
         ),

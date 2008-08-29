@@ -113,6 +113,12 @@
   border: 1px solid #999999;
 }
 
+.desktop_screenshot {
+  float: right;
+  text-align: center;
+  margin-left: 20px;
+}
+
 .heading {
   padding: 0.5em;
   margin-top: 1em;
@@ -362,6 +368,10 @@
 
 #upgrade_table_small .feature_value {
   font-size: 82%;
+}
+
+.download_button_area {
+  padding-top: 0.5em;
 }
 
 .yearly_link {
