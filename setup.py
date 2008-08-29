@@ -119,8 +119,6 @@ class InnoScript:
         extra = " isreadme"
       elif path.endswith( "luminotes.exe" ):
         extra = "; BeforeInstall: stop_exe()"
-      elif path.endswith( "luminotes.db" ):
-        extra = " onlyifdoesntexist"
       else:
         extra = ""
       print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion%s' % (path, os.path.dirname(path), extra)
