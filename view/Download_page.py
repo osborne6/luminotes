@@ -1,5 +1,6 @@
 from Product_page import Product_page
 from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script, H4, B
+from config.Version import VERSION
 
 
 class Download_page( Product_page ):
@@ -42,6 +43,10 @@ class Download_page( Product_page ):
                   Th( u"&nbsp;" ),
                   Th(
                     u"Luminotes Desktop",
+                    Div(
+                      "version", VERSION,
+                      class_ = u"version_text",
+                    ),
                     Div(
                       download_button,
                       class_ = u"download_button_area",

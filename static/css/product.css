@@ -387,6 +387,12 @@
   font-size: 75%;
 }
 
+.version_text {
+  padding-top: 0.25em;
+  font-size: 72%;
+  font-weight: normal;
+}
+
 .subscribe_form {
   margin-top: 0.5em;
   margin-bottom: 0;

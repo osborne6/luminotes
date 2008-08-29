@@ -178,9 +178,7 @@ class Main_page( Page ):
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
             ( notebook.name == u"trash" or not notebook.read_write ) \
-              and (
-                len( notes ) == 1 and A( Strong( notebook.name ), href = notebook_path ) or Strong( notebook.name )
-              ) \
+              and Strong( notebook.name ) \
               or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
             parent_id and Span(
               u" | ",
