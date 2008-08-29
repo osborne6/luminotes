@@ -8,6 +8,7 @@ from Link_area import Link_area
 from Toolbar import Toolbar
 from Json import Json
 from Rounded_div import Rounded_div
+from config.Version import VERSION
 
 
 class Main_page( Page ):
@@ -177,9 +178,13 @@ class Main_page( Page ):
           ) or None,
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
-            ( notebook.name == u"trash" or not notebook.read_write ) \
-              and Strong( notebook.name ) \
-              or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
+            ( notebook.name == u"Luminotes" and title == u"source code" ) and \
+              Strong( "%s %s" % ( notebook.name, VERSION ) ) or \
+              Span(
+                ( notebook.name == u"trash" or not notebook.read_write ) \
+                  and Strong( notebook.name ) \
+                  or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
+              ),
             parent_id and Span(
               u" | ",
               A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
