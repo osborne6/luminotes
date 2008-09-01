@@ -228,7 +228,7 @@ class Download_page( Product_page ):
             H4( u"Can I try before I buy?", class_ = u"upgrade_question" ),
             P(
               """
-              Absolutely! Just check out the full-featured
+              Sure! Just check out the full-featured
               """,
               A( u"online demo", href = "/users/demo" ),
               """
