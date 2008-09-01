@@ -170,11 +170,11 @@ class Download_page( Product_page ):
             H4( u"What operating systems are supported?", class_ = u"upgrade_question" ),
             P(
               u"""
-              Luminotes Desktop currently supports Windows XP, and Windows Vista. Future
-              releases will support Mac OS X as well. And Linux users should get the
+              Luminotes Desktop currently supports Windows XP and Windows Vista.
+              Linux users should get the
               """,
               A( u"source code", href = "/source_code" ),
-              "directly.",
+              "directly. And future releases will support Mac OS X as well.",
               class_ = u"upgrade_text",
             ),
             P(
