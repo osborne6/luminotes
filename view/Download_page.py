@@ -225,6 +225,18 @@ class Download_page( Product_page ):
               """,
               class_ = u"upgrade_text",
             ),
+            H4( u"Can I try before I buy?", class_ = u"upgrade_question" ),
+            P(
+              """
+              Absolutely! Just check out the full-featured
+              """,
+              A( u"online demo", href = "/users/demo" ),
+              """
+              to see Luminotes for yourself. The only difference is that Luminotes Desktop runs in
+              a browser on your own computer instead of on the web.
+              """,
+              class_ = u"upgrade_text",
+            ),
             H4( u"What forms of payment do you accept?", class_ = u"upgrade_question" ),
             P(
               """
