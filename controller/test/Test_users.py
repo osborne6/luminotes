@@ -2725,6 +2725,15 @@ class Test_users( Test_controller ):
     assert len( result ) == 1
     assert result.get( u"session_id" )
 
+  def test_paypal_notify_payment_blank_item_number( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"item_number" ] = u""
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+
   def test_paypal_notify_payment_incorrect_gross( self ):
     data = dict( self.PAYMENT_DATA )
     data[ u"custom" ] = self.user.object_id

@@ -1284,7 +1284,7 @@ class Users( object ):
 
     # verify item_number
     plan_index = params.get( u"item_number" )
-    if plan_index == None:
+    if plan_index == None or plan_index == u"":
       return dict() # ignore this transaction if there's no item number
 
     try:
