@@ -88,7 +88,6 @@ class Link_area( Div ):
                 id = u"import_link",
                 title = u"Import notes from other software into Luminotes.",
               ),
-              Span( "beta", class_ = "new_feature_text" ),
               class_ = u"link_area_item",
             ) or None,
 
