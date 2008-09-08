@@ -1624,7 +1624,11 @@ Wiki.prototype.submit_form = function ( form ) {
           editor.scrape_title();
         }
 
+        editor.highlight();
+
         signal( self, "note_saved", editor );
+      } else {
+        self.load_editor( "Note not found.", form.note_id.value );
       }
 
       self.display_storage_usage( result.storage_bytes );
