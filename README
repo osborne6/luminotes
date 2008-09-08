@@ -8,11 +8,21 @@ Windows XP / Vista
 ------------------
 
 To start Luminotes Desktop on Windows, just click the Start button, click on
-"All Programs", and then click on "Luminotes". If you see a Windows Security
-Alert about blocking Luminotes, click the "Unblock" button.
+"All Programs", and then click on "Luminotes". Luminotes Desktop runs inside a
+browser, so when you launch it, it will open up in a new browser window or
+tab.
 
-Luminotes Desktop runs inside a browser, so when you launch it, it will
-open up in a new browser window or tab.
+The first time you start Luminotes, you may see a Windows Security Alert about
+blocking Luminotes. This is basically Windows asking you if you want to allow
+Luminotes to access the internet. If you click "Keep Blocking", then that will
+prevent Luminotes Desktop from accessing the internet. If you click "Unblock",
+then Luminotes will be able to use your internet connection.
+
+Right now, Luminotes does not use the internet at all. However, a future
+release will include the optional ability for you to synchronize your notes
+with Luminotes.com. If you plan on using this synchronization feature when
+it's available, then you should click "Unblock". Otherwise, you can safely
+click "Keep Blocking".
 
 In case you're curious, your notes and attached files are stored within the
 %APPDATA%\Luminotes folder in a database file.
