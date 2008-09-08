@@ -2947,7 +2947,8 @@ function Changes_pulldown( wiki, notebook_id, invoker, editor ) {
     var link = createDOM(
       "a",
       { "href": href, "class": "pulldown_link" },
-      short_revision + ( user_revision.username ? " by " + user_revision.username : "" )
+      short_revision + ( ( user_revision.username && user_revision.username != "desktopuser" )
+                         ? " by " + user_revision.username : "" )
     );
 
     this.links.push( link );
