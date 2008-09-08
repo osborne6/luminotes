@@ -1315,6 +1315,10 @@ class Test_files( Test_controller ):
 
     self.assert_streaming_error( result, u"quota" )
 
+  def test_progress_no_quota( self ):
+    self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ][ u"storage_quota_bytes" ] = None
+    self.test_progress()
+
   def test_stats( self ):
     self.login()
     orig_storage_bytes = self.user.storage_bytes

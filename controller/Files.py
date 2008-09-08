@@ -681,7 +681,9 @@ class Files( object ):
 
       rate_plan = self.__users.rate_plan( user.rate_plan )
 
-      if user.storage_bytes + uploading_file.content_length > rate_plan.get( u"storage_quota_bytes", 0 ) * SOFT_QUOTA_FACTOR:
+      storage_quota_bytes = rate_plan.get( u"storage_quota_bytes" )
+      if storage_quota_bytes and \
+         user.storage_bytes + uploading_file.content_length > storage_quota_bytes * SOFT_QUOTA_FACTOR:
         return stream_quota_error()
 
     return stream_progress( uploading_file, filename, fraction_reported )
