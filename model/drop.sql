@@ -7,6 +7,7 @@ DROP TABLE note;
 DROP VIEW notebook_current;
 DROP TABLE notebook;
 DROP TABLE password_reset;
+DROP TABLE download_access;
 DROP TABLE user_notebook;
 DROP TABLE user_group;
 DROP TABLE invite;

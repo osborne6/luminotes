@@ -96,6 +96,21 @@ class Test_controller( object ):
             u"yearly_button": u"[yearly or here user %s!] button",
           },
         ],
+        "luminotes.download_products": [
+          {
+            "name": "local desktop extravaganza",
+            "designed_for": "individuals",
+            "storage_quota_bytes": None,
+            "included_users": 1,
+            "notebook_sharing": False,
+            "notebook_collaboration": False,
+            "user_admin": False,
+            "fee": "30.00",
+            "item_number": "5000",
+            "filename": "test.exe",
+            "button": u"",
+          },
+        ],
       },
       u"/files/download": {
         u"stream_response": True,

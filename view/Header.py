@@ -17,7 +17,7 @@ class Header( Div ):
             A( title_image, href = u"http://luminotes.com/", target = "_new" ),
           Div(
             u"version", VERSION, u" | ",
-            A( u"upgrade", href = u"http://luminotes.com/pricing", target = "_new" ), u" | ",
+            A( u"upgrade", href = u"http://luminotes.com/download?upgrade=True", target = "_new" ), u" | ",
             A( u"support", href = u"http://luminotes.com/support", target = "_new" ), u" | ",
             A( u"blog", href = u"http://luminotes.com/blog", target = "_new" ),
             class_ = u"header_links",

@@ -4,8 +4,11 @@ from config.Version import VERSION
 
 
 class Download_page( Product_page ):
-  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, download_button ):
+  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, download_products, upgrade = False ):
     MEGABYTE = 1024 * 1024
+
+    # for now, just assume there's a single download package
+    download_button = download_products[ 0 ].get( "button" )
 
     Product_page.__init__(
       self,
@@ -33,6 +36,17 @@ class Download_page( Product_page ):
             class_ = u"upgrade_subtitle",
           ),
           Div(
+            upgrade and P(
+              B( "Upgrading:" ),
+              u"""
+              If you have already purchased Luminotes Desktop and would like to download a newer
+              version, simply follow the link you received after your purchase. Can't find
+              the link or need help? Please
+              """,
+              A( u"contact support", href = u"/contact_info" ),
+              u"for assistance.",
+              class_ = u"upgrade_text",
+            ) or None,
             Div(
               Img( src = u"/static/images/installer_screenshot.png", width = u"350", height = u"273" ),
               class_ = u"desktop_screenshot",

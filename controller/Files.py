@@ -18,6 +18,7 @@ from Users import grab_user_id, Access_error
 from Expire import strongly_expire
 from model.File import File
 from model.User import User
+from model.Download_access import Download_access
 from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
 from view.Json import Json
@@ -249,7 +250,7 @@ class Files( object ):
   """
   Controller for dealing with uploaded files, corresponding to the "/files" URL.
   """
-  def __init__( self, database, users ):
+  def __init__( self, database, users, download_products ):
     """
     Create a new Files object.
 
@@ -257,11 +258,14 @@ class Files( object ):
     @param database: database that file metadata is stored in
     @type users: controller.Users
     @param users: controller for all users
+    @type download_products: [ { "name": unicode, ... } ]
+    @param download_products: list of configured downloadable products
     @rtype: Files
     @return: newly constructed Files
     """
     self.__database = database
     self.__users = users
+    self.__download_products = download_products
 
   @expose()
   @end_transaction
@@ -323,6 +327,68 @@ class Files( object ):
     def stream():
       CHUNK_SIZE = 8192
       local_file = Upload_file.open_file( file_id )
+
+      while True:
+        data = local_file.read( CHUNK_SIZE )
+        if len( data ) == 0: break
+        yield data        
+
+    return stream()
+
+  @expose()
+  @end_transaction
+  @validate(
+    access_id = Valid_id(),
+    item_number = Valid_int(),
+  )
+  def download_product( self, access_id, item_number ):
+    """
+    Return the contents of downloadable product file.
+
+    @type access_id: unicode
+    @param access_id: id of download access object that grants access to the file
+    @type item_number: int or int as unicode
+    @param item_number: number of the downloadable product
+    @rtype: generator
+    @return: file data
+    @raise Access_error: the access_id is unknown, doesn't grant access to the file, or the
+           item_number is unknown
+    """
+    # release the session lock before beginning to stream the download. otherwise, if the
+    # download is cancelled before it's done, the lock won't be released
+    try:
+      cherrypy.session.release_lock()
+    except ( KeyError, OSError ):
+      pass
+
+    # find the product corresponding to the given item_number
+    products = [
+      product for product in self.__download_products
+      if unicode( item_number ) == product.get( u"item_number" )
+    ]
+    if len( products ) == 0:
+      raise Access_error()
+
+    product = products[ 0 ]
+
+    # load the download_access object corresponding to the given id
+    download_access = self.__database.load( Download_access, access_id )
+    if download_access is None:
+      raise Access_error()
+
+    public_filename = product[ u"filename" ].encode( "utf8" )
+    local_filename = u"products/%s" % product[ u"filename" ]
+
+    if not os.path.exists( local_filename ):
+      raise Access_error()
+
+    cherrypy.response.headerMap[ u"Content-Type" ] = u"application/octet-stream"
+    cherrypy.response.headerMap[ u"Content-Disposition" ] = 'attachment; filename="%s"' % public_filename
+    cherrypy.response.headerMap[ u"Content-Length" ] = os.path.getsize( local_filename )
+
+    def stream():
+      CHUNK_SIZE = 8192
+      local_file = file( local_filename, "rb" )
 
       while True:
         data = local_file.read( CHUNK_SIZE )

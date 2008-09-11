@@ -538,3 +538,9 @@ class Test_root( Test_controller ):
     result = self.http_get( "/i/%s" % invite_id )
 
     assert result[ u"redirect" ] == u"/users/redeem_invite/%s" % invite_id
+
+  def test_download_thanks( self ):
+    download_access_id = u"foobarbaz"
+    result = self.http_get( "/d/%s" % download_access_id )
+
+    assert result[ u"redirect" ] == u"/users/download_thanks/access_id=%s" % download_access_id

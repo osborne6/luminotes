@@ -7,11 +7,13 @@ from nose.tools import raises
 from datetime import datetime, timedelta
 from Test_controller import Test_controller
 import Stub_urllib2
+from config.Version import VERSION
 from model.User import User
 from model.Group import Group
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
+from model.Download_access import Download_access
 from model.Invite import Invite
 from controller.Users import Invite_error, Payment_error
 import controller.Users as Users
@@ -3944,6 +3946,150 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 1
 
+  DOWNLOAD_PAYMENT_DATA = {
+    u"last_name": u"User",
+    u"txn_id": u"txn",
+    u"receiver_email": u"unittest@luminotes.com",
+    u"payment_status": u"Completed",
+    u"payment_gross": u"30.00",
+    u"residence_country": u"US",
+    u"payer_status": u"verified",
+    u"txn_type": u"web_accept",
+    u"payment_date": u"15:38:18 Jan 10 2008 PST",
+    u"first_name": u"Test",
+    u"item_name": u"local desktop extravaganza",
+    u"charset": u"windows-1252",
+    u"notify_version": u"2.4",
+    u"item_number": u"5000",
+    u"receiver_id": u"rcv",
+    u"business": u"unittest@luminotes.com",
+    u"payer_id": u"pyr",
+    u"verify_sign": u"vfy",
+    u"payment_fee": u"1.19",
+    u"mc_fee": u"1.19",
+    u"mc_currency": u"USD",
+    u"shipping": u"0.00",
+    u"payer_email": u"buyer@luminotes.com",
+    u"payment_type": u"instant",
+    u"mc_gross": u"30.00",
+    u"quantity": u"1",
+  }
+
+  def __assert_download_payment_success( self, result, expect_email = True ):
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    # verify that the user has been granted download access
+    download_access = self.database.select_one( Download_access, "select * from download_access order by revision desc limit 1;" );
+    assert download_access
+    assert download_access.item_number == u"5000"
+    assert download_access.transaction_id == u"txn"
+
+    if not expect_email:
+      return
+
+    # verify that an email has been sent to the user
+    assert smtplib.SMTP.connected == False
+    assert "<%s>" % self.settings[ u"global" ][ u"luminotes.support_email" ] in smtplib.SMTP.from_address
+    assert smtplib.SMTP.to_addresses == [ u"buyer@luminotes.com" ]
+    assert u"Thank you" in smtplib.SMTP.message
+    assert u"download" in smtplib.SMTP.message
+    assert u"upgrade" in smtplib.SMTP.message
+
+    expected_download_link = u"%s/d/%s" % \
+      ( self.settings[ u"global" ][ u"luminotes.https_url" ], download_access.object_id )
+    assert expected_download_link in smtplib.SMTP.message
+
+  def test_paypal_notify_download_payment( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_success( result )
+
+  def test_paypal_notify_download_payment_multiple_quantity( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"mc_gross" ] = u"90.0"
+    data[ u"quantity" ] = u"3"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_success( result )
+
+  def __assert_download_payment_error( self, result ):
+    assert u"error" in result
+    download_access = self.database.select_one( Download_access, "select * from download_access order by revision desc limit 1;" );
+    assert not download_access
+    assert not smtplib.SMTP.message
+
+  def test_paypal_notify_download_payment_missing_mc_gross( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    del( data[ u"mc_gross" ] )
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_none_mc_gross( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"mc_gross" ] = None
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_missing_quantity( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    del( data[ u"quantity" ] )
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_none_quantity( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"quantity" ] = None
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_quantity_mc_gross_mismatch( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"quantity" ] = u"2"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_mc_gross_fee_mismatch( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"quantity" ] = u"2"
+    data[ u"mc_gross" ] = u"61.0"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_invalid_item_name( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"item_name" ] = u"something unexpected"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_partial_item_name( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"item_name" ] = u"ultra LOCAL DESKTOP extravaganza digital download!"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_success( result )
+
+  def test_paypal_notify_download_payment_invalid_txn_type( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"txn_type" ] = u"web_wtf"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_invalid_txn_id( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"txn_id" ] = u"not even remotely valid"
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_error( result )
+
+  def test_paypal_notify_download_payment_missing_payer_email( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"payer_email" ] = u""
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_success( result, expect_email = False )
+
   def test_thanks( self ):
     self.user.rate_plan = 1
     user = self.database.save( self.user )
@@ -4142,6 +4288,508 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
     assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert result[ u"conversion" ] == u"download_5000"
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"Luminotes Desktop" in result[ u"notes" ][ 0 ].contents
+    assert u"Download" in result[ u"notes" ][ 0 ].contents
+    assert VERSION in result[ u"notes" ][ 0 ].contents
+
+    expected_download_link = u"%s/files/download_product/access_id=%s&item_number=%s" % \
+      ( self.settings[ u"global" ][ u"luminotes.https_url" ], access_id, item_number )
+    assert expected_download_link in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_without_login( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+    ) )
+
+    assert result[ u"user" ].username == self.anonymous.username
+    assert len( result[ u"notebooks" ] ) == 1
+
+    assert result[ u"login_url" ]
+    assert result[ u"logout_url" ]
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert result[ u"conversion" ] == u"download_5000"
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"Luminotes Desktop" in result[ u"notes" ][ 0 ].contents
+    assert u"Download" in result[ u"notes" ][ 0 ].contents
+    assert VERSION in result[ u"notes" ][ 0 ].contents
+
+    expected_download_link = u"%s/files/download_product/access_id=%s&item_number=%s" % \
+      ( self.settings[ u"global" ][ u"luminotes.https_url" ], access_id, item_number )
+    assert expected_download_link in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_invalid_item_number( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000abc"
+    transaction_id = u"txn"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_thanks_download_none_item_number( self ):
+    access_id = u"wheeaccessid"
+    item_number = None
+    transaction_id = u"txn"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_thanks_download_missing_item_number( self ):
+    access_id = u"wheeaccessid"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_thanks_download_incorrect_item_number( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = u"1234",
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_thanks_download_txn_id( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      txn_id = transaction_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    redirect = result.get( u"redirect" )
+    expected_redirect = "/users/thanks_download?access_id=%s&item_number=%s" % ( access_id, item_number )
+    assert redirect == expected_redirect
+
+  def test_thanks_download_invalid_txn_id( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"invalid txn id"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      txn_id = transaction_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_thanks_download_not_yet_paid( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    # an unknown transaction id might just mean we're still waiting for the transaction to come in,
+    # so expect a retry
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert not result.get( u"conversion" )
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert u"processing" in result[ u"notes" ][ 0 ].title
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"being processed" in result[ u"notes" ][ 0 ].contents
+    assert u"retry_count=1" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_not_yet_paid_with_retry( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+      retry_count = u"3",
+    ), session_id = self.session_id )
+
+    # an unknown transaction id might just mean we're still waiting for the transaction to come in,
+    # so expect a retry
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert not result.get( u"conversion" )
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert u"processing" in result[ u"notes" ][ 0 ].title
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"being processed" in result[ u"notes" ][ 0 ].contents
+    assert u"retry_count=4" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_not_yet_paid_with_retry_timeout( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+      retry_count = u"16",
+    ), session_id = self.session_id )
+
+    # an unknown transaction id might just mean we're still waiting for the transaction to come in,
+    # so expect a retry
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert not result.get( u"conversion" )
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_not_yet_paid_txn_id( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      txn_id = transaction_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    # an unknown transaction id might just mean we're still waiting for the transaction to come in,
+    # so expect a retry
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert not result.get( u"conversion" )
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert u"processing" in result[ u"notes" ][ 0 ].title
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"being processed" in result[ u"notes" ][ 0 ].contents
+    assert u"retry_count=1" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_not_yet_paid_txn_id_with_retry( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      txn_id = transaction_id,
+      item_number = item_number,
+      retry_count = u"3",
+    ), session_id = self.session_id )
+
+    # an unknown transaction id might just mean we're still waiting for the transaction to come in,
+    # so expect a retry
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert not result.get( u"conversion" )
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert u"processing" in result[ u"notes" ][ 0 ].title
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"being processed" in result[ u"notes" ][ 0 ].contents
+    assert u"retry_count=4" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_not_yet_paid_txn_id_with_retry_timeout( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      txn_id = transaction_id,
+      item_number = item_number,
+      retry_count = u"16",
+    ), session_id = self.session_id )
+
+    # an unknown transaction id might just mean we're still waiting for the transaction to come in,
+    # so expect a retry
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+    assert notebook.name == self.notebooks[ 0 ].name
+    assert notebook.read_write == True
+    assert notebook.owner == True
+    assert notebook.rank == 0
+
+    assert result[ u"login_url" ] == None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert not result.get( u"conversion" )
+    assert result[ u"notebook" ].object_id == self.anon_notebook.object_id
+    assert len( result[ u"startup_notes" ] ) == 1
+    assert result[ u"startup_notes" ][ 0 ].object_id == self.startup_note.object_id
+    assert result[ u"startup_notes" ][ 0 ].title == self.startup_note.title
+    assert result[ u"startup_notes" ][ 0 ].contents == self.startup_note.contents
+    assert result[ u"note_read_write" ] is False
+
+    assert result[ u"notes" ]
+    assert len( result[ u"notes" ] ) == 1
+    assert result[ u"notes" ][ 0 ].title == u"thank you"
+    assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
+    assert u"Thank you" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+
+  def test_thanks_download_missing_txn_id_missing_access_id( self ):
+    item_number = u"5000"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
+
+  def test_thanks_download_invalid_access_id( self ):
+    access_id = u"invalid access id"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    result = self.http_post( "/users/thanks_download", dict(
+      access_id = access_id,
+      item_number = item_number,
+    ), session_id = self.session_id )
+
+    assert u"error" in result
 
   def test_rate_plan( self ):
     plan_index = 1

@@ -1,5 +1,13 @@
-1.5.0 beta 2: 
+1.5.0: 
+ * Fixed a Luminotes Desktop Internet Explorer bug in which note links within
+   the "download as html" document pointed to notes in the local Luminotes
+   installation instead of notes within the stand-alone document.
+ * Fixed a bug in which Luminotes Desktop file attachment did not always work
+   due to incorrect upload progress reporting.
+ * In the revision changes pulldown, no longer showing "by desktopuser" in
+   Luminotes Desktop.
  * Added a Luminotes Desktop download page.
+ * Added code for supporting product download access.
 
 1.5.0 beta 1: August 27, 2008
  * Completed the Luminotes Desktop Windows installer.

@@ -2,6 +2,8 @@ import re
 import urllib
 import urllib2
 import cherrypy
+import smtplib
+from email import Message
 from pytz import utc
 from datetime import datetime, timedelta
 from model.User import User
@@ -9,6 +11,7 @@ from model.Group import Group
 from model.Notebook import Notebook
 from model.Note import Note
 from model.Password_reset import Password_reset
+from model.Download_access import Download_access
 from model.Invite import Invite
 from Expose import expose
 from Validate import validate, Valid_string, Valid_bool, Valid_int, Validation_error
@@ -21,7 +24,10 @@ from view.Redeem_invite_note import Redeem_invite_note
 from view.Blank_page import Blank_page
 from view.Thanks_note import Thanks_note
 from view.Thanks_error_note import Thanks_error_note
+from view.Thanks_download_note import Thanks_download_note
+from view.Thanks_download_error_note import Thanks_download_error_note
 from view.Processing_note import Processing_note
+from view.Processing_download_note import Processing_download_note
 from view.Form_submit_page import Form_submit_page
 
 
@@ -181,7 +187,7 @@ class Users( object ):
   """
   Controller for dealing with users, corresponding to the "/users" URL.
   """
-  def __init__( self, database, http_url, https_url, support_email, payment_email, rate_plans ):
+  def __init__( self, database, http_url, https_url, support_email, payment_email, rate_plans, download_products ):
     """
     Create a new Users object.
 
@@ -195,8 +201,10 @@ class Users( object ):
     @param support_email: email address for support requests
     @type payment_email: unicode
     @param payment_email: email address for payment
-    @type rate_plans: [ { "name": unicode, "storage_quota_bytes": int } ]
+    @type rate_plans: [ { "name": unicode, ... } ]
     @param rate_plans: list of configured rate plans
+    @type download_products: [ { "name": unicode, ... } ]
+    @param download_products: list of configured downloadable products
     @rtype: Users
     @return: newly constructed Users
     """
@@ -206,6 +214,7 @@ class Users( object ):
     self.__support_email = support_email
     self.__payment_email = payment_email
     self.__rate_plans = rate_plans
+    self.__download_products = download_products
 
   def create_user( self, username, password = None, password_repeat = None, email_address = None, initial_rate_plan = None ):
     """
@@ -802,9 +811,6 @@ class Users( object ):
     @raise Password_reset_error: an error occured when sending the password reset email
     @raise Validation_error: one of the arguments is invalid
     """
-    import smtplib
-    from email import Message
-
     # check whether there are actually any users with the given email address
     users = self.__database.select_many( User, User.sql_load_by_email_address( email_address ) )
 
@@ -1252,6 +1258,9 @@ class Users( object ):
 
     self.__database.commit()
 
+  #PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
+  PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
+
   @expose( view = Blank_page )
   @end_transaction
   def paypal_notify( self, **params ):
@@ -1262,9 +1271,6 @@ class Users( object ):
     record in the database with their new rate plan. paypal_notify() is
     invoked by PayPal itself.
     """
-    #PAYPAL_URL = u"https://www.sandbox.paypal.com/cgi-bin/webscr"
-    PAYPAL_URL = u"https://www.paypal.com/cgi-bin/webscr"
-
     # check that payment_status is Completed
     payment_status = params.get( u"payment_status" )
     if payment_status == u"Refunded":
@@ -1283,19 +1289,117 @@ class Users( object ):
       raise Payment_error( u"unsupported mc_currency", params )
 
     # verify item_number
-    plan_index = params.get( u"item_number" )
-    if plan_index == None or plan_index == u"":
+    item_number = params.get( u"item_number" )
+    if item_number == None or item_number == u"":
       return dict() # ignore this transaction if there's no item number
-
     try:
-      plan_index = int( plan_index )
+      int( item_number )
     except ValueError:
       raise Payment_error( u"invalid item_number", params )
-    if plan_index == 0 or plan_index >= len( self.__rate_plans ):
-      raise Payment_error( u"invalid item_number", params )
 
+    product = None
+    for potential_product in self.__download_products:
+      if unicode( item_number ) == potential_product.get( u"item_number" ):
+        product = potential_product
+
+    if product:
+      self.__paypal_notify_download( params, product, unicode( item_number ) )
+    else:
+      plan_index = int( item_number )
+      try:
+        rate_plan = self.__rate_plans[ plan_index ]
+      except IndexError:
+        raise Payment_error( u"invalid item_number", params )
+      self.__paypal_notify_subscribe( params, rate_plan, plan_index )
+
+    return dict()
+
+  TRANSACTION_ID_PATTERN = re.compile( u"^[a-zA-Z0-9]+$" )
+
+  def __paypal_notify_download( self, params, product, item_number ):
+    # verify that quantity * the expected fee == mc_gross
+    fee = float( product[ u"fee" ] )
+
+    try:
+      mc_gross = float( params.get( u"mc_gross" ) )
+      if not mc_gross: raise ValueError()
+    except ( TypeError, ValueError ):
+      raise Payment_error( u"invalid mc_gross", params )
+
+    try:
+      quantity = float( params.get( u"quantity" ) )
+      if not quantity: raise ValueError()
+    except ( TypeError, ValueError ):
+      raise Payment_error( u"invalid quantity", params )
+
+    if quantity * fee != mc_gross:
+      raise Payment_error( u"invalid mc_gross", params )
+
+    # verify item_name
+    item_name = params.get( u"item_name" )
+    if item_name and product[ u"name" ].lower() not in item_name.lower():
+      raise Payment_error( u"invalid item_name", params )
+
+    params[ u"cmd" ] = u"_notify-validate"
+    encoded_params = urllib.urlencode( params )
+
+    # verify txn_type
+    txn_type = params.get( u"txn_type" )
+    if txn_type and txn_type != u"web_accept":
+      raise Payment_error( u"invalid txn_type", params )
+    
+    # verify txn_id
+    txn_id = params.get( u"txn_id" )
+    if not self.TRANSACTION_ID_PATTERN.search( txn_id ):
+      raise Payment_error( u"invalid txn_id", params )
+    
+    # ask paypal to verify the request
+    request = urllib2.Request( self.PAYPAL_URL )
+    request.add_header( u"Content-type", u"application/x-www-form-urlencoded" )
+    request_file = urllib2.urlopen( self.PAYPAL_URL, encoded_params )
+    result = request_file.read()
+
+    if result != u"VERIFIED":
+      raise Payment_error( result, params )
+
+    # update the database with a record of the transaction, thereby giving the user access to the
+    # download
+    download_access_id = self.__database.next_id( Download_access, commit = False )
+    download_access = Download_access.create( download_access_id, item_number, txn_id )
+    self.__database.save( download_access, commit = False )
+    self.__database.commit()
+
+    # using the reported payer email, send the user an email with a download link
+    email_address = params.get( u"payer_email" )
+    if not email_address:
+      return
+
+    # create an email message with a unique invitation link
+    message = Message.Message()
+    message[ u"From" ] = u"Luminotes personal wiki <%s>" % self.__support_email
+    message[ u"To" ] = email_address
+    message[ u"Subject" ] = u"Luminotes Desktop download"
+
+    payload = \
+      u"Thank you for purchasing Luminotes Desktop!\n\n"  + \
+      u"To download the installer, please follow this link:\n\n" + \
+      u"%s/d/%s\n\n" % ( self.__https_url or self.__http_url, download_access_id ) + \
+      u"You can use this link anytime to download Luminotes Desktop or upgrade\n" + \
+      u"to new versions as they are released. So you should probably keep the" + \
+      u"link around.\n\n" + \
+      u"If you have any questions, please email support@luminotes.com\n\n" + \
+      u"Enjoy!"
+
+    message.set_payload( payload )
+
+    # send the message out through localhost's smtp server
+    server = smtplib.SMTP()
+    server.connect()
+    server.sendmail( message[ u"From" ], [ email_address ], message.as_string() )
+    server.quit()
+
+  def __paypal_notify_subscribe( self, params, rate_plan, plan_index ):
     # verify mc_gross
-    rate_plan = self.__rate_plans[ plan_index ]
     fee = u"%0.2f" % rate_plan[ u"fee" ]
     yearly_fee = u"%0.2f" % rate_plan[ u"yearly_fee" ]
     mc_gross = params.get( u"mc_gross" )
@@ -1329,9 +1433,9 @@ class Users( object ):
     encoded_params = urllib.urlencode( params )
     
     # ask paypal to verify the request
-    request = urllib2.Request( PAYPAL_URL )
+    request = urllib2.Request( self.PAYPAL_URL )
     request.add_header( u"Content-type", u"application/x-www-form-urlencoded" )
-    request_file = urllib2.urlopen( PAYPAL_URL, encoded_params )
+    request_file = urllib2.urlopen( self.PAYPAL_URL, encoded_params )
     result = request_file.read()
 
     if result != u"VERIFIED":
@@ -1365,8 +1469,6 @@ class Users( object ):
       pass # for now, ignore payments and let paypal handle them
     else:
       raise Payment_error( "unknown txn_type", params )
-
-    return dict()
 
   def update_groups( self, user ):
     """
@@ -1467,6 +1569,93 @@ class Users( object ):
 
   def rate_plan( self, plan_index ):
     return self.__rate_plans[ plan_index ]
+
+  @expose( view = Main_page )
+  @end_transaction
+  @grab_user_id
+  def thanks_download( self, **params ):
+    """
+    Provide the information necessary to display the download thanks page, including a product
+    download link. This information can be accessed with an item_number and either a txn_id or a
+    download access_id.
+    """
+    item_number = params.get( u"item_number" )
+    try:
+      item_number = int( item_number )
+    except ( TypeError, ValueError ):
+      raise Payment_error( u"invalid item_number", params )
+
+    # if a valid txn_id is provided, redirect to this page with the corresponding access_id.
+    # that way, if the user bookmarks the page, they'll bookmark it with the access_id rather
+    # than the txn_id
+    txn_id = params.get( u"txn_id" )
+    if txn_id:
+      if not self.TRANSACTION_ID_PATTERN.search( txn_id ):
+        raise Payment_error( u"invalid txn_id", params )
+
+      download_access = self.__database.select_one( Download_access, Download_access.sql_load_by_transaction_id( txn_id ) )
+      if download_access:
+        return dict(
+          redirect = u"/users/thanks_download?access_id=%s&item_number=%s" % ( download_access.object_id, item_number )
+        )
+
+    download_access_id = params.get( u"access_id" )
+    download_url = None
+
+    if download_access_id:
+      try:
+        Valid_id()( download_access_id )
+      except ValueError:
+        raise Payment_error( u"invalid access_id", params )
+
+      download_access = self.__database.load( Download_access, download_access_id )
+      if download_access:
+        if download_access.item_number != unicode( item_number ):
+          raise Payment_error( u"incorrect item_number", params )
+        download_url = u"%s/files/download_product/access_id=%s&item_number=%s" % \
+                       ( self.__https_url or u"", download_access_id, item_number )
+
+    if not txn_id and not download_access_id:
+      raise Payment_error( u"either txn_id or access_id required", params )
+
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
+    if anonymous:
+      main_notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
+    else:
+      main_notebook = None
+
+    result = self.current( params.get( u"user_id" ) )
+
+    retry_count = params.get( u"retry_count", "" )
+    try:
+      retry_count = int( retry_count )
+    except ValueError:
+      retry_count = None
+
+    # if there's no download access or we've retried too many times, give up and display an error
+    RETRY_TIMEOUT = 15
+    if download_url is None and retry_count > RETRY_TIMEOUT:
+      note = Thanks_download_error_note()
+    # if the rate plan of the subscription matches the user's current rate plan, success
+    elif download_url:
+      note = Thanks_download_note( download_url )
+      result[ "conversion" ] = "download_%s" % item_number
+    # otherwise, display an auto-reloading "processing..." page
+    else:
+      note = Processing_download_note( download_access_id, item_number, retry_count )
+
+    result[ "notebook" ] = main_notebook
+    result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
+    result[ "total_notes_count" ] = self.__database.select_one( Note, main_notebook.sql_count_notes(), use_cache = True )
+    result[ "note_read_write" ] = False
+    result[ "notes" ] = [ Note.create(
+      object_id = u"thanks",
+      contents = unicode( note ),
+      notebook_id = main_notebook.object_id,
+    ) ]
+    result[ "invites" ] = []
+
+    return result
 
   @expose( view = Json )
   @end_transaction

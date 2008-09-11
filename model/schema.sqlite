@@ -132,6 +132,17 @@ CREATE TABLE password_reset (
 );
 
 
+-- Name: download_access; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE TABLE download_access (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    item_number text,
+    transaction_id text
+);
+
+
 --
 -- Name: user_group; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
@@ -214,10 +225,29 @@ CREATE INDEX note_notebook_id_title_index ON note (notebook_id, title);
 
 
 --
+-- Name: password_reset_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX password_reset_id_index ON password_reset (id);
+
+
+--
 -- Name: password_reset_email_address_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
 --
 
 CREATE INDEX password_reset_email_address_index ON password_reset (email_address);
+
+
+-- Name: download_access_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX download_access_id_index ON password_reset (id);
+
+
+-- Name: download_access_transaction_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX download_access_transaction_id_index ON download_access (transaction_id);
 
 
 --

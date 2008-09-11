@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import os
 import time
 import types
 import urllib
@@ -14,6 +15,7 @@ from model.Note import Note
 from model.User import User
 from model.Invite import Invite
 from model.File import File
+from model.Download_access import Download_access
 from controller.Notebooks import Access_error
 from controller.Files import Upload_file, Parse_error
 
@@ -90,6 +92,11 @@ class Test_files( Test_controller ):
     Upload_file.exists = exists
     Upload_file.close = close
 
+    # write a test product file
+    test_product_file = file( u"products/test.exe", "wb" )
+    test_product_file.write( self.file_data )
+    test_product_file.close()
+
     self.make_users()
     self.make_notebooks()
     self.database.commit()
@@ -127,6 +134,8 @@ class Test_files( Test_controller ):
   def tearDown( self ):
     if self.upload_thread:
       self.upload_thread.join()
+
+    os.remove( u"products/test.exe" )
 
   def test_download( self, filename = None, quote_filename = None, file_data = None, preview = None ):
     self.login()
@@ -326,6 +335,139 @@ class Test_files( Test_controller ):
     )
 
     assert u"access" in result[ u"body" ][ 0 ]
+
+  def test_download_product( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_get(
+      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, item_number ),
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"application/octet-stream"
+
+    filename = u"test.exe".encode( "utf8" )
+    assert headers[ u"Content-Disposition" ] == 'attachment; filename="%s"' % filename
+
+    gen = result[ u"body" ]
+    assert isinstance( gen, types.GeneratorType )
+    pieces = []
+
+    try:
+      for piece in gen:
+        pieces.append( piece )
+    except AttributeError, exc:
+      if u"session_storage" not in str( exc ):
+        raise exc
+
+    file_data = "".join( pieces )
+    assert file_data == self.file_data
+
+  def test_download_product_without_login( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_get(
+      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, item_number ),
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"application/octet-stream"
+
+    filename = u"test.exe".encode( "utf8" )
+    assert headers[ u"Content-Disposition" ] == 'attachment; filename="%s"' % filename
+
+    gen = result[ u"body" ]
+    assert isinstance( gen, types.GeneratorType )
+    pieces = []
+
+    try:
+      for piece in gen:
+        pieces.append( piece )
+    except AttributeError, exc:
+      if u"session_storage" not in str( exc ):
+        raise exc
+
+    file_data = "".join( pieces )
+    assert file_data == self.file_data
+
+  def test_download_product_unknown_access_id( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_get(
+      "/files/download_product?access_id=%s&item_number=%s" % ( u"unknownid", item_number ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"text/html"
+    assert not headers.get( u"Content-Disposition" )
+
+  def test_download_product_unknown_item_number( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_get(
+      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, u"1137" ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"text/html"
+    assert not headers.get( u"Content-Disposition" )
+
+  def test_download_product_missing_file( self ):
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+    self.settings[ u"global" ][ u"luminotes.download_products" ][ 0 ][ u"filename" ] = u"notthere.exe"
+
+    self.login()
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_get(
+      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, item_number ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"text/html"
+    assert not headers.get( u"Content-Disposition" )
 
   def test_preview( self ):
     self.login()

@@ -107,10 +107,24 @@ settings = {
           """,
       },
     ],
+    "luminotes.download_products": [
+      {
+        "name": "Luminotes Desktop",
+        "designed_for": "individuals",
+        "storage_quota_bytes": None,
+        "included_users": 1,
+        "notebook_sharing": False,
+        "notebook_collaboration": False,
+        "user_admin": False,
+        "fee": "20.00",
+        "item_number": "5000",
+        "filename": "luminotes.exe",
+        "button":
+          """
+          """,
+      },
+    ],
     "luminotes.unsubscribe_button":
-      """
-      """,
-    "luminotes.download_button":
       """
       """,
   },

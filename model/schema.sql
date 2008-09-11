@@ -180,6 +180,21 @@ CREATE TABLE password_reset (
 
 ALTER TABLE public.password_reset OWNER TO luminotes;
 
+
+-- Name: download_access; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE TABLE download_access (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    item_number text,
+    transaction_id text
+);
+
+
+ALTER TABLE public.download_access OWNER TO luminotes;
+
+--
 --
 -- Name: user_group; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
 --
@@ -257,6 +272,14 @@ ALTER TABLE ONLY password_reset
 
 
 --
+-- Name: download_access_pkey; Type: CONSTRAINT; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+ALTER TABLE ONLY download_access
+    ADD CONSTRAINT download_access_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: user_notebook_pkey; Type: CONSTRAINT; Schema: public; Owner: luminotes; Tablespace: 
 --
 
@@ -325,6 +348,13 @@ CREATE INDEX note_notebook_id_title_index ON note USING btree (notebook_id, md5(
 --
 
 CREATE INDEX password_reset_email_address_index ON password_reset USING btree (email_address);
+
+
+--
+-- Name: download_access_transaction_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
+--
+
+CREATE INDEX download_access_transaction_id_index ON download_access USING btree (transaction_id);
 
 
 --

@@ -49,9 +49,14 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.support_email", u"" ),
       settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
       settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
+      settings[ u"global" ].get( u"luminotes.download_products", [] ),
     )
     self.__groups = Groups( database, self.__users )
-    self.__files = Files( database, self.__users )
+    self.__files = Files(
+      database,
+      self.__users,
+      settings[ u"global" ].get( u"luminotes.download_products", [] ),
+    )
     self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
     self.__forums = Forums( database, self.__users )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
@@ -153,6 +158,24 @@ class Root( object ):
 
     return dict(
       redirect = u"/users/redeem_invite/%s" % invite_id,
+    )
+
+  @expose()
+  def d( self, download_access_id ):
+    """
+    Redirect to the product download thanks URL, based on the given download access id. The sole
+    purpose of this method is to shorten product download URLs sent by email so email clients don't
+    wrap them.
+    """
+    # if the value looks like an id, it's a download access id, so redirect
+    try:
+      validator = Valid_id()
+      download_access_id = validator( download_access_id )
+    except ValueError:
+      raise cherrypy.NotFound
+
+    return dict(
+      redirect = u"/users/download_thanks/access_id=%s" % download_access_id,
     )
 
   @expose( view = Front_page )
@@ -350,9 +373,10 @@ class Root( object ):
   @end_transaction
   @grab_user_id
   @validate(
+    upgrade = Valid_bool( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def download( self, user_id = None ):
+  def download( self, upgrade = False, user_id = None ):
     """
     Provide the information necessary to display the Luminotes download page.
     """
@@ -363,7 +387,8 @@ class Root( object ):
     else:
       result[ "first_notebook" ] = None
 
-    result[ "download_button" ] = self.__settings[ u"global" ].get( u"luminotes.download_button" )
+    result[ "download_products" ] = self.__settings[ u"global" ].get( u"luminotes.download_products" )
+    result[ "upgrade" ] = upgrade
 
     return result
 
