@@ -543,4 +543,4 @@ class Test_root( Test_controller ):
     download_access_id = u"foobarbaz"
     result = self.http_get( "/d/%s" % download_access_id )
 
-    assert result[ u"redirect" ] == u"/users/download_thanks/access_id=%s" % download_access_id
+    assert result[ u"redirect" ] == u"/users/thanks_download?access_id=%s" % download_access_id

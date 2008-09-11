@@ -175,7 +175,7 @@ class Root( object ):
       raise cherrypy.NotFound
 
     return dict(
-      redirect = u"/users/download_thanks/access_id=%s" % download_access_id,
+      redirect = u"/users/thanks_download?access_id=%s" % download_access_id,
     )
 
   @expose( view = Front_page )

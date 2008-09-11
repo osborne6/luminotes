@@ -1385,7 +1385,7 @@ class Users( object ):
       u"To download the installer, please follow this link:\n\n" + \
       u"%s/d/%s\n\n" % ( self.__https_url or self.__http_url, download_access_id ) + \
       u"You can use this link anytime to download Luminotes Desktop or upgrade\n" + \
-      u"to new versions as they are released. So you should probably keep the" + \
+      u"to new versions as they are released. So you should probably keep the\n" + \
       u"link around.\n\n" + \
       u"If you have any questions, please email support@luminotes.com\n\n" + \
       u"Enjoy!"
@@ -1576,31 +1576,26 @@ class Users( object ):
   def thanks_download( self, **params ):
     """
     Provide the information necessary to display the download thanks page, including a product
-    download link. This information can be accessed with an item_number and either a txn_id or a
-    download access_id.
+    download link. This information can be accessed with either a tx (transaction id) or a download
+    access_id.
     """
-    item_number = params.get( u"item_number" )
-    try:
-      item_number = int( item_number )
-    except ( TypeError, ValueError ):
-      raise Payment_error( u"invalid item_number", params )
-
-    # if a valid txn_id is provided, redirect to this page with the corresponding access_id.
+    # if a valid tx is provided, redirect to this page with the corresponding access_id.
     # that way, if the user bookmarks the page, they'll bookmark it with the access_id rather
-    # than the txn_id
-    txn_id = params.get( u"txn_id" )
-    if txn_id:
-      if not self.TRANSACTION_ID_PATTERN.search( txn_id ):
-        raise Payment_error( u"invalid txn_id", params )
+    # than the tx
+    tx = params.get( u"tx" )
+    if tx:
+      if not self.TRANSACTION_ID_PATTERN.search( tx ):
+        raise Payment_error( u"invalid tx", params )
 
-      download_access = self.__database.select_one( Download_access, Download_access.sql_load_by_transaction_id( txn_id ) )
+      download_access = self.__database.select_one( Download_access, Download_access.sql_load_by_transaction_id( tx ) )
       if download_access:
         return dict(
-          redirect = u"/users/thanks_download?access_id=%s&item_number=%s" % ( download_access.object_id, item_number )
+          redirect = u"/users/thanks_download?access_id=%s" % download_access.object_id
         )
 
     download_access_id = params.get( u"access_id" )
     download_url = None
+    item_number = None
 
     if download_access_id:
       try:
@@ -1610,13 +1605,12 @@ class Users( object ):
 
       download_access = self.__database.load( Download_access, download_access_id )
       if download_access:
-        if download_access.item_number != unicode( item_number ):
-          raise Payment_error( u"incorrect item_number", params )
-        download_url = u"%s/files/download_product/access_id=%s&item_number=%s" % \
-                       ( self.__https_url or u"", download_access_id, item_number )
+        download_url = u"%s/files/download_product?access_id=%s" % \
+                       ( self.__https_url or self.__http_url, download_access_id )
+        item_number = download_access.item_number
 
-    if not txn_id and not download_access_id:
-      raise Payment_error( u"either txn_id or access_id required", params )
+    if not tx and not download_access_id:
+      raise Payment_error( u"either tx or access_id required", params )
 
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     if anonymous:
@@ -1642,7 +1636,7 @@ class Users( object ):
       result[ "conversion" ] = "download_%s" % item_number
     # otherwise, display an auto-reloading "processing..." page
     else:
-      note = Processing_download_note( download_access_id, item_number, retry_count )
+      note = Processing_download_note( download_access_id, retry_count )
 
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )

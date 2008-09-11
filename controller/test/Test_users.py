@@ -4301,7 +4301,6 @@ class Test_users( Test_controller ):
 
     result = self.http_post( "/users/thanks_download", dict(
       access_id = access_id,
-      item_number = item_number,
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
@@ -4338,8 +4337,8 @@ class Test_users( Test_controller ):
     assert u"Download" in result[ u"notes" ][ 0 ].contents
     assert VERSION in result[ u"notes" ][ 0 ].contents
 
-    expected_download_link = u"%s/files/download_product/access_id=%s&item_number=%s" % \
-      ( self.settings[ u"global" ][ u"luminotes.https_url" ], access_id, item_number )
+    expected_download_link = u"%s/files/download_product?access_id=%s" % \
+      ( self.settings[ u"global" ][ u"luminotes.https_url" ], access_id )
     assert expected_download_link in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_without_login( self ):
@@ -4352,7 +4351,6 @@ class Test_users( Test_controller ):
 
     result = self.http_post( "/users/thanks_download", dict(
       access_id = access_id,
-      item_number = item_number,
     ) )
 
     assert result[ u"user" ].username == self.anonymous.username
@@ -4383,74 +4381,11 @@ class Test_users( Test_controller ):
     assert u"Download" in result[ u"notes" ][ 0 ].contents
     assert VERSION in result[ u"notes" ][ 0 ].contents
 
-    expected_download_link = u"%s/files/download_product/access_id=%s&item_number=%s" % \
-      ( self.settings[ u"global" ][ u"luminotes.https_url" ], access_id, item_number )
+    expected_download_link = u"%s/files/download_product?access_id=%s" % \
+      ( self.settings[ u"global" ][ u"luminotes.https_url" ], access_id )
     assert expected_download_link in result[ u"notes" ][ 0 ].contents
 
-  def test_thanks_download_invalid_item_number( self ):
-    access_id = u"wheeaccessid"
-    item_number = u"5000abc"
-    transaction_id = u"txn"
-
-    download_access = Download_access.create( access_id, item_number, transaction_id )
-    self.database.save( download_access )
-
-    self.login()
-
-    result = self.http_post( "/users/thanks_download", dict(
-      access_id = access_id,
-      item_number = item_number,
-    ), session_id = self.session_id )
-
-    assert u"error" in result
-
-  def test_thanks_download_none_item_number( self ):
-    access_id = u"wheeaccessid"
-    item_number = None
-    transaction_id = u"txn"
-
-    download_access = Download_access.create( access_id, item_number, transaction_id )
-    self.database.save( download_access )
-
-    self.login()
-
-    result = self.http_post( "/users/thanks_download", dict(
-      access_id = access_id,
-      item_number = item_number,
-    ), session_id = self.session_id )
-
-    assert u"error" in result
-
-  def test_thanks_download_missing_item_number( self ):
-    access_id = u"wheeaccessid"
-    transaction_id = u"txn"
-
-    self.login()
-
-    result = self.http_post( "/users/thanks_download", dict(
-      access_id = access_id,
-    ), session_id = self.session_id )
-
-    assert u"error" in result
-
-  def test_thanks_download_incorrect_item_number( self ):
-    access_id = u"wheeaccessid"
-    item_number = u"5000"
-    transaction_id = u"txn"
-
-    self.login()
-
-    download_access = Download_access.create( access_id, item_number, transaction_id )
-    self.database.save( download_access )
-
-    result = self.http_post( "/users/thanks_download", dict(
-      access_id = access_id,
-      item_number = u"1234",
-    ), session_id = self.session_id )
-
-    assert u"error" in result
-
-  def test_thanks_download_txn_id( self ):
+  def test_thanks_download_tx( self ):
     access_id = u"wheeaccessid"
     item_number = u"5000"
     transaction_id = u"txn"
@@ -4461,15 +4396,14 @@ class Test_users( Test_controller ):
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
-      txn_id = transaction_id,
-      item_number = item_number,
+      tx = transaction_id,
     ), session_id = self.session_id )
 
     redirect = result.get( u"redirect" )
-    expected_redirect = "/users/thanks_download?access_id=%s&item_number=%s" % ( access_id, item_number )
+    expected_redirect = "/users/thanks_download?access_id=%s" % access_id
     assert redirect == expected_redirect
 
-  def test_thanks_download_invalid_txn_id( self ):
+  def test_thanks_download_invalid_tx( self ):
     access_id = u"wheeaccessid"
     item_number = u"5000"
     transaction_id = u"invalid txn id"
@@ -4480,8 +4414,7 @@ class Test_users( Test_controller ):
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
-      txn_id = transaction_id,
-      item_number = item_number,
+      tx = transaction_id,
     ), session_id = self.session_id )
 
     assert u"error" in result
@@ -4495,7 +4428,6 @@ class Test_users( Test_controller ):
 
     result = self.http_post( "/users/thanks_download", dict(
       access_id = access_id,
-      item_number = item_number,
     ), session_id = self.session_id )
 
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
@@ -4541,7 +4473,6 @@ class Test_users( Test_controller ):
 
     result = self.http_post( "/users/thanks_download", dict(
       access_id = access_id,
-      item_number = item_number,
       retry_count = u"3",
     ), session_id = self.session_id )
 
@@ -4588,7 +4519,6 @@ class Test_users( Test_controller ):
 
     result = self.http_post( "/users/thanks_download", dict(
       access_id = access_id,
-      item_number = item_number,
       retry_count = u"16",
     ), session_id = self.session_id )
 
@@ -4626,7 +4556,7 @@ class Test_users( Test_controller ):
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
     assert u"confirmation" in result[ u"notes" ][ 0 ].contents
 
-  def test_thanks_download_not_yet_paid_txn_id( self ):
+  def test_thanks_download_not_yet_paid_tx( self ):
     access_id = u"wheeaccessid"
     item_number = u"5000"
     transaction_id = u"txn"
@@ -4634,8 +4564,7 @@ class Test_users( Test_controller ):
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
-      txn_id = transaction_id,
-      item_number = item_number,
+      tx = transaction_id,
     ), session_id = self.session_id )
 
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
@@ -4672,7 +4601,7 @@ class Test_users( Test_controller ):
     assert u"being processed" in result[ u"notes" ][ 0 ].contents
     assert u"retry_count=1" in result[ u"notes" ][ 0 ].contents
 
-  def test_thanks_download_not_yet_paid_txn_id_with_retry( self ):
+  def test_thanks_download_not_yet_paid_tx_with_retry( self ):
     access_id = u"wheeaccessid"
     item_number = u"5000"
     transaction_id = u"txn"
@@ -4680,7 +4609,7 @@ class Test_users( Test_controller ):
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
-      txn_id = transaction_id,
+      tx = transaction_id,
       item_number = item_number,
       retry_count = u"3",
     ), session_id = self.session_id )
@@ -4719,7 +4648,7 @@ class Test_users( Test_controller ):
     assert u"being processed" in result[ u"notes" ][ 0 ].contents
     assert u"retry_count=4" in result[ u"notes" ][ 0 ].contents
 
-  def test_thanks_download_not_yet_paid_txn_id_with_retry_timeout( self ):
+  def test_thanks_download_not_yet_paid_tx_with_retry_timeout( self ):
     access_id = u"wheeaccessid"
     item_number = u"5000"
     transaction_id = u"txn"
@@ -4727,8 +4656,7 @@ class Test_users( Test_controller ):
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
-      txn_id = transaction_id,
-      item_number = item_number,
+      tx = transaction_id,
       retry_count = u"16",
     ), session_id = self.session_id )
 
@@ -4766,27 +4694,22 @@ class Test_users( Test_controller ):
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
     assert u"confirmation" in result[ u"notes" ][ 0 ].contents
 
-  def test_thanks_download_missing_txn_id_missing_access_id( self ):
-    item_number = u"5000"
-
+  def test_thanks_download_missing_tx_missing_access_id( self ):
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
-      item_number = item_number,
     ), session_id = self.session_id )
 
     assert u"error" in result
 
   def test_thanks_download_invalid_access_id( self ):
     access_id = u"invalid access id"
-    item_number = u"5000"
     transaction_id = u"txn"
 
     self.login()
 
     result = self.http_post( "/users/thanks_download", dict(
       access_id = access_id,
-      item_number = item_number,
     ), session_id = self.session_id )
 
     assert u"error" in result

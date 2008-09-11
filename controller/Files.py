@@ -339,20 +339,16 @@ class Files( object ):
   @end_transaction
   @validate(
     access_id = Valid_id(),
-    item_number = Valid_int(),
   )
-  def download_product( self, access_id, item_number ):
+  def download_product( self, access_id ):
     """
     Return the contents of downloadable product file.
 
     @type access_id: unicode
     @param access_id: id of download access object that grants access to the file
-    @type item_number: int or int as unicode
-    @param item_number: number of the downloadable product
     @rtype: generator
     @return: file data
-    @raise Access_error: the access_id is unknown, doesn't grant access to the file, or the
-           item_number is unknown
+    @raise Access_error: the access_id is unknown or doesn't grant access to the file
     """
     # release the session lock before beginning to stream the download. otherwise, if the
     # download is cancelled before it's done, the lock won't be released
@@ -361,20 +357,20 @@ class Files( object ):
     except ( KeyError, OSError ):
       pass
 
-    # find the product corresponding to the given item_number
+    # load the download_access object corresponding to the given id
+    download_access = self.__database.load( Download_access, access_id )
+    if download_access is None:
+      raise Access_error()
+
+    # find the product corresponding to the item_number
     products = [
       product for product in self.__download_products
-      if unicode( item_number ) == product.get( u"item_number" )
+      if unicode( download_access.item_number ) == product.get( u"item_number" )
     ]
     if len( products ) == 0:
       raise Access_error()
 
     product = products[ 0 ]
-
-    # load the download_access object corresponding to the given id
-    download_access = self.__database.load( Download_access, access_id )
-    if download_access is None:
-      raise Access_error()
 
     public_filename = product[ u"filename" ].encode( "utf8" )
     local_filename = u"products/%s" % product[ u"filename" ]

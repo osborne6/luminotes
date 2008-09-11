@@ -347,7 +347,7 @@ class Test_files( Test_controller ):
     self.database.save( download_access )
 
     result = self.http_get(
-      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, item_number ),
+      "/files/download_product?access_id=%s" % access_id,
       session_id = self.session_id,
     )
 
@@ -381,7 +381,7 @@ class Test_files( Test_controller ):
     self.database.save( download_access )
 
     result = self.http_get(
-      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, item_number ),
+      "/files/download_product?access_id=%s" % access_id,
     )
 
     headers = result[ u"headers" ]
@@ -416,28 +416,7 @@ class Test_files( Test_controller ):
     self.database.save( download_access )
 
     result = self.http_get(
-      "/files/download_product?access_id=%s&item_number=%s" % ( u"unknownid", item_number ),
-      session_id = self.session_id,
-    )
-
-    assert u"access" in result[ u"body" ][ 0 ]
-    headers = result[ u"headers" ]
-    assert headers
-    assert headers[ u"Content-Type" ] == u"text/html"
-    assert not headers.get( u"Content-Disposition" )
-
-  def test_download_product_unknown_item_number( self ):
-    access_id = u"wheeaccessid"
-    item_number = u"5000"
-    transaction_id = u"txn"
-
-    self.login()
-
-    download_access = Download_access.create( access_id, item_number, transaction_id )
-    self.database.save( download_access )
-
-    result = self.http_get(
-      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, u"1137" ),
+      "/files/download_product?access_id=%s" % u"unknown_id",
       session_id = self.session_id,
     )
 
@@ -459,7 +438,7 @@ class Test_files( Test_controller ):
     self.database.save( download_access )
 
     result = self.http_get(
-      "/files/download_product?access_id=%s&item_number=%s" % ( access_id, item_number ),
+      "/files/download_product?access_id=%s" % access_id,
       session_id = self.session_id,
     )
 

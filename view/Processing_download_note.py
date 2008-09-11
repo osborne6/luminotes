@@ -2,7 +2,7 @@ from Tags import Html, Head, Meta, H3, P
 
 
 class Processing_download_note( Html ):
-  def __init__( self, download_access_id, item_number, retry_count ):
+  def __init__( self, download_access_id, retry_count ):
     if not retry_count:
       retry_count = 0
 
@@ -13,8 +13,8 @@ class Processing_download_note( Html ):
       Head(
         Meta(
           http_equiv = u"Refresh",
-          content = u"2; URL=/users/thanks_download?access_id=%s&item_number=%s&retry_count=%s" %
-                    ( download_access_id, item_number, retry_count ),
+          content = u"2; URL=/users/thanks_download?access_id=%s&retry_count=%s" %
+                    ( download_access_id, retry_count ),
         ),
       ),
       H3( u"processing..." ),
