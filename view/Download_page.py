@@ -141,6 +141,7 @@ class Download_page( Product_page ):
                   Td(
                     Ul(
                       Li( u"All of your notes are stored privately on your own computer." ),
+                      Li( u"You can also run Luminotes Desktop from a USB drive." ),
                       Li( u"A future release will support optional online syncing." ),
                     ),
                     colspan = u"2",
