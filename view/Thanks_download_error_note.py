@@ -15,7 +15,8 @@ class Thanks_download_error_note( Span ):
         u"""
         Luminotes has not yet received confirmation of your payment. Please
         check back in a few minutes by refreshing this page, or check your
-        email for a Luminotes Desktop download message.
+        email for a Luminotes Desktop download message. You will also receive
+        a separate email receipt for this purchase.
         """
       ),
       P(

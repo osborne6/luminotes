@@ -9,7 +9,8 @@ class Thanks_download_note( Span ):
       H3( u"thank you" ),
       P(
         u"""
-        Thank you for purchasing Luminotes Desktop! 
+        Thank you for purchasing Luminotes Desktop! Your payment has been received,
+        and a receipt for your purchase has been emailed to you.
         """,
       ),
       P(
