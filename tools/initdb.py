@@ -130,7 +130,7 @@ def main( args = None ):
       return
 
   print "Initializing the database with default data."
-  host = settings[ u"global" ].get( u"luminotes.db_host" )
+  host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" )
   database = Database(
     host = host,
     ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),

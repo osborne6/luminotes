@@ -3,39 +3,32 @@
 import os
 import os.path
 import sys
+import cherrypy
 from controller.Database import Database
-from controller.Users import Users
-from model.Notebook import Notebook
-from model.User import User
+from model.Download_access import Download_access
 
 
-class Plan_setter( object ):
+class Link_maker( object ):
   """
-  Set the rate plan for a particular user.
+  Create a product download access record and print the download link for it.
   """
-  def __init__( self, database, settings, user_id, rate_plan ):
+  def __init__( self, database, settings, item_number, transaction_id = None ):
     self.database = database
-    self.user_id = user_id
-    self.rate_plan = int( rate_plan )
+    self.settings = settings
+    self.item_number = item_number
+    self.transaction_id = transaction_id
 
-    rate_plans = settings[ u"global" ][ u"luminotes.rate_plans" ]
-    self.users = Users( database, None, None, None, None, rate_plans, [] )
-
-    self.set_plan()
+    self.grant_access()
     self.database.commit()
 
-  def set_plan( self ):
-    user = self.database.load( User, self.user_id )
+  def grant_access( self ):
+    access_id = self.database.next_id( Download_access, commit = False )
+    download_access = Download_access.create( access_id, self.item_number, self.transaction_id )
+    self.database.save( download_access, commit = False )
 
-    if not user:
-      print "user id %s unknown" % self.user_id
-      sys.exit( 1 )
+    https_url = self.settings[ u"global" ][ u"luminotes.https_url" ]
+    print u"%s/d/%s" % ( https_url, access_id )
 
-    user.rate_plan = self.rate_plan
-    self.database.save( user, commit = False )
-
-    # update a user's group membership as a result of a rate plan change
-    self.users.update_groups( user )
 
 def main( args ):
   import cherrypy
@@ -58,12 +51,13 @@ def main( args ):
     settings = Production.settings
 
   cherrypy.config.update( settings )
+
   database = Database(
     host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
     ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
     data_dir = ".",
   )
-  ranker = Plan_setter( database, cherrypy.config.configMap, *args )
+  ranker = Link_maker( database, cherrypy.config.configMap, *args )
 
 
 if __name__ == "__main__":
