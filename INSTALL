@@ -102,8 +102,7 @@ As the PostgreSQL superuser (usually "postgres"), create a new database user
 and set a new password, for instance, "mypassword".
 
   createuser -S -d -R -P -E luminotes
-  createdb -E UTF8 luminotes
-  echo "alter database luminotes owner to luminotes;" | psql luminotes
+  createdb -E UTF8 -O luminotes luminotes
 
 Also as the PostgreSQL superuser, setup full-text searching. The path to the
 tsearch2.sql file may be different depending on your Linux distribution or
