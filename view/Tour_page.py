@@ -44,7 +44,7 @@ class Tour_page( Product_page ):
           Img( src = u"/static/images/tour_card3.png", width = u"430", height = u"366", class_ = u"tour_card" ),
           P(
             u"""
-            If only there was something as simple for taking notes as index cards, but online, searchable, and with some way to make
+            If only there was something as simple for taking notes as index cards, but fast, searchable, and with some way to make
             links between your notes!
             """,
             class_ = u"tour_text",
@@ -99,6 +99,12 @@ class Tour_page( Product_page ):
             ),
           ),
           class_ = u"tour_screenshot_wrapper",
+        ),
+        Div(
+          Div(
+            u"You can use Luminotes online and collaborate with others, or download Luminotes Desktop and take notes locally on your own computer!",
+            class_ = u"tour_text",
+          ),
         ),
         class_ = u"tour_area" 
       ),
