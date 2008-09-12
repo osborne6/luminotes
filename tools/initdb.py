@@ -91,6 +91,7 @@ class Initializer( object ):
       self.settings[ u"global" ].get( u"luminotes.support_email", u"" ),
       self.settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
       self.settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
+      self.settings[ u"global" ].get( u"luminotes.download_products", [] ),
     )
 
     users.create_user( u"desktopuser" )
