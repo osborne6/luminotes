@@ -472,6 +472,30 @@ class Test_files( Test_controller ):
     assert result[ u"filename" ] == self.filename
     assert result[ u"quote_filename" ] == False
 
+  def test_preview_with_unicode_filename( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.unicode_filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/preview?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert result[ u"file_id" ] == self.file_id
+    assert result[ u"filename" ] == self.unicode_filename
+    assert result[ u"quote_filename" ] == False
+
   def test_preview_with_quote_filename_true( self ):
     self.login()
 

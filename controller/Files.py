@@ -420,7 +420,7 @@ class Files( object ):
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
       raise Access_error()
 
-    filename = db_file.filename.replace( '"', r"\"" ).encode( "utf8" )
+    filename = db_file.filename.replace( '"', r"\"" )
 
     return dict(
       file_id = file_id,
