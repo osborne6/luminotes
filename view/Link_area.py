@@ -32,16 +32,6 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ),
 
-          ( notebook.name != u"Luminotes" ) and Div(
-            A(
-              u"download as html",
-              href = u"/notebooks/download_html/%s" % notebook.object_id,
-              id = u"download_html_link",
-              title = u"Download a stand-alone copy of the entire wiki notebook.",
-            ),
-            class_ = u"link_area_item",
-          ) or None,
-
           ( rate_plan.get( u"notebook_sharing" ) and notebook.name == u"Luminotes blog" ) and Div(
             A(
               u"subscribe to rss",
@@ -70,23 +60,40 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None ),
 
+          notebook.read_write and Div(
+            A(
+              u"nothing but notes",
+              href = u"#",
+              id = u"declutter_link",
+              title = u"Focus on just your notes without any distractions.",
+            ),
+            class_ = u"link_area_item",
+          ) or None,
+
+          ( not notebook.read_write and notebook.name != u"Luminotes" ) and Div(
+            A(
+              u"export",
+              href = u"#",
+              id = u"export_link",
+              title = u"Download a stand-alone copy of the entire wiki notebook.",
+            ),
+            class_ = u"link_area_item",
+          ) or None,
+
           notebook.read_write and Span(
             Div(
-              A(
-                u"nothing but notes",
-                href = u"#",
-                id = u"declutter_link",
-                title = u"Focus on just your notes without any distractions.",
-              ),
-              class_ = u"link_area_item",
-            ),
-
-            ( notebook.name != u"Luminotes" ) and Div(
               A(
                 u"import",
                 href = u"#",
                 id = u"import_link",
                 title = u"Import notes from other software into Luminotes.",
+              ),
+              u"|",
+              A(
+                u"export",
+                href = u"#",
+                id = u"export_link",
+                title = u"Download a stand-alone copy of the entire wiki notebook.",
               ),
               class_ = u"link_area_item",
             ) or None,

@@ -1,6 +1,8 @@
 import re
 import cgi
+import csv
 import cherrypy
+from cStringIO import StringIO
 from datetime import datetime
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool, Valid_int
@@ -1182,7 +1184,7 @@ class Notebooks( object ):
     notebook_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def download_html( self, notebook_id, user_id ):
+  def export_html( self, notebook_id, user_id ):
     """
     Download the entire contents of the given notebook as a stand-alone HTML page (no JavaScript).
 
@@ -1191,7 +1193,7 @@ class Notebooks( object ):
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: unicode
-    @return: rendered HTML page
+    @return: rendered HTML page with appropriate headers to trigger a download
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
@@ -1210,6 +1212,69 @@ class Notebooks( object ):
       notebook_name = notebook.name,
       notes = startup_notes + other_notes,
     )
+
+  @expose()
+  @weakly_expire
+  @end_transaction
+  @grab_user_id
+  @validate(
+    notebook_id = Valid_id(),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def export_csv( self, notebook_id, user_id ):
+    """
+    Download the entire contents of the given notebook as a CSV file.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of notebook to download
+    @type user_id: unicode
+    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
+    @rtype: unicode
+    @return: CSV file with appropriate headers to trigger a download
+    @raise Access_error: the current user doesn't have access to the given notebook
+    @raise Validation_error: one of the arguments is invalid
+    """
+    if not self.__users.check_access( user_id, notebook_id ):
+      raise Access_error()
+
+    notebook = self.__database.load( Notebook, notebook_id )
+
+    if not notebook:
+      raise Access_error()
+
+    startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
+    other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
+    notes = startup_notes + other_notes 
+
+    buffer = StringIO()
+    writer = csv.writer( buffer )
+
+    cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=wiki.csv"
+    cherrypy.response.headerMap[ u"Content-Type" ] = u"text/csv"
+
+    def stream():
+      writer.writerow( ( u"contents", u"title", u"note_id", u"startup", u"username", u"revision_date" ) )
+      yield buffer.getvalue()
+      buffer.truncate( 0 )
+
+      for note in notes:
+        user = None
+        if note.user_id:
+          user = self.__database.load( User, note.user_id )
+
+        writer.writerow( (
+          note.contents.encode( "utf8" ), # TODO: should this try to remove the title?
+          note.title.encode( "utf8" ),
+          note.object_id,
+          note.startup and 1 or 0,
+          note.user_id and user and user.username.encode( "utf8" ) or u"",
+          note.revision,
+        ) )
+
+        yield buffer.getvalue()
+        buffer.truncate( 0 )
+
+    return stream()
 
   @expose( view = Json )
   @end_transaction
@@ -1704,7 +1769,8 @@ class Notebooks( object ):
     @type title_column: int or NoneType
     @param title_column: zero-based index of the column containing note titles (None indicates
                          the lack of any such column, in which case titles are derived from the
-                         first few words of each note's contents)
+                         first few words of each note's contents if no title is already present
+                         in the note's contents)
     @type plaintext: bool
     @param plaintext: True if the note contents are plaintext, or False if they're HTML
     @type import_button: unicode
@@ -1743,11 +1809,13 @@ class Notebooks( object ):
       if title_column is not None and title_column >= row_length:
         raise Import_error()
 
-      # if there is a title column, use it. otherwise, use the first line of the content column as
-      # the title
+      title = None
+
+      # if there is a title column, use it. otherwise, if the note doesn't already contain a title,
+      # use the first line of the content column as the title
       if title_column and title_column != content_column and len( row[ title_column ].strip() ) > 0:
         title = Html_nuker( allow_refs = True ).nuke( Valid_string( escape_html = plaintext )( row[ title_column ].strip() ) )
-      else:
+      elif plaintext or not Note.TITLE_PATTERN.search( row[ content_column ] ):
         content_text = Html_nuker( allow_refs = True ).nuke( Valid_string( escape_html = plaintext )( row[ content_column ].strip() ) )
         content_lines = [ line for line in self.NEWLINE_PATTERN.split( content_text ) if line.strip() ]
 
@@ -1769,16 +1837,18 @@ class Notebooks( object ):
             else:
               break
 
-      contents = u"<h3>%s</h3>%s" % (
-        title,
-        Valid_string( max = 25000, escape_html = plaintext, require_link_target = True )( row[ content_column ] ),
-      )
+      contents = Valid_string( max = 25000, escape_html = plaintext, require_link_target = True )( row[ content_column ] )
 
       if plaintext:
         contents = contents.replace( u"\n", u"<br />" )
 
       note_id = self.__database.next_id( Note, commit = False )
       note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = False, rank = None, user_id = user_id )
+
+      # if the note doesn't have a title yet, then tack the given title onto the start of the contents
+      if title and note.title is None:
+        note.contents = u"<h3>%s</h3>%s" % ( title, note.contents )
+
       self.__database.save( note, commit = False )
 
     # delete the CSV file now that it's been imported

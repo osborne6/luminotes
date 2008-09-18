@@ -1,3 +1,13 @@
+1.5.1:
+ * Implemented CSV exporting, so now you can export all of your notes to a
+   CSV spreadsheet file. This currently doesn't include revision history or
+   attached files.
+ * Improved CSV importing so you can export a CSV of your notes from one
+   Luminotes installation and import that CSV into a different Luminotes
+   installation.
+ * Fixed a bug in which the image preview page didn't correctly handle
+   filenames containing special characters.
+
 1.5.0: September 12, 2008
  * Initial release of Luminotes Desktop!
  * Fixed a Luminotes Desktop Internet Explorer bug in which note links within

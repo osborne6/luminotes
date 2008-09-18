@@ -580,6 +580,7 @@ h1 {
 
 .pulldown_label {
   color: #000000;
+  text-decoration: none;
 }
 
 .pulldown_label:hover {

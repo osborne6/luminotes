@@ -340,10 +340,13 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     save_button.disabled = true;
   }
 
-  var download_html_link = getElement( "download_html_link" );
-  if ( download_html_link ) {
-    connect( download_html_link, "onclick", function ( event ) {
-      self.save_editor( null, true );
+  var export_link = getElement( "export_link" );
+  if ( export_link ) {
+    connect( export_link, "onclick", function ( event ) {
+      self.save_editor( null, true, function () {
+        self.export_clicked();
+      } );
+      event.stop();
     } );
   }
 
@@ -2595,6 +2598,18 @@ Wiki.prototype.zero_total_notes_count = function () {
   signal( this, "total_notes_count_updated", this.total_notes_count );
 }
 
+Wiki.prototype.export_clicked = function () {
+  var pulldown_id = "export_pulldown";
+  var existing_div = getElement( pulldown_id );
+  if ( existing_div ) {
+    existing_div.pulldown.shutdown();
+    existing_div.pulldown = null;
+    return;
+  }
+
+  new Export_pulldown( this, this.notebook_id, this.invoker, getElement( "export_link" ) );
+}
+
 Wiki.prototype.import_clicked = function () {
   var pulldown_id = "import_pulldown";
   var existing_div = getElement( pulldown_id );
@@ -3355,6 +3370,39 @@ Upload_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )
     this.link.pulldown = null;
+}
+
+
+function Export_pulldown( wiki, notebook_id, invoker, anchor ) {
+  Pulldown.call( this, wiki, notebook_id, "export_pulldown", anchor, null, false );
+
+  this.invoker = invoker;
+  this.html_link = createDOM( "a", {
+      "href": "/notebooks/export_html/" + notebook_id,
+      "class": "pulldown_label",
+      "title": "Download this notebook as a stand-alone HTML web page."
+    },
+    "HTML web page"
+  );
+  this.csv_link = createDOM( "a", {
+      "href": "/notebooks/export_csv/" + notebook_id,
+      "class": "pulldown_label",
+      "title": "Download this notebook as a CSV spreadsheet file."
+    },
+    "CSV spreadsheet"
+  );
+
+  appendChildNodes( this.div, createDOM( "div", {}, this.html_link ) );
+  appendChildNodes( this.div, createDOM( "div", {}, this.csv_link ) );
+
+  Pulldown.prototype.finish_init.call( this );
+}
+
+Export_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Export_pulldown.prototype.constructor = Export_pulldown;
+
+Export_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
 }
 
 

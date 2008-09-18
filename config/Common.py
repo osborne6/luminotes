@@ -132,6 +132,22 @@ settings = {
     "stream_response": True,
     "encoding_filter.on": False,
   },
+  "/files/download_product": {
+    "stream_response": True,
+    "encoding_filter.on": False,
+  },
+  "/files/thumbnail": {
+    "stream_response": True,
+    "encoding_filter.on": False,
+  },
+  "/files/image": {
+    "stream_response": True,
+    "encoding_filter.on": False,
+  },
+  "/notebooks/export_csv": {
+    "stream_response": True,
+    "encoding_filter.on": False,
+  },
   "/files/upload": {
     "server.max_request_body_size": 505 * MEGABYTE, # maximum upload size
   },

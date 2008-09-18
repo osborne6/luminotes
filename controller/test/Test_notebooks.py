@@ -3471,14 +3471,14 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" )
 
-  def test_download_html( self ):
+  def test_export_html( self ):
     self.login()
 
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
     result = self.http_get(
-      "/notebooks/download_html/%s" % self.notebook.object_id,
+      "/notebooks/export_html/%s" % self.notebook.object_id,
       session_id = self.session_id,
     )
     assert result.get( "notebook_name" ) == self.notebook.name
@@ -3500,11 +3500,11 @@ class Test_notebooks( Test_controller ):
 
         previous_revision = note.revision
       
-  def test_download_html( self ):
+  def test_export_html( self ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
-    path = "/notebooks/download_html/%s" % self.notebook.object_id
+    path = "/notebooks/export_html/%s" % self.notebook.object_id
     result = self.http_get(
       path,
       session_id = self.session_id,
@@ -3514,11 +3514,11 @@ class Test_notebooks( Test_controller ):
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
       
-  def test_download_html_with_unknown_notebook( self ):
+  def test_export_html_with_unknown_notebook( self ):
     self.login()
 
     result = self.http_get(
-      "/notebooks/download_html/%s" % self.unknown_notebook_id,
+      "/notebooks/export_html/%s" % self.unknown_notebook_id,
       session_id = self.session_id,
     )
 
@@ -4379,7 +4379,8 @@ class Test_notebooks( Test_controller ):
       assert note.title == title
       if plaintext is True:
         contents = contents.replace( u"\n", u"<br />" )
-      contents = u"<h3>%s</h3>%s" % ( title, contents )
+      if plaintext is True or u"<h3>" not in contents:
+        contents = u"<h3>%s</h3>%s" % ( title, contents )
       assert note.contents == contents
 
     # make sure the CSV data file has been deleted from the database and filesystem
@@ -4389,6 +4390,70 @@ class Test_notebooks( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
+
+  def test_import_csv_title_already_in_contents( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","<h3>yay</h3>3.3"\n"8","whee","hmm\n<h3>my title</h3>foo"\n3,4,5'
+    expected_notes = [
+      ( "yay", "<h3>yay</h3>3.3" ), # ( title, contents )
+      ( "my title", "hmm\n<h3>my title</h3>foo" ),
+      ( "4", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
+  def test_import_csv_title_already_in_plaintext_contents( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","hi\n<h3>yay</h3>3.3"\n"8","whee","hmm\n<h3>my title</h3>foo"\n3,4,5'
+    expected_notes = [
+      ( "blah and stuff", "hi<br />&lt;h3&gt;yay&lt;/h3&gt;3.3" ), # ( title, contents )
+      ( "whee", "hmm<br />&lt;h3&gt;my title&lt;/h3&gt;foo" ),
+      ( "4", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = True )
 
   def test_import_csv_unknown_file_id( self ):
     self.login()
@@ -4552,6 +4617,70 @@ class Test_notebooks( Test_controller ):
     ), session_id = self.session_id )
 
     self.__assert_imported_notebook( expected_notes, result )
+
+  def test_import_csv_no_title_column_and_title_already_in_contents( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","<h3>yay</h3>3.3"\n"8","whee","hmm\n<h3>my title</h3>foo"\n3,4,5'
+    expected_notes = [
+      ( "yay", "<h3>yay</h3>3.3" ), # ( title, contents )
+      ( "my title", "hmm\n<h3>my title</h3>foo" ),
+      ( "5", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = None,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
+  def test_import_csv_no_title_column_and_title_already_in_plaintext_contents( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","hi\n<h3>yay</h3>3.3"\n"8","whee","hmm\n<h3>my title</h3>foo"\n3,4,5'
+    expected_notes = [
+      ( "hi", "hi<br />&lt;h3&gt;yay&lt;/h3&gt;3.3" ), # ( title, contents )
+      ( "hmm", "hmm<br />&lt;h3&gt;my title&lt;/h3&gt;foo" ),
+      ( "5", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = None,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = True )
 
   def test_import_csv_no_title_column_and_html_first_line( self ):
     self.login()
