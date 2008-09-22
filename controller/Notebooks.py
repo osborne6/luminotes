@@ -1760,7 +1760,11 @@ class Notebooks( object ):
 
     Plaintext contents are left mostly untouched, just stripping HTML and converting newlines to
     <br> tags. HTML contents are cleaned of any disallowed/harmful HTML tags, and target="_new"
-    attributes are added to all links without targets.
+    attributes are added to all links without targets, except internal note links.
+
+    Internal note links are rewritten such that they point to the newly imported notes. This is
+    accomplished by looking for a "note_id" column and determining what note each link points out.
+    Then each internal note link is rewritten to point at the new notebook id and note id.
 
     @type file_id: unicode
     @param file_id: id of the previously uploaded CSV file to import

@@ -1,3 +1,4 @@
+import re
 import cherrypy
 import urllib
 from nose.tools import raises
@@ -4348,6 +4349,9 @@ class Test_notebooks( Test_controller ):
 
     self.__assert_imported_notebook( expected_notes, result )
 
+  LINK_PATTERN = re.compile( '<a href="([^"]*)"\s*([^>]*)>([^<]*)</a>', re.IGNORECASE )
+  NOTE_URL_PATTERN = re.compile( '(.*)/notebooks/([^?]+)\?note_id=(.*)', re.IGNORECASE )
+
   def __assert_imported_notebook( self, expected_notes, result, plaintext = True ):
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
 
@@ -4381,6 +4385,23 @@ class Test_notebooks( Test_controller ):
         contents = contents.replace( u"\n", u"<br />" )
       if plaintext is True or u"<h3>" not in contents:
         contents = u"<h3>%s</h3>%s" % ( title, contents )
+      if plaintext is False:
+        link_match = self.LINK_PATTERN.search( contents )
+
+        # if there's a link, make sure it is a rewritten note link or has a link target
+        if link_match:
+          ( url, attributes, title ) = link_match.groups()
+
+          url_match = self.NOTE_URL_PATTERN.search( url )
+          if url_match:
+            ( protocol_and_host, notebook_id, note_id ) = url_match.groups()
+            assert attributes == u""
+            assert protocol_and_host == u""
+            assert notebook_id == self.notebook.object_id
+            assert note_id # TODO: assert that the note id has been rewritten properly
+          else:
+            assert attributes.startswith( u'target="' )
+
       assert note.contents == contents
 
     # make sure the CSV data file has been deleted from the database and filesystem
@@ -5012,6 +5033,40 @@ class Test_notebooks( Test_controller ):
     expected_notes = [
       ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
       ( "whee", 'hmm\n<a href="http://luminotes.com/" target="something">foo</a>' ),
+      ( "4", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
+  def test_import_csv_html_content_with_internal_note_link( self ):
+    self.login()
+
+    # one of the imported notes contains a link to one of the other imported notes
+    note_url = "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, "idthree" )
+    csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
+    expected_notes = [
+      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "whee", 'hmm\n<a href="%s">foo</a>' % note_url ), # TODO: expect rewritten URL instead
       ( "4", "5" ),
     ]
 
