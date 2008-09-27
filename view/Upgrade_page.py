@@ -282,7 +282,7 @@ class Upgrade_page( Product_page ):
             P(
               """
               Your wiki is fully backed up every day, and you can even download the entire contents
-              of your wiki by clicking "download as html" whenever you want.
+              of your wiki as a stand-alone web page or a CSV spreadsheet &mdash; anytime you like.
               """,
               class_ = u"upgrade_text",
             ),
