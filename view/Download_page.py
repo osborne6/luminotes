@@ -227,7 +227,7 @@ class Download_page( Product_page ):
             class_ = u"wide_center_area",
           ),
           Div(
-            u"Don't want to install anything? ",
+            u"Don't want to install anything? Need collaboration features? ",
             A( u"Use Luminotes online", href = u"/pricing" ),
             u".",
             class_ = u"small_text",
@@ -239,18 +239,6 @@ class Download_page( Product_page ):
 
         Div(
           Div(
-            H4( u"How many users are supported?", class_ = u"upgrade_question" ),
-            P(
-              u"""
-              Luminotes Desktop is designed for individual note taking. If you're interested
-              in sharing and collaboration, take a look at
-              """,
-              A( u"the online version of Luminotes", href = "/pricing" ),
-              """
-              for those features.
-              """,
-              class_ = u"upgrade_text",
-            ),
             H4( u"Is my wiki private?", class_ = u"upgrade_question" ),
             P(
               u"""
