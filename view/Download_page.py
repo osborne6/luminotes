@@ -300,7 +300,7 @@ class Download_page( Product_page ):
             H4( u"What happens to my wiki if I stop using Luminotes?", class_ = u"upgrade_question" ),
             P(
               """
-              There is no lock-in with Luminotes. You can export your entire wiki whenever you like.
+              There is no lock-in with Luminotes. You can export your entire wiki to either a stand-alone web page or a CSV spreadsheet &mdash; anytime you like.
               """,
               class_ = u"upgrade_text",
             ),
