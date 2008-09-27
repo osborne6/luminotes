@@ -116,6 +116,22 @@ class Test_controller( object ):
         u"stream_response": True,
         u"encoding_filter.on": False,
       },
+      u"/files/download_product": {
+        u"stream_response": True,
+        u"encoding_filter.on": False,
+      },
+      u"/files/thumbnail": {
+        u"stream_response": True,
+        u"encoding_filter.on": False,
+      },
+      u"/files/image": {
+        u"stream_response": True,
+        u"encoding_filter.on": False,
+      },
+      u"/notebooks/export_csv": {
+        u"stream_response": True,
+        u"encoding_filter.on": False,
+      },
       u"/files/progress": {
         u"stream_response": True,
       },

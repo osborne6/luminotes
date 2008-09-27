@@ -1,5 +1,6 @@
 # originally from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/496942
 
+import re
 import urlparse
 from htmllib import HTMLParser
 from cgi import escape
@@ -17,6 +18,8 @@ class Html_cleaner(HTMLParser):
   """
   Cleans HTML of any tags not matching a whitelist.
   """
+  NOTE_LINK_URL_PATTERN = re.compile( '[^"]*/notebooks/\w+\?note_id=\w+', re.IGNORECASE )
+
   def __init__( self, require_link_target = False ):
     HTMLParser.__init__( self, AbstractFormatter( NullWriter() ) )
     self.result = []
@@ -194,7 +197,8 @@ class Html_cleaner(HTMLParser):
           else:
             bt += ' %s=%s' % \
                (xssescape(attribute), quoteattr(attrs[attribute]))
-        if self.require_link_target and tag == "a" and not attrs.get( 'target' ):
+        if self.require_link_target and tag == "a" and not attrs.get( 'target' ) and \
+           ( not attrs.get( 'href' ) or not self.NOTE_LINK_URL_PATTERN.search( attrs.get( 'href' ) ) ):
           bt += ' target="_new"'
       if bt == "<a" or bt == "<img":
         return

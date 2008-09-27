@@ -1,4 +1,8 @@
+# -*- coding: utf8 -*-
+
 import re
+import csv
+import types
 import cherrypy
 import urllib
 from nose.tools import raises
@@ -3485,23 +3489,36 @@ class Test_notebooks( Test_controller ):
     assert result.get( "notebook_name" ) == self.notebook.name
 
     notes = result.get( "notes" )
-    assert len( notes ) == len( self.notebook.notes )
+    assert len( notes ) == self.database.select_one( int, self.notebook.sql_count_notes() )
     startup_note_allowed = True
     previous_revision = None
 
     # assert that startup notes come first, then normal notes in descending revision order
     for note in notes:
-      if self.notebook.is_startup_note( note ):
+      if note.startup:
         assert startup_note_allowed
       else:
         startup_note_allowed = False
-        assert note in self.notebook.notes
+
         if previous_revision:
           assert note.revision < previous_revision
 
         previous_revision = note.revision
-      
-  def test_export_html( self ):
+
+      db_note = self.database.load( Note, note.object_id )
+      assert db_note
+      assert note.object_id == db_note.object_id
+      assert note.revision == db_note.revision
+      assert note.title == db_note.title
+      assert note.contents == db_note.contents
+      assert note.notebook_id == db_note.notebook_id
+      assert note.startup == db_note.startup
+      assert note.deleted_from_id == db_note.deleted_from_id
+      assert note.rank == db_note.rank
+      assert note.user_id == db_note.user_id
+      assert note.creation == db_note.creation
+ 
+  def test_export_html_without_login( self ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
@@ -3524,6 +3541,103 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( "error" )
+
+  def test_export_csv( self, note_text = None ):
+    self.login()
+
+    if not note_text:
+      note_text = u"foo"
+
+    note3 = Note.create( "55", u"<h3>blah</h3>%s" % note_text, notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+
+    result = self.http_get(
+      "/notebooks/export_csv/%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"text/csv;charset=utf-8"
+    assert headers[ u"Content-Disposition" ] == 'attachment; filename=wiki.csv'
+
+    gen = result[ u"body" ]
+    assert isinstance( gen, types.GeneratorType )
+    pieces = []
+
+    try:
+      for piece in gen:
+        pieces.append( piece )
+    except AttributeError, exc:
+      if u"session_storage" not in str( exc ):
+        raise exc
+
+    csv_data = "".join( pieces )
+    reader = csv.reader( StringIO( csv_data ) )
+
+    row = reader.next()
+    expected_header = [ u"contents", u"title", u"note_id", u"startup", u"username", u"revision_date" ]
+    assert row == expected_header
+
+    expected_note_count = self.database.select_one( int, self.notebook.sql_count_notes() )
+    note_count = 0
+    startup_note_allowed = True
+    previous_revision = None
+
+    # assert that startup notes come first, then normal notes in descending revision order
+    for row in reader:
+      note_count += 1
+
+      assert len( row ) == len( expected_header )
+      ( contents, title, note_id, startup, username, revision_date ) = row
+      
+      if startup:
+        assert startup_note_allowed
+      else:
+        startup_note_allowed = False
+
+        if previous_revision:
+          assert revision_date < previous_revision
+
+        previous_revision = revision_date
+
+      db_note = self.database.load( Note, note_id )
+      assert db_note
+      assert contents.decode( "utf8" ) == db_note.contents
+      assert title.decode( "utf8" ) == db_note.title
+      assert note_id.decode( "utf8" ) == db_note.object_id
+      assert startup.decode( "utf8" ) == db_note.startup and u"1" or "0"
+      assert username.decode( "utf8" ) == ( db_note.user_id and self.user.username or u"" )
+      assert revision_date.decode( "utf8" ) == unicode( db_note.revision )
+
+    assert note_count == expected_note_count
+
+  def test_export_csv_with_unicode( self ):
+    self.test_export_csv( note_text = u"ümlaut.png" )
+ 
+  def test_export_csv_without_login( self ):
+    note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+
+    path = "/notebooks/export_csv/%s" % self.notebook.object_id
+    result = self.http_get(
+      path,
+      session_id = self.session_id,
+    )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+      
+  def test_export_csv_with_unknown_notebook( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/export_csv/%s" % self.unknown_notebook_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
 
   def test_create( self ):
     self.login()
@@ -4350,7 +4464,7 @@ class Test_notebooks( Test_controller ):
     self.__assert_imported_notebook( expected_notes, result )
 
   LINK_PATTERN = re.compile( '<a href="([^"]*)"\s*([^>]*)>([^<]*)</a>', re.IGNORECASE )
-  NOTE_URL_PATTERN = re.compile( '(.*)/notebooks/([^?]+)\?note_id=(.*)', re.IGNORECASE )
+  NOTE_URL_PATTERN = re.compile( '([^"]*)/notebooks/(\w+)\?note_id=(\w+)', re.IGNORECASE )
 
   def __assert_imported_notebook( self, expected_notes, result, plaintext = True ):
     assert result[ u"redirect" ].startswith( u"/notebooks/" )
@@ -4394,11 +4508,19 @@ class Test_notebooks( Test_controller ):
 
           url_match = self.NOTE_URL_PATTERN.search( url )
           if url_match:
+            imported_notebook = self.database.select_one( Notebook, "select * from notebook where name = 'imported notebook' limit 1;" )
             ( protocol_and_host, notebook_id, note_id ) = url_match.groups()
             assert attributes == u""
             assert protocol_and_host == u""
-            assert notebook_id == self.notebook.object_id
-            assert note_id # TODO: assert that the note id has been rewritten properly
+
+            # assert that the link has been rewritten to point to a note in the new notebook
+            assert note_id
+            rewritten_note = self.database.load( Note, note_id )
+            if rewritten_note:
+              assert rewritten_note.notebook_id == imported_notebook.object_id
+              assert notebook_id == imported_notebook.object_id
+            else:
+              assert notebook_id == self.notebook.object_id
           else:
             assert attributes.startswith( u'target="' )
 
@@ -5064,11 +5186,6 @@ class Test_notebooks( Test_controller ):
     # one of the imported notes contains a link to one of the other imported notes
     note_url = "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, "idthree" )
     csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
-    expected_notes = [
-      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
-      ( "whee", 'hmm\n<a href="%s">foo</a>' % note_url ), # TODO: expect rewritten URL instead
-      ( "4", "5" ),
-    ]
 
     self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
@@ -5089,6 +5206,125 @@ class Test_notebooks( Test_controller ):
       plaintext = False,
       import_button = u"import",
     ), session_id = self.session_id )
+
+    notebook = self.database.select_one( Notebook, "select * from notebook where name = 'imported notebook' limit 1;" )
+    note = self.database.select_one( Note, notebook.sql_load_note_by_title( u"4" ) )
+
+    rewritten_note_url = "/notebooks/%s?note_id=%s" % ( notebook.object_id, note.object_id )
+    expected_notes = [
+      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "4", "5" ),
+      ( "whee", 'hmm\n<a href="%s">foo</a>' % rewritten_note_url ),
+    ]
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
+  def test_import_csv_html_content_with_internal_note_link_and_blank_note_id_value( self ):
+    self.login()
+
+    # one of the imported notes contains a link to one of the other imported notes
+    note_url = "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, "idthree" )
+    csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    notebook = self.database.select_one( Notebook, "select * from notebook where name = 'imported notebook' limit 1;" )
+    note = self.database.select_one( Note, notebook.sql_load_note_by_title( u"4" ) )
+
+    rewritten_note_url = "/notebooks/%s?note_id=%s" % ( notebook.object_id, note.object_id )
+    expected_notes = [
+      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "4", "5" ),
+      ( "whee", 'hmm\n<a href="%s">foo</a>' % rewritten_note_url ),
+    ]
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
+  def test_import_csv_html_content_with_internal_note_link_to_unknown_note( self ):
+    self.login()
+
+    # one of the imported notes contains a link to one of the other imported notes
+    note_url = "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, "idunknown" )
+    csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    expected_notes = [
+      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "4", "5" ),
+      ( "whee", 'hmm\n<a href="%s">foo</a>' % note_url ), # the note url should not be rewritten
+    ]
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
+  def test_import_csv_html_content_with_internal_note_link_without_note_id_column( self ):
+    self.login()
+
+    # one of the imported notes contains a link to one of the other imported notes
+    note_url = "/notebooks/%s?note_id=%s" % ( self.notebook.object_id, "idthree" )
+    csv_data = '"label 1","label 2","label 3",\n5,"blah and stuff","3.<b>3 &nbsp;</b>"\n"8","whee","hmm\n<a href=""%s"">foo</a>"\n3,4,5' % note_url
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    expected_notes = [
+      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "whee", 'hmm\n<a href="%s">foo</a>' % note_url ), # the note url should not be rewritten
+      ( "4", "5" ),
+    ]
 
     self.__assert_imported_notebook( expected_notes, result, plaintext = False )
 

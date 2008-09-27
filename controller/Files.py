@@ -883,6 +883,7 @@ class Files( object ):
       import csv
 
       table_file = Upload_file.open_file( file_id )
+      table_file.seek( 0 ) # necessary in case the file is opened by another call to parse_csv()
       sniffer = csv.Sniffer()
 
       # attempt to determine the presence of a header

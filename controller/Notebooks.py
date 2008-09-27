@@ -1250,7 +1250,7 @@ class Notebooks( object ):
     writer = csv.writer( buffer )
 
     cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=wiki.csv"
-    cherrypy.response.headerMap[ u"Content-Type" ] = u"text/csv"
+    cherrypy.response.headerMap[ u"Content-Type" ] = u"text/csv;charset=utf-8"
 
     def stream():
       writer.writerow( ( u"contents", u"title", u"note_id", u"startup", u"username", u"revision_date" ) )
@@ -1263,7 +1263,7 @@ class Notebooks( object ):
           user = self.__database.load( User, note.user_id )
 
         writer.writerow( (
-          note.contents.encode( "utf8" ), # TODO: should this try to remove the title?
+          note.contents.encode( "utf8" ),
           note.title.encode( "utf8" ),
           note.object_id,
           note.startup and 1 or 0,
@@ -1740,6 +1740,7 @@ class Notebooks( object ):
 
   WHITESPACE_PATTERN = re.compile( "\s+" )
   NEWLINE_PATTERN = re.compile( "\r?\n" )
+  NOTE_LINK_PATTERN = re.compile( '(<a\s+(?:[^>]+\s+)?href=")[^"]*/notebooks/(\w+)\?note_id=(\w+)("[^>]*>)', re.IGNORECASE )
 
   @expose( view = Json )
   @strongly_expire
@@ -1763,7 +1764,7 @@ class Notebooks( object ):
     attributes are added to all links without targets, except internal note links.
 
     Internal note links are rewritten such that they point to the newly imported notes. This is
-    accomplished by looking for a "note_id" column and determining what note each link points out.
+    accomplished by looking for a "note_id" column and determining what note each link points to.
     Then each internal note link is rewritten to point at the new notebook id and note id.
 
     @type file_id: unicode
@@ -1799,6 +1800,15 @@ class Notebooks( object ):
     db_file = self.__database.load( File, file_id )
     if db_file is None or not self.__users.check_access( user_id, db_file.notebook_id ):
       raise Access_error()
+
+    # if the file has a "note_id" header column, record its index
+    note_id_column = None
+    note_ids = {} # map of original CSV note id to imported note id
+
+    parser = self.__files.parse_csv( file_id, skip_header = False )
+    row = parser.next()
+    if row and u"note_id" in row:
+      note_id_column = row.index( u"note_id" )
 
     parser = self.__files.parse_csv( file_id, skip_header = True )
 
@@ -1853,7 +1863,35 @@ class Notebooks( object ):
       if title and note.title is None:
         note.contents = u"<h3>%s</h3>%s" % ( title, note.contents )
 
+      # if there is a note id column, then map the original CSV note id to its new imported note id
+      if note_id_column:
+        original_note_id = Valid_id( none_okay = True )( row[ note_id_column ].strip() )
+        if original_note_id:
+          note_ids[ original_note_id ] = note_id
+
       self.__database.save( note, commit = False )
+
+    def rewrite_link( match ):
+      ( link_start, original_notebook_id, original_note_id, link_end ) = match.groups()
+
+      note_id = note_ids.get( original_note_id )
+      if note_id:
+        return "%s/notebooks/%s?note_id=%s%s" % ( link_start, notebook.object_id, note_id, link_end )
+
+      # if we don't know how to rewrite the link (for lack of the new note id), then don't rewrite
+      # it and leave the link as it is
+      return "%s/notebooks/%s?note_id=%s%s" % ( link_start, original_notebook_id, original_note_id, link_end )
+
+    # do a pass over all the imported notes to rewrite internal note links so that they point to
+    # the newly imported note ids in the new notebook
+    for ( original_note_id, note_id ) in note_ids.items():
+      note = self.__database.load( Note, note_id )    
+
+      if note:
+        ( rewritten_contents, rewritten_count ) = self.NOTE_LINK_PATTERN.subn( rewrite_link, note.contents )
+        if rewritten_count > 0:
+          note.contents = rewritten_contents
+          self.__database.save( note )
 
     # delete the CSV file now that it's been imported
     self.__database.execute( db_file.sql_delete(), commit = False )
