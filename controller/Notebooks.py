@@ -1865,7 +1865,11 @@ class Notebooks( object ):
 
       # if there is a note id column, then map the original CSV note id to its new imported note id
       if note_id_column:
-        original_note_id = Valid_id( none_okay = True )( row[ note_id_column ].strip() )
+        try:
+          original_note_id = Valid_id( none_okay = True )( row[ note_id_column ].strip() )
+        except ValueError:
+          original_note_id = None
+
         if original_note_id:
           note_ids[ original_note_id ] = note_id
 
