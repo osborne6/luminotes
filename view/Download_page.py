@@ -37,15 +37,20 @@ class Download_page( Product_page ):
             class_ = u"upgrade_subtitle",
           ),
           Div(
-            upgrade and P(
-              B( "Upgrading:" ),
-              u"""
-              If you have already purchased Luminotes Desktop and would like to download a newer
-              version, simply follow the link you received after your purchase. Can't find
-              the link or need help? Please
-              """,
-              A( u"contact support", href = u"/contact_info" ),
-              u"for assistance.",
+            upgrade and Div(
+              P(
+                B( "Upgrading:" ),
+                u"""
+                If you have already purchased Luminotes Desktop and would like to download a newer
+                version, simply follow the link you received after your purchase.
+                """,
+                A( "Check out what's new in version %s" % VERSION, href = news_url ),
+              ),
+              P(
+                u"Can't find your download link or need help? Please",
+                A( u"contact support", href = u"/contact_info" ),
+                u"for assistance.",
+              ),
               class_ = u"upgrade_text",
             ) or None,
             Div(
