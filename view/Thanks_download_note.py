@@ -4,6 +4,8 @@ from config.Version import VERSION
 
 class Thanks_download_note( Span ):
   def __init__( self, download_url ):
+    news_url = u"http://luminotes.com/hg/luminotes/file/%s/NEWS" % VERSION
+
     Span.__init__(
       self,
       H3( u"thank you" ),
@@ -15,9 +17,10 @@ class Thanks_download_note( Span ):
       ),
       P(
         A( u"Download Luminotes Desktop version %s" % VERSION, href = download_url ),
-        """
-        and get started taking notes with your own personal wiki.
-        """,
+      ),
+      P(
+        A( "What's new in this release", href = news_url, target = "_new" ),
+        class_ = u"small_text",
       ),
       P(
         u"""

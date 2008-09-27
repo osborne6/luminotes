@@ -220,6 +220,15 @@ class Upgrade_page( Product_page ):
             separator = "",
             class_ = u"yearly_link",
           ),
+
+          Div(
+            u"Don't want to take notes online? ",
+            A( u"Download Luminotes Desktop", href = u"/download" ),
+            u".",
+            class_ = u"small_text",
+            separator = u"",
+          ),
+
           class_ = u"upgrade_area",
         ),
 

@@ -9,6 +9,7 @@ class Download_page( Product_page ):
 
     # for now, just assume there's a single download package
     download_button = download_products[ 0 ].get( "button" )
+    news_url = u"http://luminotes.com/hg/luminotes/file/%s/NEWS" % VERSION
 
     Product_page.__init__(
       self,
@@ -175,6 +176,13 @@ class Download_page( Product_page ):
               class_ = u"upgrade_table_area",
             ),
             class_ = u"wide_center_area",
+          ),
+          Div(
+            u"Don't want to install anything? ",
+            A( u"Use Luminotes online", href = u"/pricing" ),
+            u".",
+            class_ = u"small_text",
+            separator = u"",
           ),
 
           class_ = u"upgrade_area",
