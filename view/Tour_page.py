@@ -76,7 +76,7 @@ class Tour_page( Product_page ):
               Ol(
                 Li( u"Connect your thoughts with links between notes" ),
                 Li( u"Track past revisions and make updates without worry" ),
-                Li( u"Download your complete wiki with a single click" ),
+                Li( u"Download your complete wiki as a web page or spreadsheet" ),
                 Li( u"Attach files to your wiki and download them anytime" ),
                 class_ = u"tour_list",
               ),

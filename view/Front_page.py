@@ -309,7 +309,7 @@ class Front_page( Product_page ):
                     href = u"/tour",
                   ),
                   Div( u"Take your wiki to go", class_ = u"thumbnail_caption" ),
-                  Div( u"Download your entire wiki with a single click.", class_ = u"thumbnail_caption_detail" ),
+                  Div( u"Download your wiki as a web page or spreadsheet.", class_ = u"thumbnail_caption_detail" ),
                   class_ = u"thumbnail_cell",
                 ),
                 Td(
