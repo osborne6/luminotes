@@ -3542,13 +3542,13 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" )
 
-  def test_export_csv( self, note_text = None ):
+  def test_export_csv( self, note_contents = None ):
     self.login()
 
-    if not note_text:
-      note_text = u"foo"
+    if not note_contents:
+      note_contents = u"<h3>blah</h3>foo"
 
-    note3 = Note.create( "55", u"<h3>blah</h3>%s" % note_text, notebook_id = self.notebook.object_id )
+    note3 = Note.create( "55", note_contents, notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
     result = self.http_get(
@@ -3604,7 +3604,12 @@ class Test_notebooks( Test_controller ):
       db_note = self.database.load( Note, note_id )
       assert db_note
       assert contents.decode( "utf8" ) == db_note.contents
-      assert title.decode( "utf8" ) == db_note.title
+
+      if db_note.title:
+        assert title.decode( "utf8" ) == db_note.title
+      else:
+        assert not title
+
       assert note_id.decode( "utf8" ) == db_note.object_id
       assert startup.decode( "utf8" ) == db_note.startup and u"1" or "0"
       assert username.decode( "utf8" ) == ( db_note.user_id and self.user.username or u"" )
@@ -3613,8 +3618,11 @@ class Test_notebooks( Test_controller ):
     assert note_count == expected_note_count
 
   def test_export_csv_with_unicode( self ):
-    self.test_export_csv( note_text = u"ümlaut.png" )
- 
+    self.test_export_csv( note_contents = u"<h3>blah</h3>ümlaut.png" )
+
+  def test_export_csv_without_note_title( self ):
+    self.test_export_csv( note_contents = u"there's no title" )
+
   def test_export_csv_without_login( self ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
