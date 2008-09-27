@@ -169,6 +169,7 @@ class Download_page( Product_page ):
                     Ul(
                       Li( u"Take notes in meetings, in class, or while on the go." ),
                       Li( u"Runs in a web browser, but no internet connection is needed." ),
+                      Li( u'Absolutely no DRM. Does not "phone home".' ),
                     ),
                     colspan = u"2",
                     id = u"works_offline",
