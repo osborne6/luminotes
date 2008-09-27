@@ -1895,7 +1895,7 @@ class Notebooks( object ):
         ( rewritten_contents, rewritten_count ) = self.NOTE_LINK_PATTERN.subn( rewrite_link, note.contents )
         if rewritten_count > 0:
           note.contents = rewritten_contents
-          self.__database.save( note )
+          self.__database.save( note, commit = False )
 
     # delete the CSV file now that it's been imported
     self.__database.execute( db_file.sql_delete(), commit = False )

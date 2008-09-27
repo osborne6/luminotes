@@ -18,7 +18,7 @@ class Html_cleaner(HTMLParser):
   """
   Cleans HTML of any tags not matching a whitelist.
   """
-  NOTE_LINK_URL_PATTERN = re.compile( '[^"]*/notebooks/\w+\?note_id=\w+', re.IGNORECASE )
+  NOTE_LINK_URL_PATTERN = re.compile( '[^"]*/notebooks/\w+\?[^"]*note_id=\w+', re.IGNORECASE )
 
   def __init__( self, require_link_target = False ):
     HTMLParser.__init__( self, AbstractFormatter( NullWriter() ) )
