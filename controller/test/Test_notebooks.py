@@ -5233,6 +5233,45 @@ class Test_notebooks( Test_controller ):
 
     self.__assert_imported_notebook( expected_notes, result, plaintext = False )
 
+  def test_import_csv_html_content_with_internal_note_link_with_full_protocol( self ):
+    self.login()
+
+    # one of the imported notes contains a link to one of the other imported notes
+    note_url = "http://localhost:8081/notebooks/%s?note_id=%s" % ( self.notebook.object_id, "idthree" )
+    csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = False,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    notebook = self.database.select_one( Notebook, "select * from notebook where name = 'imported notebook' limit 1;" )
+    note = self.database.select_one( Note, notebook.sql_load_note_by_title( u"4" ) )
+
+    rewritten_note_url = "/notebooks/%s?note_id=%s" % ( notebook.object_id, note.object_id )
+    expected_notes = [
+      ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "4", "5" ),
+      ( "whee", 'hmm\n<a href="%s">foo</a>' % rewritten_note_url ),
+    ]
+
+    self.__assert_imported_notebook( expected_notes, result, plaintext = False )
+
   def test_import_csv_html_content_with_internal_note_link_and_blank_note_id_value( self ):
     self.login()
 
