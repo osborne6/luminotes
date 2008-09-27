@@ -175,6 +175,49 @@ class Download_page( Product_page ):
                     class_ = u"feature_description undisplayed",
                   ),
                 ),
+                Tr(
+                  Td(
+                    A( u"Supported operating systems", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'supported_oses' ); return false;" ),
+                    class_ = u"feature_name",
+                  ),
+                  Td(
+                    u"Windows XP/Vista, Linux",
+                    class_ = u"small_text",
+                  ),
+                ),
+                Tr(
+                  Td(
+                    Ul(
+                      Li( u"Fully supports Windows XP and Windows Vista." ),
+                      Li( u"Linux", A( u"source code", href = u"/source_code" ), "is available." ),
+                      Li( u"Future releases will include Mac OS X support." ),
+                    ),
+                    colspan = u"2",
+                    id = u"supported_oses",
+                    class_ = u"feature_description undisplayed",
+                  ),
+                ),
+                Tr(
+                  Td(
+                    A( u"Supported web browsers", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'supported_browsers' ); return false;" ),
+                    class_ = u"feature_name",
+                  ),
+                  Td(
+                    u"Firefox, Internet Explorer",
+                    class_ = u"small_text",
+                  ),
+                ),
+                Tr(
+                  Td(
+                    Ul(
+                      Li( u"Fully supports Firefox and Internet Explorer." ),
+                      Li( u"Future upgrades will support Safari, Chrome, and Opera." ),
+                    ),
+                    colspan = u"2",
+                    id = u"supported_browsers",
+                    class_ = u"feature_description undisplayed",
+                  ),
+                ),
                 border = u"1",
                 id = u"upgrade_table",
               ),
@@ -195,29 +238,6 @@ class Download_page( Product_page ):
 
         Div(
           Div(
-            H4( u"What operating systems are supported?", class_ = u"upgrade_question" ),
-            P(
-              u"""
-              Luminotes Desktop currently supports Windows XP and Windows Vista.
-              Linux users should get the
-              """,
-              A( u"source code", href = "/source_code" ),
-              "directly. And future releases will support Mac OS X as well.",
-              class_ = u"upgrade_text",
-            ),
-            P(
-              u"""
-              If Luminotes Desktop does not support your operating system currently, or you just
-              don't want to install anything on your computer, you can still use Luminotes
-              online! Simply
-              """,
-              A( u"sign up", href = "/pricing" ),
-              """
-              for an online Luminotes account. With the online version of Luminotes, there's
-              nothing to download or install.
-              """,
-              class_ = u"upgrade_text",
-            ),
             H4( u"How many users are supported?", class_ = u"upgrade_question" ),
             P(
               u"""
