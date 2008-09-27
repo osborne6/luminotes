@@ -1267,7 +1267,7 @@ class Notebooks( object ):
           note.title and note.title.encode( "utf8" ) or None,
           note.object_id,
           note.startup and 1 or 0,
-          note.user_id and user and user.username.encode( "utf8" ) or u"",
+          note.user_id and user and user.username and user.username.encode( "utf8" ) or u"",
           note.revision,
         ) )
 

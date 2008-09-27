@@ -3623,6 +3623,12 @@ class Test_notebooks( Test_controller ):
   def test_export_csv_without_note_title( self ):
     self.test_export_csv( note_contents = u"there's no title" )
 
+  def test_export_csv_with_blank_username( self ):
+    self.user._User__username = None
+    self.database.save( self.user )
+
+    self.test_export_csv( note_contents = u"<h3>blah</h3>foo" )
+
   def test_export_csv_without_login( self ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
