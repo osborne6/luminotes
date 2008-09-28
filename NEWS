@@ -1,4 +1,4 @@
-1.5.1:
+1.5.1: September 28, 2008
  * Implemented CSV exporting, so now you can export all of your notes to a
    CSV spreadsheet file. This currently doesn't include revision history or
    attached files.
