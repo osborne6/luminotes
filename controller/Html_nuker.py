@@ -25,13 +25,17 @@ class Html_nuker( HTMLParser ):
 
   def handle_entityref( self, ref ):
     if self.allow_refs:
-      self.result.append( "&%s;" % ref )
+      if ref == "nbsp":
+        self.result.append( " " )
+      else:
+        self.result.append( "&%s;" % ref )
     else:
       self.result.append( {
         "amp": "&",
         "lt": "<",
         "gt": ">",
         "quot": '"',
+        "nbsp": " ",
       }.get ( ref, "" ) )
 
   def handle_comment( self, comment ):
@@ -60,4 +64,6 @@ class Html_nuker( HTMLParser ):
     self.result = []
     self.feed( rawstring )
 
-    return u"".join( self.result )
+    result = u"".join( self.result ).strip()
+
+    return result

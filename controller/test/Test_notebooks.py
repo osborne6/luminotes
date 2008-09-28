@@ -1204,6 +1204,22 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_load_note_by_title_with_trailing_whitespace( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "%s    " % self.note.title,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_load_note_by_title_case_insensitive( self ):
     self.login()
 
@@ -4711,7 +4727,7 @@ class Test_notebooks( Test_controller ):
 
     self.__assert_imported_notebook( expected_notes, result )
 
-  def test_import_csv_html_title( self ):
+  def test_import_csv_html_in_plaintext_title( self ):
     self.login()
 
     csv_data = '"label 1","label 2","label 3"\n5,"blah <i>and</i>&nbsp; stuff<br />",3.3\n"8","whee<p>","hmm\nfoo"\n3,4,5'
@@ -5040,7 +5056,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"<i>blah</i> and stuff",3.3\n"8","wh&nbsp;ee","hmm\nfoo"\n3,4,5'
     expected_notes = [
       ( "blah and stuff", "3.3" ), # ( title, contents )
-      ( "wh&nbsp;ee", "hmm\nfoo" ),
+      ( "wh ee", "hmm\nfoo" ),
       ( "4", "5" ),
     ]
 
@@ -5103,7 +5119,7 @@ class Test_notebooks( Test_controller ):
 
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","3.<b>3 &nbsp;</b>"\n"8","whee","hmm\n<i>foo</i>"\n3,4,5'
     expected_notes = [
-      ( "3.3 &nbsp;", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
+      ( "3.3", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
       ( "hmm", "hmm\n<i>foo</i>" ),
       ( "5", "5" ),
     ]

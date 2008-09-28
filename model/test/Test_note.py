@@ -49,6 +49,60 @@ class Test_note( object ):
     assert self.note.user_id == self.user_id
     assert self.note.creation == self.creation
 
+  def test_set_contents_with_title_with_trailing_whitespace( self ):
+    new_title = u"new title"
+    new_contents = u"<h3>%s  </h3>new blah" % new_title
+    previous_revision = self.note.revision
+
+    self.note.contents = new_contents
+
+    assert self.note.revision > previous_revision
+    assert self.note.contents == new_contents
+    assert self.note.summary == None
+    assert self.note.title == new_title
+    assert self.note.notebook_id == self.notebook_id
+    assert self.note.startup == self.startup
+    assert self.note.deleted_from_id == None
+    assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
+    assert self.note.creation == self.creation
+
+  def test_set_contents_with_title_with_trailing_nbsp( self ):
+    new_title = u"new title"
+    new_contents = u"<h3>%s&nbsp; </h3>new blah" % new_title
+    previous_revision = self.note.revision
+
+    self.note.contents = new_contents
+
+    assert self.note.revision > previous_revision
+    assert self.note.contents == new_contents
+    assert self.note.summary == None
+    assert self.note.title == new_title
+    assert self.note.notebook_id == self.notebook_id
+    assert self.note.startup == self.startup
+    assert self.note.deleted_from_id == None
+    assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
+    assert self.note.creation == self.creation
+
+  def test_set_contents_with_title_with_internal_nbsp( self ):
+    new_title = u"new&nbsp;title"
+    new_contents = u"<h3>%s</h3>new blah" % new_title
+    previous_revision = self.note.revision
+
+    self.note.contents = new_contents
+
+    assert self.note.revision > previous_revision
+    assert self.note.contents == new_contents
+    assert self.note.summary == None
+    assert self.note.title == u"new title"
+    assert self.note.notebook_id == self.notebook_id
+    assert self.note.startup == self.startup
+    assert self.note.deleted_from_id == None
+    assert self.note.rank == self.rank
+    assert self.note.user_id == self.user_id
+    assert self.note.creation == self.creation
+
   def test_set_contents_with_html_title( self ):
     new_title = u"new title"
     new_contents = u"<h3>new<br /> title</h3>new blah"

@@ -462,7 +462,7 @@ class Notebooks( object ):
       return note
 
     # remove all HTML from the contents and also remove the title
-    summary = Html_nuker().nuke( note.contents ).strip()
+    summary = Html_nuker().nuke( note.contents )
     if note.title and summary.startswith( note.title ):
       summary = summary[ len( note.title ) : ]
 
