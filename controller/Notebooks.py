@@ -1263,8 +1263,8 @@ class Notebooks( object ):
           user = self.__database.load( User, note.user_id )
 
         writer.writerow( (
-          note.contents and note.contents.encode( "utf8" ) or None,
-          note.title and note.title.encode( "utf8" ) or None,
+          note.contents and note.contents.strip().encode( "utf8" ) or None,
+          note.title and note.title.strip().encode( "utf8" ) or None,
           note.object_id,
           note.startup and 1 or 0,
           note.user_id and user and user.username and user.username.encode( "utf8" ) or u"",

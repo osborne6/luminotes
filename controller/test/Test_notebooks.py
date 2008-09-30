@@ -3619,10 +3619,10 @@ class Test_notebooks( Test_controller ):
 
       db_note = self.database.load( Note, note_id )
       assert db_note
-      assert contents.decode( "utf8" ) == db_note.contents
+      assert contents.decode( "utf8" ) == db_note.contents.strip()
 
       if db_note.title:
-        assert title.decode( "utf8" ) == db_note.title
+        assert title.decode( "utf8" ) == db_note.title.strip()
       else:
         assert not title
 
@@ -3638,6 +3638,12 @@ class Test_notebooks( Test_controller ):
 
   def test_export_csv_without_note_title( self ):
     self.test_export_csv( note_contents = u"there's no title" )
+
+  def test_export_csv_with_trailing_newline_in_title( self ):
+    self.test_export_csv( note_contents = u"<h3>blah\n</h3>foo" )
+
+  def test_export_csv_with_trailing_newline_in_contents( self ):
+    self.test_export_csv( note_contents = u"<h3>blah</h3>foo\n" )
 
   def test_export_csv_with_blank_username( self ):
     self.user._User__username = None
