@@ -343,9 +343,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
   var export_link = getElement( "export_link" );
   if ( export_link ) {
     connect( export_link, "onclick", function ( event ) {
-      self.save_editor( null, true, function () {
-        self.export_clicked();
-      } );
+      self.save_editor( null );
+      self.export_clicked();
       event.stop();
     } );
   }

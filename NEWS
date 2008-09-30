@@ -2,6 +2,8 @@
  * Leading/trailing spaces in note titles are now ignored when making links
    to such notes. This means that creating a link titled "my note" to a note
    called "my note  " now works properly.
+ * Fixed a bug in which clicking the "export" link when the current note was
+   unsaved did not open the export pulldown.
 
 1.5.1: September 28, 2008
  * Implemented CSV exporting, so now you can export all of your notes to a
