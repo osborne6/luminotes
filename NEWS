@@ -6,6 +6,9 @@
    stripped out when exporting to CSV.
  * Fixed a bug in which clicking the "export" link when the current note was
    unsaved did not open the export pulldown.
+ * Changed the warning about Safari/Chrome/Opera incompatibility to be an
+   in-page message instead of a popup alert so as to be slightly less
+   obnoxious.
 
 1.5.1: September 28, 2008
  * Implemented CSV exporting, so now you can export all of your notes to a
