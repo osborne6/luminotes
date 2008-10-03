@@ -262,7 +262,7 @@ Editor.prototype.exec_command = function ( command, parameter ) {
 Editor.prototype.insert_html = function ( html ) {
   if ( html.length == 0 ) return;
 
-  if ( !this.edit_enabled ) {
+  if ( !this.edit_enabled || strip( this.contents() ) == "" ) {
     this.document.body.innerHTML = html;
     return;
   }
