@@ -135,8 +135,14 @@ Editor.prototype.init_document = function () {
 
 // third and final stage of construction, invoked by init_document(). do not call directly
 Editor.prototype.finish_init = function () {
-  if ( !this.initial_text )
+  if ( !this.initial_text ) {
     this.initial_text = "<h3>";
+
+    // WebKit hack: add a zero-width space to make the horizontal line under title show up in the
+    // correct position, even before there is a title
+    if ( WEBKIT )
+      this.initial_text += "&#8203;";
+  }
 
   this.insert_html( this.initial_text );
 
