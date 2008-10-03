@@ -995,9 +995,9 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   var code = event.key().code;
 
   if ( event.modifier().ctrl ) {
-    // ctrl-backtick: alert with frame HTML contents (temporary for debugging)
+    // ctrl-backtick: message with frame HTML contents (for debugging)
     if ( code == 192 || code == 96 ) {
-      alert( editor.contents() );
+      this.display_message( editor.contents() );
       event.stop();
     // ctrl-b: bold
     } else if ( code == 66 ) {
