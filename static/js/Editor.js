@@ -1,3 +1,7 @@
+GECKO = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.userAgent );
+WEBKIT = /WebKit/.test( navigator.userAgent );
+
+
 function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty ) {
   this.id = id;
   this.notebook_id = notebook_id;
@@ -13,7 +17,6 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.init_focus = focus || false;
   this.closed = false;
   this.link_started = null;
-  this.gecko = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.userAgent );
   this.hover_target = null;
   this.hover_timer = null;
   var iframe_id = "note_" + id;
@@ -259,7 +262,7 @@ Editor.prototype.exec_command = function ( command, parameter ) {
 Editor.prototype.insert_html = function ( html ) {
   if ( html.length == 0 ) return;
 
-  if ( !this.edit_enabled || /Safari/.test( navigator.userAgent ) ) {
+  if ( !this.edit_enabled ) {
     this.document.body.innerHTML = html;
     return;
   }
@@ -308,7 +311,7 @@ Editor.prototype.key_released = function ( event ) {
 
 Editor.prototype.cleanup_html = function () {
   // this only applies to Firefox and other Gecko-based browsers
-  if ( !this.gecko )
+  if ( !GECKO )
     return;
 
   // if you're typing the text of an <h3> title and you hit enter, the text cursor will skip a line
@@ -459,30 +462,25 @@ Editor.prototype.empty = function () {
   return ( scrapeText( this.document.body ).length == 0 );
 }
 
+Editor.title_placeholder_char = "\u200b";
+Editor.title_placeholder_pattern = /\u200b/g;
+Editor.title_placeholder_html = "&#8203;&#8203;";
+
 Editor.prototype.insert_link = function ( url ) {
   // get the current selection, which is the link title
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
 
-    // if no text is selected, then insert a link with a placeholder span as the link title, and
-    // then immediately remove the link title once the link is created
+    // if no text is selected, then insert a link with two zero-width spaces as the title. then,
+    // position the text cursor between the two zero-width spaces. yes, this really is necessary.
+    // it ensures that the next character typed in WebKit becomes part of the link title.
     if ( selection.toString().length == 0 ) {
-      this.insert_html( '<span id="placeholder_title"> </span>' );
-      var placeholder = withDocument( this.document, function () { return getElement( "placeholder_title" ); } );
-      selection.selectAllChildren( placeholder );
-
-      this.exec_command( "createLink", url );
-      selection.collapseToEnd();
-
-      // hack to prevent Firefox from erasing spaces before links that happen to be at the end of list items
-      var sentinel = createDOM( "span" );
-      var link = placeholder.parentNode;
-      insertSiblingNodesBefore( link, sentinel );
-      this.link_started = placeholder.parentNode;
-
-      // nuke the link title and collapse the selection, yielding a tasty new link that's titleless
-      // (except for this span) and unselected
-      link.innerHTML = "<span></span>";
+      this.insert_html( '<a href="' + url + '" id="new_link">' + Editor.title_placeholder_html + '</a>' );
+      var link = withDocument( this.document, function () { return getElement( "new_link" ); } );
+      link.removeAttribute( "id" );
+      selection.selectAllChildren( link );
+      selection.collapse( link.firstChild, 1 );
+      this.link_started = link;
     // otherwise, just create a link with the selected text as the link title
     } else {
       this.link_started = null;
@@ -522,6 +520,13 @@ Editor.prototype.end_link = function () {
 
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     this.exec_command( "unlink" );
+
+    // necessary to actually end a link in WebKit. the side-effect is that the cursor jumps to the
+    // end of the link if it's not already there
+    if ( link && WEBKIT ) {
+      var selection = this.iframe.contentWindow.getSelection();
+      selection.collapse( link, 1 );
+    }
   } else if ( this.document.selection ) { // browsers such as IE
     // if some text is already selected, unlink it and bail
     var range = this.document.selection.createRange();
@@ -791,5 +796,5 @@ function link_title( link, query ) {
   if ( link_title.charCodeAt( 0 ) == 160 )
     return "";
 
-  return link_title;
+  return link_title.replace( Editor.title_placeholder_pattern, "" );
 }

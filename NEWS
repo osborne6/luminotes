@@ -1,3 +1,6 @@
+1.5.3:
+ * You can now create links when using Safari or Chrome web browsers.
+
 1.5.2: October 1, 2008
  * Leading/trailing spaces in note titles are now ignored when making links
    to such notes. This means that creating a link titled "my note" to a note

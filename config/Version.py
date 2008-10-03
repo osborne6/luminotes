@@ -1,1 +1,1 @@
-VERSION = u"1.5.2"
+VERSION = u"1.5.3"
