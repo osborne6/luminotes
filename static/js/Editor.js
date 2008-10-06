@@ -329,7 +329,8 @@ Editor.prototype.cleanup_html = function ( key_code ) {
     var style_spans = getElementsByTagAndClassName( "span", null, this.document );
     var underlines = getElementsByTagAndClassName( "u", null, this.document );
     var strikethroughs = getElementsByTagAndClassName( "strike", null, this.document );
-    var nodes = style_spans.concat( underlines ).concat( strikethroughs );
+    var fonts = getElementsByTagAndClassName( "font", "Apple-style-span", this.document );
+    var nodes = style_spans.concat( underlines ).concat( strikethroughs ).concat( fonts );
 
     for ( var i in nodes ) {
       var node = nodes[ i ];
@@ -338,9 +339,12 @@ Editor.prototype.cleanup_html = function ( key_code ) {
       var style = node.getAttribute( "style" );
 
       node.removeAttribute( "class" );
-      if ( style == undefined ) continue;
+      if ( style == undefined && node.tagName != "font" && node.tagName != "FONT" )
+        continue;
 
       var replacement = withDocument( this.document, function () {
+        if ( style == undefined )
+          return createDOM( "span" );
         // font-size is set when ending title mode
         if ( style.indexOf( "font-size: " ) != -1 )
           return null;
