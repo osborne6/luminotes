@@ -521,16 +521,16 @@ Editor.prototype.blurred = function () {
   this.scrape_title();
 }
 
+Editor.title_placeholder_char = "\u200b";
+Editor.title_placeholder_pattern = /\u200b/g;
+Editor.title_placeholder_html = "&#8203;&#8203;";
+
 Editor.prototype.empty = function () {
   if ( !this.document || !this.document.body )
     return true; // consider it empty as of now
 
-  return ( scrapeText( this.document.body ).length == 0 );
+  return ( scrapeText( this.document.body ).replace( Editor.title_placeholder_pattern, "" ).length == 0 );
 }
-
-Editor.title_placeholder_char = "\u200b";
-Editor.title_placeholder_pattern = /\u200b/g;
-Editor.title_placeholder_html = "&#8203;&#8203;";
 
 Editor.prototype.insert_link = function ( url ) {
   // get the current selection, which is the link title
