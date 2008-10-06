@@ -50,11 +50,7 @@ function Wiki( invoker ) {
 
   if ( this.notebook && this.notebook.read_write ) {
     unsupported_agent = null;
-    if ( /Chrome/.test( navigator.userAgent ) )
-      unsupported_agent = "Chrome";
-    else if ( /Safari/.test( navigator.userAgent ) )
-      unsupported_agent = "Safari";
-    else if ( /Opera/.test( navigator.userAgent ) )
+    if ( /Opera/.test( navigator.userAgent ) )
       unsupported_agent = "Opera";
 
     if ( unsupported_agent )
