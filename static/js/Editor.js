@@ -310,13 +310,69 @@ Editor.prototype.key_released = function ( event ) {
   if ( event.modifier().ctrl || code == CTRL )
     return;
 
-  this.cleanup_html();
+  this.cleanup_html( code );
 
   signal( this, "state_changed", this, false );
 }
 
-Editor.prototype.cleanup_html = function () {
-  // this only applies to Firefox and other Gecko-based browsers
+Editor.prototype.cleanup_html = function ( key_code ) {
+  if ( WEBKIT ) {
+    // if enter is pressed while in a title, end title mode, since WebKit doesn't do that for us
+    var ENTER = 13;
+    if ( key_code == ENTER && this.state_enabled( "h3" ) )
+      this.exec_command( "h3" );
+
+    // as of this writing, WebKit doesn't support execCommand( "styleWithCSS" ). for more info, see
+    // https://bugs.webkit.org/show_bug.cgi?id=13490
+    // so to make up for this shortcoming, manually scrub WebKit style spans and other nodes,
+    // replacing them with appropriate tags
+    var style_spans = getElementsByTagAndClassName( "span", null, this.document );
+    var underlines = getElementsByTagAndClassName( "u", null, this.document );
+    var strikethroughs = getElementsByTagAndClassName( "strike", null, this.document );
+    var nodes = style_spans.concat( underlines ).concat( strikethroughs );
+
+    for ( var i in nodes ) {
+      var node = nodes[ i ];
+      if ( !node ) continue;
+
+      var style = node.getAttribute( "style" );
+
+      node.removeAttribute( "class" );
+      if ( style == undefined ) continue;
+
+      var replacement = withDocument( this.document, function () {
+        // font-size is set when ending title mode
+        if ( style.indexOf( "font-size: " ) != -1 )
+          return null;
+        if ( style.indexOf( "text-decoration: none;" ) != -1 || style.length == 0 )
+          return createDOM( "span" );
+        if ( style.indexOf( "font-weight: bold;" ) != -1 )
+          return createDOM( "b" );
+        if ( style.indexOf( "font-style: italic;" ) != -1 )
+          return createDOM( "i" );
+        if ( style.indexOf( "text-decoration: underline;" ) != -1 )
+          return createDOM( "u" );
+        if ( style.indexOf( "text-decoration: line-through;" ) != -1 )
+          return createDOM( "strike" );
+        return null;
+      } );
+
+      if ( replacement ) {
+        var selection = this.iframe.contentWindow.getSelection();
+        var anchor = selection.anchorNode;
+        var offset = selection.anchorOffset;
+        swapDOM( node, replacement );
+        appendChildNodes( replacement, node.childNodes );
+
+        // necessary to prevent the text cursor from disappearing as the node containing it is replaced
+        selection.collapse( anchor, offset );
+      } else {
+        node.removeAttribute( "style" );
+      }
+    }
+  }
+
+  // the rest only applies to Firefox and other Gecko-based browsers
   if ( !GECKO )
     return;
 
@@ -647,7 +703,10 @@ Editor.prototype.current_node_names = function () {
   var node;
   if ( window.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
-    var range = selection.getRangeAt( 0 );
+    if ( selection.rangeCount > 0 )
+      var range = selection.getRangeAt( 0 );
+    else
+      var range = this.document.createRange();
     node = range.endContainer;
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
