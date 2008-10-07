@@ -60,7 +60,6 @@ class Test_controller( object ):
         u"server.environment": "production",
         u"session_filter.on": True,
         u"session_filter.storage_type": u"ram",
-        u"session_filter.locking": "implicit",
         u"encoding_filter.on": True,
         u"encoding_filter.encoding": "utf-8",
         u"decoding_filter.on": True,
