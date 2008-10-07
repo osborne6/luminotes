@@ -2856,11 +2856,15 @@ function calculate_position( node, anchor, relative_to, always_left_align ) {
   var position = getElementPosition( anchor );
 
   // in WebKit, work around a bug in which children/grandchildren/etc of relatively positioned
-  // elements have an incorrect position
+  // elements inside of fixed position elements have an incorrect position
   if ( WEBKIT ) {
     var parent_node = anchor.parentNode;
+    var found_fixed_parent = false;
+
     while ( parent_node ) {
-      if ( getStyle( parent_node, "position" ) == "relative" ) {
+      if ( getStyle( parent_node, "position" ) == "fixed" )
+        found_fixed_parent = true;
+      else if ( found_fixed_parent && getStyle( parent_node, "position" ) == "relative" ) {
         position.x -= parent_node.offsetLeft;
         position.y -= parent_node.offsetTop;
         break;
