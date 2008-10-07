@@ -185,13 +185,6 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
     cherrypy.server.socket_timeout = 60 # increase socket timeout to one minute (default is 10 sec)
     DASHES_AND_NEWLINES = 6 # four dashes and two newlines
 
-    # release the cherrypy session lock so that the user can issue other commands while the file is
-    # uploading
-    try:
-      cherrypy.session.release_lock()
-    except ( KeyError, OSError ):
-      pass
-
     # pluck the file id out of the query string. it would be preferable to grab it out of parsed
     # form variables instead, but at this point in the processing, all the form variables might not
     # be parsed
@@ -295,13 +288,6 @@ class Files( object ):
     @return: file data
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
-    # release the session lock before beginning to stream the download. otherwise, if the
-    # download is cancelled before it's done, the lock won't be released
-    try:
-      cherrypy.session.release_lock()
-    except ( KeyError, OSError ):
-      pass
-
     db_file = self.__database.load( File, file_id )
 
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
@@ -350,13 +336,6 @@ class Files( object ):
     @return: file data
     @raise Access_error: the access_id is unknown or doesn't grant access to the file
     """
-    # release the session lock before beginning to stream the download. otherwise, if the
-    # download is cancelled before it's done, the lock won't be released
-    try:
-      cherrypy.session.release_lock()
-    except ( KeyError, OSError ):
-      pass
-
     # load the download_access object corresponding to the given id
     download_access = self.__database.load( Download_access, access_id )
     if download_access is None:
@@ -451,11 +430,6 @@ class Files( object ):
     @return: thumbnail image data
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
-    try:
-      cherrypy.session.release_lock()
-    except ( KeyError, OSError ):
-      pass
-
     db_file = self.__database.load( File, file_id )
 
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
@@ -515,11 +489,6 @@ class Files( object ):
     @return: image data
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
-    try:
-      cherrypy.session.release_lock()
-    except ( KeyError, OSError ):
-      pass
-
     db_file = self.__database.load( File, file_id )
 
     if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
@@ -706,13 +675,6 @@ class Files( object ):
     @return: streaming HTML progress bar
     """
     global current_uploads
-
-    # release the session lock before beginning to stream the upload report. otherwise, if the
-    # upload is cancelled before it's done, the lock won't be released
-    try:
-      cherrypy.session.release_lock()
-    except ( KeyError, OSError ):
-      pass
 
     # poll until the file is uploading (as determined by current_uploads) or completely uploaded (in
     # the database with a filename)

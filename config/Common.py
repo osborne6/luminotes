@@ -13,7 +13,6 @@ settings = {
     "session_filter.storage_path": "session",
     "session_filter.timeout": 60 * 72, # 72 hours
     "session_filter.clean_up_delay": 5,
-    "session_filter.locking": "implicit",
     "encoding_filter.on": True,
     "encoding_filter.encoding": "utf-8",
     "decoding_filter.on": True,
