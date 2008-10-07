@@ -554,6 +554,7 @@ h1 {
   font-size: 72%;
   text-align: left;
   max-height: 20em;
+  min-width: 10em;
   overflow: auto;
   padding: 0.5em;
   border: 1px solid #000000;
