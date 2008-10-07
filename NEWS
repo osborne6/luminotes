@@ -3,6 +3,7 @@
    * You can now create and end links.
    * Underline and strikethrough now work.
    * Pulldowns for search suggestions, importing, and exporting show up.
+   * Note resizing (growing and shrinking) works as expected.
  * Improved page loading speed and fixed a rare session locking timeout bug
    by removing all implicit session locking.
  * Fixed a bug that broke that Luminotes Desktop product download page if

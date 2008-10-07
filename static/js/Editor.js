@@ -284,15 +284,21 @@ Editor.prototype.insert_html = function ( html ) {
 Editor.prototype.resize = function () {
   if ( !this.document ) return;
 
-  var dimensions;
-  // TODO: find a better way to determine which dimensions to use than just checking for contentDocument
-  if ( this.iframe.contentDocument ) { // Firefox
-    dimensions = { "h": elementDimensions( this.document.documentElement ).h };
+  var height;
+
+  if ( WEBKIT ) {
+    var self = this;
+    withDocument( this.document, function () {
+      var body = getFirstElementByTagAndClassName( "body" );
+      height = elementDimensions( body ).h;
+    } );
+  } else if ( this.iframe.contentDocument ) { // Gecko and other sane browsers
+    height = elementDimensions( this.document.documentElement ).h;
   } else { // IE
-    dimensions = { "h": this.document.body.scrollHeight };
+    height = this.document.body.scrollHeight;
   }
 
-  setElementDimensions( this.iframe, dimensions );
+  setElementDimensions( this.iframe, { "h": height } );
 }
 
 Editor.prototype.key_pressed = function ( event ) {
