@@ -1636,7 +1636,7 @@ class Users( object ):
       result[ "conversion" ] = "download_%s" % item_number
     # otherwise, display an auto-reloading "processing..." page
     else:
-      note = Processing_download_note( download_access_id, retry_count )
+      note = Processing_download_note( download_access_id, tx, retry_count )
 
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )

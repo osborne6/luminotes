@@ -1750,7 +1750,6 @@ class Test_users( Test_controller ):
       invite_button = u"send invites",
     ), session_id = self.session_id )
     
-    print result
     invites = result[ u"invites" ]
     assert len( invites ) == 2
     invite = invites[ 0 ]
@@ -4463,6 +4462,8 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"being processed" in result[ u"notes" ][ 0 ].contents
     assert u"retry_count=1" in result[ u"notes" ][ 0 ].contents
+    assert u'<meta content="2; URL=/users/thanks_download?access_id=%s&retry_count=1" http-equiv="Refresh"></meta>' % access_id \
+           in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_not_yet_paid_with_retry( self ):
     access_id = u"wheeaccessid"
@@ -4509,6 +4510,8 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"being processed" in result[ u"notes" ][ 0 ].contents
     assert u"retry_count=4" in result[ u"notes" ][ 0 ].contents
+    assert u'<meta content="2; URL=/users/thanks_download?access_id=%s&retry_count=4" http-equiv="Refresh"></meta>' % access_id \
+           in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_not_yet_paid_with_retry_timeout( self ):
     access_id = u"wheeaccessid"
@@ -4555,6 +4558,7 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
     assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+    assert u"<meta " not in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_not_yet_paid_tx( self ):
     access_id = u"wheeaccessid"
@@ -4600,6 +4604,8 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"being processed" in result[ u"notes" ][ 0 ].contents
     assert u"retry_count=1" in result[ u"notes" ][ 0 ].contents
+    assert u'<meta content="2; URL=/users/thanks_download?tx=%s&retry_count=1" http-equiv="Refresh"></meta>' % transaction_id \
+           in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_not_yet_paid_tx_with_retry( self ):
     access_id = u"wheeaccessid"
@@ -4647,6 +4653,8 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"being processed" in result[ u"notes" ][ 0 ].contents
     assert u"retry_count=4" in result[ u"notes" ][ 0 ].contents
+    assert u'<meta content="2; URL=/users/thanks_download?tx=%s&retry_count=4" http-equiv="Refresh"></meta>' % transaction_id \
+           in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_not_yet_paid_tx_with_retry_timeout( self ):
     access_id = u"wheeaccessid"
@@ -4693,6 +4701,7 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
     assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+    assert u"<meta " not in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download_missing_tx_missing_access_id( self ):
     self.login()
