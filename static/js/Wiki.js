@@ -49,12 +49,20 @@ function Wiki( invoker ) {
   }
 
   if ( this.notebook && this.notebook.read_write ) {
-    unsupported_agent = null;
-    if ( /Opera/.test( navigator.userAgent ) )
+    var unsupported_agent = null;
+    var beta_agent = null;
+
+    if ( /Chrome/.test( navigator.userAgent ) )
+      beta_agent = "Chrome";
+    else if ( /Safari/.test( navigator.userAgent ) )
+      beta_agent = "Safari";
+    else if ( /Opera/.test( navigator.userAgent ) )
       unsupported_agent = "Opera";
 
     if ( unsupported_agent )
       this.display_message( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
+    else if ( beta_agent )
+      this.display_message( "Luminotes support for your web browser (" + beta_agent + ") is currently in beta. If you encounter any problems, please contact support so that they can be fixed!" );
   }
 
   var deleted_id = getElement( "deleted_id" ).value;
