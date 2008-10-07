@@ -2,7 +2,7 @@
  * Safari and Chrome web browsers are now supported (beta):
    * You can now create and end links.
    * Underline and strikethrough now work.
-   *
+   * Pulldowns for search suggestions, importing, and exporting show up.
 
 1.5.2: October 1, 2008
  * Leading/trailing spaces in note titles are now ignored when making links

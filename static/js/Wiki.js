@@ -2855,6 +2855,20 @@ function calculate_position( node, anchor, relative_to, always_left_align ) {
   // position the pulldown under the anchor
   var position = getElementPosition( anchor );
 
+  // in WebKit, work around a bug in which children/grandchildren/etc of relatively positioned
+  // elements have an incorrect position
+  if ( WEBKIT ) {
+    var parent_node = anchor.parentNode;
+    while ( parent_node ) {
+      if ( getStyle( parent_node, "position" ) == "relative" ) {
+        position.x -= parent_node.offsetLeft;
+        position.y -= parent_node.offsetTop;
+        break;
+      }
+      parent_node = parent_node.parentNode;
+    }
+  }
+
   if ( relative_to ) {
     var relative_pos = getElementPosition( relative_to );
     if ( relative_pos ) {
