@@ -1,4 +1,5 @@
 from pytz import utc
+from threading import Thread
 from pysqlite2 import dbapi2 as sqlite
 from datetime import datetime
 from Stub_object import Stub_object
@@ -10,7 +11,7 @@ from controller.Database import Database, Connection_wrapper
 class Test_database( object ):
   def setUp( self ):
     # make an in-memory sqlite database to use in place of PostgreSQL during testing
-    self.connection = Connection_wrapper( sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES ) )
+    self.connection = Connection_wrapper( sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
     self.cache = Stub_cache()
     cursor = self.connection.cursor()
     cursor.execute( Stub_object.sql_create_table() )
@@ -189,6 +190,32 @@ class Test_database( object ):
     self.database.commit()
     assert next_id
     assert self.database.load( Stub_object, next_id )
+
+  def test_synchronize( self ):
+    def make_objects():
+      for i in range( 50 ):
+        object_id = self.database.next_id( Stub_object )
+        basic_obj = Stub_object( object_id, value = 1 )
+        original_revision = basic_obj.revision
+
+        self.database.execute( basic_obj.sql_create() )
+        obj = self.database.load( Stub_object, basic_obj.object_id )
+
+        assert obj.object_id == basic_obj.object_id
+        assert obj.revision.replace( tzinfo = utc ) == original_revision
+        assert obj.value == basic_obj.value
+
+        object_id = self.database.next_id( Stub_object )
+
+    # if synchronization (locking) is working properly, then these two threads should be able to run
+    # simultaneously without error. without locking, SQLite will raise
+    thread1 = Thread( target = make_objects )
+    thread2 = Thread( target = make_objects )
+    thread1.start()
+    thread2.start()
+
+    thread1.join()
+    thread2.join()
 
   def test_backend( self ):
     assert self.database.backend == Persistent.SQLITE_BACKEND

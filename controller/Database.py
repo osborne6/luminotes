@@ -5,6 +5,7 @@ import sys
 import sha
 import cherrypy
 import random
+import threading
 from model.Persistent import Persistent
 from model.Notebook import Notebook
 
@@ -16,6 +17,20 @@ class Connection_wrapper( object ):
 
   def __getattr__( self, name ):
     return getattr( self.connection, name )
+
+
+def synchronized( method ):
+  def lock( self, *args, **kwargs ):
+    if self.lock:
+      self.lock.acquire()
+
+    try:
+      return method( self, *args, **kwargs )
+    finally:
+      if self.lock:
+        self.lock.release()
+
+  return lock
 
 
 class Database( object ):
@@ -93,9 +108,10 @@ class Database( object ):
 
         self.__connection = \
           Connection_wrapper( sqlite.connect( data_filename, detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
-
+  
       self.__pool = None
       self.__backend = Persistent.SQLITE_BACKEND
+      self.lock = threading.Lock() # multiple simultaneous client threads make SQLite angry
     else:
       import psycopg2 as psycopg
       from psycopg2.pool import PersistentConnectionPool
@@ -125,6 +141,7 @@ class Database( object ):
         )
 
       self.__backend = Persistent.POSTGRESQL_BACKEND
+      self.lock = None # PostgreSQL does its own synchronization
 
     self.__cache = cache
 
@@ -151,6 +168,7 @@ class Database( object ):
     except ImportError:
       return None
 
+  @synchronized
   def save( self, obj, commit = True ):
     """
     Save the given object to the database.
@@ -182,6 +200,7 @@ class Database( object ):
       # no commit yet, so don't touch the cache
       connection.pending_saves.append( obj )
 
+  @synchronized
   def commit( self ):
     connection = self.__get_connection()
     connection.commit()
@@ -195,6 +214,7 @@ class Database( object ):
 
       connection.pending_saves = []
 
+  @synchronized
   def rollback( self ):
     connection = self.__get_connection()
     connection.rollback()
@@ -230,6 +250,7 @@ class Database( object ):
 
     return obj
 
+  @synchronized
   def select_one( self, Object_type, sql_command, use_cache = False ):
     """
     Execute the given sql_command and return its results in the form of an object of Object_type,
@@ -274,6 +295,7 @@ class Database( object ):
 
     return obj
 
+  @synchronized
   def select_many( self, Object_type, sql_command ):
     """
     Execute the given sql_command and return its results in the form of a list of objects of
@@ -311,6 +333,7 @@ class Database( object ):
 
     return [ isinstance( item, str ) and unicode( item, encoding = "utf8" ) or item for item in row ]
 
+  @synchronized
   def execute( self, sql_command, commit = True ):
     """
     Execute the given sql_command.
@@ -328,6 +351,7 @@ class Database( object ):
     if commit:
       connection.commit()
 
+  @synchronized
   def execute_script( self, sql_commands, commit = True ):
     """
     Execute the given sql_commands.
@@ -374,6 +398,7 @@ class Database( object ):
 
     return "".join( digits )
 
+  @synchronized
   def next_id( self, Object_type, commit = True ):
     """
     Generate the next available object id and return it.
@@ -404,6 +429,7 @@ class Database( object ):
 
     return next_id
 
+  @synchronized
   def close( self ):
     """
     Shutdown the database.
