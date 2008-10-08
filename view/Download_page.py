@@ -204,7 +204,8 @@ class Download_page( Product_page ):
                     class_ = u"feature_name",
                   ),
                   Td(
-                    u"Firefox, Internet Explorer",
+                    u"Firefox, Internet Explorer,", Br(),
+                    U"Chrome, Safari",
                     class_ = u"small_text",
                   ),
                 ),
@@ -212,7 +213,8 @@ class Download_page( Product_page ):
                   Td(
                     Ul(
                       Li( u"Fully supports Firefox and Internet Explorer." ),
-                      Li( u"Future upgrades will support Safari, Chrome, and Opera." ),
+                      Li( u"Beta support for Chrome and Safari." ),
+                      Li( u"Future upgrades will support Opera." ),
                     ),
                     colspan = u"2",
                     id = u"supported_browsers",
