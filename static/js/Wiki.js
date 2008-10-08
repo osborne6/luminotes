@@ -2854,10 +2854,15 @@ Pulldown.prototype.finish_init = function () {
 function calculate_position( node, anchor, relative_to, always_left_align ) {
   var anchor_dimensions = getElementDimensions( anchor );
 
-  // if the anchor has no height, use its first child (if any) instead
-  if ( anchor_dimensions.h == 0 && anchor.firstChild ) {
-    anchor = anchor.firstChild;
-    anchor_dimensions = getElementDimensions( anchor );
+  // if the anchor's first child is larger (vertically) than its parent, then use it as the anchor
+  if ( anchor.firstChild ) {
+    try{
+      var child_dimensions = getElementDimensions( anchor.firstChild );
+      if ( child_dimensions.h > anchor_dimensions.h ) {
+        anchor = anchor.firstChild;
+        anchor_dimensions = child_dimensions;
+      }
+    } catch ( e ) {}
   }
 
   // position the pulldown under the anchor
