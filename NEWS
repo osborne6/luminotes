@@ -1,4 +1,4 @@
-1.5.3:
+1.5.3: October 9, 2008
  * Safari and Chrome web browsers are now supported (beta):
    * You can now create and end links.
    * Underline and strikethrough now work.
@@ -8,7 +8,7 @@
    * Note resizing (growing and shrinking) works (mostly) as expected.
  * Improved page loading speed and fixed a rare session locking timeout bug
    by removing all implicit session locking.
- * Fixed a bug that broke that Luminotes Desktop product download page if
+ * Fixed a bug that broke the Luminotes Desktop product download page if
    PayPal took too long to notify Luminotes of the purchase.
 
 1.5.2: October 1, 2008
