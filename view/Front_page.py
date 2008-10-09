@@ -277,8 +277,8 @@ class Front_page( Product_page ):
             P(
               u"""
               Luminotes is a WYSIWYG personal wiki notebook for organizing your notes and ideas.
-              You don't have to use any special markup codes or install any software. You
-              simply start typing.
+              It's designed for note taking and note keeping without the hassle
+              of learning special markup codes. You simply start typing.
               """,
             ),
             Table(

@@ -22,6 +22,6 @@ class Rounded_div( Div ):
     Div.__init__(
       self,
       div,
-      id = u"%s_wrapper" % image_name,
+      id = u"%s_wrapper" % ( kwargs.get( u"id" ) or image_name ),
       class_ = u"%s_color" % image_name,
     )

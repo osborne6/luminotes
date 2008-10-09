@@ -1,3 +1,7 @@
+1.5.4: October 9, 2008
+ * Fixed a visual bug in which clicking up or down to reorder your notebooks
+   didn't display correctly.
+
 1.5.3: October 9, 2008
  * Safari and Chrome web browsers are now supported (beta):
    * You can now create and end links.
