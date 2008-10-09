@@ -2858,7 +2858,7 @@ function calculate_position( node, anchor, relative_to, always_left_align ) {
   if ( anchor.firstChild ) {
     try{
       var child_dimensions = getElementDimensions( anchor.firstChild );
-      if ( child_dimensions.h > anchor_dimensions.h ) {
+      if ( child_dimensions.h > anchor_dimensions.h + 4 ) {
         anchor = anchor.firstChild;
         anchor_dimensions = child_dimensions;
       }
