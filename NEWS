@@ -4,7 +4,8 @@
    * Underline and strikethrough now work.
    * Pulldowns for search suggestions, importing, and exporting show up.
    * Pulldowns on inline images are now positioned correctly.
-   * Note resizing (growing and shrinking) works as expected.
+   * Uploading files now works reliably instead of just once.
+   * Note resizing (growing and shrinking) works (mostly) as expected.
  * Improved page loading speed and fixed a rare session locking timeout bug
    by removing all implicit session locking.
  * Fixed a bug that broke that Luminotes Desktop product download page if

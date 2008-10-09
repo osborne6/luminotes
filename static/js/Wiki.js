@@ -3271,14 +3271,17 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe, ephemeral );
   wiki.down_image_button( "attachFile" );
 
+  var vaguely_random = new Date().getTime();
   this.invoker = invoker;
   this.editor = editor;
   this.iframe = createDOM( "iframe", {
     "src": "/files/upload_page?notebook_id=" + notebook_id + "&note_id=" + editor.id,
     "frameBorder": "0",
     "scrolling": "no",
-    "id": "upload_frame",
-    "name": "upload_frame",
+    // if a new iframe has an id/name that WebKit has already seen, then it will just use its
+    // previous src value and ignore our new src value here. workaround: don't use the same id!
+    "id": "upload_frame_" + vaguely_random,
+    "name": "upload_frame_" + vaguely_random,
     "class": "upload_frame"
   } );
   this.iframe.pulldown = this;
@@ -3293,8 +3296,8 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   this.progress_iframe = createDOM( "iframe", {
     "frameBorder": "0",
     "scrolling": "no",
-    "id": "progress_frame",
-    "name": "progress_frame",
+    "id": "progress_frame_" + vaguely_random,
+    "name": "progress_frame_" + vaguely_random,
     "class": "upload_frame"
   } );
   addElementClass( this.progress_iframe, "undisplayed" );
@@ -3339,10 +3342,7 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
   removeElementClass( this.progress_iframe, "undisplayed" );
   var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
 
-  if ( frames[ "progress_frames" ] )
-    frames[ "progress_frame" ].location.href = progress_url;
-  else
-    this.progress_iframe.src = progress_url;
+  this.progress_iframe.src = progress_url;
 }
 
 Upload_pulldown.prototype.upload_complete = function () {
@@ -3439,13 +3439,16 @@ function Import_pulldown( wiki, notebook_id, invoker, anchor ) {
 
   Pulldown.call( this, wiki, notebook_id, "import_pulldown", anchor, null, false );
 
+  var vaguely_random = new Date().getTime();
   this.invoker = invoker;
   this.iframe = createDOM( "iframe", {
     "src": "/files/import_page?notebook_id=" + notebook_id,
     "frameBorder": "0",
     "scrolling": "no",
-    "id": "upload_frame",
-    "name": "upload_frame",
+    // if a new iframe has an id/name that WebKit has already seen, then it will just use its
+    // previous src value and ignore our new src value here. workaround: don't use the same id!
+    "id": "upload_frame_" + vaguely_random,
+    "name": "upload_frame_" + vaguely_random,
     "class": "upload_frame"
   } );
   this.iframe.pulldown = this;
@@ -3460,8 +3463,8 @@ function Import_pulldown( wiki, notebook_id, invoker, anchor ) {
   this.progress_iframe = createDOM( "iframe", {
     "frameBorder": "0",
     "scrolling": "no",
-    "id": "progress_frame",
-    "name": "progress_frame",
+    "id": "progress_frame_" + vaguely_random,
+    "name": "progress_frame_" + vaguely_random,
     "class": "upload_frame"
   } );
   addElementClass( this.progress_iframe, "undisplayed" );
@@ -3497,10 +3500,7 @@ Import_pulldown.prototype.upload_started = function ( file_id ) {
   removeElementClass( this.progress_iframe, "undisplayed" );
   var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
 
-  if ( frames[ "progress_frames" ] )
-    frames[ "progress_frame" ].location.href = progress_url;
-  else
-    this.progress_iframe.src = progress_url;
+  this.progress_iframe.src = progress_url;
 }
 
 Import_pulldown.prototype.upload_complete = function () {
