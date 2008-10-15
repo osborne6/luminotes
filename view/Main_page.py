@@ -77,7 +77,7 @@ class Main_page( Page ):
     if len( notes ) == 1:
       title = notes[ 0 ].title
     else:
-      title = None
+      title = notebook.name
 
     if rate_plan.get( u"notebook_sharing" ):
       updates_path = u"/notebooks/updates/%s?rss&%s" % (
