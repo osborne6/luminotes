@@ -156,7 +156,7 @@ class Notebooks( object ):
 
     # if the user doesn't have any storage bytes yet, they're a new user, so see what type of
     # conversion this is (demo or signup)
-    if result[ "user" ].storage_bytes == 0:
+    if result[ "user" ].username != u"anonymous" and result[ "user" ].storage_bytes == 0:
       if u"this is a demo" in [ note.title for note in result[ "startup_notes" ] ]:
         result[ "conversion" ] = u"demo"
       else:
