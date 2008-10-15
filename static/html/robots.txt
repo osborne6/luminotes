@@ -2,7 +2,9 @@
 User-agent: *
 Disallow: /users/demo
 Disallow: /users/thanks
-Disallow: /notebooks/download_html/
+Disallow: /users/thanks_download
+Disallow: /notebooks/export_csv/
+Disallow: /notebooks/export_html/
 
 # this crawler is completely broken and requests many invalid URLs
 User-agent: panscient.com
