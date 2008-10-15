@@ -7,7 +7,7 @@ class Product_page( Page ):
   def __init__( self, user, first_notebook, login_url, logout_url, note_title, *nodes ):
     Page.__init__(
       self,
-      None, # use the default title
+      ( note_title != "home" ) and note_title or None, # use the default title for the "home" page
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/product.css" ),
       Meta( name = u"description", content = u"Luminotes is a WYSIWYG personal wiki notebook for organizing your notes and ideas." ),
