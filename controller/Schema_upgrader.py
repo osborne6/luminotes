@@ -53,6 +53,10 @@ class Schema_upgrader:
     except:
       from_version = ( 1, 5, 4 )
 
+    # if the database schema version is already equal to to_version, there's nothing to do
+    if to_version == from_version:
+      return
+
     if self.__database.backend == Persistent.SQLITE_BACKEND:
       extension = u"sqlite"
     else:
