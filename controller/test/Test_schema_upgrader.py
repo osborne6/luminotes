@@ -102,6 +102,23 @@ class Test_schema_upgrader( object ):
 
     self.test_upgrade_schema();
 
+  def test_upgrade_schema_default_to_start_version_of_1_5_4( self ):
+    # test that if no schema_version table exists, then the starting version is assumed to be 1.5.4
+    self.fake_files = {
+      u"model/delta/1.5.3.sqlite": u"invalid sql;",
+      u"model/delta/1.5.4.sqlite": u"should not be invoked;",
+      u"model/delta/1.5.5.sqlite": u"create table new_table ( foo text ); insert into new_table values ( 'hi' );",
+      u"model/delta/1.5.6.sqlite": u"insert into new_table values ( 'bye' );",
+    }
+
+    self.upgrader.upgrade_schema( u"1.5.6" );
+
+    result = self.database.select_many( tuple, u"select * from new_table;" );
+    assert result == [ ( u"hi", ), ( u"bye", ), ];
+
+    result = self.database.select_many( tuple, u"select * from schema_version;" );
+    assert result == [ ( 1, 5, 6 ) ];
+
   def test_apply_schema_delta( self ):
     self.fake_files = {
       u"model/delta/5.6.5.sqlite": u"insert into new_table values ( 'should not show up' );",

@@ -48,8 +48,10 @@ class Schema_upgrader:
 
     try:
       from_version = self.__database.select_one( tuple, "select * from schema_version;" );
+    # if there's no schema version table, assume the from_version is 1.5.4, which was the last
+    # version not to include a schema_version table
     except:
-      from_version = None
+      from_version = ( 1, 5, 4 )
 
     if self.__database.backend == Persistent.SQLITE_BACKEND:
       extension = u"sqlite"
@@ -69,7 +71,7 @@ class Schema_upgrader:
         continue
 
       # skip those versions that won't help us upgrade
-      if from_version and version <= from_version:
+      if version <= from_version:
         continue
       if version > to_version:
         continue
