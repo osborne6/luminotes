@@ -364,7 +364,10 @@ class Database( object ):
     connection = self.__get_connection()
     cursor = connection.cursor()
 
-    cursor.executescript( sql_commands )
+    if self.__backend == Persistent.SQLITE_BACKEND:
+      cursor.executescript( sql_commands )
+    else:
+      cursor.execute( sql_commands )
 
     if commit:
       connection.commit()
