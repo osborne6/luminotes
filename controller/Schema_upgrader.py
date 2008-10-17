@@ -51,7 +51,11 @@ class Schema_upgrader:
     # if there's no schema version table, assume the from_version is 1.5.4, which was the last
     # version not to include a schema_version table
     except:
+      self.__database.rollback()
       from_version = ( 1, 5, 4 )
+      self.__database.execute( "create table schema_version ( major numeric, minor numeric, release numeric );", commit = False );
+      self.__database.execute( "insert into schema_version values ( %s, %s, %s );" % from_version, commit = False );
+      self.__database.commit()
 
     # if the database schema version is already equal to to_version, there's nothing to do
     if to_version == from_version:
@@ -90,25 +94,30 @@ class Schema_upgrader:
       self.apply_schema_delta( version, filename )
 
     self.__database.commit()
+    print "successfully upgraded database schema"
 
   def apply_schema_delta( self, version, filename ):
     """
     Upgrade the database from its current version to a given version, applying only the named
-    schema delta file to do so.
+    schema delta file to do so. The changes are commited once complete, and the schema_version
+    within the database is updated accordingly. This method assumes that the schema_version
+    table exists and has one row.
 
     @type version: tuple
     @param version: ( major, minor, release ) with each version part as an integer
     @type filename: unicode
     @param filename: full path to the schema delta file to apply
     """
-    self.__database.execute_script( self.__read_file( filename ), commit = False )
+    print "upgrading database schema to version %s.%s.%s" % version
 
-    try:
-      self.__database.execute( "update schema_version set major = %s, minor = %s, release = %s;" % version, commit = False );
-    # if the table doesn't yet exist, create it
-    except:
-      self.__database.execute( "create table schema_version ( major numeric, minor numeric, release numeric );", commit = False );
-      self.__database.execute( "insert into schema_version values ( %s, %s, %s );" % version, commit = False );
+    # note: SQLite will auto-commit before certain statements (such as "create table"), which sort
+    # of defeats the point of transactions. doing an explicit "begin transaction" first gives an
+    # error later
+    # http://oss.itsystementwicklung.de/download/pysqlite/doc/sqlite3.html#sqlite3-controlling-transactions
+
+    self.__database.execute_script( self.__read_file( filename ), commit = False )
+    self.__database.execute( "update schema_version set major = %s, minor = %s, release = %s;" % version, commit = False );
+    self.__database.commit()
 
   @staticmethod
   def version_string_to_tuple( version ):

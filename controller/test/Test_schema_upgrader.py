@@ -120,6 +120,9 @@ class Test_schema_upgrader( object ):
     assert result == [ ( 1, 5, 6 ) ];
 
   def test_apply_schema_delta( self ):
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, release numeric );" );
+    self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
+
     self.fake_files = {
       u"model/delta/5.6.5.sqlite": u"insert into new_table values ( 'should not show up' );",
       u"model/delta/5.6.7.sqlite": u"create table new_table ( foo text ); insert into new_table values ( 'hi' );",
@@ -133,11 +136,6 @@ class Test_schema_upgrader( object ):
 
     result = self.database.select_many( tuple, u"select * from schema_version;" );
     assert result == [ ( 5, 6, 7 ) ];
-
-  def test_apply_schema_delta_with_schema_version_table( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, release numeric );" );
-    self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
-    self.test_apply_schema_delta();
 
   @raises( IOError )
   def test_apply_schema_delta_with_unknown_file( self ):
