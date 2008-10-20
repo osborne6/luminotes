@@ -20,7 +20,7 @@ class Not_found_page( Page ):
           u"Sorry, the page you are looking for couldn't be found. But not to worry. You've got a few options.",
           Ul(
             Li( u"Return to the", A( u"Luminotes personal wiki notebook", href = u"/" ), u"home page." ),
-            Li( A( u"Contact support", href = u"mailto:%s" % support_email ), u"and report that the page that you expected to find here is missing." ),
+            Li( A( u"Contact support", href = u"mailto:%s" % support_email ), u"and report that the page you expected to find here is missing." ),
           ),
         ),
         class_ = u"error_box",
