@@ -276,6 +276,14 @@ class Download_page( Product_page ):
               """,
               class_ = u"upgrade_text",
             ),
+            H4( u"Can I run Luminotes Desktop from a USB flash drive?", class_ = u"upgrade_question" ),
+            P(
+              """
+              Yes! You can keep your wiki in your pocket by running Luminotes Desktop directly from
+              a USB flash drive. Full instructions are included with the download.
+              """,
+              class_ = u"upgrade_text",
+            ),
             H4( u"What forms of payment do you accept?", class_ = u"upgrade_question" ),
             P(
               """
