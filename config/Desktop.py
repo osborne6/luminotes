@@ -20,6 +20,7 @@ sock.close()
 settings = { 
   "global": {
     "server.socket_port": socket_port,
+    "server.socket_host": "localhost",
     "server.thread_pool": 4,
     "session_filter.storage_type": "ram",
     "session_filter.timeout": 60 * 24 * 365, # one year
