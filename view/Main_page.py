@@ -9,6 +9,7 @@ from Toolbar import Toolbar
 from Json import Json
 from Rounded_div import Rounded_div
 from config.Version import VERSION
+from model.Notebook import Notebook
 
 
 class Main_page( Page ):
@@ -105,7 +106,7 @@ class Main_page( Page ):
       except IOError:
         pass
 
-    if notebook.read_write is True:
+    if notebook.read_write == Notebook.READ_WRITE:
       header_note_title = u"wiki"
     else:
       all_notes = startup_notes + notes
@@ -118,7 +119,7 @@ class Main_page( Page ):
         "Luminotes privacy policy": "privacy",
       }.get( header_note_title, header_note_title )
 
-    own_notebooks = [ nb for nb in notebooks if nb.read_write is True ]
+    own_notebooks = [ nb for nb in notebooks if nb.read_write == Notebook.READ_WRITE ]
     header_notebook = own_notebooks and own_notebooks[ 0 ] or notebook
 
     Page.__init__(
@@ -133,7 +134,7 @@ class Main_page( Page ):
       Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ) or None,
-      Input( type = u"hidden", name = u"storage_bytes", id = u"storage_bytes", value = user.storage_bytes ),
+      Input( type = u"hidden", name = u"user", id = u"user", value = json( user ) ),
       Input( type = u"hidden", name = u"rate_plan", id = u"rate_plan", value = json( rate_plan ) ),
       Input( type = u"hidden", name = u"yearly", id = u"yearly", value = json( signup_yearly ) ),
       Input( type = u"hidden", name = u"notebooks", id = u"notebooks", value = json( notebooks ) ),
@@ -148,7 +149,6 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"invite_id", id = u"invite_id", value = invite_id ),
       Input( type = u"hidden", name = u"after_login", id = u"after_login", value = after_login ),
       Input( type = u"hidden", name = u"signup_plan", id = u"signup_plan", value = signup_plan ),
-      Input( type = u"hidden", name = u"email_address", id = u"email_address", value = user.email_address ),
       Input( type = u"hidden", name = u"groups", id = u"groups", value = json( groups ) ),
       Div(
         id = u"status_area",
@@ -158,7 +158,7 @@ class Main_page( Page ):
         Div(
           Note_tree_area(
             Toolbar(
-              hide_toolbar = parent_id or not notebook.read_write
+              hide_toolbar = parent_id or notebook.read_write == Notebook.READ_ONLY
             ),
             notebook,
             root_notes,
@@ -168,7 +168,7 @@ class Main_page( Page ):
           id = u"left_area",
         ),
         Div(
-          notebook.read_write and Noscript(
+          ( notebook.read_write != Notebook.READ_ONLY ) and Noscript(
             P( Strong(
               u"""
               Luminotes requires JavaScript to be enabled in your web browser in order to edit
@@ -181,7 +181,7 @@ class Main_page( Page ):
             ( notebook.name == u"Luminotes" and title == u"source code" ) and \
               Strong( "%s %s" % ( notebook.name, VERSION ) ) or \
               Span(
-                ( notebook.name == u"trash" or not notebook.read_write ) \
+                ( notebook.name == u"trash" or notebook.read_write != Notebook.READ_WRITE ) \
                   and Strong( notebook.name ) \
                   or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
               ),
@@ -204,7 +204,7 @@ class Main_page( Page ):
                 Span( id = u"notes_top" ),
                 id = u"notes",
               ),
-              notebook.read_write and Div(
+              ( notebook.read_write != Notebook.READ_ONLY ) and Div(
                 id = u"blank_note_stub",
                 class_ = u"blank_note_stub_hidden_border",
               ) or None,

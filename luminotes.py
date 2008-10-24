@@ -9,8 +9,10 @@ import urllib2 as urllib
 import cherrypy
 import webbrowser
 from controller.Database import Database
+from controller.Schema_upgrader import Schema_upgrader
 from controller.Root import Root
 from config import Common
+from config.Version import VERSION
 
 
 INITIAL_SOCKET_TIMEOUT_SECONDS = 1
@@ -103,6 +105,10 @@ def main( args ):
     ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
   )
 
+  # if necessary, upgrade the database schema to match this current version of the code
+  schema_upgrader = Schema_upgrader( database )
+  schema_upgrader.upgrade_schema( to_version = VERSION )
+
   cherrypy.lowercase_api = True
   root = Root( database, cherrypy.config.configMap )
   cherrypy.root = root
@@ -114,6 +120,7 @@ def callback( log_access_file, log_file, server_url, port_filename, socket_port,
   # record our listening socket port
   if port_filename:
     port_file = file( port_filename, "w" )
+    os.chmod( port_filename, stat.S_IRUSR | stat.S_IWUSR )
     port_file.write( "%s" % socket_port )
     port_file.close()
 

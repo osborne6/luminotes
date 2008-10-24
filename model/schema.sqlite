@@ -1,5 +1,5 @@
 --
--- Name: file; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
+-- SQLite database schema
 --
 
 CREATE TABLE file (
@@ -12,10 +12,27 @@ CREATE TABLE file (
     content_type text
 );
 
+CREATE TABLE tag (
+    id text NOT NULL,
+    revision timestamp with time zone,
+    notebook_id text,
+    user_id text,
+    name text,
+    description text
+);
 
---
--- Name: invite; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
+CREATE TABLE tag_notebook (
+    notebook_id text,
+    tag_id text,
+    value text,
+    user_id text
+);
+
+CREATE TABLE tag_note (
+    note_id text,
+    tag_id text,
+    value text
+);
 
 CREATE TABLE invite (
     id text NOT NULL,
@@ -28,29 +45,14 @@ CREATE TABLE invite (
     redeemed_user_id text
 );
 
-
---
--- Name: luminotes_group; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE TABLE luminotes_group (
     id text NOT NULL,
     revision timestamp with time zone NOT NULL,
     name text
 );
 
-
---
--- Name: luminotes_group_current; Type: VIEW; Schema: public; Owner: luminotes
---
-
 CREATE VIEW luminotes_group_current AS
     SELECT id, revision, name FROM luminotes_group WHERE (luminotes_group.revision IN (SELECT max(sub_group.revision) AS max FROM luminotes_group sub_group WHERE (sub_group.id = luminotes_group.id)));
-
-
---
--- Name: luminotes_user; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE TABLE luminotes_user (
     id text NOT NULL,
@@ -63,18 +65,8 @@ CREATE TABLE luminotes_user (
     rate_plan integer
 );
 
-
---
--- Name: luminotes_user_current; Type: VIEW; Schema: public; Owner: luminotes
---
-
 CREATE VIEW luminotes_user_current AS
     SELECT id, revision, username, salt, password_hash, email_address, storage_bytes, rate_plan FROM luminotes_user WHERE (luminotes_user.revision IN (SELECT max(sub_user.revision) AS max FROM luminotes_user sub_user WHERE (sub_user.id = luminotes_user.id)));
-
-
---
--- Name: note; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE TABLE note (
     id text NOT NULL,
@@ -89,18 +81,8 @@ CREATE TABLE note (
     user_id text
 );
 
-
---
--- Name: note_current; Type: VIEW; Schema: public; Owner: luminotes
---
-
 CREATE VIEW note_current AS
     SELECT id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, search, user_id FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
-
-
---
--- Name: notebook; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE TABLE notebook (
     id text NOT NULL,
@@ -111,18 +93,8 @@ CREATE TABLE notebook (
     user_id text
 );
 
-
---
--- Name: notebook_current; Type: VIEW; Schema: public; Owner: luminotes
---
-
 CREATE VIEW notebook_current AS
     SELECT id, revision, name, trash_id, deleted, user_id FROM notebook WHERE (notebook.revision IN (SELECT max(sub_notebook.revision) AS max FROM notebook sub_notebook WHERE (sub_notebook.id = notebook.id)));
-
-
---
--- Name: password_reset; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE TABLE password_reset (
     id text NOT NULL,
@@ -131,10 +103,6 @@ CREATE TABLE password_reset (
     redeemed boolean
 );
 
-
--- Name: download_access; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE TABLE download_access (
     id text NOT NULL,
     revision timestamp with time zone NOT NULL,
@@ -142,118 +110,69 @@ CREATE TABLE download_access (
     transaction_id text
 );
 
-
---
--- Name: user_group; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE TABLE user_group (
     user_id text NOT NULL,
     group_id text NOT NULL,
     "admin" boolean DEFAULT false
 );
 
-
---
--- Name: user_notebook; Type: TABLE; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE TABLE user_notebook (
     user_id text NOT NULL,
     notebook_id text NOT NULL,
     read_write boolean DEFAULT false,
     "owner" boolean DEFAULT false,
-    rank numeric
+    rank numeric,
+    own_notes_only boolean DEFAULT false
 );
 
+CREATE INDEX file_pkey ON file (id);
 
+CREATE INDEX tag_pkey ON tag (id);
 
---
--- Name: file_note_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
+CREATE INDEX tag_notebook_pkey ON tag_notebook (user_id, notebook_id, tag_id);
+
+CREATE INDEX tag_note_pkey ON tag_note (note_id, tag_id);
+
+CREATE INDEX invite_pkey ON invite (id);
+
+CREATE INDEX luminotes_user_pkey ON luminotes_user (id, revision);
+
+CREATE INDEX note_pkey ON note (id, revision);
+
+CREATE INDEX notebook_pkey ON notebook (id, revision);
+
+CREATE INDEX password_reset_pkey ON password_reset (id);
+
+CREATE INDEX download_access_pkey ON download_access (id);
+
+CREATE INDEX user_notebook_pkey ON user_notebook (user_id, notebook_id);
 
 CREATE INDEX file_note_id_index ON file (note_id);
 
-
---
--- Name: file_notebook_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX file_notebook_id_index ON file (notebook_id);
 
+CREATE INDEX tag_notebook_id_index ON tag (notebook_id);
 
---
--- Name: luminotes_group_pkey; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
+CREATE INDEX tag_user_id_index ON tag (user_id);
 
 CREATE INDEX luminotes_group_pkey ON luminotes_group (id, revision);
 
-
---
--- Name: luminotes_user_email_address_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX luminotes_user_email_address_index ON luminotes_user (email_address);
-
-
---
--- Name: luminotes_user_username_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE INDEX luminotes_user_username_index ON luminotes_user (username);
 
-
---
--- Name: note_notebook_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX note_notebook_id_index ON note (notebook_id);
-
-
---
--- Name: note_notebook_id_startup_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE INDEX note_notebook_id_startup_index ON note (notebook_id, startup);
 
-
---
--- Name: note_notebook_id_title_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX note_notebook_id_title_index ON note (notebook_id, title);
-
-
---
--- Name: password_reset_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE INDEX password_reset_id_index ON password_reset (id);
 
-
---
--- Name: password_reset_email_address_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX password_reset_email_address_index ON password_reset (email_address);
-
-
--- Name: download_access_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
 
 CREATE INDEX download_access_id_index ON password_reset (id);
 
-
--- Name: download_access_transaction_id_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX download_access_transaction_id_index ON download_access (transaction_id);
 
-
---
--- Name: search_index; Type: INDEX; Schema: public; Owner: luminotes; Tablespace: 
---
-
 CREATE INDEX search_index ON note (search);
-
--- vim: ft=sql

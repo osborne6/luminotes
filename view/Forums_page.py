@@ -3,7 +3,7 @@ from Tags import Div, Img, A, P, Span, I, Br
 
 
 class Forums_page( Product_page ):
-  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan ):
+  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups ):
     Product_page.__init__(
       self,
       user,
@@ -21,14 +21,15 @@ class Forums_page( Product_page ):
           ),
         ),
         Div(
+          Span( A( u"general discussion", href = u"/forums/general" ), class_ = u"forum_title" ),
+          P(
+            u"""
+            Swap tips about making the most out of your personal wiki, and discuss your ideas for
+            new Luminotes features and enhancements.
+            """
+          ),
           Span( A( u"technical support", href = u"/forums/support" ), class_ = u"forum_title" ),
           P( u"Having a problem with your wiki? Something not working as expected? Ask about it here." ),
-
-          Span( A( u"feature requests", href = u"/forums/features" ), class_ = u"forum_title" ),
-          P( u"Discuss your ideas for new Luminotes features and enhancements." ),
-
-          Span( A( u"general discussion", href = u"/forums/general" ), class_ = u"forum_title" ),
-          P( u"Swap tips about making the most out of your personal wiki." ),
           class_ = u"forums_text",
         ),
         class_ = u"forums_area", 

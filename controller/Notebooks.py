@@ -135,7 +135,7 @@ class Notebooks( object ):
       ]
       if len( result[ u"notebooks" ] ) == 0:
         raise Access_error()
-      result[ u"notebooks" ][ 0 ].read_write = False
+      result[ u"notebooks" ][ 0 ].read_write = Notebook.READ_ONLY
       result[ u"notebooks" ][ 0 ].owner = False
     elif preview in ( u"owner", u"default", None ):
       read_write = True
@@ -148,9 +148,8 @@ class Notebooks( object ):
     if revision:
       result[ "note_read_write" ] = False
 
-    notebook = self.__database.load( Notebook, notebook_id )
-    if not notebook:
-      raise Access_error()
+    notebook = result[ u"notebook" ]
+
     if notebook.name != u"Luminotes":
       result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
 
@@ -181,9 +180,11 @@ class Notebooks( object ):
     @type previous_revision: unicode or NoneType
     @param previous_revision: older revision timestamp to diff with the given revision (optional)
     @type read_write: bool or NoneType
-    @param read_write: whether the notebook should be returned as read-write (optional, defaults to True)
+    @param read_write: whether the notebook should be returned as read-write (optional, defaults to True).
+                       this can only lower access, not elevate it
     @type owner: bool or NoneType
-    @param owner: whether the notebook should be returned as owner-level access (optional, defaults to True)
+    @param owner: whether the notebook should be returned as owner-level access (optional, defaults to True).
+                  this can only lower access, not elevate it
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: dict
@@ -197,22 +198,15 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if notebook is None:
       raise Access_error()
 
     if read_write is False:
-      notebook.read_write = False
-    elif not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      notebook.read_write = False
+      notebook.read_write = Notebook.READ_ONLY
 
     if owner is False:
-      notebook.owner = False
-    elif not self.__users.check_access( user_id, notebook_id, owner = True ):
       notebook.owner = False
 
     if note_id:
@@ -234,7 +228,7 @@ class Notebooks( object ):
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
     total_notes_count = self.__database.select_one( int, notebook.sql_count_notes(), use_cache = True )
 
-    if self.__users.check_access( user_id, notebook_id, owner = True ):
+    if self.__users.load_notebook( user_id, notebook_id, owner = True ):
       invites = self.__database.select_many( Invite, Invite.sql_load_notebook_invites( notebook_id ) )
     else:
       invites = []
@@ -350,7 +344,9 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
+    notebook = self.__users.load_notebook( user_id, notebook_id )
+
+    if not notebook:
       raise Access_error()
 
     note = self.__database.load( Note, note_id, revision )
@@ -362,8 +358,7 @@ class Notebooks( object ):
       )
 
     if note and note.notebook_id != notebook_id:
-      notebook = self.__database.load( Notebook, notebook_id )
-      if notebook and note.notebook_id == notebook.trash_id:
+      if note.notebook_id == notebook.trash_id:
         if revision:
           return dict(
             note = summarize and self.summarize_note( note ) or note,
@@ -414,15 +409,12 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
+    notebook = self.__users.load_notebook( user_id, notebook_id )
+
+    if not notebook:
       raise Access_error()
 
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if notebook is None:
-      note = None
-    else:
-      note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
+    note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
 
     return dict(
       note = summarize and self.summarize_note( note ) or note,
@@ -520,15 +512,12 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
+    notebook = self.__users.load_notebook( user_id, notebook_id )
+
+    if not notebook:
       raise Access_error()
 
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if notebook is None:
-      note = None
-    else:
-      note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
+    note = self.__database.select_one( Note, notebook.sql_load_note_by_title( note_title ) )
 
     return dict(
       note_id = note and note.object_id or None,
@@ -558,7 +547,9 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
+    notebook = self.__users.load_notebook( user_id, notebook_id )
+
+    if not notebook:
       raise Access_error()
 
     note = self.__database.load( Note, note_id )
@@ -570,8 +561,7 @@ class Notebooks( object ):
         )
 
       if note.notebook_id != notebook_id:
-        notebook = self.__database.load( Notebook, notebook_id )
-        if notebook and note.notebook_id == notebook.trash_id:
+        if note.notebook_id == notebook.trash_id:
           return dict(
             revisions = None,
           )
@@ -610,10 +600,8 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook or note
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
-    notebook = self.__database.load( Notebook, notebook_id )
     if not notebook:
       raise Access_error()
 
@@ -696,16 +684,18 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      raise Access_error()
-
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id )
     user = self.__database.load( User, user_id )
-    notebook = self.__database.load( Notebook, notebook_id )
 
     if not user or not notebook:
-      raise Access_error()
+      raise Access_error();
 
     note = self.__database.load( Note, note_id )
+
+    # if the user has read-write access only to their own notes in this notebook, force the startup
+    # flag to be True for this note
+    if notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
+      startup = True
 
     # check whether the provided note contents have been changed since the previous revision
     def update_note( current_notebook, old_note, startup, user ):
@@ -805,11 +795,8 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      raise Access_error()
-
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
     user = self.__database.load( User, user_id )
-    notebook = self.__database.load( Notebook, notebook_id )
 
     if not user or not notebook:
       raise Access_error()
@@ -817,6 +804,9 @@ class Notebooks( object ):
     note = self.__database.load( Note, note_id )
 
     if not note:
+      raise Access_error()
+
+    if not self.__users.load_notebook( user_id, note.notebook_id, read_write = True, note_id = note.object_id ):
       raise Access_error()
 
     # check whether the provided note contents have been changed since the previous revision
@@ -895,10 +885,7 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id )
 
     if not notebook:
       raise Access_error()
@@ -949,10 +936,7 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id )
 
     if not notebook:
       raise Access_error()
@@ -1005,12 +989,9 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
-      raise Access_error()
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
 
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if not notebook:
+    if not notebook or notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     notes = self.__database.select_many( Note, notebook.sql_load_notes() )
@@ -1063,7 +1044,9 @@ class Notebooks( object ):
     @raise Validation_error: one of the arguments is invalid
     @raise Search_error: the provided search_text is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
+    notebook = self.__users.load_notebook( user_id, notebook_id )
+
+    if not notebook:
       raise Access_error()
 
     MAX_SEARCH_TEXT_LENGTH = 256
@@ -1112,14 +1095,19 @@ class Notebooks( object ):
     @raise Validation_error: one of the arguments is invalid
     @raise Search_error: the provided search_text is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
     # if the anonymous user has access to the given notebook, then run the search as the anonymous
     # user instead of the given user id
-    if self.__users.check_access( user_id = None, notebook_id = notebook_id ) is True:
-      anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
+    if not anonymous:
+      raise Access_error()
+
+    notebook = self.__users.load_notebook( anonymous.object_id, notebook_id )
+    if notebook:
       user_id = anonymous.object_id
+    else:
+      notebook = self.__users.load_notebook( user_id, notebook_id )
+      if not notebook:
+        raise Access_error()
 
     MAX_SEARCH_TEXT_LENGTH = 256
     if len( search_text ) > MAX_SEARCH_TEXT_LENGTH:
@@ -1162,10 +1150,7 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if not notebook:
       raise Access_error()
@@ -1197,10 +1182,7 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if not notebook:
       raise Access_error()
@@ -1234,10 +1216,7 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if not notebook:
       raise Access_error()
@@ -1346,13 +1325,10 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, owner = True )
     user = self.__database.load( User, user_id )
-    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
-      raise Access_error()
 
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if not notebook:
+    if not user or not notebook:
       raise Access_error()
 
     # prevent renaming of the trash notebook to anything
@@ -1399,14 +1375,10 @@ class Notebooks( object ):
     if user_id is None:
       raise Access_error()
 
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, owner = True )
     user = self.__database.load( User, user_id )
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if not notebook:
+    if not user or not notebook:
       raise Access_error()
 
     # prevent deletion of a trash notebook directly
@@ -1454,14 +1426,10 @@ class Notebooks( object ):
     if user_id is None:
       raise Access_error()
 
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, owner = True )
     user = self.__database.load( User, user_id )
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
-
-    if not notebook:
+    if not user or not notebook:
       raise Access_error()
 
     # prevent deletion of a trash notebook directly
@@ -1498,10 +1466,7 @@ class Notebooks( object ):
     if user_id is None:
       raise Access_error()
 
-    if not self.__users.check_access( user_id, notebook_id, read_write = True, owner = True ):
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, owner = True )
 
     if not notebook:
       raise Access_error()
@@ -1537,11 +1502,10 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
+    notebook = self.__users.load_notebook( user_id, notebook_id )
     user = self.__database.load( User, user_id )
-    if not user:
+
+    if not user or not notebook:
       raise Access_error()
 
     # load the notebooks to which this user has access
@@ -1609,11 +1573,10 @@ class Notebooks( object ):
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-
+    notebook = self.__users.load_notebook( user_id, notebook_id )
     user = self.__database.load( User, user_id )
-    if not user:
+
+    if not user or not notebook:
       raise Access_error()
 
     # load the notebooks to which this user has access
@@ -1676,7 +1639,6 @@ class Notebooks( object ):
     Provide the information necessary to display a notebook's recent updated/created notes, in
     reverse chronological order by update time.
     
-
     @type notebook_id: unicode
     @param notebook_id: id of the notebook containing the notes
     @type start: unicode or NoneType
@@ -1689,10 +1651,7 @@ class Notebooks( object ):
     @return: { 'notes': recent_notes_list }
     @raise Access_error: the current user doesn't have access to the given notebook or note
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-    
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if notebook is None:
       raise Access_error()
@@ -1720,10 +1679,7 @@ class Notebooks( object ):
     @return: data for Main_page() constructor
     @raise Access_error: the current user doesn't have access to the given notebook or note
     """
-    if not self.__users.check_access( user_id, notebook_id ):
-      raise Access_error()
-    
-    notebook = self.__database.load( Notebook, notebook_id )
+    notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if notebook is None:
       raise Access_error()
@@ -1798,7 +1754,7 @@ class Notebooks( object ):
       raise Access_error()
 
     db_file = self.__database.load( File, file_id )
-    if db_file is None or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if db_file is None or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     # if the file has a "note_id" header column, record its index

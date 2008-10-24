@@ -50,7 +50,7 @@ class Initializer( object ):
   def create_main_notebook( self ):
     # create the main notebook
     main_notebook_id = self.database.next_id( Notebook )
-    self.main_notebook = Notebook.create( main_notebook_id, u"Luminotes" )
+    self.main_notebook = Notebook.create( main_notebook_id, u"Luminotes", rank = 0 )
     self.database.save( self.main_notebook, commit = False )
 
     # no need to create default notes for the desktop version

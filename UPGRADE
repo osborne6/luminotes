@@ -1,18 +1,44 @@
+When upgrading Luminotes, if you are using memcached, it is recommended
+that you restart memcached to clear your cache.
+
+
+Upgrading from Luminotes 1.5.0 or higher
+----------------------------------------
+
+If you're using Luminotes 1.5.0 or higher and you'd like to upgrade to a
+newer version, Luminotes will automatically upgrade your database when
+you start Luminotes after an upgrade. This means that all of your notes
+and notebooks created in an older versions of Luminotes will be included
+in the upgrade. You don't have to do a thing other than install the
+software for the new release, and then execute the following command:
+
+  export PYTHONPATH=.
+  python2.4 tools/updatedb.py
+
+
+Upgrading from Luminotes 1.0, 1.2, 1.3, or 1.4
+----------------------------------------------
+
+If you're using an older version of Luminotes (prior to 1.5.0) and you'd
+like to upgrade to a newer version, you'll have to perform database
+upgrades manually. Below are the intructions for doing so.
+
 To upgrade the Luminotes database from an earlier version, manually apply each
 relevant schema delta file within model/delta/
 
-For instance, if you were upgrading from version 5.0.1 to 5.0.4, you would
+For instance, if you are upgrading from version 1.3.12 to 1.5.0, you would
 apply the following deltas in order:
 
-  psql -U luminotes luminotes -f model/delta/5.0.2.sql
-  psql -U luminotes luminotes -f model/delta/5.0.3.sql
-  psql -U luminotes luminotes -f model/delta/5.0.4.sql
+  psql -U luminotes luminotes -f model/delta/1.3.14.sql
+  psql -U luminotes luminotes -f model/delta/1.4.0.sql
+  psql -U luminotes luminotes -f model/delta/1.5.0.sql
 
 Any version which does not introduce a schema change does not have a
 corresponding schema delta file.
 
-Sometimes I include comments within a schema delta file with additional
-manual steps you need to take.
+IMPORTANT: Even if you are upgrading past version 1.5.0 to a newer version,
+you should stop applying schema delta files after 1.5.0. This is because the
+Luminotes automatic schema upgrade process will pick up after that point.
 
 After you've updated the schema, run the updatedb.py script:
 

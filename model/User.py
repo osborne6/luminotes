@@ -2,6 +2,7 @@ import sha
 import random
 from copy import copy
 from Persistent import Persistent, quote
+from Notebook import Notebook
 
 
 class User( Persistent ):
@@ -132,7 +133,8 @@ class User( Persistent ):
   def sql_load_by_email_address( email_address ):
     return "select * from luminotes_user_current where email_address = %s;" % quote( email_address )
 
-  def sql_load_notebooks( self, parents_only = False, undeleted_only = False, read_write = False ):
+  def sql_load_notebooks( self, parents_only = False, undeleted_only = False, read_write = False,
+                          tag_name = None, tag_value = None, notebook_id = None ):
     """
     Return a SQL string to load a list of the notebooks to which this user has access.
     """
@@ -151,28 +153,55 @@ class User( Persistent ):
     else:
       read_write_clause = ""
 
+    if tag_name:
+      tag_tables = ", tag_notebook, tag"
+      tag_clause = \
+        """
+         and tag_notebook.tag_id = tag.id and tag_notebook.user_id = %s and
+        tag_notebook.notebook_id = notebook_current.id and tag.name = %s
+        """ % ( quote( self.object_id ), quote( tag_name ) )
+
+      if tag_value:
+        tag_clause += " and tag_notebook.value = %s" % quote( tag_value )
+    else:
+      tag_tables = ""
+      tag_clause = ""
+
+    # useful for loading just a single notebook that the user has access to
+    if notebook_id:
+      notebook_id_clause = " and notebook_current.id = %s" % quote( notebook_id )
+    else:
+      notebook_id_clause = ""
+
     return \
       """
       select
-        notebook_current.*, user_notebook.read_write, user_notebook.owner, user_notebook.rank
+        notebook_current.*, user_notebook.read_write, user_notebook.owner, user_notebook.rank, user_notebook.own_notes_only
       from
-        user_notebook, notebook_current
+        user_notebook, notebook_current%s
       where
-        user_notebook.user_id = %s%s%s%s and
+        user_notebook.user_id = %s%s%s%s%s%s and
         user_notebook.notebook_id = notebook_current.id
       order by user_notebook.rank;
-      """ % ( quote( self.object_id ), parents_only_clause, undeleted_only_clause, read_write_clause )
+      """ % ( tag_tables, quote( self.object_id ), parents_only_clause, undeleted_only_clause,
+              read_write_clause, tag_clause, notebook_id_clause )
 
-  def sql_save_notebook( self, notebook_id, read_write = True, owner = True, rank = None ):
+  def sql_save_notebook( self, notebook_id, read_write = True, owner = True, rank = None, own_notes_only = False ):
     """
     Return a SQL string to save the id of a notebook to which this user has access.
     """
     if rank is None: rank = quote( None )
 
     return \
-      "insert into user_notebook ( user_id, notebook_id, read_write, owner, rank ) values " + \
-      "( %s, %s, %s, %s, %s );" % ( quote( self.object_id ), quote( notebook_id ), quote( read_write and 't' or 'f' ),
-                                quote( owner and 't' or 'f' ), rank )
+      "insert into user_notebook ( user_id, notebook_id, read_write, owner, rank, own_notes_only ) values " + \
+      "( %s, %s, %s, %s, %s, %s );" % (
+        quote( self.object_id ),
+        quote( notebook_id ),
+        quote( read_write and 't' or 'f' ),
+        quote( owner and 't' or 'f' ),
+        rank,
+        quote( own_notes_only and 't' or 'f' ),
+      )
 
   def sql_remove_notebook( self, notebook_id ):
     """
@@ -202,14 +231,26 @@ class User( Persistent ):
         "select user_id from user_notebook where user_id = %s and notebook_id = %s;" % \
         ( quote( self.object_id ), quote( notebook_id ) )
 
-  def sql_update_access( self, notebook_id, read_write = False, owner = False ):
+  def sql_update_access( self, notebook_id, read_write = Notebook.READ_ONLY, owner = False ):
     """
     Return a SQL string to update the user's notebook access to the given read_write and owner level.
     """
     return \
-      "update user_notebook set read_write = %s, owner = %s where user_id = %s and notebook_id = %s;" % \
-      ( quote( read_write and 't' or 'f' ), quote( owner and 't' or 'f' ), quote( self.object_id ),
-        quote( notebook_id ) )
+      "update user_notebook set read_write = %s, owner = %s, own_notes_only = %s where user_id = %s and notebook_id = %s;" % (
+        quote( ( read_write != Notebook.READ_ONLY ) and 't' or 'f' ),
+        quote( owner and 't' or 'f' ),
+        quote( ( read_write == Notebook.READ_WRITE_FOR_OWN_NOTES ) and 't' or 'f' ),
+        quote( self.object_id ),
+        quote( notebook_id ),
+      )
+
+  def sql_save_notebook_tag( self, notebook_id, tag_id, value = None ):
+    """
+    Return a SQL string to associate a tag with a notebook of this user.
+    """
+    return \
+      "insert into tag_notebook ( notebook_id, tag_id, value, user_id ) values " + \
+      "( %s, %s, %s, %s );" % ( quote( notebook_id ), quote( tag_id ), quote( value ), quote( self.object_id ) )
 
   def sql_update_notebook_rank( self, notebook_id, rank ):
     """

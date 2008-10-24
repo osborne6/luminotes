@@ -10,7 +10,7 @@ from controller.Database import Database, Connection_wrapper
 
 class Test_database( object ):
   def setUp( self ):
-    # make an in-memory sqlite database to use in place of PostgreSQL during testing
+    # make an in-memory sqlite database to use during testing
     self.connection = Connection_wrapper( sqlite.connect( ":memory:", detect_types = sqlite.PARSE_DECLTYPES, check_same_thread = False ) )
     self.cache = Stub_cache()
     cursor = self.connection.cursor()

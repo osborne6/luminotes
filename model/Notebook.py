@@ -12,8 +12,12 @@ class Notebook( Persistent ):
   WHITESPACE_PATTERN = re.compile( r"\s+" )
   SEARCH_OPERATORS = re.compile( r"[&|!()'\\:]" )
 
+  READ_ONLY = 0                # user can only view the notes within this notebook
+  READ_WRITE = 1               # user can view and edit the notes within this notebook
+  READ_WRITE_FOR_OWN_NOTES = 2 # user can only edit their own notes, not notes created by others
+
   def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False,
-                user_id = None, read_write = True, owner = True, rank = None ):
+                user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False ):
     """
     Create a new notebook with the given id and name.
 
@@ -30,11 +34,14 @@ class Notebook( Persistent ):
     @type user_id: unicode or NoneType
     @param user_id: id of the user who most recently updated this notebook object (optional)
     @type read_write: bool or NoneType
-    @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
+    @param read_write: whether this view of the notebook is currently read-write. one of:
+                       READ_ONLY, READ_WRITE, READ_WRITE_FOR_OWN_NOTES (optional, defaults to READ_WRITE)
     @type owner: bool or NoneType
     @param owner: whether this view of the notebook currently has owner-level access (optional, defaults to True)
     @type rank: float or NoneType
     @param rank: indicates numeric ordering of this note in relation to other notebooks
+    @type own_notes_only: bool or NoneType
+    @param own_notes_only: True makes read_write be READ_WRITE_FOR_OWN_NOTES (optional, defaults to False)
     @rtype: Notebook
     @return: newly constructed notebook
     """
@@ -43,12 +50,22 @@ class Notebook( Persistent ):
     self.__trash_id = trash_id
     self.__deleted = deleted
     self.__user_id = user_id
+
+    read_write = {
+      None: Notebook.READ_WRITE,
+      True: Notebook.READ_WRITE,
+      False: Notebook.READ_ONLY,
+    }.get( read_write, read_write )
+
+    if own_notes_only is True and read_write != Notebook.READ_ONLY:
+      read_write = Notebook.READ_WRITE_FOR_OWN_NOTES
+
     self.__read_write = read_write
     self.__owner = owner
     self.__rank = rank
 
   @staticmethod
-  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = True, owner = True, rank = None ):
+  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False ):
     """
     Convenience constructor for creating a new notebook.
 
@@ -63,15 +80,18 @@ class Notebook( Persistent ):
     @type user_id: unicode or NoneType
     @param user_id: id of the user who most recently updated this notebook object (optional)
     @type read_write: bool or NoneType
-    @param read_write: whether this view of the notebook is currently read-write (optional, defaults to True)
+    @param read_write: whether this view of the notebook is currently read-write. one of:
+                       READ_ONLY, READ_WRITE, READ_WRITE_FOR_OWN_NOTES (optional, defaults to READ_WRITE)
     @type owner: bool or NoneType
     @param owner: whether this view of the notebook currently has owner-level access (optional, defaults to True)
     @type rank: float or NoneType
     @param rank: indicates numeric ordering of this note in relation to other notebooks
+    @type own_notes_only: bool or NoneType
+    @param own_notes_only: True makes read_write be READ_WRITE_FOR_OWN_NOTES (optional, defaults to False)
     @rtype: Notebook
     @return: newly constructed notebook
     """
-    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner, rank = rank )
+    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner, rank = rank, own_notes_only = own_notes_only )
 
   @staticmethod
   def sql_load( object_id, revision = None ):
@@ -264,6 +284,42 @@ class Notebook( Persistent ):
       "select count( id ) from note_current where notebook_id = %s;" % \
       ( quote( self.object_id ) )
 
+  def sql_load_tag_by_name( self, user_id, tag_name ):
+    """
+    Return a SQL string to load a tag associated with this notebook by the given user.
+    """
+    return \
+      """
+      select
+        tag.id, tag.revision, tag.notebook_id, tag.user_id, tag.name, tag.description, tag_notebook.value
+      from
+        tag_notebook, tag
+      where
+        tag_notebook.notebook_id = %s and 
+        tag_notebook.user_id = %s and
+        tag_notebook.tag_id = tag.id and
+        tag.name = %s
+      order by tag.name;
+      """ % ( quote( self.object_id ), quote( user_id ), quote( tag_name ) )
+
+  def sql_load_tags( self, user_id ):
+    """
+    Return a SQL string to load a list of all the tags associated with this notebook by the given
+    user.
+    """
+    return \
+      """
+      select
+        tag.id, tag.revision, tag.notebook_id, tag.user_id, tag.name, tag.description, tag_notebook.value
+      from
+        tag_notebook, tag
+      where
+        tag_notebook.notebook_id = %s and 
+        tag_notebook.user_id = %s and
+        tag_notebook.tag_id = tag.id
+      order by tag.name;
+      """ % ( quote( self.object_id ), quote( user_id ) )
+
   def to_dict( self ):
     d = Persistent.to_dict( self )
 
@@ -285,6 +341,12 @@ class Notebook( Persistent ):
   def __set_read_write( self, read_write ):
     # The read_write member isn't actually saved to the database, so setting it doesn't need to
     # call update_revision().
+    read_write = {
+      None: Notebook.READ_WRITE,
+      True: Notebook.READ_WRITE,
+      False: Notebook.READ_ONLY,
+    }.get( read_write, read_write )
+
     self.__read_write = read_write
 
   def __set_owner( self, owner ):

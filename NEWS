@@ -1,3 +1,11 @@
+1.5.5: 
+ * Improved speed of Luminotes Desktop by adding some database indices. This
+   will help in particular for larger notebooks with many notes.
+ * Added some code to automatically upgrade your database when upgrading to a
+   new Luminotes release. This applies to all Luminotes products.
+ * Added code to support Luminotes discussion forums.
+ * Laid some of the foundational groundwork for future tags support.
+
 1.5.4: October 9, 2008
  * Fixed a visual bug in which clicking up or down to reorder your notebooks
    didn't display correctly.

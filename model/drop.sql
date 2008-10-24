@@ -12,4 +12,7 @@ DROP TABLE user_notebook;
 DROP TABLE user_group;
 DROP TABLE invite;
 DROP TABLE file;
+DROP TABLE tag;
+DROP TABLE tag_notebook;
+DROP TABLE tag_note;
 DROP FUNCTION drop_html_tags( text ); 

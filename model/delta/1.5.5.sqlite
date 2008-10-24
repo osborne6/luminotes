@@ -1,0 +1,37 @@
+create table tag (
+  id text,
+  revision timestamp with time zone,
+  notebook_id text,
+  user_id text,
+  name text,
+  description text
+);
+CREATE INDEX tag_pkey ON tag (id);
+CREATE INDEX tag_notebook_id_index ON tag (notebook_id);
+CREATE INDEX tag_user_id_index ON tag (user_id);
+
+create table tag_notebook (
+  notebook_id text,
+  tag_id text,
+  value text,
+  user_id text
+);
+CREATE INDEX tag_notebook_pkey ON tag_notebook (user_id, notebook_id, tag_id);
+
+create table tag_note (
+  note_id text,
+  tag_id text,
+  value text
+);
+CREATE INDEX tag_note_pkey ON tag_note (note_id, tag_id);
+
+CREATE INDEX file_pkey ON file (id);
+CREATE INDEX invite_pkey ON invite (id);
+CREATE INDEX luminotes_user_pkey ON luminotes_user (id, revision);
+CREATE INDEX note_pkey ON note (id, revision);
+CREATE INDEX notebook_pkey ON notebook (id, revision);
+CREATE INDEX password_reset_pkey ON password_reset (id);
+CREATE INDEX download_access_pkey ON download_access (id);
+CREATE INDEX user_notebook_pkey ON user_notebook (user_id, notebook_id);
+
+ALTER TABLE user_notebook ADD COLUMN own_notes_only boolean DEFAULT false;

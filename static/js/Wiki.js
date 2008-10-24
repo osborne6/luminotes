@@ -1,4 +1,8 @@
 IMAGE_DIR = "/static/images/";
+NOTEBOOK_READ_ONLY = 0;
+NOTEBOOK_READ_WRITE = 1;
+NOTEBOOK_READ_WRITE_FOR_OWN_NOTES = 2;
+
 
 function Wiki( invoker ) {
   this.next_id = null;
@@ -11,6 +15,7 @@ function Wiki( invoker ) {
   this.open_editors = new Array();   // map of open notes: lowercase note title to editor
   this.search_results_editor = null; // editor for display of search results
   this.invoker = invoker;
+  this.user = evalJSON( getElement( "user" ).value );
   this.rate_plan = evalJSON( getElement( "rate_plan" ).value );
   this.yearly = evalJSON( getElement( "yearly" ).value );
   this.storage_usage_high = false;
@@ -18,7 +23,6 @@ function Wiki( invoker ) {
   this.invite_id = getElement( "invite_id" ).value;
   this.after_login = getElement( "after_login" ).value;
   this.signup_plan = getElement( "signup_plan" ).value;
-  this.email_address = getElement( "email_address" ).value || "";
   this.groups = evalJSON( getElement( "groups" ).value );
   this.font_size = null;
   this.small_toolbar = false;
@@ -48,7 +52,7 @@ function Wiki( invoker ) {
       this.notebook = notebook;
   }
 
-  if ( this.notebook && this.notebook.read_write ) {
+  if ( this.notebook && this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
     var unsupported_agent = null;
     var beta_agent = null;
 
@@ -76,7 +80,7 @@ function Wiki( invoker ) {
     skip_empty_message
   );
 
-  this.display_storage_usage( evalJSON( getElement( "storage_bytes" ).value || "0" ) );
+  this.display_storage_usage( this.user.storage_bytes || "0" );
 
   connect( this.invoker, "error_message", this, "display_error" );
   connect( this.invoker, "message", this, "display_message" );
@@ -116,11 +120,11 @@ function Wiki( invoker ) {
   }
 
   var rename = evalJSON( getElement( "rename" ).value );
-  if ( rename && this.notebook.read_write )
+  if ( rename && this.notebook.read_write == NOTEBOOK_READ_WRITE )
     this.start_notebook_rename();
 
   // if a notebook was just deleted, show a message with an undo button
-  if ( deleted_id && this.notebook.read_write ) {
+  if ( deleted_id && this.notebook.read_write == NOTEBOOK_READ_WRITE ) {
     var undo_button = createDOM( "input", {
       "type": "button",
       "class": "message_button",
@@ -276,7 +280,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
         startup_note.deleted_from_id,
         startup_note.revision,
         startup_note.creation,
-        this.notebook.read_write, false, focus
+        this.notebook.read_write, false, focus, null,
+        startup_note.user_id
       );
 
       if ( startup_note.title )
@@ -296,7 +301,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       note.deleted_from_id,
       note.revision,
       note.creation,
-      this.notebook.read_write && note_read_write, false, focus
+      this.notebook.read_write != NOTEBOOK_READ_ONLY && note_read_write, false, focus, null,
+      note.user_id
     );
     focus = false;
   }
@@ -308,7 +314,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
   if ( empty_trash_link )
     connect( empty_trash_link, "onclick", function ( event ) { self.delete_all_editors( event ); } );
 
-  if ( this.notebook.read_write ) {
+  if ( this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "newNote", "onclick", this, "create_blank_editor" );
     connect( "createLink", "onclick", this, "toggle_link_button" );
@@ -453,7 +459,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true );
+  var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true, null, this.user.object_id );
   this.increment_total_notes_count();
   this.blank_editor_id = editor.id;
   signal( this, "note_added", editor );
@@ -693,6 +699,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var actual_creation = result.note.creation;
     var note_text = result.note.contents;
     var deleted_from_id = result.note.deleted;
+    var user_id = result.note.user_id;
   } else {
     // if the title looks like a URL, then make it a link to an external site
     if ( /^\w+:\/\//.test( note_title ) ) {
@@ -707,6 +714,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var deleted_from_id = null;
     var actual_revision = null;
     var actual_creation = null;
+    var user_id = null;
     this.increment_total_notes_count();
   }
 
@@ -716,7 +724,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var read_write = this.notebook.read_write;
 
   var self = this;
-  var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false, position_after );
+  var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false, position_after, user_id );
   if ( !requested_revision )
     connect( editor, "init_complete", function () { signal( self, "note_added", editor ); } );
   id = editor.id;
@@ -726,9 +734,20 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after ) {
+Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after, user_id ) {
   var self = this;
   var dirty = false;
+
+  if ( read_write == NOTEBOOK_READ_ONLY )
+    read_write = false;
+  else if ( read_write == NOTEBOOK_READ_WRITE )
+    read_write = true;
+  else if ( read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+    if ( user_id == this.user.object_id )
+      read_write = true;
+    else
+      read_write = false;
+  }
 
   if ( isUndefinedOrNull( id ) ) {
     if ( this.notebook.read_write ) {
@@ -743,7 +762,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   // for read-only notes within read-write notebooks, tack the revision timestamp onto the start of the note text
-  if ( !read_write && this.notebook.read_write && revision ) {
+  if ( !read_write && this.notebook.read_write == NOTEBOOK_READ_WRITE && revision ) {
     var short_revision = this.brief_revision( revision );
     var note_id = id.split( ' ' )[ 0 ];
     note_text = '<p>Previous revision from ' + short_revision + '</p>' +
@@ -984,7 +1003,7 @@ Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
 }
 
 Wiki.prototype.key_pressed = function ( event ) {
-  if ( !this.notebook.read_write )
+  if ( this.notebook.read_write == NOTEBOOK_READ_ONLY )
     return;
 
   var code = event.key().code;
@@ -1221,7 +1240,7 @@ Wiki.prototype.update_toolbar = function() {
   var link = null;
 
   // a read-only notebook doesn't have a visible toolbar
-  if ( !this.notebook.read_write )
+  if ( this.notebook.read_write == NOTEBOOK_READ_ONLY )
     return;
 
   if ( this.focused_editor ) {
@@ -1332,7 +1351,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
       this.display_empty_message();
     } else {
       // before hiding an editor, save it
-      if ( this.notebook.read_write && editor.read_write ) {
+      if ( this.notebook.read_write != NOTEBOOK_READ_ONLY && editor.read_write ) {
         var self = this;
         this.save_editor( editor, false, function () {
           editor.shutdown();
@@ -1367,7 +1386,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
 
   var self = this;
   this.save_editor( editor, false, function () {
-    if ( self.notebook.read_write && editor.read_write ) {
+    if ( self.notebook.read_write != NOTEBOOK_READ_ONLY && editor.read_write ) {
       self.invoker.invoke( "/notebooks/delete_note", "POST", { 
         "notebook_id": self.notebook_id,
         "note_id": editor.id
@@ -1414,7 +1433,7 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
     if ( this.startup_notes[ editor.id ] )
       delete this.startup_notes[ editor.id ];
 
-    if ( this.notebook.read_write && editor.read_write ) {
+    if ( this.notebook.read_write != NOTEBOOK_READ_ONLY && editor.read_write ) {
       var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": editor.deleted_from_id,
@@ -1437,7 +1456,7 @@ Wiki.prototype.undelete_editor_via_trash = function ( event, editor ) {
 
 Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_after ) {
   if ( editor ) {
-    if ( this.notebook.read_write && editor.read_write ) {
+    if ( this.notebook.read_write != NOTEBOOK_READ_ONLY && editor.read_write ) {
       var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
         "notebook_id": this.notebook_id,
@@ -1458,7 +1477,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
 }
 
 Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position_after ) {
-  if ( this.notebook.read_write ) {
+  if ( this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
     var self = this;
     this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
       "notebook_id": this.notebook_id,
@@ -1600,7 +1619,7 @@ Wiki.prototype.submit_form = function ( form ) {
     }
   } else if ( url == "/users/update_settings" ) {
     callback = function ( result ) {
-      self.email_address = result.email_address || "";
+      self.user.email_address = result.email_address || "";
       self.display_message( "Your account settings have been updated." );
     }
   } else if ( url == "/users/signup_group_member" ) {
@@ -1996,7 +2015,7 @@ Wiki.prototype.display_settings = function () {
         createDOM( "br", {} ),
         createDOM( "input",
           { "type": "text", "name": "email_address", "id": "email_address", "class": "text_field",
-            "size": "30", "maxlength": "60", "value": this.email_address || "" }
+            "size": "30", "maxlength": "60", "value": this.user.email_address || "" }
         )
       ),
       createDOM( "p", {},
@@ -2510,7 +2529,7 @@ Wiki.prototype.delete_all_editors = function ( event ) {
 
   this.startup_notes = new Array();
 
-  if ( this.notebook.read_write ) {
+  if ( this.notebook.read_write == NOTEBOOK_READ_WRITE ) {
     var self = this;
     this.invoker.invoke( "/notebooks/delete_all_notes", "POST", { 
       "notebook_id": this.notebook_id

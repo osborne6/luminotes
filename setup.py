@@ -253,6 +253,7 @@ data_files = [
   ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*", excludes = [ "static/images/toolbar/small/*.xcf" ]  ) ),
   ( "static/js", files( "static/js/*.*" ) ),
   ( "static/js", files( "static/js/*_LICENSE" ) ),
+  ( "model/delta", files( "model/delta/*.sqlite" ) ),
 ]
 
 package_data = { ".": sum( [ pair[ 1 ] for pair in data_files ], [] ) }

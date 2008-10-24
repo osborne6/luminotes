@@ -702,34 +702,62 @@ class Users( object ):
 
     return user
 
-  def check_access( self, user_id, notebook_id, read_write = False, owner = False ):
+  def load_notebook( self, user_id, notebook_id, read_write = False, owner = False, note_id = None ):
     """
-    Determine whether the given user has access to the given notebook.
+    Determine whether the given user has access to the given notebook, and if so, return that
+    notebook.
+
+    If the notebook.read_write member is READ_WRITE_FOR_OWN_NOTES, and a particular note_id is
+    given, then make sure that the given note_id is one of the user's own notes.
 
     @type user_id: unicode
     @param user_id: id of user whose access to check
     @type notebook_id: unicode
     @param notebook_id: id of notebook to check access for
-    @type read_write: bool
-    @param read_write: True if read-write access is being checked, False if read-only access (defaults to False)
+    @type read_write: boolean
+    @param read_write: True if the notebook must be READ_WRITE or READ_WRITE_FOR_OWN_NOTES,
+                       False if read-write access is not to be checked (defaults to False)
     @type owner: bool
     @param owner: True if owner-level access is being checked (defaults to False)
-    @rtype: bool
-    @return: True if the user has access
+    @type note_id: unicode
+    @param note_id: id of the note in the given notebook that the user is trying to access.
+                    if the notebook is READ_WRITE_FOR_OWN_NOTES, then the given note is checked
+                    to make sure its user_id is the same as the given user_id. for READ_WRITE
+                    and READ_ONLY notebooks, this note_id parameter is ignored
+    @rtype: Notebook or NoneType
+    @return: the loaded notebook if the user has access to it, None otherwise
     """
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
+    notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( notebook_id = notebook_id ) )
 
-    if self.__database.select_one( bool, anonymous.sql_has_access( notebook_id, read_write, owner ) ):
-      return True
-
-    if user_id:
-      # check if the given user has access to this notebook
+    if not notebook and user_id:
       user = self.__database.load( User, user_id )
+      if not user:
+        return None
 
-      if user and self.__database.select_one( bool, user.sql_has_access( notebook_id, read_write, owner ) ):
-        return True
+      notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( notebook_id = notebook_id ) )
 
-    return False
+    # if the user has no access to this notebook, bail
+    if notebook is None:
+      return None
+
+    if read_write and notebook.read_write == Notebook.READ_ONLY:
+      return None
+
+    if owner and not notebook.owner:
+      return None
+
+    # if a particular note_id is given, and the notebook is READ_WRITE_FOR_OWN_NOTES, then check
+    # that the user is associated with that note
+    if note_id and notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
+      note = self.__database.load( Note, note_id )
+      if not note:
+        return None
+
+      if user_id != note.user_id or notebook_id != note.notebook_id:
+        return None
+        
+    return notebook
 
   def check_group( self, user_id, group_id, admin = False ):
     """
@@ -1006,7 +1034,9 @@ class Users( object ):
     if len( email_addresses ) > 5000:
       raise Invite_error( u"Please enter fewer email addresses." )
 
-    if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
+    notebook = self.load_notebook( user_id, notebook_id, read_write = True, owner = True )
+
+    if not notebook:
       raise Access_error()
 
     # except for viewer-only invites, this feature requires a rate plan above basic
@@ -1025,10 +1055,6 @@ class Users( object ):
       read_write = True
       owner = True
     else:
-      raise Access_error()
-
-    notebook = self.__database.load( Notebook, notebook_id )
-    if notebook is None:
       raise Access_error()
 
     # parse email_addresses string into individual email addresses
@@ -1136,12 +1162,13 @@ class Users( object ):
     @raise Validation_error: one of the arguments is invalid
     @raise Access_error: user_id doesn't have owner-level notebook access to revoke an invite
     """
-    if not self.check_access( user_id, notebook_id, read_write = True, owner = True ):
+    notebook = self.load_notebook( user_id, notebook_id, read_write = True, owner = True )
+
+    if not notebook:
       raise Access_error()
 
     invite = self.__database.load( Invite, invite_id )
-    notebook = self.__database.load( Notebook, notebook_id )
-    if not notebook or not invite or not invite.email_address or invite.notebook_id != notebook_id:
+    if not invite or not invite.email_address or invite.notebook_id != notebook_id:
       raise Access_error()
 
     self.__database.execute(

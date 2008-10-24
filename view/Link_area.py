@@ -1,12 +1,16 @@
 from Tags import Div, P, Span, H4, A, Strong, Img, Input, Br
 from Rounded_div import Rounded_div
 from Search_form import Search_form
+from model.Notebook import Notebook
 
 
 class Link_area( Div ):
   def __init__( self, notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan ):
     linked_notebooks = [ nb for nb in notebooks if
-      ( nb.read_write or not nb.name.startswith( u"Luminotes" ) ) and
+      (
+        nb.read_write == Notebook.READ_WRITE or
+        ( nb.read_write == Notebook.READ_ONLY and not nb.name.startswith( u"Luminotes" ) )
+      ) and
       nb.name not in ( u"trash" ) and
       nb.deleted is False
     ]
@@ -17,7 +21,7 @@ class Link_area( Div ):
         Div(
           H4(
             u"this notebook",
-            notebook.read_write and Input(
+            notebook.read_write != Notebook.READ_ONLY and Input(
               type = u"button",
               class_ = u"note_button small_text",
               id = u"save_button",
@@ -60,7 +64,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None ),
 
-          notebook.read_write and Div(
+          ( notebook.read_write != Notebook.READ_ONLY ) and Div(
             A(
               u"nothing but notes",
               href = u"#",
@@ -70,7 +74,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          ( not notebook.read_write and notebook.name != u"Luminotes" ) and Div(
+          ( notebook.read_write != Notebook.READ_WRITE and notebook.name != u"Luminotes" ) and Div(
             A(
               u"export",
               href = u"#",
@@ -80,7 +84,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
-          notebook.read_write and Span(
+          ( notebook.read_write == Notebook.READ_WRITE ) and Span(
             Div(
               A(
                 u"import",

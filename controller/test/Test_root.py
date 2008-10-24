@@ -62,10 +62,10 @@ class Test_root( Test_controller ):
 
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous )
-    self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ) )
-    self.database.execute( self.anonymous.sql_save_notebook( self.blog_notebook.object_id, read_write = False, owner = False ) )
-    self.database.execute( self.anonymous.sql_save_notebook( self.guide_notebook.object_id, read_write = False, owner = False ) )
-    self.database.execute( self.anonymous.sql_save_notebook( self.privacy_notebook.object_id, read_write = False, owner = False ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False, rank = 0 ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.blog_notebook.object_id, read_write = False, owner = False, rank = 1 ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.guide_notebook.object_id, read_write = False, owner = False, rank = 2 ) )
+    self.database.execute( self.anonymous.sql_save_notebook( self.privacy_notebook.object_id, read_write = False, owner = False, rank = 3 ) )
 
   def test_index( self ):
     result = self.http_get( "/" )
@@ -429,7 +429,7 @@ class Test_root( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.anon_notebook.object_id ][ 0 ]
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.name == self.anon_notebook.name
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
 
     rate_plan = result[ u"rate_plan" ]
@@ -451,7 +451,7 @@ class Test_root( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebook.object_id ][ 0 ]
     assert notebook.object_id == self.notebook.object_id
     assert notebook.name == self.notebook.name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
 
     rate_plan = result[ u"rate_plan" ]

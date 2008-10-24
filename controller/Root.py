@@ -58,7 +58,7 @@ class Root( object ):
       settings[ u"global" ].get( u"luminotes.download_products", [] ),
     )
     self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
-    self.__forums = Forums( database, self.__users )
+    self.__forums = Forums( database, self.__notebooks, self.__users )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )
@@ -486,4 +486,4 @@ class Root( object ):
   users = property( lambda self: self.__users )
   groups = property( lambda self: self.__groups )
   files = property( lambda self: self.__files )
-#  forums = property( lambda self: self.__forums )
+  forums = property( lambda self: self.__forums )

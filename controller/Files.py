@@ -290,7 +290,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     # if the file is openable as an image, then allow the user to view it instead of downloading it
@@ -396,7 +396,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     filename = db_file.filename.replace( '"', r"\"" )
@@ -432,7 +432,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     cherrypy.response.headerMap[ u"Content-Type" ] = u"image/png"
@@ -491,7 +491,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
@@ -531,7 +531,7 @@ class Files( object ):
     @return: rendered HTML page
     @raise Access_error: the current user doesn't have access to the given notebook
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id ):
       raise Access_error()
 
     file_id = self.__database.next_id( File )
@@ -565,7 +565,7 @@ class Files( object ):
     @return: rendered HTML page
     @raise Access_error: the current user doesn't have access to the given notebook
     """
-    if not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not self.__users.load_notebook( user_id, notebook_id, read_write = True ):
       raise Access_error()
 
     file_id = self.__database.next_id( File )
@@ -622,7 +622,7 @@ class Files( object ):
       current_uploads_lock.release()
 
     user = self.__database.load( User, user_id )
-    if not user or not self.__users.check_access( user_id, notebook_id, read_write = True ):
+    if not user or not self.__users.load_notebook( user_id, notebook_id, read_write = True ):
       uploaded_file.delete()
       return dict( script = general_error_script % u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user." )
 
@@ -739,7 +739,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     user = self.__database.load( User, user_id )
@@ -778,7 +778,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id, read_write = True ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id, read_write = True ):
       raise Access_error()
 
     self.__database.execute( db_file.sql_delete(), commit = False )
@@ -817,7 +817,7 @@ class Files( object ):
     """
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id, read_write = True ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id, read_write = True ):
       raise Access_error()
 
     db_file.filename = filename
@@ -919,7 +919,7 @@ class Files( object ):
 
     db_file = self.__database.load( File, file_id )
 
-    if not db_file or not self.__users.check_access( user_id, db_file.notebook_id ):
+    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
       raise Access_error()
 
     parser = self.parse_csv( file_id )

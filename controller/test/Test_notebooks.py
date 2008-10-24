@@ -175,13 +175,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
     assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -211,13 +211,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == False
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_ONLY
     assert result.get( u"notebooks" )[ 0 ].owner == False
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).read_write == Notebook.READ_ONLY
     assert result.get( u"notebook" ).owner == False
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -247,13 +247,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == True
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 0 ].owner == False
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == False
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -283,13 +283,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
     assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -319,13 +319,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == False
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_ONLY
     assert result.get( u"notebooks" )[ 0 ].owner == False
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.anon_notebook.object_id
-    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).read_write == Notebook.READ_ONLY
     assert result.get( u"notebook" ).owner == False
     assert len( result.get( u"startup_notes" ) ) == 0
     assert result[ "total_notes_count" ] == 0
@@ -351,13 +351,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == False
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_ONLY
     assert result.get( u"notebooks" )[ 0 ].owner == False
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.anon_notebook.object_id
-    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).read_write == Notebook.READ_ONLY
     assert result.get( u"notebook" ).owner == False
     assert len( result.get( u"startup_notes" ) ) == 0
     assert result[ "total_notes_count" ] == 0
@@ -380,14 +380,18 @@ class Test_notebooks( Test_controller ):
     
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 1 ].object_id == self.anon_notebook.object_id
-    assert result.get( u"notebooks" )[ 1 ].read_write == False
-    assert result.get( u"notebooks" )[ 1 ].owner == False
+    notebook = result[ u"notebooks" ][ 0 ]
+    if notebook.name == u"trash":
+      notebook = result[ u"notebooks" ][ 1 ]
+
+    assert notebook.object_id == self.anon_notebook.object_id
+    assert notebook.read_write == Notebook.READ_ONLY
+    assert notebook.owner == False
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.anon_notebook.object_id
-    assert result.get( u"notebook" ).read_write == False
+    assert result.get( u"notebook" ).read_write == Notebook.READ_ONLY
     assert result.get( u"notebook" ).owner == False
     assert len( result.get( u"startup_notes" ) ) == 0
     assert result[ "total_notes_count" ] == 0
@@ -468,13 +472,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
     assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -511,13 +515,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
     assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -560,13 +564,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
     assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -602,13 +606,13 @@ class Test_notebooks( Test_controller ):
     assert result.get( u"user" ).object_id == self.user.object_id
     assert len( result.get( u"notebooks" ) ) == 3
     assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == True
+    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
     assert result.get( u"notebooks" )[ 2 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
     assert result.get( u"notebook" ).object_id == self.notebook.object_id
-    assert result.get( u"notebook" ).read_write == True
+    assert result.get( u"notebook" ).read_write == Notebook.READ_WRITE
     assert result.get( u"notebook" ).owner == True
     assert len( result.get( u"startup_notes" ) ) == 1
     assert result[ "total_notes_count" ] == 2
@@ -644,7 +648,7 @@ class Test_notebooks( Test_controller ):
     assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -669,7 +673,7 @@ class Test_notebooks( Test_controller ):
     assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -694,7 +698,7 @@ class Test_notebooks( Test_controller ):
     assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == False
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -718,7 +722,7 @@ class Test_notebooks( Test_controller ):
     assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -751,7 +755,7 @@ class Test_notebooks( Test_controller ):
     assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -790,7 +794,7 @@ class Test_notebooks( Test_controller ):
     assert invite.object_id == self.invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -830,7 +834,7 @@ class Test_notebooks( Test_controller ):
     assert invites[ 1 ].object_id == invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -861,7 +865,7 @@ class Test_notebooks( Test_controller ):
     assert invites[ 1 ].object_id == invite.object_id
 
     assert notebook.object_id == self.notebook.object_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert len( startup_notes ) == 1
     assert startup_notes[ 0 ].object_id == self.note.object_id
@@ -901,7 +905,7 @@ class Test_notebooks( Test_controller ):
     assert result[ "invites" ] == []
 
     assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert len( startup_notes ) == 0
     user = self.database.load( User, self.user.object_id )
@@ -1727,6 +1731,72 @@ class Test_notebooks( Test_controller ):
   def test_save_startup_note( self ):
     self.test_save_note( startup = True )
 
+  def test_save_note_in_notebook_with_read_write_for_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+    ) )
+
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+
+    # make sure the old title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents
+    assert note.startup == True # startup is forced to True in READ_WRITE_FOR_OWN_NOTES notebook
+    assert note.user_id == self.user.object_id
+    assert note.rank == 0
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+
   def test_save_note_by_different_user( self, startup = False ):
     self.login2()
 
@@ -1795,6 +1865,27 @@ class Test_notebooks( Test_controller ):
     assert revisions[ 2 ].revision == current_revision
     assert revisions[ 2 ].user_id == self.user2.object_id
     assert revisions[ 2 ].username == self.username2
+
+  def test_save_note_by_different_user_with_notebook_read_write_for_own_notes( self ):
+    self.login2()
+
+    self.database.execute( self.user2.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+    ) )
+
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = previous_revision,
+    ), session_id = self.session_id )
+
+    assert result.get( "error" )
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
 
   def test_save_note_without_login( self, startup = False ):
     # save over an existing note supplying new contents and a new title
@@ -3688,7 +3779,7 @@ class Test_notebooks( Test_controller ):
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == new_notebook_id
     assert notebook.name == u"new notebook"
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.trash_id
 
@@ -3715,7 +3806,7 @@ class Test_notebooks( Test_controller ):
     assert result[ "invites" ] == []
 
     assert notebook.object_id == new_notebook_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
 
   def test_create_without_login( self ):
@@ -3810,7 +3901,7 @@ class Test_notebooks( Test_controller ):
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == remaining_notebook_id
     assert notebook.name == u"my notebook"
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.trash_id
     assert notebook.user_id == self.user.object_id
@@ -3864,7 +3955,7 @@ class Test_notebooks( Test_controller ):
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == remaining_notebook_id
     assert notebook.name == u"my notebook"
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.trash_id
     assert notebook.user_id == self.user.object_id
@@ -4009,7 +4100,7 @@ class Test_notebooks( Test_controller ):
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == notebook_id
     assert notebook.name == self.notebook.name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.trash_id
     assert notebook.user_id == self.user.object_id
@@ -4069,7 +4160,7 @@ class Test_notebooks( Test_controller ):
     assert isinstance( notebook, Notebook )
     assert notebook.object_id == notebook_id
     assert notebook.name == self.notebook.name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.trash_id
     assert notebook.user_id == self.user.object_id
@@ -4511,7 +4602,7 @@ class Test_notebooks( Test_controller ):
 
     assert notebook.name == u"imported notebook"
     assert notebook.trash_id
-    assert notebook.read_write is True
+    assert notebook.read_write is Notebook.READ_WRITE
     assert notebook.owner is True
     assert notebook.deleted is False
     assert notebook.user_id == self.user.object_id

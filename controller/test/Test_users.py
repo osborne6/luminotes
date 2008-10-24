@@ -62,21 +62,23 @@ class Test_users( Test_controller ):
     self.database.save( self.notebooks[ 0 ] )
     self.database.save( self.notebooks[ 1 ] )
 
+    self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
+    self.database.save( self.user, commit = False )
+
     self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"anon notebook" )
     self.database.save( self.anon_notebook )
     self.startup_note = Note.create(
       self.database.next_id( Note ), u"<h3>login</h3>",
       notebook_id = self.anon_notebook.object_id, startup = True,
+      user_id = self.user.object_id,
     )
-    self.database.save( self.startup_note )
+    self.database.save( self.startup_note, commit = False )
 
     self.group = Group.create( self.database.next_id( Group ), u"my group" )
     self.database.save( self.group, commit = False )
     self.group2 = Group.create( self.database.next_id( Group ), u"other group" )
     self.database.save( self.group2, commit = False )
 
-    self.user = User.create( self.database.next_id( User ), self.username, self.password, self.email_address )
-    self.database.save( self.user, commit = False )
     self.database.execute( self.user.sql_save_notebook( notebook_id1, read_write = True, owner = True, rank = 0 ), commit = False )
     self.database.execute( self.user.sql_save_notebook( trash_id1, read_write = True, owner = True ), commit = False )
     self.database.execute( self.user.sql_save_notebook( notebook_id2, read_write = True, owner = True, rank = 1 ), commit = False )
@@ -180,7 +182,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == None
 
@@ -189,7 +191,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -198,7 +200,7 @@ class Test_users( Test_controller ):
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert notebook.rank == None
 
@@ -250,8 +252,8 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].username == self.new_username
     assert result[ u"user" ].email_address == self.new_email_address
 
-    assert cherrypy.root.users.check_access( user.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( user.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.load_notebook( user.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.load_notebook( user.object_id, self.notebooks[ 0 ].trash_id )
 
     # the notebook that the user was invited to should be in the list of returned notebooks
     notebooks = dict( [ ( notebook.object_id, notebook ) for notebook in result[ u"notebooks" ] ] )
@@ -261,7 +263,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == self.notebooks[ 0 ].name
     assert notebook.trash_id
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert notebook.rank == 1
 
@@ -269,7 +271,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert notebook.rank == None
 
@@ -277,7 +279,7 @@ class Test_users( Test_controller ):
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert notebook.rank == None
 
@@ -317,7 +319,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == None
 
@@ -326,7 +328,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -335,7 +337,7 @@ class Test_users( Test_controller ):
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert notebook.rank == None
 
@@ -639,7 +641,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"trash"
     assert notebook.trash_id == None
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == None
 
@@ -648,7 +650,7 @@ class Test_users( Test_controller ):
     assert notebook.revision
     assert notebook.name == u"my notebook"
     assert notebook.trash_id
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -657,7 +659,7 @@ class Test_users( Test_controller ):
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
     assert notebook.trash_id == None
-    assert notebook.read_write == False
+    assert notebook.read_write == Notebook.READ_ONLY
     assert notebook.owner == False
     assert notebook.rank == None
 
@@ -740,27 +742,27 @@ class Test_users( Test_controller ):
     assert len( result[ u"notebooks" ] ) == 5
     assert result[ u"notebooks" ][ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == u"trash"
-    assert result[ u"notebooks" ][ 0 ].read_write == True
+    assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 0 ].owner == True
     assert result[ u"notebooks" ][ 0 ].rank == None
     assert result[ u"notebooks" ][ 1 ].object_id
     assert result[ u"notebooks" ][ 1 ].name == u"trash"
-    assert result[ u"notebooks" ][ 1 ].read_write == True
+    assert result[ u"notebooks" ][ 1 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 1 ].owner == True
     assert result[ u"notebooks" ][ 1 ].rank == None
     assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 2 ].read_write == True
+    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 2 ].owner == True
     assert result[ u"notebooks" ][ 2 ].rank == 0
     assert result[ u"notebooks" ][ 3 ].object_id == self.notebooks[ 1 ].object_id
     assert result[ u"notebooks" ][ 3 ].name == self.notebooks[ 1 ].name
-    assert result[ u"notebooks" ][ 3 ].read_write == True
+    assert result[ u"notebooks" ][ 3 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 3 ].owner == True
     assert result[ u"notebooks" ][ 3 ].rank == 1
     assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 4 ].read_write == False
+    assert result[ u"notebooks" ][ 4 ].read_write == Notebook.READ_ONLY
     assert result[ u"notebooks" ][ 4 ].owner == False
     assert result[ u"notebooks" ][ 4 ].rank == None
     assert result[ u"login_url" ] is None
@@ -783,7 +785,7 @@ class Test_users( Test_controller ):
     assert len( result[ u"notebooks" ] ) == 1
     assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_ONLY
     assert result[ u"notebooks" ][ 0 ].owner == False
     assert result[ u"notebooks" ][ 0 ].rank == None
 
@@ -831,8 +833,8 @@ class Test_users( Test_controller ):
     invite_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ]
     assert invite_notebook_id == self.notebooks[ 0 ].object_id
 
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_login_with_after_login( self ):
     after_login = u"/foo/bar"
@@ -895,45 +897,215 @@ class Test_users( Test_controller ):
     assert user.group_storage_bytes == 0
     assert user.revision > previous_revision
 
-  def test_check_access( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id )
+  def test_load_notebook( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id )
 
-    assert access is True
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_check_access_read_write( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+  def test_load_notebook_unknown_notebook( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, u"unknownid" )
 
-    assert access is True
+    assert notebook is None
 
-  def test_check_access_owner( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id, owner = True )
+  def test_load_notebook_unknown_user( self ):
+    notebook = cherrypy.root.users.load_notebook( u"unknownuser", self.notebooks[ 0 ].object_id )
 
-    assert access is True
+    assert notebook is None
 
-  def test_check_access_full( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+  def test_load_notebook_read_write( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True )
 
-    assert access is True
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_check_access_anon( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id )
+  def test_load_notebook_owner( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, owner = True )
 
-    assert access is True
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_check_access_anon_read_write( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, read_write = True )
+  def test_load_notebook_full( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
 
-    assert access is False
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_check_access_anon_owner( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, owner = True )
+  def test_load_notebook_with_note_id( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user.object_id,
+    )
+    self.database.save( note )
 
-    assert access is False
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
 
-  def test_check_access_anon_full( self ):
-    access = cherrypy.root.users.check_access( self.user.object_id, self.anon_notebook.object_id, read_write = True, owner = True )
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
 
-    assert access is False
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_with_note_id_by_another_user( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi from another user</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user2.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_with_unknown_note_id( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = u"unknownid" )
+
+    assert notebook is None
+
+  def test_load_notebook_with_note_id_in_another_notebook( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = self.startup_note.object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_read_write_with_note_id( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user.object_id,
+    )
+    self.database.save( note )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_write_with_note_id_by_another_user( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi from another user</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user2.object_id,
+    )
+    self.database.save( note )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_write_with_unknown_note_id( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = u"unknownid" )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_write_with_note_id_in_another_notebook( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = self.startup_note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_only_with_note_id( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_only_with_note_id_by_another_user( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi from another user</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user2.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_only_with_unknown_note_id( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = u"unknownid" )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_only_with_note_id_in_another_notebook( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = self.startup_note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_anon( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.anon_notebook.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.anon_notebook.object_id
+
+  def test_load_notebook_anon_read_write( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.anon_notebook.object_id, read_write = True )
+
+    assert notebook is None
+
+  def test_load_notebook_anon_owner( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.anon_notebook.object_id, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_anon_full( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.anon_notebook.object_id, read_write = True, owner = True )
+
+    assert notebook is None
 
   def test_check_group( self ):
     membership = cherrypy.root.users.check_group( self.user.object_id, self.group.object_id )
@@ -1097,7 +1269,7 @@ class Test_users( Test_controller ):
     assert len( result[ u"notebooks" ] ) == 1
     assert result[ u"notebooks" ][ 0 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 0 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 0 ].read_write == False
+    assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_ONLY
     assert result[ u"notebooks" ][ 0 ].owner == False
     assert result[ u"notebooks" ][ 0 ].rank == None
 
@@ -2151,8 +2323,8 @@ class Test_users( Test_controller ):
       invite_id = invite_id,
     ), session_id = self.session_id )
 
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
     self.login()
     result = self.http_post( "/users/revoke_invite", dict(
@@ -2163,8 +2335,8 @@ class Test_users( Test_controller ):
     assert result[ u"message" ]
     assert len( result[ u"invites" ] ) == 0
 
-    assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert not cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert not cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_revoke_invite_redeemed_self( self ):
     self.login()
@@ -2191,8 +2363,8 @@ class Test_users( Test_controller ):
       invite_id = invite_id,
     ), session_id = self.session_id )
 
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
     # as user2, revoke that user's own invite
     result = self.http_post( "/users/revoke_invite", dict(
@@ -2204,8 +2376,8 @@ class Test_users( Test_controller ):
     assert len( result[ u"invites" ] ) == 0
 
     # the user should no longer have any access
-    assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert not cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert not cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert not cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
   def test_revoke_invite_without_login( self ):
     # login to send the invites, but don't send the logged-in session id for revoke_invite() below
@@ -2347,8 +2519,8 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     # assert that access has been granted
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
     # assert that the user is redirected to the notebook that the invite is for
     assert result[ u"redirect"].startswith( u"/notebooks/" )
@@ -2385,8 +2557,8 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     # assert that access is still granted
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].object_id )
-    assert cherrypy.root.users.check_access( self.user2.object_id, self.notebooks[ 0 ].trash_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+    assert cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].trash_id )
 
     # assert that the user is redirected to the notebook that the invite is for
     assert result[ u"redirect"].startswith( u"/notebooks/" )
@@ -4104,7 +4276,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4145,7 +4317,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4184,7 +4356,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4224,7 +4396,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4262,7 +4434,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4307,7 +4479,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4436,7 +4608,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4484,7 +4656,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4532,7 +4704,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4578,7 +4750,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4627,7 +4799,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
@@ -4675,7 +4847,7 @@ class Test_users( Test_controller ):
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
-    assert notebook.read_write == True
+    assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
 
