@@ -63,6 +63,7 @@ class Notebook( Persistent ):
     self.__read_write = read_write
     self.__owner = owner
     self.__rank = rank
+    self.__tags = []
 
   @staticmethod
   def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False ):
@@ -330,6 +331,7 @@ class Notebook( Persistent ):
       owner = self.__owner,
       deleted = self.__deleted,
       user_id = self.__user_id,
+      tags = self.__tags,
     ) )
 
     return d
@@ -367,6 +369,11 @@ class Notebook( Persistent ):
     # call update_revision().
     self.__rank = rank
 
+  def __set_tags( self, tags ):
+    # The tags member isn't actually saved to the database, so setting it doesn't need to
+    # call update_revision().
+    self.__tags = tags
+
   name = property( lambda self: self.__name, __set_name )
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
@@ -374,3 +381,4 @@ class Notebook( Persistent ):
   deleted = property( lambda self: self.__deleted, __set_deleted )
   user_id = property( lambda self: self.__user_id, __set_user_id )
   rank = property( lambda self: self.__rank, __set_rank )
+  tags = property( lambda self: self.__tags, __set_tags )

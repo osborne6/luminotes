@@ -15,12 +15,21 @@ class Link_area( Div ):
       nb.deleted is False
     ]
 
+    if [ tag for tag in notebook.tags if tag.name == u"forum" ]:
+      forum_tag = True
+      notebook_word = u"discussion"
+      note_word = u"post"
+    else:
+      forum_tag = False
+      notebook_word = u"notebook"
+      note_word = u"note"
+
     Div.__init__(
       self,
       Div(
         Div(
           H4(
-            u"this notebook",
+            u"this %s" % notebook_word,
             notebook.read_write != Notebook.READ_ONLY and Input(
               type = u"button",
               class_ = u"note_button small_text",
@@ -54,22 +63,22 @@ class Link_area( Div ):
               u"subscribe to rss",
               href = updates_path,
               id = u"notebook_rss_link",
-              title = u"Subscribe to the RSS feed for this notebook.",
+              title = u"Subscribe to the RSS feed for this %s." % notebook_word,
             ),
             A(
               Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image" ),
               href = updates_path,
-              title = u"Subscribe to the RSS feed for this notebook.",
+              title = u"Subscribe to the RSS feed for this %s." % notebook_word,
             ),
             class_ = u"link_area_item",
           ) or None ),
 
           ( notebook.read_write != Notebook.READ_ONLY ) and Div(
             A(
-              u"nothing but notes",
+              u"nothing but %ss" % note_word,
               href = u"#",
               id = u"declutter_link",
-              title = u"Focus on just your notes without any distractions.",
+              title = u"Focus on just your %ss without any distractions." % note_word,
             ),
             class_ = u"link_area_item",
           ) or None,
@@ -79,7 +88,7 @@ class Link_area( Div ):
               u"export",
               href = u"#",
               id = u"export_link",
-              title = u"Download a stand-alone copy of the entire wiki notebook.",
+              title = u"Download a stand-alone copy of the entire %s." % notebook_word,
             ),
             class_ = u"link_area_item",
           ) or None,
@@ -90,14 +99,14 @@ class Link_area( Div ):
                 u"import",
                 href = u"#",
                 id = u"import_link",
-                title = u"Import notes from other software into Luminotes.",
+                title = u"Import %ss from other software into Luminotes." % note_word,
               ),
               u"|",
               A(
                 u"export",
                 href = u"#",
                 id = u"export_link",
-                title = u"Download a stand-alone copy of the entire wiki notebook.",
+                title = u"Download a stand-alone copy of the entire %s." % notebook_word,
               ),
               class_ = u"link_area_item",
             ) or None,
@@ -107,7 +116,7 @@ class Link_area( Div ):
                 u"rename",
                 href = u"#",
                 id = u"rename_notebook_link",
-                title = u"Change the name of this notebook.",
+                title = u"Change the name of this %s." % notebook_word,
               ),
               class_ = u"link_area_item",
             ) or None,
@@ -117,7 +126,7 @@ class Link_area( Div ):
                 u"delete",
                 href = u"#",
                 id = u"delete_notebook_link",
-                title = u"Move this notebook to the trash.",
+                title = u"Move this %s to the trash." % notebook_word,
               ),
               class_ = u"link_area_item",
             ) or None,
@@ -127,7 +136,7 @@ class Link_area( Div ):
                 u"share",
                 href = u"#",
                 id = u"share_notebook_link",
-                title = u"Share this notebook with others.",
+                title = u"Share this %s with others." % notebook_word,
               ),
               class_ = u"link_area_item",
             ) or None,
@@ -137,7 +146,7 @@ class Link_area( Div ):
                 u"trash",
                 href = u"/notebooks/%s?parent_id=%s" % ( notebook.trash_id, notebook.object_id ),
                 id = u"trash_link",
-                title = u"Look here for notes you've deleted.",
+                title = u"Look here for %ss you've deleted." % note_word,
               ),
               class_ = u"link_area_item",
             ) or None,
@@ -148,7 +157,7 @@ class Link_area( Div ):
                 u"trash",
                 href = u"#",
                 id = u"trash_link",
-                title = u"Look here for notes you've deleted.",
+                title = u"Look here for %ss you've deleted." % note_word,
               ),
               class_ = u"link_area_item",
             ) or None,

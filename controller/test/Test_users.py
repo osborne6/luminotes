@@ -15,6 +15,7 @@ from model.Note import Note
 from model.Password_reset import Password_reset
 from model.Download_access import Download_access
 from model.Invite import Invite
+from model.Tag import Tag
 from controller.Users import Invite_error, Payment_error
 import controller.Users as Users
 
@@ -745,26 +746,125 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 0 ].owner == True
     assert result[ u"notebooks" ][ 0 ].rank == None
+    assert result[ u"notebooks" ][ 0 ].tags == []
     assert result[ u"notebooks" ][ 1 ].object_id
     assert result[ u"notebooks" ][ 1 ].name == u"trash"
     assert result[ u"notebooks" ][ 1 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 1 ].owner == True
     assert result[ u"notebooks" ][ 1 ].rank == None
+    assert result[ u"notebooks" ][ 1 ].tags == []
     assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 2 ].owner == True
     assert result[ u"notebooks" ][ 2 ].rank == 0
+    assert result[ u"notebooks" ][ 2 ].tags == []
     assert result[ u"notebooks" ][ 3 ].object_id == self.notebooks[ 1 ].object_id
     assert result[ u"notebooks" ][ 3 ].name == self.notebooks[ 1 ].name
     assert result[ u"notebooks" ][ 3 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 3 ].owner == True
     assert result[ u"notebooks" ][ 3 ].rank == 1
+    assert result[ u"notebooks" ][ 3 ].tags == []
     assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
     assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
     assert result[ u"notebooks" ][ 4 ].read_write == Notebook.READ_ONLY
     assert result[ u"notebooks" ][ 4 ].owner == False
     assert result[ u"notebooks" ][ 4 ].rank == None
+    assert result[ u"notebooks" ][ 4 ].tags == []
+    assert result[ u"login_url" ] is None
+    assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
+
+    rate_plan = result[ u"rate_plan" ]
+    assert rate_plan
+    assert rate_plan[ u"name" ] == u"super"
+    assert rate_plan[ u"storage_quota_bytes" ] == 1337 * 10
+
+    assert result[ u"groups" ]
+    assert result[ u"groups" ][ 0 ].object_id == self.group.object_id
+    assert result[ u"groups" ][ 0 ].name == self.group.name
+    assert result[ u"groups" ][ 0 ].admin == False
+
+  def test_current_with_tags( self ):
+    tag_id = self.database.next_id( Tag, commit = False )
+    new_tag = Tag.create(
+      tag_id,
+      notebook_id = None, # this tag is not in the namespace of a single notebook
+      user_id = self.anonymous.object_id,
+      name = u"mytag",
+      description = u"some tag"
+    )
+    self.database.save( new_tag, commit = False )
+    self.database.execute(
+      self.user.sql_save_notebook_tag( self.notebooks[ 0 ].object_id, new_tag.object_id, value = u"myvalue" ),
+      commit = False,
+    )
+
+    tag_id2 = self.database.next_id( Tag, commit = False )
+    new_tag2 = Tag.create(
+      tag_id2,
+      notebook_id = None, # this tag is not in the namespace of a single notebook
+      user_id = self.user.object_id,
+      name = u"mytag2",
+      description = u"some tag 2"
+    )
+    self.database.save( new_tag2, commit = False )
+    self.database.execute(
+      self.user.sql_save_notebook_tag( self.notebooks[ 0 ].object_id, new_tag2.object_id, value = u"myvalue2" ),
+      commit = False,
+    )
+
+    self.database.commit()
+
+    result = cherrypy.root.users.current( self.user.object_id )
+
+    assert result[ u"user" ]
+    assert result[ u"user" ].object_id == self.user.object_id
+    assert result[ u"user" ].username == self.user.username
+    assert len( result[ u"notebooks" ] ) == 5
+    assert result[ u"notebooks" ][ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == u"trash"
+    assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
+    assert result[ u"notebooks" ][ 0 ].owner == True
+    assert result[ u"notebooks" ][ 0 ].rank == None
+    assert result[ u"notebooks" ][ 0 ].tags == []
+    assert result[ u"notebooks" ][ 1 ].object_id
+    assert result[ u"notebooks" ][ 1 ].name == u"trash"
+    assert result[ u"notebooks" ][ 1 ].read_write == Notebook.READ_WRITE
+    assert result[ u"notebooks" ][ 1 ].owner == True
+    assert result[ u"notebooks" ][ 1 ].rank == None
+    assert result[ u"notebooks" ][ 1 ].tags == []
+    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 0 ].name
+    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_WRITE
+    assert result[ u"notebooks" ][ 2 ].owner == True
+    assert result[ u"notebooks" ][ 2 ].rank == 0
+    assert result[ u"notebooks" ][ 2 ].tags
+    assert len( result[ u"notebooks" ][ 2 ].tags ) == 2
+
+    tags = result[ u"notebooks" ][ 2 ].tags
+    assert tags[ 0 ].object_id == new_tag.object_id
+    assert tags[ 0 ].notebook_id == new_tag.notebook_id
+    assert tags[ 0 ].user_id == new_tag.user_id
+    assert tags[ 0 ].name == new_tag.name
+    assert tags[ 0 ].description == new_tag.description
+    assert tags[ 1 ].object_id == new_tag2.object_id
+    assert tags[ 1 ].notebook_id == new_tag2.notebook_id
+    assert tags[ 1 ].user_id == new_tag2.user_id
+    assert tags[ 1 ].name == new_tag2.name
+    assert tags[ 1 ].description == new_tag2.description
+
+    assert result[ u"notebooks" ][ 3 ].object_id == self.notebooks[ 1 ].object_id
+    assert result[ u"notebooks" ][ 3 ].name == self.notebooks[ 1 ].name
+    assert result[ u"notebooks" ][ 3 ].read_write == Notebook.READ_WRITE
+    assert result[ u"notebooks" ][ 3 ].owner == True
+    assert result[ u"notebooks" ][ 3 ].rank == 1
+    assert result[ u"notebooks" ][ 3 ].tags == []
+    assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
+    assert result[ u"notebooks" ][ 4 ].read_write == Notebook.READ_ONLY
+    assert result[ u"notebooks" ][ 4 ].owner == False
+    assert result[ u"notebooks" ][ 4 ].rank == None
+    assert result[ u"notebooks" ][ 4 ].tags == []
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 

@@ -14,6 +14,7 @@ from model.Note import Note
 from model.User import User
 from model.Invite import Invite
 from model.File import File
+from model.Tag import Tag
 from controller.Notebooks import Access_error
 from controller.Files import Upload_file
 
@@ -3850,6 +3851,99 @@ class Test_notebooks( Test_controller ):
     assert notebook.object_id == new_notebook_id
     assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
+    assert notebook.tags == []
+
+  def test_contents_after_create_with_tag( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/create", dict(), session_id = self.session_id )
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
+
+    tag_id = self.database.next_id( Tag, commit = False )
+    new_tag = Tag.create(
+      tag_id,
+      notebook_id = None, # this tag is not in the namespace of a single notebook
+      user_id = self.user.object_id,
+      name = u"mytag",
+      description = u"some tag"
+    )
+    self.database.save( new_tag, commit = False )
+
+    self.database.execute(
+      self.user.sql_save_notebook_tag( new_notebook_id, new_tag.object_id, value = u"myvalue" ),
+      commit = False,
+    )
+    self.database.commit()
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = new_notebook_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert result[ "total_notes_count" ] == 0
+    assert result[ "startup_notes" ] == []
+    assert result[ "notes" ] == []
+    assert result[ "invites" ] == []
+
+    assert notebook.object_id == new_notebook_id
+    assert notebook.read_write == Notebook.READ_WRITE
+    assert notebook.owner == True
+    assert notebook.tags
+    assert len( notebook.tags ) == 1
+
+    tag = notebook.tags[ 0 ]
+    assert tag.object_id == new_tag.object_id
+    assert tag.notebook_id == new_tag.notebook_id
+    assert tag.user_id == new_tag.user_id
+    assert tag.name == new_tag.name
+    assert tag.description == new_tag.description
+
+  def test_contents_after_create_with_anonymous_tag( self ):
+    self.login()
+
+    result = self.http_post( "/notebooks/create", dict(), session_id = self.session_id )
+    new_notebook_id = result[ u"redirect" ].split( u"/notebooks/" )[ -1 ].split( u"?" )[ 0 ]
+
+    tag_id = self.database.next_id( Tag, commit = False )
+    new_tag = Tag.create(
+      tag_id,
+      notebook_id = None, # this tag is not in the namespace of a single notebook
+      user_id = self.anonymous.object_id,
+      name = u"mytag",
+      description = u"some tag"
+    )
+    self.database.save( new_tag, commit = False )
+
+    self.database.execute(
+      self.anonymous.sql_save_notebook_tag( new_notebook_id, new_tag.object_id, value = u"myvalue" ),
+      commit = False,
+    )
+    self.database.commit()
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = new_notebook_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert result[ "total_notes_count" ] == 0
+    assert result[ "startup_notes" ] == []
+    assert result[ "notes" ] == []
+    assert result[ "invites" ] == []
+
+    assert notebook.object_id == new_notebook_id
+    assert notebook.read_write == Notebook.READ_WRITE
+    assert notebook.owner == True
+    assert notebook.tags
+    assert len( notebook.tags ) == 1
+
+    tag = notebook.tags[ 0 ]
+    assert tag.object_id == new_tag.object_id
+    assert tag.notebook_id == new_tag.notebook_id
+    assert tag.user_id == new_tag.user_id
+    assert tag.name == new_tag.name
+    assert tag.description == new_tag.description
 
   def test_create_without_login( self ):
     result = self.http_post( "/notebooks/create", dict() )

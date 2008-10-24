@@ -13,6 +13,7 @@ from model.Note import Note
 from model.Password_reset import Password_reset
 from model.Download_access import Download_access
 from model.Invite import Invite
+from model.Tag import Tag
 from Expose import expose
 from Validate import validate, Valid_string, Valid_bool, Valid_int, Validation_error
 from Database import Valid_id, end_transaction
@@ -649,9 +650,16 @@ class Users( object ):
         if login_note:
           login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, main_notebook.object_id, login_note.object_id )
 
+    notebooks += anon_notebooks
+
+    for notebook in notebooks:
+      notebook.tags = \
+        self.__database.select_many( Tag, notebook.sql_load_tags( user_id ) ) + \
+        self.__database.select_many( Tag, notebook.sql_load_tags( anonymous.object_id ) )
+
     return dict(
       user = user,
-      notebooks = notebooks + anon_notebooks,
+      notebooks = notebooks,
       login_url = login_url,
       logout_url = self.__https_url + u"/users/logout",
       rate_plan = ( user.rate_plan < len( self.__rate_plans ) ) and self.__rate_plans[ user.rate_plan ] or {},

@@ -18,6 +18,7 @@ from model.Invite import Invite
 from model.User import User
 from model.User_revision import User_revision
 from model.File import File
+from model.Tag import Tag
 from view.Main_page import Main_page
 from view.Json import Json
 from view.Html_file import Html_file
@@ -168,8 +169,8 @@ class Notebooks( object ):
   def contents( self, notebook_id, note_id = None, revision = None, previous_revision = None,
                 read_write = True, owner = True, user_id = None ):
     """
-    Return the startup notes for the given notebook. Optionally include a single requested note as
-    well.
+    Return information about the requested notebook, including its startup notes. Optionally include
+    a single requested note as well.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to return
@@ -199,8 +200,9 @@ class Notebooks( object ):
     @raise Validation_error: one of the arguments is invalid
     """
     notebook = self.__users.load_notebook( user_id, notebook_id )
+    anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
 
-    if notebook is None:
+    if notebook is None or anonymous is None:
       raise Access_error()
 
     if read_write is False:
@@ -224,6 +226,10 @@ class Notebooks( object ):
           note.replace_contents( Html_differ().diff( previous_note.contents, note.contents ) )
     else:
       note = None
+
+    notebook.tags = \
+      self.__database.select_many( Tag, notebook.sql_load_tags( user_id ) ) + \
+      self.__database.select_many( Tag, notebook.sql_load_tags( anonymous.object_id ) )
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
     total_notes_count = self.__database.select_one( int, notebook.sql_count_notes(), use_cache = True )
