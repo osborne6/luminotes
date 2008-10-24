@@ -98,4 +98,6 @@ class Forums( object ):
     return result
 
   # threads() is just an alias for Notebooks.default()
-  threads = Notebooks.default
+  def threads( self, *args, **kwargs ):
+    return self.__notebooks.default( *args, **kwargs )
+  threads.exposed = True

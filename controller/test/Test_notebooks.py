@@ -2412,6 +2412,48 @@ class Test_notebooks( Test_controller ):
   def test_save_new_startup_note( self ):
     self.test_save_new_note( startup = True )
 
+  def test_save_new_note_with_notebook_read_write_for_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+    ) )
+
+    # save a completely new note
+    new_note = Note.create( "55", u"<h3>newest title</h3>foo" )
+    previous_revision = new_note.revision
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ] == None
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = new_note.title,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == new_note.contents
+    assert note.startup == True # startup is forced to True in READ_WRITE_FOR_OWN_NOTES notebook
+    assert note.user_id == self.user.object_id
+    assert note.rank == 0 
+
   def test_save_new_note_with_disallowed_tags( self ):
     self.login()
 

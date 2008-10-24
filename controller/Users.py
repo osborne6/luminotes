@@ -748,13 +748,14 @@ class Users( object ):
       return None
 
     # if a particular note_id is given, and the notebook is READ_WRITE_FOR_OWN_NOTES, then check
-    # that the user is associated with that note
+    # that the user is associated with that note (if the note exists). this prevents a user
+    # from modifying someone else's note in a READ_WRITE_FOR_OWN_NOTES notebook
     if note_id and notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       note = self.__database.load( Note, note_id )
-      if not note:
-        return None
-
-      if user_id != note.user_id or notebook_id != note.notebook_id:
+      if note and (
+        ( note.user_id and user_id != note.user_id ) or
+        ( note.notebook_id and notebook_id != note.notebook_id )
+      ):
         return None
         
     return notebook

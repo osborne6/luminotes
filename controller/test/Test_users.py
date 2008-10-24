@@ -974,7 +974,24 @@ class Test_users( Test_controller ):
     notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
                                                   note_id = u"unknownid" )
 
-    assert notebook is None
+    # an unknown note id indicates that a new note is being created, which is allowed in a
+    # READ_WRITE_FOR_OWN_NOTES notebooks
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_with_stub_note( self ):
+    # don't fully create a note, but reserve an id for it
+    note_id = self.database.next_id( Note )
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
 
   def test_load_notebook_with_note_id_in_another_notebook( self ):
     self.database.execute( self.user.sql_update_access(
