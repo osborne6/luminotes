@@ -166,7 +166,7 @@ class Link_area( Div ):
           id = u"this_notebook_area",
         ),
 
-        Div(
+        ( not forum_tag ) and Div(
           ( len( linked_notebooks ) > 0 ) and H4(
             u"notebooks",
             Img(
@@ -202,7 +202,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) for nb in linked_notebooks ],
           id = u"notebooks_area"
-        ),
+        ) or None,
 
         ( user.username is None and notebook_path != "/" ) and P(
           A( u"Download", href = u"/download", class_ = u"hook_action"  ),

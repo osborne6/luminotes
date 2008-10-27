@@ -159,7 +159,9 @@ class Main_page( Page ):
         Div(
           Note_tree_area(
             Toolbar(
-              hide_toolbar = parent_id or notebook.read_write == Notebook.READ_ONLY
+              notebook,
+              hide_toolbar = parent_id or notebook.read_write == Notebook.READ_ONLY,
+              note_word = ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES ) and u"post" or u"note",
             ),
             notebook,
             root_notes,

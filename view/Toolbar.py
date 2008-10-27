@@ -1,15 +1,16 @@
 from Tags import P, Div, A, Input, Span, Br
+from model.Notebook import Notebook
 
 
 class Toolbar( Div ):
-  def __init__( self, hide_toolbar = False ):
+  def __init__( self, notebook, hide_toolbar = False, note_word = None ):
     Div.__init__(
       self,
       Div(
         P(
           Div( Input(
             type = u"image",
-            id = u"newNote", title = u"new note [ctrl-N]",
+            id = u"newNote", title = u"new %s [ctrl-N]" % ( note_word or u"note" ),
             src = u"/static/images/toolbar/new_note_button.png",
             width = u"40", height = u"40",
             class_ = "image_button",
@@ -21,13 +22,14 @@ class Toolbar( Div ):
             width = u"40", height = u"40",
             class_ = "image_button",
           ) ),
-          Div( Input(
+          # Notebook.READ_WRITE_FOR_OWN_NOTES should not have a file upload button
+          ( notebook.read_write == Notebook.READ_WRITE ) and Div( Input(
             type = u"image",
             id = u"attachFile", title = u"attach file or image",
             src = u"/static/images/toolbar/attach_button.png",
             width = u"40", height = u"40",
             class_ = "image_button",
-          ) ),
+          ) ) or None,
         ),
         P(
           Div( Input(

@@ -2,7 +2,7 @@ GECKO = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.use
 WEBKIT = /WebKit/.test( navigator.userAgent );
 
 
-function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty ) {
+function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty, own_notes_only ) {
   this.id = id;
   this.notebook_id = notebook_id;
   this.initial_text = note_text;
@@ -11,6 +11,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.revision = revision;
   this.user_revisions = new Array(); // cache for this note's list of revisions, loaded from the server on-demand
   this.read_write = read_write;      // whether the user has read-write access to this Editor
+  this.own_notes_only = own_notes_only; // whether the user only has read-write access to their own notes
   this.edit_enabled = read_write && !deleted_from_id; // whether editing is actually enabled for this Editor
   this.startup = startup || false;   // whether this Editor is for a startup note
   this.init_highlight = highlight || false;
@@ -65,18 +66,20 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
       } );
       connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
 
-      this.options_button = createDOM( "input", {
-        "type": "button",
-        "class": "note_button",
-        "id": "options_" + iframe_id,
-        "value": "options",
-        "title": "note options"
-      } );
-      connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
+      if ( !own_notes_only ) {
+        this.options_button = createDOM( "input", {
+          "type": "button",
+          "class": "note_button",
+          "id": "options_" + iframe_id,
+          "value": "options",
+          "title": "note options"
+        } );
+        connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
+      }
     }
   }
 
-  if ( !this.deleted_from_id && ( read_write || !startup ) ) {
+  if ( !this.deleted_from_id && ( read_write || !startup ) && !own_notes_only ) {
     this.hide_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",

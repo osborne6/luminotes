@@ -35,7 +35,8 @@ function Wiki( invoker ) {
   else
     this.total_notes_count = null;
 
-  this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
+  if ( getElement( "note_tree_root_table" ) )
+    this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
   this.recent_notes = new Recent_notes( this, this.notebook_id, this.invoker );
 
   // grab the current notebook from the list of available notebooks
@@ -318,7 +319,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
     connect( "newNote", "onclick", this, "create_blank_editor" );
     connect( "createLink", "onclick", this, "toggle_link_button" );
-    connect( "attachFile", "onclick", this, "toggle_attach_button" );
+    if ( this.notebook.read_write == NOTEBOOK_READ_WRITE )
+      connect( "attachFile", "onclick", this, "toggle_attach_button" );
     connect( "bold", "onclick", function ( event ) { self.toggle_button( event, "bold" ); } );
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
@@ -329,7 +331,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
     this.make_image_button( "newNote", "new_note" );
     this.make_image_button( "createLink", "link" );
-    this.make_image_button( "attachFile", "attach" );
+    if ( this.notebook.read_write == NOTEBOOK_READ_WRITE )
+      this.make_image_button( "attachFile", "attach" );
     this.make_image_button( "bold" );
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
@@ -737,12 +740,14 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after, user_id ) {
   var self = this;
   var dirty = false;
+  var own_note_only = false;
 
   if ( read_write == NOTEBOOK_READ_ONLY )
     read_write = false;
   else if ( read_write == NOTEBOOK_READ_WRITE )
     read_write = true;
   else if ( read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+    own_notes_only = true;
     if ( user_id == this.user.object_id )
       read_write = true;
     else
@@ -780,7 +785,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, this.notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty );
+  var editor = new Editor( id, this.notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty, own_notes_only );
 
   if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
@@ -1165,6 +1170,9 @@ Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
 
 Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
+  if ( !button )
+    return;
+
   var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
 
   if ( !this.resize_toolbar_button( button ) && /_down/.test( button.src ) )
@@ -1174,11 +1182,13 @@ Wiki.prototype.down_image_button = function ( name ) {
     button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
   else
     button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
-
 }
 
 Wiki.prototype.up_image_button = function ( name ) {
   var button = getElement( name );
+  if ( !button )
+    return;
+
   var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
 
   if ( !this.resize_toolbar_button( button ) && !/_down/.test( button.src ) )
@@ -1192,6 +1202,9 @@ Wiki.prototype.up_image_button = function ( name ) {
 
 Wiki.prototype.toggle_image_button = function ( name ) {
   var button = getElement( name );
+  if ( !button )
+    return;
+
   var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
 
   if ( /_down/.test( button.src ) ) {
@@ -2545,7 +2558,11 @@ Wiki.prototype.delete_all_editors = function ( event ) {
   }
 
   this.zero_total_notes_count();
-  removeElement( "note_tree_root_table" );
+
+  var note_tree_root_table = getElement( "note_tree_root_table" );
+  if ( note_tree_root_table )
+    removeElement( note_tree_root_table );
+
   this.display_empty_message( true );
 
   event.stop();
