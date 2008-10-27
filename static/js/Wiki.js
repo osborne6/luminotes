@@ -740,7 +740,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after, user_id ) {
   var self = this;
   var dirty = false;
-  var own_note_only = false;
+  var own_notes_only = false;
 
   if ( read_write == NOTEBOOK_READ_ONLY )
     read_write = false;
