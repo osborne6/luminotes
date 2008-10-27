@@ -4,9 +4,11 @@ import os
 import os.path
 import sys
 from controller.Database import Database
+from controller.Schema_upgrader import Schema_upgrader
 from model.Notebook import Notebook
 from model.Note import Note
 from model.User import User
+from config.Version import VERSION
 
 
 class Initializer( object ):
@@ -44,6 +46,9 @@ class Initializer( object ):
     self.create_anonymous_user()
     if desktop is True:
       self.create_desktop_user()
+
+    version = Schema_upgrader.version_string_to_tuple( VERSION )
+    Schema_upgrader.schema_version( database, default_version = version )
 
     self.database.commit()
 
@@ -95,6 +100,17 @@ class Initializer( object ):
     )
 
     users.create_user( u"desktopuser" )
+
+  def set_schema_version( self ):
+    try:
+      from_version = self.__database.select_one( tuple, "select * from schema_version;" );
+    # if there's no schema version table, set the schema to the current version
+    except:
+      self.__database.rollback()
+      from_version = ( 1, 5, 4 )
+      self.__database.execute( "create table schema_version ( major numeric, minor numeric, release numeric );", commit = False );
+      self.__database.execute( "insert into schema_version values ( %s, %s, %s );" % from_version, commit = False );
+      self.__database.commit()
 
 
 def main( args = None ):

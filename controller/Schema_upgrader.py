@@ -45,17 +45,8 @@ class Schema_upgrader:
     @param to_version: the desired version to upgrade to, as a string
     """
     to_version = self.version_string_to_tuple( to_version )
-
-    try:
-      from_version = self.__database.select_one( tuple, "select * from schema_version;" );
-    # if there's no schema version table, assume the from_version is 1.5.4, which was the last
-    # version not to include a schema_version table
-    except:
-      self.__database.rollback()
-      from_version = ( 1, 5, 4 )
-      self.__database.execute( "create table schema_version ( major numeric, minor numeric, release numeric );", commit = False );
-      self.__database.execute( "insert into schema_version values ( %s, %s, %s );" % from_version, commit = False );
-      self.__database.commit()
+    from_version = self.schema_version( self.__database )
+    self.__database.commit()
 
     # if the database schema version is already equal to to_version, there's nothing to do
     if to_version == from_version:
@@ -95,6 +86,22 @@ class Schema_upgrader:
 
     self.__database.commit()
     print "successfully upgraded database schema"
+
+  @staticmethod
+  def schema_version( database, default_version = None ):
+    try:
+      schema_version = database.select_one( tuple, "select * from schema_version;" );
+    # if there's no schema version table, then use the default version given. if there's no default
+    # version, then assume the from_version is 1.5.4, which was the last version not to include a
+    # schema_version table
+    except:
+      database.rollback()
+      schema_version = default_version or ( 1, 5, 4 )
+
+      database.execute( "create table schema_version ( major numeric, minor numeric, release numeric );", commit = False );
+      database.execute( "insert into schema_version values ( %s, %s, %s );" % schema_version, commit = False );
+
+    return schema_version
 
   def apply_schema_delta( self, version, filename ):
     """
