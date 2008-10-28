@@ -20,6 +20,8 @@ class Forum_page( Product_page ):
       Div(
         P(
           A( u"start a new discussion", href = u"/forums/%s/create_thread" % forum_name ),
+          u" | ",
+          A( u"all forums", href = u"/forums/" ),
           class_ = u"small_text",
         ),
         [ Div(
