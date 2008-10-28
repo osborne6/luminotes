@@ -58,7 +58,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             class_ = u"link_area_item",
-          ) or ( updates_path and rate_plan.get( u"notebook_sharing" ) and Div(
+          ) or ( updates_path and rate_plan.get( u"notebook_sharing" ) and ( not forum_tag ) and Div(
             A(
               u"subscribe to rss",
               href = updates_path,
