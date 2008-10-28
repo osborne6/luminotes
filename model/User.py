@@ -182,7 +182,7 @@ class User( Persistent ):
       where
         user_notebook.user_id = %s%s%s%s%s%s and
         user_notebook.notebook_id = notebook_current.id
-      order by user_notebook.rank;
+      order by user_notebook.rank, notebook_current.revision;
       """ % ( tag_tables, quote( self.object_id ), parents_only_clause, undeleted_only_clause,
               read_write_clause, tag_clause, notebook_id_clause )
 

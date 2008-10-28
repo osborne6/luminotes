@@ -108,13 +108,15 @@ class Forum( object ):
     if anonymous is None:
       raise Access_error()
 
-    # TODO: this needs to sort by either thread/note creation or modification date
     threads = self.__database.select_many(
       Notebook,
       anonymous.sql_load_notebooks(
         parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name
       )
     )
+
+    # put threads in reverse chronological order by creation date
+    threads.reverse()
 
     # if there are no matching threads, then this forum doesn't exist
     if len( threads ) == 0:
