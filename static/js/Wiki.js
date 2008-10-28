@@ -317,7 +317,15 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
   if ( this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
-    connect( "newNote", "onclick", this, "create_blank_editor" );
+
+    if ( this.notebook.read_write == NOTEBOOK_READ_WRITE ||
+         ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES &&
+           this.user.username && this.user.username != "anonymous" )
+    )
+      connect( "newNote", "onclick", this, "create_blank_editor" );
+    else
+      connect( "newNote", "onclick", function( event ) { self.display_message( 'Please login first. No account? Click "sign up".' ) } );
+
     connect( "createLink", "onclick", this, "toggle_link_button" );
     if ( this.notebook.read_write == NOTEBOOK_READ_WRITE )
       connect( "attachFile", "onclick", this, "toggle_attach_button" );
@@ -748,7 +756,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     read_write = true;
   else if ( read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
     own_notes_only = true;
-    if ( user_id == this.user.object_id )
+    if ( user_id == this.user.object_id && this.user.username && this.user.username != "anonymous" )
       read_write = true;
     else
       read_write = false;

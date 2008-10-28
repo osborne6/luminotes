@@ -232,6 +232,14 @@
   margin-top: 1em;
 }
 
+.forum_threads {
+  text-align: left;
+  width: 500px;
+  margin: 0 auto;
+  margin-top: 1em;
+  line-height: 200%;
+}
+
 .forum_title {
   font-weight: bold;
   font-size: 105%;

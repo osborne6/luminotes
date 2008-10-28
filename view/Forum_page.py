@@ -18,12 +18,16 @@ class Forum_page( Product_page ):
         H1( full_forum_name ),
       ),
       Div(
+        P(
+          A( u"start a new discussion", href = u"/forums/%s/create_thread" % forum_name ),
+          class_ = u"small_text",
+        ),
         [ Div(
           A(
             thread.name,
-            href = u"/forums/threads/%s" % thread.object_id,
+            href = u"/forums/%s/%s" % ( forum_name, thread.object_id ),
           ),
         ) for thread in threads ],
-        class_ = u"forums_text", 
+        class_ = u"forum_threads", 
       ),
     )
