@@ -27,6 +27,10 @@ class Note_tree_area( Div ):
           ),
           id = u"note_tree_area_title",
         ) or None,
+        forum_tag and Div(
+          A( u"%s forum" % forum_name, href = "/forums/%s" % forum_name ),
+          class_ = u"link_area_item",
+        ) or None,
         ( not forum_tag ) and self.make_tree(
           [ self.make_item(
             title = note.title,
