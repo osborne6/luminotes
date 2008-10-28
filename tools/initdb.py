@@ -47,6 +47,8 @@ class Initializer( object ):
     if desktop is True:
       self.create_desktop_user()
 
+    self.database.commit()
+
     version = Schema_upgrader.version_string_to_tuple( VERSION )
     Schema_upgrader.schema_version( database, default_version = version )
 
