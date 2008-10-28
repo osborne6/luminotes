@@ -1,6 +1,6 @@
 DROP VIEW luminotes_user_current;
 DROP TABLE luminotes_user;
-DROP VIEW luminoes_group_current;
+DROP VIEW luminotes_group_current;
 DROP TABLE luminotes_group;
 DROP VIEW note_current;
 DROP TABLE note;
@@ -15,4 +15,5 @@ DROP TABLE file;
 DROP TABLE tag;
 DROP TABLE tag_notebook;
 DROP TABLE tag_note;
+DROP TABLE schema_version;
 DROP FUNCTION drop_html_tags( text ); 
