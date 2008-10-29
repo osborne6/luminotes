@@ -15,7 +15,7 @@ class Session_storage( PostgreSQLStorage ):
 
   def load( self, *args, **kwargs ):
     try:
-      PostgreSQLStorage.load( self, *args, **kwargs )
+      return PostgreSQLStorage.load( self, *args, **kwargs )
     # catch "ProgrammingError: no results to fetch" from self.cursor.fetchall()
     except ProgrammingError:
       return None
