@@ -1,4 +1,5 @@
 import cherrypy
+from  psycopg2 import ProgrammingError
 from cherrypy.filters.sessionfilter import PostgreSQLStorage
 
 
@@ -11,6 +12,13 @@ class Session_storage( PostgreSQLStorage ):
   def __init__( self ):
     self.db = cherrypy.root.database.get_connection()
     self.cursor = self.db.cursor()
+
+  def load( self, *args, **kwargs ):
+    try:
+      PostgreSQLStorage.load( self, *args, **kwargs )
+    # catch "ProgrammingError: no results to fetch" from self.cursor.fetchall()
+    except ProgrammingError:
+      return None
 
   def save( self, *args, **kwargs ):
     PostgreSQLStorage.save( self, *args, **kwargs )
