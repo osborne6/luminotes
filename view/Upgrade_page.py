@@ -1,13 +1,14 @@
 from Product_page import Product_page
-from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script, H4, B
+from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script, H4, B, Script
 
 
 class Upgrade_page( Product_page ):
+  HIDDEN_PLAN_THRESHOLD = 3
+
   def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, rate_plans, unsubscribe_button ):
     MEGABYTE = 1024 * 1024
     rate_plans = list( rate_plans )
     user_plan = rate_plans[ user.rate_plan ]
-    rate_plans.reverse() # show rate plans highest to lowest
 
     Product_page.__init__(
       self,
@@ -50,8 +51,8 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   plan[ u"designed_for" ],
-                  class_ = u"feature_value",
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -60,8 +61,8 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br>%s users" % plan[ u"included_users" ],
-                  class_ = u"feature_value",
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -82,7 +83,8 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   plan[ u"storage_quota_bytes" ] and "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ) or u"unlimited",
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -103,7 +105,8 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -123,7 +126,8 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -144,7 +148,8 @@ class Upgrade_page( Product_page ):
                 [ Td(
                   plan[ u"notebook_sharing" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -166,7 +171,8 @@ class Upgrade_page( Product_page ):
                 [ Td(
                   plan[ u"notebook_collaboration" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -190,7 +196,8 @@ class Upgrade_page( Product_page ):
                 [ Td(
                   plan[ u"user_admin" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                ) for plan in rate_plans ],
+                  class_ = u"feature_value" + self.displayed( index ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 Td(
@@ -207,6 +214,25 @@ class Upgrade_page( Product_page ):
               id = u"upgrade_table",
             ),
             class_ = u"upgrade_table_area",
+          ),
+
+          Script(
+            """
+            function toggle_plans() {
+              var nodes = getElementsByTagAndClassName( null, "hidden_plans" );
+              for ( var i in nodes ) { var node = nodes[ i ]; toggleElementClass( "undisplayed", node ); }
+
+              toggleElementClass( "undisplayed", "more_plans_link" );
+              toggleElementClass( "undisplayed", "fewer_plans_link" );
+              return false;
+            }
+            """,
+            type = u"text/javascript",
+          ),
+          Div(
+            A( "Show me plans for teams.", id = "more_plans_link", href = u"#", onclick = u"return toggle_plans();" ),
+            A( "Show me fewer plans.", id = "fewer_plans_link", class_ = u"undisplayed", href = u"#", onclick = u"return toggle_plans();" ),
+            class_ = u"small_text",
           ),
 
           user and user.username not in ( u"anonymous", None ) and P(
@@ -373,12 +399,6 @@ class Upgrade_page( Product_page ):
     )
 
   def fee_row( self, rate_plans, user, include_blank = True, yearly = False ):
-    last_index = len( rate_plans ) - 1
-    plan_list = []
-
-    for ( index, plan ) in enumerate( rate_plans ):
-      plan_list.append( ( last_index - index, plan ) )
-
     return Tr(
       include_blank and Th( u"&nbsp;" ) or None,
       [ Th(
@@ -406,6 +426,10 @@ class Upgrade_page( Product_page ):
           ),
           class_ = u"sign_up_button_area",
         ) or None,
-        class_ = u"plan_name",
-      ) for ( index, plan ) in plan_list ],
+        class_ = u"plan_name" + self.displayed( index, yearly ),
+      ) for ( index, plan ) in enumerate( rate_plans ) ],
     )
+
+  @staticmethod
+  def displayed( index, yearly = False ):
+    return ( index >= Upgrade_page.HIDDEN_PLAN_THRESHOLD and not yearly ) and " undisplayed hidden_plans" or ""
