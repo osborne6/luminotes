@@ -5,6 +5,11 @@
    new Luminotes release. This applies to all Luminotes products.
  * Added code to support Luminotes discussion forums.
  * Laid some of the foundational groundwork for future tags support.
+ * Made the subscription pricing page a little less confusing by hiding some
+   of the bigger plans by default.
+ * Fixed an occasional bug that caused unexpected logouts. The solution was
+   to move the session information into the database where it could be
+   properly locked.
 
 1.5.4: October 9, 2008
  * Fixed a visual bug in which clicking up or down to reorder your notebooks

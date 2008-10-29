@@ -28,3 +28,9 @@ ALTER TABLE ONLY tag_note ADD CONSTRAINT tag_note_pkey PRIMARY KEY (note_id, tag
 ALTER TABLE user_notebook ADD COLUMN own_notes_only boolean DEFAULT false;
 
 update user_notebook set rank = 0 from luminotes_user_current, notebook_current where user_notebook.user_id = luminotes_user_current.id and username = 'anonymous' and user_notebook.notebook_id = notebook_current.id and notebook_current.name = 'Luminotes'; 
+
+create table session (
+  id text,
+  data text,
+  expiration_time timestamp
+);

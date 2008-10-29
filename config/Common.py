@@ -1,4 +1,5 @@
 import cherrypy
+from controller.Session_storage import Session_storage
 
 
 MEGABYTE = 1024 * 1024
@@ -9,8 +10,7 @@ settings = {
     "server.socket_port": 8081,
     "server.environment": "production",
     "session_filter.on": True,
-    "session_filter.storage_type": "file",
-    "session_filter.storage_path": "session",
+    "session_filter.storage_class": Session_storage,
     "session_filter.timeout": 60 * 72, # 72 hours
     "session_filter.clean_up_delay": 5,
     "encoding_filter.on": True,

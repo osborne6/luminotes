@@ -141,6 +141,13 @@ CREATE TABLE user_notebook (
     own_notes_only boolean DEFAULT false
 );
 ALTER TABLE public.user_notebook OWNER TO luminotes;
+CREATE TABLE session (
+    id text,
+    data text,
+    expiration_time timestamp
+);
+ALTER TABLE public.session OWNER TO luminotes;
+
 
 ALTER TABLE ONLY file
     ADD CONSTRAINT file_pkey PRIMARY KEY (id);

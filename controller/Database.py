@@ -152,7 +152,7 @@ class Database( object ):
     except ImportError:
       return None
 
-  def __get_connection( self ):
+  def get_connection( self ):
     if self.__connection:
       return self.__connection
     else:
@@ -178,7 +178,7 @@ class Database( object ):
     @type commit: bool
     @param commit: True to automatically commit after the save
     """
-    connection = self.__get_connection()
+    connection = self.get_connection()
     cursor = connection.cursor()
 
     cursor.execute( obj.sql_exists() )
@@ -202,7 +202,7 @@ class Database( object ):
 
   @synchronized
   def commit( self ):
-    connection = self.__get_connection()
+    connection = self.get_connection()
     connection.commit()
 
     # save any pending saves to the cache
@@ -216,7 +216,7 @@ class Database( object ):
 
   @synchronized
   def rollback( self ):
-    connection = self.__get_connection()
+    connection = self.get_connection()
     connection.rollback()
 
   def load( self, Object_type, object_id, revision = None ):
@@ -276,7 +276,7 @@ class Database( object ):
       if obj:
         return obj
 
-    connection = self.__get_connection()
+    connection = self.get_connection()
     cursor = connection.cursor()
 
     cursor.execute( sql_command )
@@ -308,7 +308,7 @@ class Database( object ):
     @rtype: list of Object_type
     @return: loaded objects
     """
-    connection = self.__get_connection()
+    connection = self.get_connection()
     cursor = connection.cursor()
 
     cursor.execute( sql_command )
@@ -343,7 +343,7 @@ class Database( object ):
     @type commit: bool
     @param commit: True to automatically commit after the command
     """
-    connection = self.__get_connection()
+    connection = self.get_connection()
     cursor = connection.cursor()
 
     cursor.execute( sql_command )
@@ -361,7 +361,7 @@ class Database( object ):
     @type commit: bool
     @param commit: True to automatically commit after the command
     """
-    connection = self.__get_connection()
+    connection = self.get_connection()
     cursor = connection.cursor()
 
     if self.__backend == Persistent.SQLITE_BACKEND:
@@ -411,7 +411,7 @@ class Database( object ):
     @type commit: bool
     @param commit: True to automatically commit after storing the next id
     """
-    connection = self.__get_connection()
+    connection = self.get_connection()
     cursor = connection.cursor()
 
     # generate a random id, but on the off-chance that it collides with something else already in
