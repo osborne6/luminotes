@@ -769,7 +769,7 @@ class Notebooks( object ):
       new_revision = new_revision,
       previous_revision = previous_revision,
       storage_bytes = user and user.storage_bytes or 0,
-      rank = note.rank,
+      rank = float( note.rank ),
     )
 
   @expose( view = Json )
