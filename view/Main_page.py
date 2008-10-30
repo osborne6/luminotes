@@ -211,7 +211,7 @@ class Main_page( Page ):
               ),
               self.page_navigation( notebook_path, len( notes ), total_notes_count, start, count ),
               ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and user.username and user.username != u"anonymous" ) and \
-                P( u"When you're done with your comment, click the save button to publish it.", class_ = u"small_text" ) or None,
+                P( u"If you write a comment, click the save button to publish it.", class_ = u"small_text" ) or None,
               Div(
                 Span( id = u"notes_top" ),
                 id = u"notes",
