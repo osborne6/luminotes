@@ -173,12 +173,13 @@ class Notebook( Persistent ):
       select
         note_current.id, note_current.revision, note_current.title, note_current.contents,
         note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
-        note_current.rank, note_current.user_id, note_creation.revision as creation
+        note_current.rank, note_current.user_id, luminotes_user_current.username, note_creation.revision as creation
       from
-        note_current,
+        note_current, luminotes_user_current,
         ( select id, min( revision ) as revision from note where notebook_id = %s group by id ) as note_creation
       where
-        notebook_id = %s and note_current.id = note_creation.id
+        notebook_id = %s and note_current.id = note_creation.id and
+        note_current.user_id = luminotes_user_current.id
       order by
         creation %s
       limit %d offset %d;

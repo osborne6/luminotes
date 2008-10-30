@@ -10,7 +10,8 @@ class Note( Persistent ):
   TITLE_PATTERN = re.compile( u"<h3>(.*?)</h3>", flags = re.IGNORECASE )
 
   def __init__( self, object_id, revision = None, title = None, contents = None, notebook_id = None,
-                startup = None, deleted_from_id = None, rank = None, user_id = None, creation = None, summary = None ):
+                startup = None, deleted_from_id = None, rank = None, user_id = None,
+                username = None, creation = None, summary = None ):
     """
     Create a new note with the given id and contents.
 
@@ -32,6 +33,8 @@ class Note( Persistent ):
     @param rank: indicates numeric ordering of this note in relation to other startup notes
     @type user_id: unicode or NoneType
     @param user_id: id of the user who most recently updated this note object (optional)
+    @type username: unicode or NoneType
+    @param username: username of the user who most recently updated this note object (optional)
     @type creation: datetime or NoneType
     @param creation: creation timestamp of the object (optional, defaults to None)
     @type summary: unicode or NoneType
@@ -48,10 +51,12 @@ class Note( Persistent ):
     self.__deleted_from_id = deleted_from_id
     self.__rank = rank
     self.__user_id = user_id
+    self.__username = username
     self.__creation = creation
 
   @staticmethod
-  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None, user_id = None, creation = None, summary = None ):
+  def create( object_id, contents = None, notebook_id = None, startup = None, rank = None,
+              user_id = None, username = None, creation = None, summary = None ):
     """
     Convenience constructor for creating a new note.
 
@@ -67,6 +72,8 @@ class Note( Persistent ):
     @param rank: indicates numeric ordering of this note in relation to other startup notes
     @type user_id: unicode or NoneType
     @param user_id: id of the user who most recently updated this note object (optional)
+    @type username: unicode or NoneType
+    @param username: username of the user who most recently updated this note object (optional)
     @type creation: datetime or NoneType
     @param creation: creation timestamp of the object (optional, defaults to None)
     @type summary: unicode or NoneType
@@ -74,7 +81,11 @@ class Note( Persistent ):
     @rtype: Note
     @return: newly constructed note
     """
-    note = Note( object_id, notebook_id = notebook_id, startup = startup, rank = rank, user_id = user_id, creation = creation, summary = summary )
+    note = Note(
+      object_id, notebook_id = notebook_id, startup = startup, rank = rank, user_id = user_id,
+      username = username, creation = creation, summary = summary
+    )
+
     note.contents = contents
 
     return note
@@ -175,6 +186,7 @@ class Note( Persistent ):
       title = self.__title,
       deleted_from_id = self.__deleted_from_id,
       user_id = self.__user_id,
+      username = self.__username,
       creation = self.__creation,
     ) )
 
@@ -188,4 +200,5 @@ class Note( Persistent ):
   deleted_from_id = property( lambda self: self.__deleted_from_id, __set_deleted_from_id )
   rank = property( lambda self: self.__rank, __set_rank )
   user_id = property( lambda self: self.__user_id, __set_user_id )
+  username = property( lambda self: self.__username )
   creation = property( lambda self: self.__creation )

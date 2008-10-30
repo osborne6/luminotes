@@ -286,7 +286,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
         startup_note.revision,
         startup_note.creation,
         this.notebook.read_write, false, focus, null,
-        startup_note.user_id
+        startup_note.user_id,
+        startup_note.username
       );
 
       if ( startup_note.title )
@@ -312,7 +313,8 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       note.revision,
       note.creation,
       read_write, false, focus, null,
-      note.user_id
+      note.user_id,
+      note.username
     );
     focus = false;
   }
@@ -477,7 +479,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
     }
   }
 
-  var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true, null, this.user.object_id );
+  var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true, null, this.user.object_id, this.user.username );
   this.increment_total_notes_count();
   this.blank_editor_id = editor.id;
   signal( this, "note_added", editor );
@@ -732,6 +734,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var note_text = result.note.contents;
     var deleted_from_id = result.note.deleted;
     var user_id = result.note.user_id;
+    var username = result.note.username;
   } else {
     // if the title looks like a URL, then make it a link to an external site
     if ( /^\w+:\/\//.test( note_title ) ) {
@@ -747,6 +750,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var actual_revision = null;
     var actual_creation = null;
     var user_id = null;
+    var username = null;
     this.increment_total_notes_count();
   }
 
@@ -756,7 +760,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var read_write = this.notebook.read_write;
 
   var self = this;
-  var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false, position_after, user_id );
+  var editor = this.create_editor( id, note_text, deleted_from_id, actual_revision, actual_creation, read_write, true, false, position_after, user_id, username );
   if ( !requested_revision )
     connect( editor, "init_complete", function () { signal( self, "note_added", editor ); } );
   id = editor.id;
@@ -766,7 +770,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
 }
 
-Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after, user_id ) {
+Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after, user_id, username ) {
   var self = this;
   var dirty = false;
   var own_notes_only = false;
@@ -809,8 +813,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   if ( creation ) {
-    // FIXME: should be username, not user_id
-    note_text = this.make_byline( user_id, creation ) + note_text;
+    note_text = this.make_byline( username, creation ) + note_text;
   }
 
   var startup = this.startup_notes[ id ];
@@ -1035,6 +1038,9 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
 }
 
 Wiki.prototype.make_byline = function ( username, creation ) {
+  if ( username == "anonymous" )
+    username = "admin";
+
   if ( username )
     var by = ' by ' + username;
   else

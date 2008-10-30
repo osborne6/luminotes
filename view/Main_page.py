@@ -62,6 +62,7 @@ class Main_page( Page ):
       u"revision" : startup_note.revision,
       u"deleted_from_id" : startup_note.deleted_from_id,
       u"user_id": startup_note.user_id,
+      u"username": startup_note.username,
     } for startup_note in startup_notes ]
 
     note_dicts = [ {
@@ -69,6 +70,7 @@ class Main_page( Page ):
       u"revision" : note.revision,
       u"deleted_from_id" : note.deleted_from_id,
       u"user_id": note.user_id,
+      u"username": note.username,
       u"creation" : note.creation,
     } for note in notes ]
 
