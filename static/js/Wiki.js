@@ -808,16 +808,9 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
       '</form>' + note_text;
   }
 
-  if ( !read_write && creation ) {
-    var short_creation = this.brief_revision( creation );
-    if ( user_id )
-      var by = ' by ' + user_id;
-    else
-      var by = '';
-
-    note_text = '<p class="small_text">Posted' + by + ' on ' +  short_creation + 
-                ' | <a href="' + window.location.protocol + '//' + window.location.host + window.location.pathname +
-                '?note_id=' + id + '" target="_top">permalink</a></p>' + note_text;
+  if ( creation ) {
+    // FIXME: should be username, not user_id
+    note_text = this.make_byline( user_id, creation ) + note_text;
   }
 
   var startup = this.startup_notes[ id ];
@@ -1005,8 +998,17 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
 }
 
 Wiki.prototype.editor_focused = function ( editor, synchronous ) {
-  if ( editor )
+  if ( editor ) {
     addElementClass( editor.iframe, "focused_note_frame" );
+
+    if ( editor.document && editor.read_write ) {
+      var byline = getFirstElementByTagAndClassName( "p", "byline", editor.document );
+      if ( byline ) {
+        removeElement( byline );
+        editor.resize();
+      }
+    }
+  }
 
   if ( this.focused_editor && this.focused_editor != editor ) {
     this.clear_pulldowns();
@@ -1030,6 +1032,20 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   } else {
     this.focused_editor = editor;
   }
+}
+
+Wiki.prototype.make_byline = function ( username, creation ) {
+  if ( username )
+    var by = ' by ' + username;
+  else
+    var by = '';
+
+  if ( creation )
+    var timestamp = ' on ' + this.brief_revision( creation );
+  else
+    var timestamp = '';
+
+  return '<p class="byline small_text">Posted' + by + timestamp;
 }
 
 Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
