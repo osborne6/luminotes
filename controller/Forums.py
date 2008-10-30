@@ -1,9 +1,10 @@
 import cherrypy
 from model.User import User
 from model.Notebook import Notebook
+from model.Note import Note
 from model.Tag import Tag
 from Expose import expose
-from Validate import validate, Valid_string
+from Validate import validate, Valid_string, Valid_int
 from Database import Valid_id, end_transaction
 from Users import grab_user_id
 from Notebooks import Notebooks
@@ -64,6 +65,8 @@ class Forums( object ):
 
 
 class Forum( object ):
+  DEFAULT_THREAD_NAME = u"new discussion"
+
   def __init__( self, database, notebooks, users, name ):
     """
     Create a new Forum object, representing a single forum.
@@ -108,12 +111,13 @@ class Forum( object ):
     if anonymous is None:
       raise Access_error()
 
-    threads = self.__database.select_many(
+    # load a list of the threads in this forum, excluding those with a default name
+    threads = [ thread for thread in self.__database.select_many(
       Notebook,
       anonymous.sql_load_notebooks(
         parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name
       )
-    )
+    ) if thread.name != self.DEFAULT_THREAD_NAME ]
 
     # put threads in reverse chronological order by creation date
     threads.reverse()
@@ -126,9 +130,40 @@ class Forum( object ):
     result[ "threads" ] = threads
     return result
 
-  # default() is just an alias for Notebooks.default()
-  def default( self, *args, **kwargs ):
-    return self.__notebooks.default( *args, **kwargs )
+  @expose( view = Main_page )
+  @end_transaction
+  @grab_user_id
+  @validate(
+    thread_id = Valid_id(),
+    start = Valid_int( min = 0 ),
+    count = Valid_int( min = 1, max = 50 ),
+    note_id = Valid_id( none_okay = True ),
+    user_id = Valid_id( none_okay = True ),
+  )
+  def default( self, thread_id, start = 0, count = 10, note_id = None, user_id = None ):
+    """
+    Provide the information necessary to display a forum thread.
+
+    @type thread_id: unicode
+    @param thread_id: id of thread notebook to display
+    @type start: unicode or NoneType
+    @param start: index of recent note to start with (defaults to 0, the most recent note)
+    @type count: int or NoneType
+    @param count: number of recent notes to display (defaults to 10 notes)
+    @type note_id: unicode or NoneType
+    @param note_id: id of single note to load (optional)
+    @rtype: unicode
+    @return: rendered HTML page
+    @raise Validation_error: one of the arguments is invalid
+    """
+    result = self.__users.current( user_id )
+    result.update( self.__notebooks.old_notes( thread_id, start, count, user_id ) )
+
+    # if a single note was requested, just return that one note
+    if note_id:
+      result[ "notes" ] = [ note for note in result[ "notes" ] if note.object_id == note_id ]
+
+    return result
 
   default.exposed = True
 
@@ -140,7 +175,8 @@ class Forum( object ):
   )
   def create_thread( self, user_id ):
     """
-    Create a new forum post and give it a default name. Then redirect to that new post thread.
+    Create a new forum thread with a blank post, and give the thread a default name. Then redirect
+    to that new thread.
 
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
@@ -162,7 +198,7 @@ class Forum( object ):
 
     # create the new notebook thread
     thread_id = self.__database.next_id( Notebook, commit = False )
-    thread = Notebook.create( thread_id, u"new forum post", user_id = user.object_id )
+    thread = Notebook.create( thread_id, self.DEFAULT_THREAD_NAME, user_id = user.object_id )
     self.__database.save( thread, commit = False )
 
     # associate the forum tag with the new notebook thread
@@ -177,6 +213,11 @@ class Forum( object ):
       anonymous.sql_save_notebook( thread_id, read_write = True, owner = False, own_notes_only = True ),
       commit = False,
     )
+
+    # create a blank post in which the user can  start off the thread
+    note_id = self.__database.next_id( Notebook, commit = False )
+    note = Note.create( note_id, u"<h3>", notebook_id = thread_id, startup = True, rank = 0, user_id = user_id )
+    self.__database.save( note, commit = False )
 
     self.__database.commit()
 

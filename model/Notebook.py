@@ -151,7 +151,7 @@ class Notebook( Persistent ):
     """
     return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
 
-  def sql_load_recent_notes( self, start = 0, count = 10 ):
+  def sql_load_recent_notes( self, start = 0, count = 10, reverse = False ):
     """
     Return a SQL string to load a list of the most recently created notes within this notebook.
 
@@ -159,7 +159,15 @@ class Notebook( Persistent ):
     @param start: index of recent note to start with (defaults to 0, the most recent note)
     @type count: int or NoneType
     @param count: number of recent notes to return (defaults to 10 notes)
+    @type reverse: bool or NoneType
+    @param reverse: whether to reverse the chronological order of notes. so if reverse is True,
+                    the oldest notes are returned instead of the newest (defaults to False)
     """
+    if reverse:
+      ordering = u"asc"
+    else:
+      ordering = u"desc"
+
     return \
       """
       select
@@ -172,9 +180,9 @@ class Notebook( Persistent ):
       where
         notebook_id = %s and note_current.id = note_creation.id
       order by
-        creation desc
+        creation %s
       limit %d offset %d;
-      """ % ( quote( self.object_id ), quote( self.object_id ), count, start )
+      """ % ( quote( self.object_id ), quote( self.object_id ), ordering, count, start )
 
   def sql_load_note_by_id( self, note_id ):
     """

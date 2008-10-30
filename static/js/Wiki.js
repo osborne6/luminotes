@@ -27,7 +27,7 @@ function Wiki( invoker ) {
   this.font_size = null;
   this.small_toolbar = false;
   this.large_toolbar_bottom = 0;
-  this.autosaver = Autosaver( this );
+  this.autosaver = null;
 
   var total_notes_count_node = getElement( "total_notes_count" );
   if ( total_notes_count_node )
@@ -68,6 +68,10 @@ function Wiki( invoker ) {
       this.display_message( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
     else if ( beta_agent )
       this.display_message( "Luminotes support for your web browser (" + beta_agent + ") is currently in beta. If you encounter any problems, please contact support so that they can be fixed!" );
+  }
+
+  if ( this.notebook.read_write != NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+    this.autosaver = Autosaver( this );
   }
 
   var deleted_id = getElement( "deleted_id" ).value;
@@ -296,13 +300,18 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
   for ( var i in current_notes ) {
     var note = current_notes[ i ];
 
+    if ( !note_read_write )
+      var read_write = NOTEBOOK_READ_ONLY;
+    else
+      var read_write = this.notebook.read_write;
+
     this.create_editor(
       note.object_id,
       getElement( "static_note_" + note.object_id ).innerHTML,
       note.deleted_from_id,
       note.revision,
       note.creation,
-      this.notebook.read_write != NOTEBOOK_READ_ONLY && note_read_write, false, focus, null,
+      read_write, false, focus, null,
       note.user_id
     );
     focus = false;
@@ -317,15 +326,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
   if ( this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
     connect( window, "onunload", function ( event ) { self.editor_focused( null, true ); } );
-
-    if ( this.notebook.read_write == NOTEBOOK_READ_WRITE ||
-         ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES &&
-           this.user.username && this.user.username != "anonymous" )
-    )
-      connect( "newNote", "onclick", this, "create_blank_editor" );
-    else
-      connect( "newNote", "onclick", function( event ) { self.display_message( 'Please login first. No account? Click "sign up".' ) } );
-
+    connect( "newNote", "onclick", this, "create_blank_editor" );
     connect( "createLink", "onclick", this, "toggle_link_button" );
     if ( this.notebook.read_write == NOTEBOOK_READ_WRITE )
       connect( "attachFile", "onclick", this, "toggle_attach_button" );
@@ -451,6 +452,12 @@ Wiki.prototype.background_clicked = function ( event ) {
 Wiki.prototype.create_blank_editor = function ( event ) {
   if ( event ) event.stop();
 
+  if ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES &&
+       ( !this.user.username || this.user.username == "anonymous" ) ) {
+    this.display_message( 'Please login first. No account? Click "sign up".' );
+    return;
+  }
+
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -565,6 +572,13 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       }
     }
 
+    // if the notebook's read_write is NOTEBOOK_READ_WRITE_FOR_OWN_NOTES, then instead of opening
+    // a new post, display an error message
+    if ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+      this.display_message( "No such forum post! (A forum link must point to another post in this discussion or an external web page.)" );
+      return;
+    }
+
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
         "notebook_id": this.notebook_id,
@@ -573,6 +587,13 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       },
       function ( result ) { self.parse_loaded_editor( result, note_title, revision, link, position_after ); }
     );
+    return;
+  }
+
+  // if the notebook's read_write is NOTEBOOK_READ_WRITE_FOR_OWN_NOTES, maintain displayed note
+  // order by opening an existing note on its own page
+  if ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+    window.location = window.location.protocol + '//' + window.location.host + window.location.pathname + '?note_id=' + note_id;
     return;
   }
 
@@ -789,7 +810,14 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 
   if ( !read_write && creation ) {
     var short_creation = this.brief_revision( creation );
-    note_text = '<p>' + short_creation + ' | <a href="/blog?note_id=' + id + '" target="_top">permalink</a></p>' + note_text;
+    if ( user_id )
+      var by = ' by ' + user_id;
+    else
+      var by = '';
+
+    note_text = '<p class="small_text">Posted' + by + ' on ' +  short_creation + 
+                ' | <a href="' + window.location.protocol + '//' + window.location.host + window.location.pathname +
+                '?note_id=' + id + '" target="_top">permalink</a></p>' + note_text;
   }
 
   var startup = this.startup_notes[ id ];
@@ -1559,6 +1587,10 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
         self.startup_notes[ editor.id ] = true;
       else if ( self.startup_notes[ editor.id ] )
         delete self.startup_notes[ editor.id ];
+
+      // special case to rename a NOTEBOOK_READ_WRITE_FOR_OWN_NOTES when its first note is renamed
+      if ( result.rank == 0 && self.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES )
+        self.end_notebook_rename( editor.title, true );
 
       if ( callback )
         callback();
@@ -2726,8 +2758,9 @@ Wiki.prototype.start_notebook_rename = function () {
   notebook_name_field.select();
 }
 
-Wiki.prototype.end_notebook_rename = function () {
-  var new_notebook_name = getElement( "notebook_name_field" ).value;
+Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_rename_on_click ) {
+  if ( !new_notebook_name )
+    new_notebook_name = getElement( "notebook_name_field" ).value;
 
   // if the new name is blank or reserved, don't actually rename the notebook
   if ( /^\s*$/.test( new_notebook_name ) )
@@ -2739,24 +2772,32 @@ Wiki.prototype.end_notebook_rename = function () {
   }
 
   // rename the notebook in the header
-  var notebook_header_name = createDOM(
-    "span",
-    { "id": "notebook_header_name", "title": "Rename this notebook." },
-    createDOM( "strong", {}, new_notebook_name )
-  );
-  replaceChildNodes( "notebook_header_area", notebook_header_name );
+  if ( prevent_rename_on_click ) {
+    var notebook_header_name = createDOM(
+      "span", {},
+      createDOM( "strong", {}, new_notebook_name )
+    );
+    replaceChildNodes( "notebook_header_area", notebook_header_name );
+  } else {
+    var notebook_header_name = createDOM(
+      "span",
+      { "id": "notebook_header_name", "title": "Rename this notebook." },
+      createDOM( "strong", {}, new_notebook_name )
+    );
+    replaceChildNodes( "notebook_header_area", notebook_header_name );
 
-  var self = this;
-  connect( notebook_header_name, "onclick", function ( event ) {
-    self.start_notebook_rename();
-    event.stop();
-  } );
+    var self = this;
+    connect( notebook_header_name, "onclick", function ( event ) {
+      self.start_notebook_rename();
+      event.stop();
+    } );
+  }
 
   // rename the notebook link on the right side of the page
-  replaceChildNodes(
-    "notebook_" + this.notebook.object_id,
-    document.createTextNode( new_notebook_name )
-  );
+  var notebook_link = getElement( "notebook_" + this.notebook.object_id );
+  if ( notebook_link ) {
+    replaceChildNodes( notebook_link, document.createTextNode( new_notebook_name ) );
+  }
 
   // rename the notebook within the rss link (if any)
   var notebook_rss_link = getElement( "notebook_rss_link" );

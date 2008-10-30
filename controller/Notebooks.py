@@ -656,7 +656,7 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     note_id = Valid_id(),
-    contents = Valid_string( min = 1, max = 25000, escape_html = False ),
+    contents = Valid_string( min = 1, max = 50000, escape_html = False ),
     startup = Valid_bool(),
     previous_revision = Valid_revision( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
@@ -685,7 +685,8 @@ class Notebooks( object ):
     @return: {
       'new_revision': User_revision of saved note, or None if nothing was saved
       'previous_revision': User_revision immediately before new_revision, or None if the note is new
-      'storage_bytes': current storage usage by user,
+      'storage_bytes': current storage usage by user
+      'rank': integer rank of the saved note, or None
     }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
@@ -768,6 +769,7 @@ class Notebooks( object ):
       new_revision = new_revision,
       previous_revision = previous_revision,
       storage_bytes = user and user.storage_bytes or 0,
+      rank = note.rank,
     )
 
   @expose( view = Json )
@@ -1332,6 +1334,13 @@ class Notebooks( object ):
     @raise Validation_error: one of the arguments is invalid
     """
     notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, owner = True )
+
+    # special case to allow the creator of a READ_WRITE_FOR_OWN_NOTES notebook to rename it
+    if notebook is None:
+      notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
+      if not ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and notebook.user_id == user_id ):
+        raise Access_error()
+
     user = self.__database.load( User, user_id )
 
     if not user or not notebook:
@@ -1670,7 +1679,7 @@ class Notebooks( object ):
 
   def recent_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
     """
-    Return the given notebook's recently updated notes in reverse chronological order by creation
+    Return the given notebook's recently created notes in reverse chronological order by creation
     time.
 
     @type notebook_id: unicode
@@ -1690,11 +1699,42 @@ class Notebooks( object ):
     if notebook is None:
       raise Access_error()
 
-    recent_notes = self.__database.select_many( Note, notebook.sql_load_recent_notes( start, count ) )
+    notes = self.__database.select_many( Note, notebook.sql_load_recent_notes( start, count ) )
 
     result = self.__users.current( user_id )
     result.update( self.contents( notebook_id, user_id = user_id ) )
-    result[ "notes" ] = recent_notes
+    result[ "notes" ] = notes
+    result[ "start" ] = start
+    result[ "count" ] = count
+
+    return result
+
+  def old_notes( self, notebook_id, start = 0, count = 10, user_id = None ):
+    """
+    Return the given notebook's oldest notes in chronological order by creation time.
+
+    @type notebook_id: unicode
+    @param notebook_id: id of the notebook containing the notes
+    @type start: unicode or NoneType
+    @param start: index of recent note to start with (defaults to 0, the oldest note)
+    @type count: int or NoneType
+    @param count: number of notes to return (defaults to 10 notes)
+    @type user_id: unicode or NoneType
+    @param user_id: id of current logged-in user (if any)
+    @rtype: dict
+    @return: data for Main_page() constructor
+    @raise Access_error: the current user doesn't have access to the given notebook or note
+    """
+    notebook = self.__users.load_notebook( user_id, notebook_id )
+
+    if notebook is None:
+      raise Access_error()
+
+    notes = self.__database.select_many( Note, notebook.sql_load_recent_notes( start, count, reverse = True ) )
+
+    result = self.__users.current( user_id )
+    result.update( self.contents( notebook_id, user_id = user_id ) )
+    result[ "notes" ] = notes
     result[ "start" ] = start
     result[ "count" ] = count
 
@@ -1813,7 +1853,7 @@ class Notebooks( object ):
             else:
               break
 
-      contents = Valid_string( max = 25000, escape_html = plaintext, require_link_target = True )( row[ content_column ] )
+      contents = Valid_string( max = 50000, escape_html = plaintext, require_link_target = True )( row[ content_column ] )
 
       if plaintext:
         contents = contents.replace( u"\n", u"<br />" )

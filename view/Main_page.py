@@ -68,6 +68,7 @@ class Main_page( Page ):
       u"object_id" : note.object_id,
       u"revision" : note.revision,
       u"deleted_from_id" : note.deleted_from_id,
+      u"user_id": note.user_id,
       u"creation" : note.creation,
     } for note in notes ]
 
@@ -89,6 +90,8 @@ class Main_page( Page ):
     else:
       updates_path = None
 
+    forum_tags = [ tag for tag in notebook.tags if tag.name == u"forum" ]
+
     if notebook.name == u"Luminotes":
       notebook_path = u"/"
       updates_path = None   # no RSS feed for the main notebook
@@ -96,6 +99,9 @@ class Main_page( Page ):
       notebook_path = u"/guide"
     elif notebook.name == u"Luminotes blog":
       notebook_path = u"/blog"
+    elif forum_tags:
+      forum_tag = forum_tags[ 0 ]
+      notebook_path = u"/forums/%s/%s" % ( forum_tag.value, notebook.object_id )
     else:
       notebook_path = u"/notebooks/%s" % notebook.object_id
 
@@ -203,11 +209,14 @@ class Main_page( Page ):
               Div(
                 id = u"deleted_notebooks",
               ),
+              self.page_navigation( notebook_path, len( notes ), total_notes_count, start, count ),
+              ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES ) and \
+                Div( u"When you're done with your comment, click the save button to publish it.", class_ = u"small_text" ) or None,
               Div(
                 Span( id = u"notes_top" ),
                 id = u"notes",
               ),
-              ( notebook.read_write != Notebook.READ_ONLY ) and Div(
+              ( notebook.read_write == Notebook.READ_WRITE ) and Div(
                 id = u"blank_note_stub",
                 class_ = u"blank_note_stub_hidden_border",
               ) or None,
@@ -220,17 +229,7 @@ class Main_page( Page ):
                 u"document.getElementById( 'static_notes' ).style.display = 'none';",
                 type = u"text/javascript",
               ),
-              # make page navigation for those notebooks that require it (such as the blog)
-              ( start is not None and count is not None and len( notes ) > 1 ) and Div(
-                ( start > 0 ) and Div( A(
-                  u"previous page",
-                  href = "%s?start=%d&count=%d" % ( notebook_path, max( start - count, 0 ), count ),
-                ) ) or None,
-                ( start + count < total_notes_count ) and Div( A(
-                  u"next page",
-                  href = "%s?start=%d&count=%d" % ( notebook_path, min( start + count, total_notes_count - 1 ), count ),
-                ) ) or None,
-              ) or None,
+              self.page_navigation( notebook_path, len( notes ), total_notes_count, start, count, top = False ),
               id = u"notebook_background",
               corners = ( u"tl", ),
             ),
@@ -245,4 +244,46 @@ class Main_page( Page ):
         ),
         id = u"everything_area",
       ),
+    )
+
+  def page_navigation( self, notebook_path, displayed_notes_count, total_notes_count, start, notes_per_page, top = True ):
+    if start is None or notes_per_page is None:
+      return None
+
+    if displayed_notes_count == 1 and displayed_notes_count < total_notes_count:
+      if top is True:
+        return None
+      return Div(
+        Span(
+          A(
+            u"return to the discussion",
+            href = "%s" % notebook_path,
+          ),
+        ),
+      )
+
+    if start == 0 and notes_per_page >= total_notes_count:
+      return None
+
+    return Div(
+      ( start > 0 ) and Span(
+        A(
+          u"previous",
+          href = "%s?start=%d&count=%d" % ( notebook_path, max( start - notes_per_page, 0 ), notes_per_page ),
+        ),
+        u" | ",
+      ) or None,
+      [ Span(
+        ( start == page_start ) and Strong( unicode( page_number + 1 ) ) or A(
+          Strong( unicode( page_number + 1 ) ),
+          href = "%s?start=%d&count=%d" % ( notebook_path, page_start, notes_per_page ),
+        ),
+      ) for ( page_number, page_start ) in enumerate( range( 0, total_notes_count, notes_per_page ) ) ],
+      ( start + notes_per_page < total_notes_count ) and Span(
+        u" | ",
+        A(
+          u"next",
+          href = "%s?start=%d&count=%d" % ( notebook_path, min( start + notes_per_page, total_notes_count - 1 ), notes_per_page ),
+        ),
+      ) or None,
     )

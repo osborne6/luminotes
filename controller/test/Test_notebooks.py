@@ -1912,7 +1912,7 @@ class Test_notebooks( Test_controller ):
 
     # save over an existing note supplying new (too long) contents and a new title
     previous_revision = self.note.revision
-    new_note_contents = u"<h3>new title</h3>new blah" * 962
+    new_note_contents = u"<h3>new title</h3>new blah" * 1923
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
