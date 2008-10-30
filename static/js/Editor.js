@@ -32,7 +32,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     "name": iframe_id,
     "class": "note_frame",
     "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
-    "onload": function () { setTimeout( function () { self.resize() }, 250 ); }
+    "onload": function () { setTimeout( function () { self.resize(); if ( !highlight ) scroll( 0, 0 ); }, 250 ); }
   } );
   this.iframe.editor = this;
   this.title = "";
