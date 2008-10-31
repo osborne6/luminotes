@@ -144,7 +144,7 @@ class Html_cleaner(HTMLParser):
     # "on" tags, like "onhover," would not be smart.  Also be very careful
     # of "background" and "style."
     self.allowed_attributes = {
-      'a': [ 'href', 'target' ],
+      'a': [ 'href', 'target', 'rel' ],
       'p': [ 'align' ],
       'img': [ 'src', 'alt', 'border', 'title', "class" ],
       'table': [ 'cellpadding', 'cellspacing', 'border', 'width', 'height' ],
@@ -197,9 +197,13 @@ class Html_cleaner(HTMLParser):
           else:
             bt += ' %s=%s' % \
                (xssescape(attribute), quoteattr(attrs[attribute]))
-        if self.require_link_target and tag == "a" and not attrs.get( 'target' ) and \
+        if tag == "a" and \
            ( not attrs.get( 'href' ) or not self.NOTE_LINK_URL_PATTERN.search( attrs.get( 'href' ) ) ):
-          bt += ' target="_new"'
+          if self.require_link_target and not attrs.get( 'target' ):
+            bt += ' target="_new"'
+          rel = attrs.get( 'rel' )
+          if not rel or rel != "nofollow":
+            bt += ' rel="nofollow"'
       if bt == "<a" or bt == "<img":
         return
       if tag in self.requires_no_close:
