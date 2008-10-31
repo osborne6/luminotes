@@ -151,6 +151,18 @@ class Notebooks( object ):
 
     notebook = result[ u"notebook" ]
 
+    # if this is a forum thread notebook, redirect to the forum thread page
+    forum_tags = [ tag for tag in notebook.tags if tag.name == u"forum" ]
+    if forum_tags:
+      forum_name = forum_tags[ 0 ].value
+      redirect = u"/forums/%s/%s" % ( forum_name, notebook_id )
+      if note_id:
+        redirect += u"?note_id=%s" % note_id
+
+      return dict(
+        redirect = redirect,
+      )
+
     if notebook.name != u"Luminotes":
       result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
 

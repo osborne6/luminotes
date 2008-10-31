@@ -1849,6 +1849,11 @@ Wiki.prototype.display_search_results = function ( result ) {
   if ( this.search_results_editor )
     this.search_results_editor.shutdown();
 
+  if ( /^\/forums/.test( window.location.pathname ) )
+    var notebook_word = "discussion";
+  else
+    var notebook_word = "notebook";
+
   var list = createDOM( "span", {} );
   var other_notebooks_section = false;
 
@@ -1879,9 +1884,9 @@ Wiki.prototype.display_search_results = function ( result ) {
       if ( !other_notebooks_section ) {
         other_notebooks_section = true;
         if ( i == 0 )
-          appendChildNodes( list, createDOM( "p", {}, "No matching notes in this notebook." ) );
+          appendChildNodes( list, createDOM( "p", {}, "No matching notes in this " + notebook_word + "." ) );
 
-        appendChildNodes( list, createDOM( "hr" ), createDOM( "h4", {}, "other notebooks" ) );
+        appendChildNodes( list, createDOM( "hr" ), createDOM( "h4", {}, "other " + notebook_word + "s" ) );
       }
     }
 
