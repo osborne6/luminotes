@@ -781,7 +781,7 @@ class Notebooks( object ):
       new_revision = new_revision,
       previous_revision = previous_revision,
       storage_bytes = user and user.storage_bytes or 0,
-      rank = float( note.rank ),
+      rank = note.rank and float( note.rank ) or None,
     )
 
   @expose( view = Json )
@@ -1350,7 +1350,8 @@ class Notebooks( object ):
     # special case to allow the creator of a READ_WRITE_FOR_OWN_NOTES notebook to rename it
     if notebook is None:
       notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
-      if not ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and notebook.user_id == user_id ):
+      if not notebook or not ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and
+                              notebook.user_id == user_id ):
         raise Access_error()
 
     user = self.__database.load( User, user_id )
@@ -1812,7 +1813,11 @@ class Notebooks( object ):
       raise Access_error()
 
     db_file = self.__database.load( File, file_id )
-    if db_file is None or not self.__users.load_notebook( user_id, db_file.notebook_id ):
+    if db_file is None:
+      raise Access_error()
+
+    db_notebook = self.__users.load_notebook( user_id, db_file.notebook_id )
+    if db_notebook is None or db_notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     # if the file has a "note_id" header column, record its index

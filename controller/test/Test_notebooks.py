@@ -1912,7 +1912,7 @@ class Test_notebooks( Test_controller ):
 
     # save over an existing note supplying new (too long) contents and a new title
     previous_revision = self.note.revision
-    new_note_contents = u"<h3>new title</h3>new blah" * 1923
+    new_note_contents = u"<h3>new title</h3>new blah" * 1924
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -5385,7 +5385,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","3.<b>3 &nbsp;</b>"\n"8","whee","hmm\n<a href=""http://luminotes.com/"">foo</a>"\n3,4,5'
     expected_notes = [
       ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
-      ( "whee", 'hmm\n<a href="http://luminotes.com/" target="_new">foo</a>' ),
+      ( "whee", 'hmm\n<a href="http://luminotes.com/" target="_new" rel="nofollow">foo</a>' ),
       ( "4", "5" ),
     ]
 
@@ -5417,7 +5417,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff","3.<b>3 &nbsp;</b>"\n"8","whee","hmm\n<a href=""http://luminotes.com/"" target=""something"">foo</a>"\n3,4,5'
     expected_notes = [
       ( "blah and stuff", "3.<b>3 &nbsp;</b>" ), # ( title, contents )
-      ( "whee", 'hmm\n<a href="http://luminotes.com/" target="something">foo</a>' ),
+      ( "whee", 'hmm\n<a href="http://luminotes.com/" target="something" rel="nofollow">foo</a>' ),
       ( "4", "5" ),
     ]
 

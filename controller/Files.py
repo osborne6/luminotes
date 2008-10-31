@@ -18,6 +18,7 @@ from Users import grab_user_id, Access_error
 from Expire import strongly_expire
 from model.File import File
 from model.User import User
+from model.Notebook import Notebook
 from model.Download_access import Download_access
 from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
@@ -531,7 +532,9 @@ class Files( object ):
     @return: rendered HTML page
     @raise Access_error: the current user doesn't have access to the given notebook
     """
-    if not self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id ):
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id )
+
+    if not notebook or notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     file_id = self.__database.next_id( File )
@@ -565,7 +568,9 @@ class Files( object ):
     @return: rendered HTML page
     @raise Access_error: the current user doesn't have access to the given notebook
     """
-    if not self.__users.load_notebook( user_id, notebook_id, read_write = True ):
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
+
+    if not notebook or notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     file_id = self.__database.next_id( File )
@@ -622,7 +627,9 @@ class Files( object ):
       current_uploads_lock.release()
 
     user = self.__database.load( User, user_id )
-    if not user or not self.__users.load_notebook( user_id, notebook_id, read_write = True ):
+    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
+
+    if not user or not notebook or notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       uploaded_file.delete()
       return dict( script = general_error_script % u"Sorry, you don't have access to do that. Please make sure you're logged in as the correct user." )
 
@@ -738,8 +745,11 @@ class Files( object ):
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
     db_file = self.__database.load( File, file_id )
+    if db_file is None:
+      raise Access_error()
 
-    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
+    db_notebook = self.__users.load_notebook( user_id, db_file.notebook_id )
+    if db_notebook is None or db_notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     user = self.__database.load( User, user_id )
@@ -777,8 +787,11 @@ class Files( object ):
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
     db_file = self.__database.load( File, file_id )
+    if db_file is None:
+      raise Access_error()
 
-    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id, read_write = True ):
+    db_notebook = self.__users.load_notebook( user_id, db_file.notebook_id, read_write = True )
+    if db_notebook is None or db_notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     self.__database.execute( db_file.sql_delete(), commit = False )
@@ -816,8 +829,11 @@ class Files( object ):
     @raise Access_error: the current user doesn't have access to the notebook that the file is in
     """
     db_file = self.__database.load( File, file_id )
+    if db_file is None:
+      raise Access_error()
 
-    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id, read_write = True ):
+    db_notebook = self.__users.load_notebook( user_id, db_file.notebook_id, read_write = True )
+    if db_notebook is None or db_notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     db_file.filename = filename
@@ -918,8 +934,11 @@ class Files( object ):
     MAX_ROW_ELEMENT_COUNT = 20
 
     db_file = self.__database.load( File, file_id )
+    if db_file is None:
+      raise Access_error()
 
-    if not db_file or not self.__users.load_notebook( user_id, db_file.notebook_id ):
+    db_notebook = self.__users.load_notebook( user_id, db_file.notebook_id )
+    if db_notebook is None or db_notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
     parser = self.parse_csv( file_id )
