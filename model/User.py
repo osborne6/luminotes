@@ -134,7 +134,8 @@ class User( Persistent ):
     return "select * from luminotes_user_current where email_address = %s;" % quote( email_address )
 
   def sql_load_notebooks( self, parents_only = False, undeleted_only = False, read_write = False,
-                          tag_name = None, tag_value = None, notebook_id = None ):
+                          tag_name = None, tag_value = None, notebook_id = None,
+                          exclude_notebook_name = None, start = 0, count = None, reverse = False ):
     """
     Return a SQL string to load a list of the notebooks to which this user has access.
     """
@@ -173,6 +174,26 @@ class User( Persistent ):
     else:
       notebook_id_clause = ""
 
+    if exclude_notebook_name:
+      notebook_name_clause = " and not notebook_current.name = %s" % quote( exclude_notebook_name )
+    else:
+      notebook_name_clause = ""
+
+    if reverse:
+      ordering = u"desc"
+    else:
+      ordering = u"asc"
+
+    if count is not None:
+      limit_clause = " limit %s" % count
+    else:
+      limit_clause = ""
+
+    if start:
+      offset_clause = " offset %s" % start
+    else:
+      offset_clause = ""
+
     return \
       """
       select
@@ -180,11 +201,63 @@ class User( Persistent ):
       from
         user_notebook, notebook_current%s
       where
-        user_notebook.user_id = %s%s%s%s%s%s and
+        user_notebook.user_id = %s%s%s%s%s%s%s and
         user_notebook.notebook_id = notebook_current.id
-      order by user_notebook.rank, notebook_current.revision;
+      order by user_notebook.rank, notebook_current.revision %s%s%s;
       """ % ( tag_tables, quote( self.object_id ), parents_only_clause, undeleted_only_clause,
-              read_write_clause, tag_clause, notebook_id_clause )
+              read_write_clause, tag_clause, notebook_id_clause, notebook_name_clause, ordering,
+              limit_clause, offset_clause )
+
+  def sql_count_notebooks( self, parents_only = False, undeleted_only = False, read_write = False,
+                           tag_name = None, tag_value = None, exclude_notebook_name = None ):
+    """
+    Return a SQL string to count the number notebooks to which this user has access.
+    """
+    if parents_only:
+      parents_only_clause = " and trash_id is not null"
+    else:
+      parents_only_clause = ""
+
+    if undeleted_only:
+      undeleted_only_clause = " and deleted = 'f'"
+    else:
+      undeleted_only_clause = ""
+
+    if read_write:
+      read_write_clause = " and user_notebook.read_write = 't'"
+    else:
+      read_write_clause = ""
+
+    if tag_name:
+      tag_tables = ", tag_notebook, tag"
+      tag_clause = \
+        """
+         and tag_notebook.tag_id = tag.id and tag_notebook.user_id = %s and
+        tag_notebook.notebook_id = notebook_current.id and tag.name = %s
+        """ % ( quote( self.object_id ), quote( tag_name ) )
+
+      if tag_value:
+        tag_clause += " and tag_notebook.value = %s" % quote( tag_value )
+    else:
+      tag_tables = ""
+      tag_clause = ""
+
+    if exclude_notebook_name:
+      notebook_name_clause = " and not notebook_current.name = %s" % quote( exclude_notebook_name )
+    else:
+      notebook_name_clause = ""
+
+    return \
+      """
+      select
+        count( notebook_current.id )
+      from
+        user_notebook, notebook_current%s
+      where
+        user_notebook.user_id = %s%s%s%s%s%s and
+        user_notebook.notebook_id = notebook_current.id;
+      """ % ( tag_tables, quote( self.object_id ), parents_only_clause, undeleted_only_clause,
+              read_write_clause, tag_clause, notebook_name_clause )
 
   def sql_save_notebook( self, notebook_id, read_write = True, owner = True, rank = None, own_notes_only = False ):
     """

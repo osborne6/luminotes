@@ -10,6 +10,7 @@ from Json import Json
 from Rounded_div import Rounded_div
 from config.Version import VERSION
 from model.Notebook import Notebook
+from Page_navigation import Page_navigation
 
 
 class Main_page( Page ):
@@ -211,7 +212,9 @@ class Main_page( Page ):
               Div(
                 id = u"deleted_notebooks",
               ),
-              self.page_navigation( notebook_path, len( notes ), total_notes_count, start, count ),
+              Page_navigation(
+                notebook_path, len( notes ), total_notes_count, start, count,
+              ),
               ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and user.username and user.username != u"anonymous" ) and \
                 P( u"If you write a comment, click the save button to publish it.", class_ = u"small_text" ) or None,
               Div(
@@ -231,7 +234,10 @@ class Main_page( Page ):
                 u"document.getElementById( 'static_notes' ).style.display = 'none';",
                 type = u"text/javascript",
               ),
-              self.page_navigation( notebook_path, len( notes ), total_notes_count, start, count, top = False ),
+              Page_navigation(
+                notebook_path, len( notes ), total_notes_count, start, count,
+                return_text = u"return to the discussion",
+              ),
               id = u"notebook_background",
               corners = ( u"tl", ),
             ),
@@ -246,46 +252,4 @@ class Main_page( Page ):
         ),
         id = u"everything_area",
       ),
-    )
-
-  def page_navigation( self, notebook_path, displayed_notes_count, total_notes_count, start, notes_per_page, top = True ):
-    if start is None or notes_per_page is None:
-      return None
-
-    if displayed_notes_count == 1 and displayed_notes_count < total_notes_count:
-      if top is True:
-        return None
-      return Div(
-        Span(
-          A(
-            u"return to the discussion",
-            href = "%s" % notebook_path,
-          ),
-        ),
-      )
-
-    if start == 0 and notes_per_page >= total_notes_count:
-      return None
-
-    return Div(
-      ( start > 0 ) and Span(
-        A(
-          u"previous",
-          href = "%s?start=%d&count=%d" % ( notebook_path, max( start - notes_per_page, 0 ), notes_per_page ),
-        ),
-        u" | ",
-      ) or None,
-      [ Span(
-        ( start == page_start ) and Strong( unicode( page_number + 1 ) ) or A(
-          Strong( unicode( page_number + 1 ) ),
-          href = "%s?start=%d&count=%d" % ( notebook_path, page_start, notes_per_page ),
-        ),
-      ) for ( page_number, page_start ) in enumerate( range( 0, total_notes_count, notes_per_page ) ) ],
-      ( start + notes_per_page < total_notes_count ) and Span(
-        u" | ",
-        A(
-          u"next",
-          href = "%s?start=%d&count=%d" % ( notebook_path, min( start + notes_per_page, total_notes_count - 1 ), notes_per_page ),
-        ),
-      ) or None,
     )

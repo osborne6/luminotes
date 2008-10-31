@@ -91,9 +91,11 @@ class Forum( object ):
   @end_transaction
   @grab_user_id
   @validate(
+    start = Valid_int( min = 0 ),
+    count = Valid_int( min = 1, max = 50 ),
     user_id = Valid_id( none_okay = True ),
   )
-  def index( self, user_id ):
+  def index( self, start = 0, count = 50, user_id = None ):
     """
     Provide the information necessary to display the current threads within a forum.
 
@@ -111,23 +113,34 @@ class Forum( object ):
     if anonymous is None:
       raise Access_error()
 
-    # load a list of the threads in this forum, excluding those with a default name
-    threads = [ thread for thread in self.__database.select_many(
+    # load a slice of the list of the threads in this forum, excluding those with a default name
+    threads = self.__database.select_many(
       Notebook,
       anonymous.sql_load_notebooks(
-        parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name
+        parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name,
+        exclude_notebook_name = self.DEFAULT_THREAD_NAME, reverse = True,
+        start = start, count = count,
       )
-    ) if thread.name != self.DEFAULT_THREAD_NAME ]
-
-    # put threads in reverse chronological order by creation date
-    threads.reverse()
+    )
 
     # if there are no matching threads, then this forum doesn't exist
     if len( threads ) == 0:
       raise cherrypy.NotFound
 
+    # count the total number of threads in this forum, excluding those with a default name
+    total_thread_count = self.__database.select_one(
+      int,
+      anonymous.sql_count_notebooks(
+        parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name,
+        exclude_notebook_name = self.DEFAULT_THREAD_NAME,
+      )
+    )
+
     result[ "forum_name" ] = self.__name
     result[ "threads" ] = threads
+    result[ "start" ] = start
+    result[ "count" ] = count
+    result[ "total_thread_count" ] = total_thread_count
     return result
 
   @expose( view = Main_page )

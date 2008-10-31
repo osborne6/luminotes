@@ -1,9 +1,13 @@
 from Product_page import Product_page
+from Page_navigation import Page_navigation
 from Tags import Div, H1, A, P
 
 
 class Forum_page( Product_page ):
-  def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, forum_name, threads ):
+  def __init__(
+    self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, forum_name,
+    threads, total_thread_count, start = 0, count = None,
+  ):
     full_forum_name = "%s forum" % forum_name
 
     Product_page.__init__(
@@ -32,4 +36,5 @@ class Forum_page( Product_page ):
         ) for thread in threads ],
         class_ = u"forum_threads", 
       ),
+      Page_navigation( u"/forums/%s" % forum_name, len( threads ), total_thread_count, start, count ),
     )
