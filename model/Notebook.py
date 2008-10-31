@@ -227,7 +227,7 @@ class Notebook( Persistent ):
           select
             note_current.id, note_current.revision, note_current.title, note_current.contents,
             note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
-            rank_cd( search, query ) as rank, note_current.user_id, null, query
+            rank_cd( search, query ) as rank, note_current.user_id, null, null, query
           from
             note_current, user_notebook, to_tsquery( 'default', %s ) query
           where
@@ -267,7 +267,7 @@ class Notebook( Persistent ):
 
     return \
       """
-      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
+      select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null, null,
              title as summary
       from
         note_current

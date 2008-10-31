@@ -11,6 +11,9 @@
  * Fixed an occasional bug that caused unexpected logouts. The solution was
    to move the session information into the database where it could be
    properly locked.
+ * NOTE: After upgrading to this release, you must restart memcached to clear
+   the cache. Failing to do so will cause errors with the Note object. This
+   does not apply to Luminotes Desktop.
 
 1.5.4: October 9, 2008
  * Fixed a visual bug in which clicking up or down to reorder your notebooks
