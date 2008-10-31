@@ -1,7 +1,7 @@
 from pytz import utc
 from threading import Thread
 from pysqlite2 import dbapi2 as sqlite
-from datetime import datetime
+from datetime import datetime, timedelta
 from Stub_object import Stub_object
 from Stub_cache import Stub_cache
 from model.Persistent import Persistent
@@ -202,7 +202,8 @@ class Test_database( object ):
         obj = self.database.load( Stub_object, basic_obj.object_id )
 
         assert obj.object_id == basic_obj.object_id
-        assert obj.revision.replace( tzinfo = utc ) == original_revision
+        delta = abs( obj.revision.replace( tzinfo = utc ) - original_revision )
+        assert delta <= timedelta( seconds = 0.000001 )
         assert obj.value == basic_obj.value
 
         object_id = self.database.next_id( Stub_object )
