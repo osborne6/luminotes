@@ -777,11 +777,16 @@ class Notebooks( object ):
     else:
       user = None
 
+    if note.rank is None:
+      rank = None
+    else:
+      rank = float( note.rank )
+
     return dict(
       new_revision = new_revision,
       previous_revision = previous_revision,
       storage_bytes = user and user.storage_bytes or 0,
-      rank = note.rank and float( note.rank ) or None,
+      rank = rank,
     )
 
   @expose( view = Json )
