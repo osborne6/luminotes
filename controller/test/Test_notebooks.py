@@ -3979,6 +3979,65 @@ class Test_notebooks( Test_controller ):
     assert notebook.name == new_name
     assert notebook.user_id == self.user.object_id
 
+  def test_contents_after_rename_read_only_for_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    new_name = u"renamed notebook"
+    self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert notebook.name == new_name
+    assert notebook.user_id == self.user.object_id
+
+  def test_contents_after_rename_read_only_for_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    new_name = u"renamed notebook"
+    self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    result = cherrypy.root.notebooks.contents(
+      notebook_id = self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    notebook = result[ "notebook" ]
+    assert notebook.name == new_name
+    assert notebook.user_id == self.user.object_id
+
+  def test_contents_after_rename_read_only_for_own_notes_without_access( self ):
+    self.login2()
+
+    self.database.execute( self.user2.sql_update_access(
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    new_name = u"renamed notebook"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
   def test_rename_without_login( self ):
     new_name = u"renamed notebook"
     result = self.http_post( "/notebooks/rename", dict(
@@ -3986,7 +4045,22 @@ class Test_notebooks( Test_controller ):
       name = new_name,
     ) )
 
-    assert result[ u"error" ]
+    assert u"access" in result[ u"error" ]
+
+  def test_rename_without_access( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebook.object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    new_name = u"renamed notebook"
+    result = self.http_post( "/notebooks/rename", dict(
+      notebook_id = self.notebook.object_id,
+      name = new_name,
+    ) )
+
+    assert u"access" in result[ u"error" ]
 
   def test_rename_trash( self ):
     self.login()
