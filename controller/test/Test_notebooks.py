@@ -4816,6 +4816,107 @@ class Test_notebooks( Test_controller ):
       user_id = self.anonymous.object_id,
     )
 
+  def test_old_notes( self ):
+    result = cherrypy.root.notebooks.old_notes(
+      self.notebook.object_id,
+      user_id = self.user.object_id,
+    )
+
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+
+    notes = result.get( u"notes" )
+    assert notes
+    assert len( notes ) == 2
+    assert notes[ 0 ].object_id == self.note.object_id
+    assert notes[ 1 ].object_id == self.note2.object_id
+
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"start" ) == 0
+    assert result.get( u"count" ) == 10
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_old_notes_with_start( self ):
+    result = cherrypy.root.notebooks.old_notes(
+      self.notebook.object_id,
+      start = 1,
+      user_id = self.user.object_id,
+    )
+
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+
+    notes = result.get( u"notes" )
+    assert notes
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note2.object_id
+
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"start" ) == 1
+    assert result.get( u"count" ) == 10
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  def test_old_notes_with_count( self ):
+    result = cherrypy.root.notebooks.old_notes(
+      self.notebook.object_id,
+      count = 1,
+      user_id = self.user.object_id,
+    )
+
+    assert result.get( u"user" ).object_id == self.user.object_id
+    assert len( result.get( u"notebooks" ) ) == 3
+    assert result.get( u"login_url" ) is None
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.notebook.object_id
+    assert len( result.get( u"startup_notes" ) ) == 1
+    assert result[ "total_notes_count" ] == 2
+
+    notes = result.get( u"notes" )
+    assert notes
+    assert len( notes ) == 1
+    assert notes[ 0 ].object_id == self.note.object_id
+
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"start" ) == 0
+    assert result.get( u"count" ) == 1
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
+  @raises( Access_error )
+  def test_old_notes_with_unknown_notebok( self ):
+    result = cherrypy.root.notebooks.old_notes(
+      self.unknown_notebook_id,
+      user_id = self.user.object_id,
+    )
+
+  @raises( Access_error )
+  def test_old_notes_with_incorrect_user( self ):
+    result = cherrypy.root.notebooks.old_notes(
+      self.notebook.object_id,
+      user_id = self.anonymous.object_id,
+    )
+
   def test_load_recent_updates( self ):
     self.login()
 
