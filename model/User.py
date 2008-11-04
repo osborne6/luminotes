@@ -310,7 +310,7 @@ class User( Persistent ):
     """
     return \
       "update user_notebook set read_write = %s, owner = %s, own_notes_only = %s where user_id = %s and notebook_id = %s;" % (
-        quote( ( read_write != Notebook.READ_ONLY ) and 't' or 'f' ),
+        quote( ( read_write not in ( Notebook.READ_ONLY, False ) ) and 't' or 'f' ),
         quote( owner and 't' or 'f' ),
         quote( ( read_write == Notebook.READ_WRITE_FOR_OWN_NOTES ) and 't' or 'f' ),
         quote( self.object_id ),
