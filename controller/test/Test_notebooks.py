@@ -165,6 +165,33 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_default_forum( self ):
+    self.login()
+
+    tag_id = self.database.next_id( Tag, commit = False )
+    new_tag = Tag.create(
+      tag_id,
+      notebook_id = None, # this tag is not in the namespace of a single notebook
+      user_id = self.user.object_id,
+      name = u"forum",
+      description = u"a discussion forum"
+    )
+    self.database.save( new_tag, commit = False )
+
+    self.database.execute(
+      self.user.sql_save_notebook_tag( self.notebook.object_id, new_tag.object_id, value = u"chickens" ),
+      commit = False,
+    )
+    self.database.commit()
+
+    result = self.http_get(
+      "/notebooks/%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    redirect = result.get( "redirect" )
+    assert redirect == u"/forums/chickens/%s" % self.notebook.object_id
+
   def test_default( self ):
     self.login()
 
