@@ -1029,6 +1029,20 @@ class Test_files( Test_controller ):
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
+  def test_upload_page_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_get(
+      "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"error" ]
+
   def test_import_page( self ):
     self.login()
 
@@ -1043,13 +1057,27 @@ class Test_files( Test_controller ):
     assert u"import" in result.get( u"label_text" )
     assert u"import" in result.get( u"instructions_text" )
 
-  def test_upload_page_without_login( self ):
+  def test_import_page_without_login( self ):
     path = "/files/import_page?notebook_id=%s" % self.notebook.object_id
     result = self.http_get( path )
 
     headers = result.get( "headers" )
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_import_page_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_get(
+      "/files/import_page?notebook_id=%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"error" ]
 
   def test_upload( self, filename = None ):
     self.login()
@@ -1088,6 +1116,30 @@ class Test_files( Test_controller ):
 
   def test_upload_with_unicode_filename( self ):
     self.test_upload( self.unicode_filename )
+
+  def test_upload_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+    )
+
+    assert u"access" in result.get( u"script" )
+
+    db_file = self.database.load( File, self.file_id )
+    assert db_file is None
+    assert not Upload_file.exists( self.file_id )
 
   def test_upload_without_login( self ):
     result = self.http_upload(
@@ -1492,6 +1544,32 @@ class Test_files( Test_controller ):
     assert result[ u"storage_bytes" ] == user.storage_bytes
     assert user.storage_bytes > orig_storage_bytes
 
+  def test_stats_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/stats?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
+
   def test_stats_without_login( self ):
     self.login() # this login is for the upload, not the call to stats
 
@@ -1580,6 +1658,35 @@ class Test_files( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert result[ u"storage_bytes" ] == user.storage_bytes
     assert user.storage_bytes != orig_storage_bytes
+
+  def test_delete_own_notes( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_post(
+      "/files/delete",
+      dict(
+        file_id = self.file_id,
+      ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
 
   def test_delete_without_login( self ):
     self.login() # this login is for the upload, not the call to delete
@@ -1676,6 +1783,36 @@ class Test_files( Test_controller ):
     assert db_file
     assert db_file.filename == self.new_filename
     assert Upload_file.exists( self.file_id )
+
+  def test_rename_own_notes( self ):
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.file_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_post(
+      "/files/rename",
+      dict(
+        file_id = self.file_id,
+        filename = self.new_filename,
+      ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
 
   def test_rename_with_weird_filename( self ):
     self.login()
@@ -2090,6 +2227,40 @@ class Test_files( Test_controller ):
       assert row == expected_rows[ index ]
 
     assert index == len( expected_rows ) - 1
+
+  def test_csv_head_own_notes( self ):
+    self.login()
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
+    expected_rows = [
+      [ "label 1", "label 2", "label 3" ],
+      [ "5", "blah and stuff", "3.3" ],
+      [ "8", "whee", "hmm\nfoo" ],
+      [ "3", "4", "5" ],
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_get(
+      "/files/csv_head?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "error" ]
 
   def test_csv_head_without_login( self ):
     self.login()
