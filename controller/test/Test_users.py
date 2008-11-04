@@ -39,6 +39,7 @@ class Test_users( Test_controller ):
     self.email_address2 = u"out-there@example.com"
     self.user = None
     self.user2 = None
+    self.demo_user = None
     self.group = None
     self.group2 = None
     self.anonymous = None
@@ -93,6 +94,10 @@ class Test_users( Test_controller ):
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous, commit = False )
     self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id, read_write = False, owner = False ), commit = False )
+
+    self.demo_user = User.create( self.database.next_id( User ), username = None )
+    self.database.save( self.demo_user, commit = False )
+    self.database.execute( self.demo_user.sql_save_notebook( notebook_id1, read_write = True, owner = False, own_notes_only = True ), commit = False )
 
     self.database.commit()
 
@@ -1003,6 +1008,22 @@ class Test_users( Test_controller ):
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
 
+  def test_load_notebook_anonymous( self ):
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_demo( self ):
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_without_access( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id )
+
+    assert notebook is None
+
   def test_load_notebook_unknown_notebook( self ):
     notebook = cherrypy.root.users.load_notebook( self.user.object_id, u"unknownid" )
 
@@ -1019,11 +1040,96 @@ class Test_users( Test_controller ):
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
 
+  def test_load_notebook_read_write_anonymous( self ):
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert notebook is None
+
+  def test_load_notebook_read_write_demo( self ):
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert notebook is None
+
+  def test_load_notebook_read_write_without_access( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert notebook is None
+
+  def test_load_notebook_read_write_own_notes( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_write_own_notes_anonymous( self ):
+    self.database.execute( self.anonymous.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert notebook is None
+
+  def test_load_notebook_read_write_own_notes_demo( self ):
+    self.database.execute( self.demo_user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id, read_write = True )
+
+    assert notebook is None
+
   def test_load_notebook_owner( self ):
     notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, owner = True )
 
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_owner_anonymous( self ):
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_owner_demo( self ):
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_owner_without_access( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_owner_own_notes( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_owner_own_notes_anonymous( self ):
+    self.database.execute( self.anonymous.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_owner_own_notes_demo( self ):
+    self.database.execute( self.demo_user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id, owner = True )
+
+    assert notebook is None
 
   def test_load_notebook_full( self ):
     notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
@@ -1031,7 +1137,49 @@ class Test_users( Test_controller ):
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_load_notebook_with_note_id( self ):
+  def test_load_notebook_full_anonymous( self ):
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_full_demo( self ):
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_full_without_access( self ):
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_full_own_notes( self ):
+    self.database.execute( self.user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_full_own_notes_anonymous( self ):
+    self.database.execute( self.anonymous.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_full_own_notes_demo( self ):
+    self.database.execute( self.demo_user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id, read_write = True, owner = True )
+
+    assert notebook is None
+
+  def test_load_notebook_with_note_id_own_notes( self ):
     note = Note.create(
       self.database.next_id( Note ), u"<h3>hi</h3>",
       notebook_id = self.notebooks[ 0 ].object_id,
@@ -1049,7 +1197,55 @@ class Test_users( Test_controller ):
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_load_notebook_with_note_id_by_another_user( self ):
+  def test_load_notebook_with_note_id_own_notes_anonymous( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.anonymous.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.anonymous.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_with_note_id_own_notes_demo( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.demo_user.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.demo_user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_with_note_id_own_notes_without_access( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user2.object_id,
+    )
+    self.database.save( note )
+
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_with_note_id_own_notes_by_another_user( self ):
     note = Note.create(
       self.database.next_id( Note ), u"<h3>hi from another user</h3>",
       notebook_id = self.notebooks[ 0 ].object_id,
@@ -1066,7 +1262,7 @@ class Test_users( Test_controller ):
 
     assert notebook is None
 
-  def test_load_notebook_with_unknown_note_id( self ):
+  def test_load_notebook_with_unknown_note_id_own_notes( self ):
     self.database.execute( self.user.sql_update_access(
       self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
     ) )
@@ -1079,7 +1275,7 @@ class Test_users( Test_controller ):
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_load_notebook_with_stub_note( self ):
+  def test_load_notebook_with_stub_note_own_notes( self ):
     # don't fully create a note, but reserve an id for it
     note_id = self.database.next_id( Note )
 
@@ -1093,7 +1289,47 @@ class Test_users( Test_controller ):
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
 
-  def test_load_notebook_with_note_id_in_another_notebook( self ):
+  def test_load_notebook_with_stub_note_own_notes_anonymous( self ):
+    # don't fully create a note, but reserve an id for it
+    note_id = self.database.next_id( Note )
+
+    self.database.execute( self.anonymous.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note_id )
+
+    assert notebook is None
+
+  def test_load_notebook_with_stub_note_own_notes_demo( self ):
+    # don't fully create a note, but reserve an id for it
+    note_id = self.database.next_id( Note )
+
+    self.database.execute( self.demo_user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_with_stub_note_own_notes_without_access( self ):
+    # don't fully create a note, but reserve an id for it
+    note_id = self.database.next_id( Note )
+
+    self.database.execute( self.user2.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note_id )
+
+    assert notebook is None
+
+  def test_load_notebook_with_note_id_own_notes_in_another_notebook( self ):
     self.database.execute( self.user.sql_update_access(
       self.notebooks[ 0 ].object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
     ) )
@@ -1116,6 +1352,46 @@ class Test_users( Test_controller ):
 
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_write_with_note_id_anonymous( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.anonymous.object_id,
+    )
+    self.database.save( note )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_read_write_with_note_id_demo( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.demo_user.object_id,
+    )
+    self.database.save( note )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_write_with_note_id_without_access( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user2.object_id,
+    )
+    self.database.save( note )
+
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
 
   def test_load_notebook_read_write_with_note_id_by_another_user( self ):
     note = Note.create(
@@ -1162,6 +1438,58 @@ class Test_users( Test_controller ):
 
     assert notebook
     assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_only_with_note_id_anonymous( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.anonymous.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.anonymous.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.anonymous.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
+
+  def test_load_notebook_read_only_with_note_id_demo( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.demo_user.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.demo_user.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.demo_user.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook
+    assert notebook.object_id == self.notebooks[ 0 ].object_id
+
+  def test_load_notebook_read_only_with_note_id_without_access( self ):
+    note = Note.create(
+      self.database.next_id( Note ), u"<h3>hi</h3>",
+      notebook_id = self.notebooks[ 0 ].object_id,
+      user_id = self.user2.object_id,
+    )
+    self.database.save( note )
+
+    self.database.execute( self.user2.sql_update_access(
+      self.notebooks[ 0 ].object_id, read_write = Notebook.READ_ONLY, owner = False,
+    ) )
+
+    notebook = cherrypy.root.users.load_notebook( self.user2.object_id, self.notebooks[ 0 ].object_id,
+                                                  note_id = note.object_id )
+
+    assert notebook is None
 
   def test_load_notebook_read_only_with_note_id_by_another_user( self ):
     note = Note.create(

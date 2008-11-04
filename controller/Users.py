@@ -737,6 +737,7 @@ class Users( object ):
     """
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( notebook_id = notebook_id ) )
+    user = None
 
     if not notebook and user_id:
       user = self.__database.load( User, user_id )
@@ -765,6 +766,12 @@ class Users( object ):
         ( note.notebook_id and notebook_id != note.notebook_id )
       ):
         return None
+
+    # also, prevent anonymous/demo read-write or owner access to READ_WRITE_FOR_OWN_NOTES notebooks
+    if notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and \
+       ( read_write is True or owner is True ) and \
+       ( user is None or user.username is None or user.username == u"anonymous" ):
+      return None
         
     return notebook
 
