@@ -1,5 +1,6 @@
 import cherrypy
 import cPickle as pickle
+from datetime import datetime
 from psycopg2 import ProgrammingError
 
 
@@ -59,7 +60,7 @@ class Session_storage( object ):
   def clean_up( self, sess ):
     cursor = self.conn.cursor()
 
-    now = datetime.datetime.now()
+    now = datetime.now()
     cursor.execute(
       'select data from session where expiration_time < %s',
       (now,))
