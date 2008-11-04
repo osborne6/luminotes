@@ -1741,7 +1741,7 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     self.database.execute( self.user.sql_update_access( 
-      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
     ) )
 
     previous_revision = self.note.revision
@@ -1878,7 +1878,7 @@ class Test_notebooks( Test_controller ):
     self.login2()
 
     self.database.execute( self.user2.sql_update_access( 
-      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
     ) )
 
     previous_revision = self.note.revision
@@ -2678,6 +2678,13 @@ class Test_notebooks( Test_controller ):
     assert revisions[ 3 ].user_id == self.user.object_id
     assert revisions[ 3 ].username == self.username
 
+  def test_revert_note_own_notes( self ):
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+    ) )
+
+    self.test_revert_note()
+
   def test_revert_note_by_different_user( self ):
     self.login()
 
@@ -2733,6 +2740,54 @@ class Test_notebooks( Test_controller ):
     assert revisions[ 3 ].revision == current_revision
     assert revisions[ 3 ].user_id == self.user2.object_id
     assert revisions[ 3 ].username == self.username2
+
+  def test_revert_note_own_notes_by_different_user( self ):
+    self.login()
+
+    self.database.execute( self.user2.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = True,
+    ) )
+
+    # save over an existing note, supplying new contents and a new title
+    first_revision = self.note.revision
+    original_contents = self.note.contents
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = first_revision,
+    ), session_id = self.session_id )
+
+    second_revision = result[ "new_revision" ].revision
+
+    self.login2()
+
+    # as a different user, revert the note to the earlier revision
+    result = self.http_post( "/notebooks/revert_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      revision = first_revision,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
+
+    # make sure that a new revision wasn't saved
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == first_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == second_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
 
   def test_revert_note_without_login( self ):
     self.login()
@@ -2976,6 +3031,13 @@ class Test_notebooks( Test_controller ):
     assert note.deleted_from_id == self.notebook.object_id
     assert note.user_id == self.user.object_id
 
+  def test_delete_note_own_notes( self ):
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    self.test_delete_note()
+
   def test_delete_note_from_trash( self ):
     self.login()
 
@@ -3048,6 +3110,57 @@ class Test_notebooks( Test_controller ):
 
     note = result.get( "note" )
     assert note.object_id == self.note.object_id
+
+  def test_delete_note_by_a_different_user( self ):
+    self.login2()
+
+    result = self.http_post( "/notebooks/delete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    user2 = self.database.load( User, self.user2.object_id )
+    assert user2.storage_bytes == 0
+    assert result[ "storage_bytes" ] == user2.storage_bytes
+
+    # test that the deleted note is actually deleted
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert result[ "note" ] is None
+    assert result[ "note_id_in_trash" ] == self.note.object_id
+
+    # test that the deleted note can be loaded from the trash
+    result = self.http_post( "/notebooks/load_note/", dict(
+      notebook_id = self.notebook.trash_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note
+    assert note.object_id == self.note.object_id
+    assert note.title == self.note.title
+    assert note.contents == self.note.contents
+    assert note.startup == self.note.startup
+    assert note.deleted_from_id == self.notebook.object_id
+    assert note.user_id == self.user2.object_id
+
+  def test_delete_note_own_notes_by_a_different_user( self ):
+    self.login2()
+
+    self.database.execute( self.user2.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_post( "/notebooks/delete_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
 
   def test_undelete_note( self ):
     self.login()
@@ -3314,7 +3427,20 @@ class Test_notebooks( Test_controller ):
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 
-    assert result.get( "error" )
+    assert u"access" in result.get( "error" )
+
+  def test_delete_all_notes_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    result = self.http_post( "/notebooks/delete_all_notes/", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result.get( "error" )
 
   def test_delete_all_notes_with_unknown_notebook( self ):
     self.login()
@@ -4371,7 +4497,24 @@ class Test_notebooks( Test_controller ):
       notebook_id = self.notebook.object_id,
     ), session_id = self.session_id )
 
-    assert result[ u"error" ]
+    assert u"access" in result[ u"error" ]
+
+  def test_undelete_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access(
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    self.http_post( "/notebooks/delete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    result = self.http_post( "/notebooks/undelete", dict(
+      notebook_id = self.notebook.object_id,
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
 
   def test_undelete_twice( self ):
     self.login()
@@ -4897,6 +5040,42 @@ class Test_notebooks( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
+
+  def test_import_csv_own_notes( self ):
+    self.login()
+
+    self.database.execute( self.user.sql_update_access( 
+      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
+    ) )
+
+    csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
+    expected_notes = [
+      ( "blah and stuff", "3.3" ), # ( title, contents )
+      ( "whee", "hmm\nfoo" ),
+      ( "4", "5" ),
+    ]
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = csv_data,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_post( "/notebooks/import_csv/", dict(
+      file_id = self.file_id,
+      content_column = 2,
+      title_column = 1,
+      plaintext = True,
+      import_button = u"import",
+    ), session_id = self.session_id )
+
+    assert u"access" in result[ u"error" ]
 
   def test_import_csv_title_already_in_contents( self ):
     self.login()
