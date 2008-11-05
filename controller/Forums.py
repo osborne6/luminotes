@@ -97,10 +97,17 @@ class Forum( object ):
   )
   def index( self, start = 0, count = 50, user_id = None ):
     """
-    Provide the information necessary to display the current threads within a forum.
+    Provide the information necessary to display the current threads within a forum (in reverse
+    chronological order).
 
+    @type start: integer or NoneType
+    @param start: index of first forum thread to display (optional, defaults to 0)
+    @type count: integer or NoneType
+    @param count: how many forum threads to display (optional, defaults to quite a few)
     @type user_id: unicode or NoneType
     @param user_id: id of the current user
+    @rtype: unicode
+    @return: rendered HTML page
     """
     result = self.__users.current( user_id )
     parents = [ notebook for notebook in result[ u"notebooks" ] if notebook.trash_id and not notebook.deleted ]
