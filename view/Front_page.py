@@ -54,6 +54,10 @@ class Front_page( Product_page ):
               class_ = u"hook_action_area",
               separator = u"",
             ),
+            Div(
+              A( u"New discussion forums!", href = u"/forums/" ),
+              class_ = u"small_text",
+            ),
             class_ = u"explanation",
           ),
           class_ = u"wide_center_area",
