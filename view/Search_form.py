@@ -7,6 +7,10 @@ class Search_form( Form ):
 
     Form.__init__(
       self,
-      Input( type = u"text", name = u"search_text", id = u"search_text", maxlength = 512, value = "search" ),
+      Input(
+        type = u"text", name = u"search_text", id = u"search_text",
+        maxlength = 512, value = "search",
+        autocomplete = u"off",
+      ),
       id = u"search_form",
     )

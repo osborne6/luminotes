@@ -8,6 +8,8 @@
  * Made the subscription pricing page a little less confusing by hiding some
    of the bigger plans by default.
  * Increased the limit on characters per note from 25,000 to 50,000.
+ * Fixed a visual conflict between your web browser's search field
+   autocomplete and Luminotes built-in suggest-as-you-type feature.
  * Fixed an occasional bug that caused unexpected logouts. The solution was
    to move the session information into the database where it could be
    properly locked.
