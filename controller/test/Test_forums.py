@@ -43,11 +43,11 @@ class Test_forums( Test_controller ):
     self.database.save( self.anonymous )
     self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ) )
 
-    tag_id = self.database.next_id( Tag, commit = False )
+    tag_id = self.database.next_id( Tag )
     self.forum_tag = Tag.create(
       tag_id,
       notebook_id = None, # this tag is not in the namespace of a single notebook
-      user_id = self.user.object_id,
+      user_id = self.anonymous.object_id,
       name = u"forum",
       description = u"a discussion forum"
     )
@@ -460,6 +460,62 @@ class Test_forums( Test_controller ):
 
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
+
+  def __assert_new_forum_thread( self, thread, expected_id ):
+    assert thread
+    assert thread.object_id == expected_id
+    assert thread.name == u"new discussion"
+    assert thread.trash_id is None
+    assert thread.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES
+    assert thread.owner == False
+    assert thread.deleted == False
+    assert thread.user_id == self.user.object_id
+
+  def test_general_create_thread( self ):
+    self.login()
+
+    result = self.http_get(
+      "/forums/general/create_thread",
+      session_id = self.session_id,
+    )
+
+    redirect = result.get( u"redirect" )
+    assert redirect
+    assert redirect.startswith( u"/forums/general/" )
+    new_thread_id = redirect.split( "/forums/general/" )[ -1 ].split( u"?" )[ 0 ]
+
+    thread = cherrypy.root.users.load_notebook( self.user.object_id, new_thread_id, read_write = True )
+    self.__assert_new_forum_thread( thread, new_thread_id )
+    tags = self.database.select_many( Tag, thread.sql_load_tags( self.user.object_id ) )
+    assert tags == []
+
+    thread = cherrypy.root.users.load_notebook( self.anonymous.object_id, new_thread_id, read_write = False )
+    self.__assert_new_forum_thread( thread, new_thread_id )
+    tags = self.database.select_many( Tag, thread.sql_load_tags( self.anonymous.object_id ) )
+
+    assert tags
+    assert len( tags ) == 1
+    assert tags[ 0 ].name == u"forum"
+    assert tags[ 0 ].value == u"general"
+
+    notes = self.database.select_many( Note, thread.sql_load_notes() )
+    assert notes
+    assert len( notes ) == 1
+    assert notes[ 0 ].title == None
+    assert notes[ 0 ].contents == u"<h3>"
+    assert notes[ 0 ].notebook_id == thread.object_id
+    assert notes[ 0 ].startup is True
+    assert notes[ 0 ].deleted_from_id is None
+    assert notes[ 0 ].rank == 0
+    assert notes[ 0 ].user_id == self.user.object_id
+
+  def test_general_create_thread_without_login( self ):
+    path = "/forums/general/create_thread"
+    result = self.http_get( path )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
   def login( self ):
     result = self.http_post( "/users/login", dict(
