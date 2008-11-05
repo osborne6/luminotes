@@ -14,6 +14,9 @@
  * NOTE: After upgrading to this release, you must restart memcached to clear
    the cache. Failing to do so will cause errors with the Note object. This
    does not apply to Luminotes Desktop.
+ * NOTE: After upgrading to this release and starting Luminotes, you can
+   optionally convert all existing user sessions with the script
+   tools/convert_sessions.py. This is not necessary for Luminotes Desktop.
 
 1.5.4: October 9, 2008
  * Fixed a visual bug in which clicking up or down to reorder your notebooks
