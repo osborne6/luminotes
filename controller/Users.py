@@ -736,15 +736,16 @@ class Users( object ):
     @return: the loaded notebook if the user has access to it, None otherwise
     """
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
-    notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( notebook_id = notebook_id ) )
-    user = None
+    user = user_id and self.__database.load( User, user_id ) or anonymous
+    notebook = None
 
-    if not notebook and user_id:
-      user = self.__database.load( User, user_id )
-      if not user:
-        return None
-
+    # first try loading the notebook as the given user (if any)
+    if user:
       notebook = self.__database.select_one( Notebook, user.sql_load_notebooks( notebook_id = notebook_id ) )
+
+    # if that doesn't work, try loading the notebook as the anonymous user
+    if notebook is None:
+      notebook = self.__database.select_one( Notebook, anonymous.sql_load_notebooks( notebook_id = notebook_id ) )
 
     # if the user has no access to this notebook, bail
     if notebook is None:
