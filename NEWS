@@ -1,3 +1,6 @@
+1.5.6:
+ * 
+
 1.5.5: November 6, 2008
  * Improved speed of Luminotes Desktop by adding some database indices. This
    will help in particular for larger notebooks with many notes.
