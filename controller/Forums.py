@@ -4,6 +4,7 @@ from model.Notebook import Notebook
 from model.Note import Note
 from model.Tag import Tag
 from Expose import expose
+from Expire import strongly_expire
 from Validate import validate, Valid_string, Valid_int
 from Database import Valid_id, end_transaction
 from Users import grab_user_id
@@ -39,6 +40,7 @@ class Forums( object ):
     self.__support = Forum( database, notebooks, users, u"support" )
 
   @expose( view = Forums_page )
+  @strongly_expire
   @end_transaction
   @grab_user_id
   @validate(
@@ -88,6 +90,7 @@ class Forum( object ):
     self.__name = name
 
   @expose( view = Forum_page )
+  @strongly_expire
   @end_transaction
   @grab_user_id
   @validate(
@@ -151,6 +154,7 @@ class Forum( object ):
     return result
 
   @expose( view = Main_page )
+  @strongly_expire
   @end_transaction
   @grab_user_id
   @validate(
