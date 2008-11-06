@@ -1,7 +1,6 @@
 import cherrypy
 import cPickle as pickle
 from datetime import datetime
-from psycopg2 import ProgrammingError
 
 
 class Session_storage( object ):
