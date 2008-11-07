@@ -21,14 +21,14 @@ class Forums_page( Product_page ):
           ),
         ),
         Div(
-          Span( A( u"general discussion", href = u"/forums/general" ), class_ = u"forum_title" ),
+          Span( A( u"general discussion", href = u"/forums/general/" ), class_ = u"forum_title" ),
           P(
             u"""
             Swap tips about making the most out of your personal wiki, and discuss your ideas for
             new Luminotes features and enhancements.
             """
           ),
-          Span( A( u"technical support", href = u"/forums/support" ), class_ = u"forum_title" ),
+          Span( A( u"technical support", href = u"/forums/support/" ), class_ = u"forum_title" ),
           P( u"Having a problem with your wiki? Something not working as expected? Ask about it here." ),
           class_ = u"forums_text",
         ),
