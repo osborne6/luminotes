@@ -16,4 +16,5 @@ DROP TABLE tag;
 DROP TABLE tag_notebook;
 DROP TABLE tag_note;
 DROP TABLE schema_version;
+DROP TABLE session;
 DROP FUNCTION drop_html_tags( text ); 
