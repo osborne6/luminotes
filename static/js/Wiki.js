@@ -813,7 +813,8 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   if ( creation ) {
-    note_text = this.make_byline( username, creation ) + note_text;
+    var note_id = id.split( ' ' )[ 0 ];
+    note_text = this.make_byline( username, creation, note_id ) + note_text;
   }
 
   var startup = this.startup_notes[ id ];
@@ -1003,14 +1004,6 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
 Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   if ( editor ) {
     addElementClass( editor.iframe, "focused_note_frame" );
-
-    if ( editor.document && editor.read_write ) {
-      var byline = getFirstElementByTagAndClassName( "p", "byline", editor.document );
-      if ( byline ) {
-        removeElement( byline );
-        editor.resize();
-      }
-    }
   }
 
   if ( this.focused_editor && this.focused_editor != editor ) {
@@ -1037,7 +1030,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   }
 }
 
-Wiki.prototype.make_byline = function ( username, creation ) {
+Wiki.prototype.make_byline = function ( username, creation, note_id ) {
   if ( username == "anonymous" )
     username = "admin";
 
@@ -1051,7 +1044,8 @@ Wiki.prototype.make_byline = function ( username, creation ) {
   else
     var timestamp = '';
 
-  return '<p class="byline small_text">Posted' + by + timestamp;
+  return '<p class="byline small_text">Posted' + by + timestamp +
+         ' | <a href="' + window.location.pathname + '?note_id=' + note_id + '" target="_top">permalink</a>';
 }
 
 Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
@@ -1078,6 +1072,14 @@ Wiki.prototype.key_pressed = function ( event ) {
 }
 
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
+  if ( editor.document && editor.read_write ) {
+    var byline = getFirstElementByTagAndClassName( "p", "byline", editor.document );
+    if ( byline ) {
+      removeElement( byline );
+      editor.resize();
+    }
+  }
+
   var code = event.key().code;
 
   if ( event.modifier().ctrl ) {

@@ -1,5 +1,5 @@
 1.5.6:
- * 
+ * Added permalinks to blog and discussion forum posts.
 
 1.5.5: November 6, 2008
  * Improved speed of Luminotes Desktop by adding some database indices. This
