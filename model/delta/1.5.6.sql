@@ -1,1 +1,1 @@
-CREATE INDEX session_id_index on session USING btree (id);
+create index session_id_index on session using btree (id);
