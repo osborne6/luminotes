@@ -287,3 +287,88 @@ packages:
 Then you can run unit tests by running:
 
   nosetests
+
+
+search performance
+------------------
+
+If you have many notes in your database and/or many users, you may find that
+wiki searching is too slow. If that's the case, you can try modifying the way
+that notes are indexed for searching in the database.
+
+These changes are completely optional and fairly technical, and you can safely
+ignore them for the majority of Luminotes Server installations.
+
+First, download an English ispell dictionary from this site:
+
+  http://www.sai.msu.su/~megera/postgres/gist/tsearch/V2/
+
+Untar the tarball and put the two english.* files into a convenient location
+such as /usr/local/lib/ispell
+
+Then, at a psql prompt for the luminotes database, run the following SQL
+command to tell PostgreSQL's tsearch2 module about the new dictionary files:
+
+  insert into pg_ts_dict (
+    select
+      'en_ispell',
+      dict_init,
+      'DictFile="/usr/local/lib/ispell/english.dict",'
+      'AffFile="/usr/local/lib/ispell/english.aff",'
+      'StopFile="/usr/share/postgresql/8.1/contrib/english.stop"',
+      dict_lexize
+    from pg_ts_dict
+    where dict_name = 'ispell_template'
+  );
+
+You may have to change the paths if you put the english.* files in a different
+location, or if your PostgreSQL installation has the english.stop file in a
+different location.
+
+Next, run the following commands at the psql prompt to make PostgreSQL use the
+new dictionary for searches by default:
+
+  update
+    pg_ts_cfgmap set dict_name = null where ts_name = 'default' and
+    dict_name = '{simple}';
+
+  update
+    pg_ts_cfgmap set dict_name = '{en_ispell,en_stem}'
+  where
+    dict_name = '{en_stem}' and ts_name = 'default';
+
+The second command should update about three rows.
+
+To test whether the new dictionary is working, run the following command:
+
+  select lexize('en_ispell', 'program');
+
+You should see a result like the following: 
+
+    lexize
+  -----------
+   {program}
+  (1 row)
+
+If you don't see "{program}" in the result, PostgreSQL may not be finding your
+english.* dictionary files, so check the paths and try again.
+
+Lastly, regenerate the database indices used for searching. This may take a
+while:
+
+  drop trigger search_update on note_current;
+  drop index note_current_search_index;
+  update
+    note_current set search = to_tsvector('default',
+    coalesce(title,'') ||' '|| coalesce(contents,'') );
+  vacuum full analyze;
+  create index note_current_search_index on note_current USING gist (search);
+  vacuum full analyze;
+  create trigger search_update
+    before insert or update on note_current
+    for each row
+    execute procedure tsearch2('search', 'drop_html_tags', 'title',
+    'contents');
+
+For a much more thorough treatment of using custom dictionaries with tsearch2,
+read the "Tsearch V2 Introduction" on the aforementioned web page.
