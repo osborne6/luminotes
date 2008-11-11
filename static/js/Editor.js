@@ -241,6 +241,10 @@ Editor.prototype.highlight = function ( scroll ) {
     }
   }
 
+  // focusing the highlighted editor before scrolling to it prevents IE from deciding to
+  // automatically scroll back to the link immediately afterwards
+  this.focus();
+
   if ( scroll ) {
     // if the editor is already completely on-screen, then there's no need to scroll
     var viewport_position = getViewportPosition();
