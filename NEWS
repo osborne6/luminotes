@@ -6,6 +6,8 @@
  * Fixed a bug in Internet Explorer in which clicking a link sometimes caused
    the browser window to scroll to the destination note, only to immediately
    scroll back to the clicked link.
+ * No longer displaying annoying warning messages about Safari/Chrome support
+   being considered "beta".
  * NOTE: Luminotes Server only, not Luminotes Desktop: Before you start
    Luminotes Server after this upgrade, run the following command as the
    PostgreSQL superuser (usually "postgres"):

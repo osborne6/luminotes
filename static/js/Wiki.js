@@ -57,11 +57,7 @@ function Wiki( invoker ) {
     var unsupported_agent = null;
     var beta_agent = null;
 
-    if ( /Chrome/.test( navigator.userAgent ) )
-      beta_agent = "Chrome";
-    else if ( /Safari/.test( navigator.userAgent ) )
-      beta_agent = "Safari";
-    else if ( /Opera/.test( navigator.userAgent ) )
+    if ( /Opera/.test( navigator.userAgent ) )
       unsupported_agent = "Opera";
 
     if ( unsupported_agent )
