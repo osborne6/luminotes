@@ -1,8 +1,17 @@
 1.5.6:
+ * Greatly improved the speed of wiki searching for Luminotes Server and
+   luminotes.com. Also included a section on search performance within the
+   INSTALL file.
  * Added permalinks to blog and discussion forum posts.
  * Fixed a bug in Internet Explorer in which clicking a link sometimes caused
    the browser window to scroll to the destination note, only to immediately
    scroll back to the clicked link.
+ * NOTE: Luminotes Server only, not Luminotes Desktop: Before you start
+   Luminotes Server after this upgrade, run the following command as the
+   PostgreSQL superuser (usually "postgres"):
+     echo "create language plpgsql;" | psql luminotes
+   Then, once you start Luminotes Server, be prepared to wait up to several
+   minutes while the database search indices regenerate.
 
 1.5.5: November 6, 2008
  * Improved speed of Luminotes Desktop by adding some database indices. This

@@ -1,0 +1,36 @@
+create index note_user_id_index on note (user_id);
+CREATE TABLE note_current_new (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    title text,
+    contents text,
+    notebook_id text,
+    startup boolean DEFAULT false,
+    deleted_from_id text,
+    rank numeric,
+    user_id text
+);
+insert into note_current_new
+  select id, revision, title, contents, notebook_id, startup,
+  deleted_from_id, rank, user_id from note_current;
+drop view note_current;
+alter table note_current_new rename to note_current;
+CREATE INDEX note_current_pkey ON note_current (id);
+CREATE INDEX note_current_notebook_id_index ON note_current (notebook_id);
+CREATE INDEX note_current_notebook_id_startup_index ON note_current (notebook_id, startup);
+CREATE INDEX note_current_notebook_id_title_index ON note_current (notebook_id, title);
+create index note_current_user_id_index on note_current (user_id);
+create trigger note_current_insert
+  after insert on note_current
+  for each row
+  begin
+    insert into note values ( NEW.id, NEW.revision, NEW.title, NEW.contents, NEW.notebook_id,
+    NEW.startup, NEW.deleted_from_id, NEW.rank, null, NEW.user_id );
+  end;
+create trigger note_current_update
+  after update on note_current
+  for each row
+  begin
+    insert into note values ( NEW.id, NEW.revision, NEW.title, NEW.contents, NEW.notebook_id,
+    NEW.startup, NEW.deleted_from_id, NEW.rank, null, NEW.user_id );
+  end;

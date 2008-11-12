@@ -148,22 +148,35 @@ class Note( Persistent ):
     return "select id from note_current where id = %s;" % quote( object_id )
 
   def sql_exists( self ):
-    return Note.sql_id_exists( self.object_id, self.revision )
+    return Note.sql_id_exists( self.object_id )
 
   def sql_create( self ):
     rank = self.__rank
     if rank is None:
       rank = quote( None )
 
+    # this relies on a database trigger to copy the new row into the note table
     return \
-      "insert into note ( id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id ) " + \
+      "insert into note_current ( id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id ) " + \
       "values ( %s, %s, %s, %s, %s, %s, %s, %s, %s );" % \
       ( quote( self.object_id ), quote( self.revision ), quote( self.__title ),
         quote( self.__contents ), quote( self.__notebook_id ), quote( self.__startup and 't' or 'f' ),
         quote( self.__deleted_from_id ), rank, quote( self.user_id ) )
 
   def sql_update( self ):
-    return self.sql_create()
+    rank = self.__rank
+    if rank is None:
+      rank = quote( None )
+
+    # this relies on a database trigger to copy the updated row into the note table
+    return \
+      """
+      update note_current set id = %s, revision = %s, title = %s, contents = %s, notebook_id = %s,
+      startup = %s, deleted_from_id = %s, rank = %s, user_id = %s where id = %s;
+      """ % \
+      ( quote( self.object_id ), quote( self.revision ), quote( self.__title ),
+        quote( self.__contents ), quote( self.__notebook_id ), quote( self.__startup and 't' or 'f' ),
+        quote( self.__deleted_from_id ), rank, quote( self.user_id ), quote( self.object_id ) )
 
   def sql_load_revisions( self ):
     return """ \

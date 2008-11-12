@@ -81,8 +81,18 @@ CREATE TABLE note (
     user_id text
 );
 
-CREATE VIEW note_current AS
-    SELECT id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, search, user_id FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
+CREATE TABLE note_current (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    title text,
+    contents text,
+    notebook_id text,
+    startup boolean DEFAULT false,
+    deleted_from_id text,
+    rank numeric,
+    user_id text
+);
+
 
 CREATE TABLE notebook (
     id text NOT NULL,
@@ -139,6 +149,8 @@ CREATE INDEX luminotes_user_pkey ON luminotes_user (id, revision);
 
 CREATE INDEX note_pkey ON note (id, revision);
 
+CREATE INDEX note_current_pkey ON note (id);
+
 CREATE INDEX notebook_pkey ON notebook (id, revision);
 
 CREATE INDEX password_reset_pkey ON password_reset (id);
@@ -167,6 +179,16 @@ CREATE INDEX note_notebook_id_startup_index ON note (notebook_id, startup);
 
 CREATE INDEX note_notebook_id_title_index ON note (notebook_id, title);
 
+CREATE INDEX note_user_id_index ON note (user_id);
+
+CREATE INDEX note_current_notebook_id_index ON note_current (notebook_id);
+
+CREATE INDEX note_current_notebook_id_startup_index ON note_current (notebook_id, startup);
+
+CREATE INDEX note_current_notebook_id_title_index ON note_current (notebook_id, title);
+
+CREATE INDEX note_current_user_id_index ON note_current (user_id);
+
 CREATE INDEX password_reset_id_index ON password_reset (id);
 
 CREATE INDEX password_reset_email_address_index ON password_reset (email_address);
@@ -176,3 +198,19 @@ CREATE INDEX download_access_id_index ON password_reset (id);
 CREATE INDEX download_access_transaction_id_index ON download_access (transaction_id);
 
 CREATE INDEX search_index ON note (search);
+
+create trigger note_current_insert
+  after insert on note_current
+  for each row
+  begin
+    insert into note values ( NEW.id, NEW.revision, NEW.title, NEW.contents, NEW.notebook_id,
+    NEW.startup, NEW.deleted_from_id, NEW.rank, null, NEW.user_id );
+  end;
+
+create trigger note_current_update
+  after update on note_current
+  for each row
+  begin
+    insert into note values ( NEW.id, NEW.revision, NEW.title, NEW.contents, NEW.notebook_id,
+    NEW.startup, NEW.deleted_from_id, NEW.rank, null, NEW.user_id );
+  end;

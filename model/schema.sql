@@ -16,6 +16,15 @@ CREATE FUNCTION drop_html_tags(text) RETURNS text
     AS $_$select regexp_replace( regexp_replace( $1, '</?(div|p|br|ul|ol|li|h3)( [^>]*?)?/?>', ' ', 'gi' ), '<[^>]+?>', '', 'g' );$_$
     LANGUAGE sql;
 ALTER FUNCTION public.drop_html_tags(text) OWNER TO luminotes;
+create function log_note_revision() returns trigger as $_$
+  begin
+    insert into note values
+      ( NEW.id, NEW.revision, NEW.title, NEW.contents, NEW.notebook_id, NEW.startup,
+        NEW.deleted_from_id, NEW.rank, NEW.user_id );
+    return null;
+  end;
+  $_$ language plpgsql;
+ALTER FUNCTION public.log_note_revision() OWNER TO luminotes;
 CREATE TABLE file (
     id text NOT NULL,
     revision timestamp with time zone,
@@ -92,12 +101,21 @@ CREATE TABLE note (
     startup boolean DEFAULT false,
     deleted_from_id text,
     rank numeric,
-    search tsvector,
     user_id text
 );
 ALTER TABLE public.note OWNER TO luminotes;
-CREATE VIEW note_current AS
-    SELECT note.id, note.revision, note.title, note.contents, note.notebook_id, note.startup, note.deleted_from_id, note.rank, note.search, note.user_id FROM note WHERE (note.revision IN (SELECT max(sub_note.revision) AS max FROM note sub_note WHERE (sub_note.id = note.id)));
+CREATE TABLE note_current (
+    id text NOT NULL,
+    revision timestamp with time zone NOT NULL,
+    title text,
+    contents text,
+    notebook_id text,
+    startup boolean DEFAULT false,
+    deleted_from_id text,
+    rank numeric,
+    search tsvector,
+    user_id text
+);
 ALTER TABLE public.note_current OWNER TO luminotes;
 CREATE TABLE notebook (
     id text NOT NULL,
@@ -170,6 +188,9 @@ ALTER TABLE ONLY luminotes_user
 ALTER TABLE ONLY note
     ADD CONSTRAINT note_pkey PRIMARY KEY (id, revision);
 
+ALTER TABLE ONLY note_current
+    ADD CONSTRAINT note_pkey PRIMARY KEY (id);
+
 ALTER TABLE ONLY notebook
     ADD CONSTRAINT notebook_pkey PRIMARY KEY (id, revision);
 
@@ -202,16 +223,33 @@ CREATE INDEX note_notebook_id_startup_index ON note USING btree (notebook_id, st
 
 CREATE INDEX note_notebook_id_title_index ON note USING btree (notebook_id, md5(title));
 
+CREATE INDEX note_user_id_index ON note USING btree (user_id);
+
+CREATE INDEX note_current_notebook_id_index ON note_current USING btree (notebook_id);
+
+CREATE INDEX note_current_notebook_id_startup_index ON note_current USING btree (notebook_id, startup);
+
+CREATE INDEX note_current_notebook_id_title_index ON note_current USING btree (notebook_id, md5(title));
+
+CREATE INDEX note_current_user_id_index ON note_current USING btree (user_id);
+
+CREATE INDEX note_current_search_index ON note_current USING gist (search);
+
 CREATE INDEX password_reset_email_address_index ON password_reset USING btree (email_address);
 
 CREATE INDEX download_access_transaction_id_index ON download_access USING btree (transaction_id);
 
-CREATE INDEX search_index ON note USING gist (search);
+CREATE INDEX session_id_index on session using btree (id);
 
 CREATE TRIGGER search_update
-    BEFORE INSERT OR UPDATE ON note
+    BEFORE INSERT OR UPDATE ON note_current
     FOR EACH ROW
     EXECUTE PROCEDURE tsearch2('search', 'drop_html_tags', 'title', 'contents');
+
+CREATE TRIGGER note_current_update
+  AFTER INSERT OR UPDATE ON note_current
+  FOR EACH ROW
+  EXECUTE PROCEDURE log_note_revision();
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM postgres;
