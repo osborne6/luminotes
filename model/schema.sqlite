@@ -149,7 +149,7 @@ CREATE INDEX luminotes_user_pkey ON luminotes_user (id, revision);
 
 CREATE INDEX note_pkey ON note (id, revision);
 
-CREATE INDEX note_current_pkey ON note (id);
+CREATE INDEX note_current_pkey ON note_current (id);
 
 CREATE INDEX notebook_pkey ON notebook (id, revision);
 

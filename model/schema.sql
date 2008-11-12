@@ -189,7 +189,7 @@ ALTER TABLE ONLY note
     ADD CONSTRAINT note_pkey PRIMARY KEY (id, revision);
 
 ALTER TABLE ONLY note_current
-    ADD CONSTRAINT note_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT note_current_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY notebook
     ADD CONSTRAINT notebook_pkey PRIMARY KEY (id, revision);
