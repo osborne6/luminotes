@@ -452,7 +452,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 
   if ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES &&
        ( !this.user.username || this.user.username == "anonymous" ) ) {
-    this.display_message( 'Please login first. No account? Click "sign up".' );
+    this.display_message( 'Please login first. No account? Click "sign up" to get a free account.' );
     return;
   }
 
