@@ -64,7 +64,7 @@ class Download_page( Product_page ):
                   Th(
                     u"Luminotes Desktop",
                     Div(
-                      "version", VERSION,
+                      A( "version", VERSION, href = news_url ),
                       class_ = u"version_text",
                     ),
                     Div(
