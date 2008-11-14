@@ -1,11 +1,13 @@
 import re
-from Tags import Div, Span, H4, A, Table, Tbody, Tr, Td
+from model.Notebook import Notebook
+from Tags import Div, Span, H4, A, Table, Tbody, Tr, Td, Img, P, Br, Input
+from Search_form import Search_form
 
 
 class Note_tree_area( Div ):
   LINK_PATTERN = re.compile( u'<a\s+(?:[^>]+\s)?href="[^"]+"[^>]*>', re.IGNORECASE )
 
-  def __init__( self, toolbar, notebook, root_notes, recent_notes, total_notes_count ):
+  def __init__( self, notebook, root_notes, recent_notes, total_notes_count, user ):
     tags = [ tag for tag in notebook.tags if tag.name == u"forum" ]
 
     if tags:
@@ -17,7 +19,6 @@ class Note_tree_area( Div ):
 
     Div.__init__(
       self,
-      toolbar,
       Div(
         H4(
           forum_tag and u"posts" or u"notes",
@@ -25,8 +26,20 @@ class Note_tree_area( Div ):
             Span( total_notes_count, id = u"total_notes_count" ), u"total",
             class_ = u"small_text link_area_item",
           ),
+          notebook.read_write != Notebook.READ_ONLY and Input(
+            type = u"button",
+            class_ = u"note_button small_text",
+            id = u"save_button",
+            value = u"saved",
+            disabled = u"true",
+            title = u"save your work",
+          ) or None,
           id = u"note_tree_area_title",
         ) or None,
+        Div(
+          Search_form(),
+          class_ = u"link_area_item",
+        ),
         forum_tag and Div(
           A( u"%s forum" % forum_name, href = "/forums/%s" % forum_name ),
           class_ = u"link_area_item",
@@ -39,11 +52,20 @@ class Note_tree_area( Div ):
             has_children = ( notebook.name != u"trash" ) and self.LINK_PATTERN.search( note.contents ) or False,
             root_note_id = note.object_id,
           ) for note in root_notes ],
-          Tr( Td(
-            ( notebook.name != u"trash" ) and u'To add a note here, click the "options" tab on a note, then "show on startup".' or None,
-            id = "note_tree_instructions",
-            class_ = ( ( len( root_notes ) > 0 ) and u"undisplayed" or u"" ),
-          ) ) or None,
+          Tr(
+            Td(),
+            ( notebook.name != u"trash" and notebook.read_write == Notebook.READ_WRITE ) and Td(
+              Img(
+                src = u"/static/images/toolbar/small/new_note_button.png",
+                width = u"20", height = u"20",
+                id = u"new_note_tree_link",
+                class_ = u"middle_image",
+                title = u"Add a note to this note tree."
+              ),
+              Span( id = u"new_note_tree_link_area" ),
+            ) or None,
+            id = u"new_note_tree_link_row",
+          ) or None,
           tree_id = "note_tree_root_table",
         ) or None,
         ( not forum_tag and recent_notes is not None and notebook.name != u"trash" ) and Span(
@@ -69,6 +91,14 @@ class Note_tree_area( Div ):
             ), id = u"recent_notes_navigation" ),
             tree_id = "recent_notes_table",
           ),
+        ) or None,
+        ( user.username is None ) and P(
+          A( u"Download", href = u"/download", class_ = u"hook_action"  ),
+          Span( u" or ", class_ = u"hook_action_or" ),
+          A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ), Br(),
+          Span( "Get started in seconds.", class_ = u"hook_action_detail" ),
+          class_ = u"hook_action_area",
+          separator = u"",
         ) or None,
         id = u"note_tree_area_holder",
       ),

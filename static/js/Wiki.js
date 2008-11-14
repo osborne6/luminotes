@@ -436,6 +436,17 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
     this.make_image_button( "new_notebook", "new_note", true );
   }
+
+  var new_note_tree_link_button = getElement( "new_note_tree_link" );
+  if ( new_note_tree_link_button ) {
+    connect( new_note_tree_link_button, "onclick", function ( event ) {
+      if ( self.note_tree )
+        self.note_tree.start_link_add();
+      event.stop();
+    } );
+
+    this.make_image_button( "new_note_tree_link", "new_note", true );
+  }
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
@@ -1206,7 +1217,7 @@ Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
       button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
   } );
 
-  if ( button.name == "newNote" || button.name == "new_notebook" ) {
+  if ( button.name == "newNote" || button.name == "new_notebook" || button.name == "new_note_tree_link" ) {
     connect( button, "onmousedown", function ( event ) {
       var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
       if ( /_hover/.test( button.src ) )
@@ -2760,8 +2771,8 @@ Wiki.prototype.start_notebook_rename = function () {
     "input", {
       "type": "button",
       "class": "message_button",
-      "value": "ok",
-      "title": "dismiss this message"
+      "value": "rename",
+      "title": "rename this notebook"
     }
   );
 
@@ -4162,11 +4173,11 @@ Suggest_pulldown.prototype.shutdown = function () {
 }
 
 
-
 function Note_tree( wiki, notebook_id, invoker ) {
   this.wiki = wiki;
   this.notebook_id = notebook_id;
   this.invoker = invoker;
+  this.suggest_pulldown = null;
 
   // add onclick handlers to the initial note links within the tree
   var links = getElementsByTagAndClassName( "a", "note_tree_link", "note_tree_area" );
@@ -4189,7 +4200,7 @@ function Note_tree( wiki, notebook_id, invoker ) {
 
   // connect to the wiki note events
   connect( wiki, "note_renamed", function ( editor, new_title ) { self.rename_link( editor, new_title ); } );
-  connect( wiki, "note_added", function ( editor ) { self.add_root_link( editor ); } );
+  connect( wiki, "note_added", function ( editor ) { self.add_root_link( editor.id, editor.title, editor.contents(), editor.startup ); } );
   connect( wiki, "note_removed", function ( id ) { self.remove_link( id ); } );
   connect( wiki, "note_saved", function ( editor ) { self.update_link( editor ); } );
 }
@@ -4209,41 +4220,40 @@ Note_tree.prototype.link_clicked = function ( event ) {
 
 LINK_PATTERN = /<a\s+([^>]+\s)?href="[^"]+"[^>]*>/i;
 
-Note_tree.prototype.add_root_link = function ( editor ) {
+Note_tree.prototype.add_root_link = function ( note_id, title, contents, startup ) {
   // for now, only add startup notes to the note tree
-  if ( !editor.startup )
+  if ( !startup )
     return;
 
   // if the root note is already present in the tree, no need to add it again
-  if ( getElement( "note_tree_item_" + editor.id ) )
+  var item = getElement( "note_tree_item_" + note_id );
+  if ( item ) {
+    new Highlight( item, { "endcolor": "#fafafa" } );
     return;
+  }
 
-  // display the tree expander arrow if the given note's editor contains any outgoing links
-  if ( LINK_PATTERN.exec( editor.contents() ) )
-    var expander = createDOM( "div", { "class": "tree_expander", "id": "note_tree_expander_" + editor.id } );
+  // display the tree expander arrow if the given note's contents contains any outgoing links
+  if ( LINK_PATTERN.exec( contents ) )
+    var expander = createDOM( "div", { "class": "tree_expander", "id": "note_tree_expander_" + note_id } );
   else
-    var expander = createDOM( "div", { "class": "tree_expander_empty", "id": "note_tree_expander_" + editor.id } );
+    var expander = createDOM( "div", { "class": "tree_expander_empty", "id": "note_tree_expander_" + note_id } );
 
   var link = createDOM( "a", {
-   "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
-   "id": "note_tree_link_" + editor.id,
+   "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id,
+   "id": "note_tree_link_" + note_id,
    "class": "note_tree_link"
-  }, editor.title || "untitled note" );
+  }, title || "untitled note" );
 
-  appendChildNodes( "note_tree_root_table_body", createDOM(
+  insertSiblingNodesBefore( "new_note_tree_link_row", createDOM(
     "tr",
-    { "id": "note_tree_item_" + editor.id, "class": "note_tree_item" },
+    { "id": "note_tree_item_" + note_id, "class": "note_tree_item" },
     createDOM( "td", {}, expander ),
     createDOM( "td", {}, link )
   ) );
 
   var self = this;
-  connect( expander, "onclick", function ( event ) { self.expand_collapse_link( event, editor.id ); } );
+  connect( expander, "onclick", function ( event ) { self.expand_collapse_link( event, note_id ); } );
   connect( link, "onclick", function ( event ) { self.link_clicked( event ); } );
-
-  var instructions = getElement( "note_tree_instructions" );
-  if ( instructions )
-    addElementClass( instructions, "undisplayed" );
 }
 
 Note_tree.prototype.remove_link = function ( note_id ) {
@@ -4254,10 +4264,6 @@ Note_tree.prototype.remove_link = function ( note_id ) {
 
   if ( getFirstElementByTagAndClassName( "a", null, "note_tree_root_table" ) )
     return;
-
-  var instructions = getElement( "note_tree_instructions" );
-  if ( instructions )
-    removeElementClass( instructions, "undisplayed" );
 }
 
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
@@ -4270,7 +4276,7 @@ Note_tree.prototype.update_link = function ( editor ) {
   var link = getElement( "note_tree_link_" + editor.id );
 
   if ( !link && editor.startup ) {
-    this.add_root_link( editor );
+    this.add_root_link( editor.id, editor.title, editor.contents(), editor.startup );
     return;
   }
 
@@ -4416,6 +4422,92 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   var note_id = parse_query( link )[ "note_id" ];
   disconnectAll( expander );
   connect_expander( expander, note_id );
+}
+
+Note_tree.prototype.start_link_add = function () {
+  // if the add is already in progress, end the add instead of starting one
+  var new_note_tree_link_field = getElement( "new_note_tree_link_field" );
+  if ( new_note_tree_link_field ) {
+    this.end_link_add();
+    return; 
+  }
+
+  link_field = createDOM(
+    "input", {
+      "type": "text",
+      "value": "",
+      "id": "new_note_tree_link_field",
+      "name": "new_note_tree_link_field",
+      "size": "10",
+      "class": "text_field"
+    }
+  );
+
+  var ok_button = createDOM(
+    "input", {
+      "type": "button",
+      "class": "message_button",
+      "value": "add",
+      "title": "add the note"
+    }
+  );
+
+  var form = createDOM(
+    "form", { "id": "new_note_tree_link_form", "class": "inline" }, link_field, ok_button
+  );
+
+  replaceChildNodes( "new_note_tree_link_area", form );
+
+  // add a suggest pulldown beneath the link name text field
+  var self = this;
+  this.suggest_pulldown = new Suggest_pulldown(
+    this.wiki, this.notebook_id, this.invoker, link_field, null, "", link_field
+  );
+  connect( this.suggest_pulldown, "suggestion_selected", function ( note ) {
+    replaceChildNodes( "new_note_tree_link_area", "" );
+    self.suggest_pulldown.shutdown();
+    // TODO: actually set the startup flag on the note (on the server)
+    self.add_root_link( note.object_id, note.title, note.contents, true );
+  } );
+  
+  connect( form, "onsubmit", function ( event ) {
+    self.end_link_add();
+    event.stop();
+  } );
+  connect( form, "onkeyup", function ( event ) {
+    self.suggest_pulldown.update_suggestions( link_field.value );
+  } );
+  connect( ok_button, "onclick", function ( event ) {
+    self.end_link_add();
+    event.stop();
+  } );
+
+  link_field.focus();
+  link_field.select();
+}
+
+Note_tree.prototype.end_link_add = function () {
+  var note_name = getElement( "new_note_tree_link_field" ).value;
+  this.suggest_pulldown.shutdown();
+  replaceChildNodes( "new_note_tree_link_area", "" );
+
+  // if the new name is blank, bail
+  if ( /^\s*$/.test( note_name ) )
+    return;
+
+  // load the requested note by title and add it as a root link
+  var self = this;
+  this.invoker.invoke( "/notebooks/load_note_by_title", "GET", {
+    "notebook_id": this.notebook_id,
+    "note_title": note_name
+  }, function ( result ) {
+    // TODO: actually set the startup flag on the note (on the server)
+    var note = result.note;
+    if ( note )
+      self.add_root_link( note.object_id, note.title, note.contents, true );
+    else
+      self.wiki.display_message( "Sorry, a note by that title doesn't exist. (If you're trying to create a new note, then simply click that large \"+\" button on the left.)" );
+  } );
 }
 
 function Recent_notes( wiki, notebook_id, invoker ) {

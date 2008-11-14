@@ -1,5 +1,8 @@
 1.5.7:
- *
+ * Rearranged the links on the left and right side of the wiki editing page
+   so the note title links have a little more horizontal breathing room.
+ * Fixed a bug in which search result note summaries were not showing the
+   portion of the note that matched the search term. (Luminotes Server)
 
 1.5.6: November 12, 2008
  * Greatly improved the speed of wiki searching for Luminotes Server and

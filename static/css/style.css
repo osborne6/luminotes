@@ -277,7 +277,7 @@ h1 {
 
 #note_tree_area {
   position: fixed;
-  width: 15em;
+  width: 20em;
   max-width: 20%;
   text-align: left;
   line-height: 140%;
@@ -289,7 +289,8 @@ h1 {
 #note_tree_area_holder {
   max-height: 100%;
   overflow: auto;
-  margin-left: 0.5em;
+  margin-left: 1em;
+  margin-right: 1em;
 }
 
 #note_tree_root_table {
@@ -298,7 +299,6 @@ h1 {
 }
 
 #recent_notes_table {
-  margin-bottom: 1em;
   font-size: 72%;
 }
 
@@ -359,15 +359,14 @@ h1 {
   line-height: 140%;
   top: 80px;
   bottom: 1em;
-  width: 20em;
+  width: 15em;
   max-width: 20%;
 }
 
 #link_area_holder {
   max-height: 100%;
   overflow: auto;
-  margin-left: 1em;
-  margin-right: 1em;
+  margin-left: 0.5em;
 }
 
 #this_notebook_area_title {
@@ -411,6 +410,7 @@ h1 {
   padding: 0.25em;
   border: #999999 1px solid;
   width: 95%;
+  max-width: 15em;
 }
 
 #clutter_link {
@@ -660,6 +660,10 @@ h1 {
   border: #999999 1px solid;
 }
 
+.inline {
+  display: inline;
+}
+
 .link_area_item {
   font-size: 75%;
   padding: 0.25em 0.25em 0.25em 0.5em;
@@ -815,10 +819,6 @@ h1 {
   font-weight: normal;
 }
 
-#note_tree_instructions {
-  line-height: 140%;
-}
-
 .new_feature_text {
   font-size: 90%;
   font-weight: bold;
@@ -842,6 +842,9 @@ h1 {
 .middle_image {
   vertical-align: middle;
   border: 0;
+}
+
+.padding_left {
   padding-left: 0.5em;
 }
 

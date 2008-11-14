@@ -166,16 +166,13 @@ class Main_page( Page ):
       Header( user, header_notebook, login_url, logout_url, header_note_title, rate_plan ),
       Div(
         Div(
-          Note_tree_area(
+          Link_area(
             Toolbar(
               notebook,
               hide_toolbar = parent_id or notebook.read_write == Notebook.READ_ONLY,
               note_word = ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES ) and u"post" or u"note",
             ),
-            notebook,
-            root_notes,
-            recent_notes,
-            total_notes_count,
+            notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan,
           ),
           id = u"left_area",
         ),
@@ -247,7 +244,13 @@ class Main_page( Page ):
           id = u"center_content_area",
         ),
         Div(
-          Link_area( notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan ),
+          Note_tree_area(
+            notebook,
+            root_notes,
+            recent_notes,
+            total_notes_count,
+            user,
+          ),
           id = u"right_area",
         ),
         id = u"everything_area",

@@ -1,11 +1,10 @@
-from Tags import Div, P, Span, H4, A, Strong, Img, Input, Br
+from Tags import Div, P, Span, H4, A, Strong, Img, Br
 from Rounded_div import Rounded_div
-from Search_form import Search_form
 from model.Notebook import Notebook
 
 
 class Link_area( Div ):
-  def __init__( self, notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan ):
+  def __init__( self, toolbar, notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan ):
     linked_notebooks = [ nb for nb in notebooks if
       (
         nb.read_write == Notebook.READ_WRITE or
@@ -26,23 +25,12 @@ class Link_area( Div ):
 
     Div.__init__(
       self,
+      toolbar,
       Div(
         Div(
           H4(
             u"this %s" % notebook_word,
-            notebook.read_write != Notebook.READ_ONLY and Input(
-              type = u"button",
-              class_ = u"note_button small_text",
-              id = u"save_button",
-              value = u"saved",
-              disabled = u"true",
-              title = u"save your work",
-            ) or None,
             id = u"this_notebook_area_title",
-          ),
-          Div(
-            Search_form(),
-            class_ = u"link_area_item",
           ),
 
           ( rate_plan.get( u"notebook_sharing" ) and notebook.name == u"Luminotes blog" ) and Div(
@@ -53,7 +41,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
             A(
-              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image" ),
+              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image padding_left" ),
               href = u"%s?rss" % notebook_path,
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
             ),
@@ -66,7 +54,7 @@ class Link_area( Div ):
               title = u"Subscribe to the RSS feed for this %s." % notebook_word,
             ),
             A(
-              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image" ),
+              Img( src = u"/static/images/rss.png", width = u"14", height = u"14", class_ = u"middle_image padding_left" ),
               href = updates_path,
               title = u"Subscribe to the RSS feed for this %s." % notebook_word,
             ),
@@ -169,13 +157,6 @@ class Link_area( Div ):
         ( not forum_tag ) and Div(
           ( len( linked_notebooks ) > 0 ) and H4(
             u"notebooks",
-            Img(
-              src = u"/static/images/toolbar/small/new_note_button.png",
-              width = u"20", height = u"20",
-              id = "new_notebook",
-              class_ = u"middle_image",
-              title = u"Create a new wiki notebook."
-            ),
             id = u"notebooks_area_title",
           ) or None,
           [ ( nb.object_id == notebook.object_id ) and Rounded_div(
@@ -203,14 +184,15 @@ class Link_area( Div ):
           ) for nb in linked_notebooks ],
           id = u"notebooks_area"
         ) or None,
-
-        ( user.username is None and notebook_path != "/" ) and P(
-          A( u"Download", href = u"/download", class_ = u"hook_action"  ),
-          Span( u" or ", class_ = u"hook_action_or" ),
-          A( u"Sign up", href = u"/pricing", class_ = u"hook_action"  ), Br(),
-          Span( "Get started in seconds.", class_ = u"hook_action_detail" ),
-          class_ = u"hook_action_area",
-          separator = u"",
+        ( not forum_tag ) and Div(
+          Img(
+            src = u"/static/images/toolbar/small/new_note_button.png",
+            width = u"20", height = u"20",
+            id = "new_notebook",
+            class_ = u"middle_image",
+            title = u"Create a new wiki notebook."
+          ),
+          class_ = u"link_area_item",
         ) or None,
 
         Div(
