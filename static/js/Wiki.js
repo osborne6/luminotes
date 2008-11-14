@@ -4438,6 +4438,7 @@ Note_tree.prototype.start_link_add = function () {
       "value": "",
       "id": "new_note_tree_link_field",
       "name": "new_note_tree_link_field",
+      "title": "Enter the title of an existing note.",
       "size": "10",
       "class": "text_field"
     }
