@@ -60,7 +60,7 @@ class Note_tree_area( Div ):
                 width = u"20", height = u"20",
                 id = u"new_note_tree_link",
                 class_ = u"middle_image",
-                title = u"Add a note to this note tree."
+                title = u"Add one of your notes to this note tree."
               ),
               Span( id = u"new_note_tree_link_area" ),
             ) or None,
