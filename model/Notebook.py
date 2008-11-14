@@ -223,7 +223,7 @@ class Notebook( Persistent ):
       return \
         """
         select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id, null,
-               headline( drop_html_tags( contents ), query ) as summary from (
+               null, headline( drop_html_tags( contents ), query ) as summary from (
           select
             note_current.id, note_current.revision, note_current.title, note_current.contents,
             note_current.notebook_id, note_current.startup, note_current.deleted_from_id,
