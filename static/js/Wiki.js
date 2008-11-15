@@ -440,6 +440,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
   var new_note_tree_link_button = getElement( "new_note_tree_link" );
   if ( new_note_tree_link_button ) {
     connect( new_note_tree_link_button, "onclick", function ( event ) {
+      self.clear_pulldowns();
       if ( self.note_tree )
         self.note_tree.start_link_add();
       event.stop();
@@ -3044,7 +3045,8 @@ Pulldown.prototype.update_position = function ( always_left_align ) {
 }
 
 Pulldown.prototype.shutdown = function () {
-  removeElement( this.div );
+  if ( this.div && this.div.parentNode )
+    removeElement( this.div );
 }
 
 
@@ -4440,6 +4442,7 @@ Note_tree.prototype.start_link_add = function () {
       "name": "new_note_tree_link_field",
       "title": "Enter the title of an existing note.",
       "size": "10",
+      "autocomplete": "off",
       "class": "text_field"
     }
   );
@@ -4465,10 +4468,7 @@ Note_tree.prototype.start_link_add = function () {
     this.wiki, this.notebook_id, this.invoker, link_field, null, "", link_field
   );
   connect( this.suggest_pulldown, "suggestion_selected", function ( note ) {
-    replaceChildNodes( "new_note_tree_link_area", "" );
-    self.suggest_pulldown.shutdown();
-    // TODO: actually set the startup flag on the note (on the server)
-    self.add_root_link( note.object_id, note.title, note.contents, true );
+    self.end_link_add( note );
   } );
   
   connect( form, "onsubmit", function ( event ) {
@@ -4487,27 +4487,64 @@ Note_tree.prototype.start_link_add = function () {
   link_field.select();
 }
 
-Note_tree.prototype.end_link_add = function () {
-  var note_name = getElement( "new_note_tree_link_field" ).value;
-  this.suggest_pulldown.shutdown();
-  replaceChildNodes( "new_note_tree_link_area", "" );
+Note_tree.prototype.end_link_add = function ( note ) {
+  // if no note is provided, load it based on the title
+  if ( !note ) {
+    var note_name = getElement( "new_note_tree_link_field" ).value;
+    replaceChildNodes( "new_note_tree_link_area", "" );
 
-  // if the new name is blank, bail
-  if ( /^\s*$/.test( note_name ) )
+    // if the new name is blank, bail
+    if ( /^\s*$/.test( note_name ) )
+      return;
+
+    // load the requested note by title and add it as a root link
+    var self = this;
+    this.invoker.invoke( "/notebooks/load_note_by_title", "GET", {
+      "notebook_id": this.notebook_id,
+      "note_title": note_name
+    }, function ( result ) {
+      self.save_and_display_startup_note( result.note );
+    } );
+  // otherwise, a note is provided
+  } else {
+    replaceChildNodes( "new_note_tree_link_area", "" );
+    this.save_and_display_startup_note( note );
+  }
+
+  if ( this.suggest_pulldown ) {
+    this.suggest_pulldown.shutdown();
+    this.suggest_pulldown = null;
+  }
+}
+
+Note_tree.prototype.save_and_display_startup_note = function ( note ) {
+  if ( !note ) {
+    this.wiki.display_message( "Sorry, a note by that title doesn't exist. (If you're trying to create a new note, then simply click that large \"+\" button on the left.)" );
     return;
+  }
 
-  // load the requested note by title and add it as a root link
+  // if it's already a startup note, just highlight it and bail
+  if ( note.startup ) {
+    this.add_root_link( note.object_id, note.title, note.contents, true );
+    return;
+  }
+
+  // mark the note as a startup note on the client
+  this.wiki.startup_notes[ note.object_id ] = true;
+  var frame = getElement( "note_" + note.object_id );
+  if ( frame )
+    frame.editor.startup = true;
+
+  // save the note as a startup note on the server, and then add it to the note tree
   var self = this;
-  this.invoker.invoke( "/notebooks/load_note_by_title", "GET", {
+  this.invoker.invoke( "/notebooks/save_note", "POST", {
     "notebook_id": this.notebook_id,
-    "note_title": note_name
+    "note_id": note.object_id,
+    "contents": note.contents,
+    "startup": true,
+    "previous_revision": note.revision
   }, function ( result ) {
-    // TODO: actually set the startup flag on the note (on the server)
-    var note = result.note;
-    if ( note )
-      self.add_root_link( note.object_id, note.title, note.contents, true );
-    else
-      self.wiki.display_message( "Sorry, a note by that title doesn't exist. (If you're trying to create a new note, then simply click that large \"+\" button on the left.)" );
+    self.add_root_link( note.object_id, note.title, note.contents, true );
   } );
 }
 
