@@ -5,6 +5,8 @@
    having to click "options" -> "show on startup".
  * Fixed a bug in which search result note summaries were not showing the
    portion of the note that matched the search term. (Luminotes Server)
+ * Fixed a visual bug in which undoing the deletion of a note didn't always
+   make the note reappear, even though the undeletion always worked.
 
 1.5.6: November 12, 2008
  * Greatly improved the speed of wiki searching for Luminotes Server and

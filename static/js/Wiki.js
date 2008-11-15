@@ -1546,12 +1546,11 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
         self.display_storage_usage( result.storage_bytes );
         self.clear_messages();
         self.clear_pulldowns();
+        self.startup_notes[ editor.id ] = true;
+        self.increment_total_notes_count();
+        self.load_editor( "Note not found.", editor.id, null, null, null, position_after );
       } );
     }
-
-    this.startup_notes[ editor.id ] = true;
-    this.increment_total_notes_count();
-    this.load_editor( "Note not found.", editor.id, null, null, null, position_after );
   }
 
   event.stop();
@@ -1567,12 +1566,11 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
       self.display_storage_usage( result.storage_bytes );
       self.clear_messages();
       self.clear_pulldowns();
+      self.startup_notes[ note_id ] = true;
+      self.increment_total_notes_count();
+      self.load_editor( "Note not found.", note_id, null, null, null, position_after );
     } );
   }
-
-  this.startup_notes[ note_id ] = true;
-  this.increment_total_notes_count();
-  this.load_editor( "Note not found.", note_id, null, null, null, position_after );
 
   event.stop();
 }
