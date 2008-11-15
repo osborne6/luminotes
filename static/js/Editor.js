@@ -56,7 +56,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
         "title": "undelete note"
       } );
       connect( this.undelete_button, "onclick", function ( event ) { signal( self, "undelete_clicked", event ); } );
-    } else {
+    } else if ( !own_notes_only ) {
       this.changes_button = createDOM( "input", {
         "type": "button",
         "class": "note_button",
@@ -66,16 +66,14 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
       } );
       connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
 
-      if ( !own_notes_only ) {
-        this.options_button = createDOM( "input", {
-          "type": "button",
-          "class": "note_button",
-          "id": "options_" + iframe_id,
-          "value": "options",
-          "title": "note options"
-        } );
-        connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
-      }
+      this.options_button = createDOM( "input", {
+        "type": "button",
+        "class": "note_button",
+        "id": "options_" + iframe_id,
+        "value": "options",
+        "title": "note options"
+      } );
+      connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
     }
   }
 
