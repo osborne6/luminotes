@@ -16,22 +16,28 @@ class Link_area( Div ):
 
     if [ tag for tag in notebook.tags if tag.name == u"forum" ]:
       forum_tag = True
+      forum_name = tag.value
       notebook_word = u"discussion"
       note_word = u"post"
     else:
       forum_tag = False
+      forum_name = None
       notebook_word = u"notebook"
       note_word = u"note"
 
     Div.__init__(
       self,
       toolbar,
-      Div(
-        Div(
+      ( user.username != u"anonymous" ) and Div(
+        ( notebook_path != u"/" ) and Div(
           H4(
             u"this %s" % notebook_word,
             id = u"this_notebook_area_title",
           ),
+          forum_tag and Div(
+            A( u"%s forum" % forum_name, href = "/forums/%s" % forum_name ),
+            class_ = u"link_area_item",
+          ) or None,
 
           ( rate_plan.get( u"notebook_sharing" ) and notebook.name == u"Luminotes blog" ) and Div(
             A(
@@ -152,7 +158,7 @@ class Link_area( Div ):
           ) or None,
 
           id = u"this_notebook_area",
-        ),
+        ) or None,
 
         ( not forum_tag ) and Div(
           ( len( linked_notebooks ) > 0 ) and H4(
@@ -199,6 +205,6 @@ class Link_area( Div ):
           id = u"storage_usage_area",
         ),
         id = u"link_area_holder",
-      ),
+      ) or None,
       id = u"link_area",
     )
