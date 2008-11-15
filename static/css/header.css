@@ -34,3 +34,7 @@
   height: 100%;
   margin: 0 auto;
 }
+
+.nav_image {
+ vertical-align: middle;
+}

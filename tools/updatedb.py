@@ -22,7 +22,7 @@ class Updater( object ):
     ( u"password reset.html", False ),
     ( u"advanced browser features.html", False ),
     ( u"supported browsers.html", False ),
-    ( u"support.html", False ),
+    ( u"community.html", False ),
     ( u"enable JavaScript.html", False ),
   ]
 

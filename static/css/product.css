@@ -195,16 +195,42 @@
 .footer {
   clear: both;
   background-color: #b0d0ff;
-  height: 2em;
+  background-image: url(/static/images/footer.png);
+  background-repeat: repeat-x;
   margin-left: 0;
   margin-right: 0;
-  margin-top: 1em;
   border-top: 1px solid #999999;
 }
 
 .footer_links {
-  font-size: 85%;
-  padding-top: 0.5em;
+  font-size: 72%;
+}
+
+.footer_links br {
+  clear: both;
+}
+
+.footer_category {
+  font-weight: bold;
+}
+
+.footer_column {
+  text-align: left;
+}
+
+.footer_list {
+  float: left;
+  list-style: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-bottom: 0.5em;
+  width: 125px;
+}
+
+.wide_footer_list {
+  width: 200px;
 }
 
 .tour_area {

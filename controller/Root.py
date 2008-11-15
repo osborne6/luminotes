@@ -368,6 +368,12 @@ class Root( object ):
       redirect = u"/pricing",
     )
 
+  @expose()
+  def support( self ):
+    return dict(
+      redirect = u"/community",
+    )
+
   @expose( view = Download_page )
   @strongly_expire
   @end_transaction

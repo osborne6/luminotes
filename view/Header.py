@@ -34,10 +34,6 @@ class Header( Div ):
       Div(
         ( note_title == u"home" ) and title_image or A( title_image, href = u"/" ),   
         ( login_url and user.username == u"anonymous" ) and Div(
-          ( note_title == u"download" ) and Span( u"download", class_ = u"bold_link" ) or \
-          A( u"download", href = u"/download", class_ = u"bold_link" ), u" | ",
-          ( note_title == u"pricing" ) and Span( u"sign up", class_ = u"bold_link" ) or \
-          A( u"sign up", href = u"/pricing", class_ = u"bold_link" ), u" | ",
           A(
             u"login",
             href = login_url,
@@ -64,32 +60,6 @@ class Header( Div ):
             ),
             " | ",
           ) or None,
-          ( note_title == u"download" ) and Span( u"download", class_ = u"bold_link" ) or \
-          A(
-            u"download",
-            href = u"/download",
-            title = u"Download Luminotes to run on your own computer.",
-            class_ = u"bold_link",
-          ),
-          " | ",
-          user.username and Span(
-            A(
-              u"upgrade",
-              href = u"/pricing",
-              title = u"Upgrade your Luminotes account.",
-              class_ = u"bold_link",
-            ),
-            " | ",
-          ) or Span(
-            ( note_title == u"pricing" ) and Span( u"sign up", class_ = u"bold_link" ) or \
-            A(
-              u"sign up",
-              href = u"/pricing",
-              title = u"Sign up for an online Luminotes account.",
-              class_ = u"bold_link",
-            ),
-            " | ",
-          ) or None,
           A(
             u"logout",
             href = logout_url,
@@ -102,10 +72,36 @@ class Header( Div ):
           ( note_title == u"home" ) and Span( u"home", class_ = u"bold_link" ) or A( u"home", href = u"/" ), u" | ",
           ( note_title == u"tour" ) and Span( u"tour", class_ = u"bold_link" ) or A( u"tour", href = u"/tour" ), u" | ",
           ( user.username in ( None, u"anonymous" ) ) and Span( ( note_title == u"wiki" ) and Span( u"demo", class_ = u"bold_link" ) or A( u"demo", href = u"/users/demo" ), u" | " ) or None,
-          ( note_title == u"support" ) and Span( u"support", class_ = u"bold_link" ) or A( u"support", href = u"/support" ), u" | ",
-          ( note_title == u"team" ) and Span( u"team", class_ = u"bold_link" ) or A( u"team", href = u"/meet_the_team" ), u" | ",
-          ( note_title == u"blog" ) and Span( u"blog", class_ = u"bold_link" ) or A( u"blog", href = u"/blog" ), u" | ",
-          ( note_title == u"privacy" ) and Span( u"privacy", class_ = u"bold_link" ) or A( u"privacy", href = u"/privacy" ),
+          ( note_title == u"community" ) and Span( u"community", class_ = u"bold_link" ) or A( u"community", href = u"/community" ), u" | ",
+          ( note_title == u"download" ) and Span( u"download", class_ = u"bold_link" ) or \
+          A(
+            u"download",
+            href = u"/download",
+            title = u"Download Luminotes to run on your own computer.",
+            class_ = u"bold_link",
+          ),
+          " | ",
+          ( user.username and user.username != u"anonymous" ) and Span(
+            A(
+              u"upgrade",
+              href = u"/pricing",
+              title = u"Upgrade your Luminotes account.",
+              class_ = u"bold_link",
+            ),
+          ) or Span(
+            ( note_title == u"pricing" ) and Span( u"sign up", class_ = u"bold_link" ) or \
+            A(
+              u"sign up",
+              href = u"/pricing",
+              title = u"Sign up for an online Luminotes account.",
+              class_ = u"bold_link",
+            ),
+          ) or None,
+
+          #( note_title == u"support" ) and Span( u"support", class_ = u"bold_link" ) or A( u"support", href = u"/support" ), u" | ",
+          #( note_title == u"team" ) and Span( u"team", class_ = u"bold_link" ) or A( u"team", href = u"/meet_the_team" ), u" | ",
+          #( note_title == u"blog" ) and Span( u"blog", class_ = u"bold_link" ) or A( u"blog", href = u"/blog" ), u" | ",
+          #( note_title == u"privacy" ) and Span( u"privacy", class_ = u"bold_link" ) or A( u"privacy", href = u"/privacy" ),
           class_ = u"header_links",
         ),
         class_ = u"wide_center_area",

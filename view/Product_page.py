@@ -1,6 +1,6 @@
 from Page import Page
 from Header import Header
-from Tags import Link, Meta, Div, A, Span
+from Tags import Link, Meta, Div, A, Span, Ul, Li, Br
 
 
 class Product_page( Page ):
@@ -21,14 +21,42 @@ class Product_page( Page ):
 
       Div(
         Div(
+          # TODO make into a table kinda like on the footer of change.gov?
           Div(
-            u"Copyright &copy;2008 Luminotes", u" | ",
-            A( u"contact", href = u"/contact_info" ), u" | ",
-            A( u"support", href = u"/support" ), u" | ",
-            A( u"source code", href = u"/source_code" ), u" | ",
-            A( u"team", href = u"/meet_the_team" ), u" | ",
-            A( u"blog", href = u"/blog" ), u" | ",
-            A( u"privacy", href = u"/privacy" ),
+            Div(
+              Ul(
+                Li( u"About", class_ = u"footer_category" ),
+                Li( A( u"tour", href = u"/tour" ) ),
+                Li( A( u"demo", href = u"/demo" ) ),
+                Li( A( u"faq", href = u"/faq" ) ),
+                Li( A( u"team", href = u"/meet_the_team" ) ),
+                Li( A( u"user guide", href = u"/guide" ) ),
+                Li( A( u"privacy", href = u"/privacy" ) ),
+                class_ = u"footer_list",
+              ),
+              Ul(
+                Li( u"Get Started", class_ = u"footer_category" ),
+                Li( A( u"download", href = u"/download" ) ),
+                Li( A( u"sign up", href = u"/pricing" ) ),
+                Li( A( u"source code", href = u"/source_code" ) ),
+                class_ = u"footer_list",
+              ),
+              Ul(
+                Li( u"Community", class_ = u"footer_category" ),
+                Li( A( u"contact support", href = u"/contact_info" ) ),
+                Li( A( u"discussion forums", href = u"/forums/" ) ),
+                Li( A( u"blog", href = u"/blog" ) ),
+                Li( A( u"Facebook group", href = u"http://www.facebook.com/pages/Luminotes-personal-wiki-notebook/17143857741" ) ),
+                Li( A( u"Twitter stream", href = u"http://twitter.com/Luminotes" ) ),
+                class_ = u"footer_list",
+              ),
+              Ul(
+                Li( u"Copyright &copy;2008 Luminotes" ),
+                class_ = u"footer_list wide_footer_list",
+              ),
+              Br(),
+              class_ = u"footer_column",
+            ),
             class_ = u"footer_links",
           ),
           class_ = u"wide_center_area",
