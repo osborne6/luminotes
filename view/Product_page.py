@@ -45,7 +45,7 @@ class Product_page( Page ):
                 Li( u"Community", class_ = u"footer_category" ),
                 Li( A( u"contact support", href = u"/contact_info" ) ),
                 Li( A( u"discussion forums", href = u"/forums/" ) ),
-                Li( A( u"blog", href = u"/blog" ) ),
+                Li( A( u"blog", href = u"/blog/" ) ),
                 Li( A( u"Facebook group", href = u"http://www.facebook.com/pages/Luminotes-personal-wiki-notebook/17143857741" ) ),
                 Li( A( u"Twitter stream", href = u"http://twitter.com/Luminotes" ) ),
                 class_ = u"footer_list",

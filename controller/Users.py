@@ -638,7 +638,7 @@ class Users( object ):
     anon_notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
 
     if user_id and user_id != anonymous.object_id:
-      notebooks = self.__database.select_many( Notebook, user.sql_load_notebooks() )
+      notebooks = self.__database.select_many( Notebook, user.sql_load_notebooks( parents_only = True ) )
       groups = self.__database.select_many( Group, user.sql_load_groups() )
     # if the user is not logged in, return a login URL
     else:

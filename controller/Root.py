@@ -7,7 +7,7 @@ from Notebooks import Notebooks
 from Users import Users, grab_user_id
 from Groups import Groups
 from Files import Files
-from Forums import Forums
+from Forums import Forums, Forum
 from Database import Valid_id, end_transaction
 from Users import update_auth
 from model.Note import Note
@@ -59,6 +59,7 @@ class Root( object ):
     )
     self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
     self.__forums = Forums( database, self.__notebooks, self.__users )
+    self.__blog = Forum( database, self.__notebooks, self.__users, u"blog" )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
 
   @expose( Main_page )
@@ -252,43 +253,6 @@ class Root( object ):
   @expose()
   def take_a_tour( self ):
     return dict( redirect = u"/tour" )
-
-  @expose( view = Main_page, rss = Notebook_rss )
-  @end_transaction
-  @grab_user_id
-  @validate(
-    start = Valid_int( min = 0 ),
-    count = Valid_int( min = 1, max = 50 ),
-    note_id = Valid_id( none_okay = True ),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def blog( self, start = 0, count = 5, note_id = None, user_id = None ):
-    """
-    Provide the information necessary to display the blog notebook with notes in reverse
-    chronological order.
-
-    @type start: unicode or NoneType
-    @param start: index of recent note to start with (defaults to 0, the most recent note)
-    @type count: int or NoneType
-    @param count: number of recent notes to display (defaults to 10 notes)
-    @type note_id: unicode or NoneType
-    @param note_id: id of single note to load (optional)
-    @rtype: unicode
-    @return: rendered HTML page
-    @raise Validation_error: one of the arguments is invalid
-    """
-    result = self.__users.current( user_id )
-    blog_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes blog" ]
-
-    result.update( self.__notebooks.recent_notes( blog_notebooks[ 0 ].object_id, start, count, user_id ) )
-
-    # if a single note was requested, just return that one note
-    if note_id:
-      result[ "notes" ] = [ note for note in result[ "notes" ] if note.object_id == note_id ]
-
-    result[ "http_url" ] = self.__settings[ u"global" ].get( u"luminotes.http_url", u"" )
-
-    return result
 
   @expose( view = Main_page )
   @end_transaction
@@ -493,3 +457,4 @@ class Root( object ):
   groups = property( lambda self: self.__groups )
   files = property( lambda self: self.__files )
   forums = property( lambda self: self.__forums )
+  blog = property( lambda self: self.__blog )

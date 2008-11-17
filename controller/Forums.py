@@ -1,3 +1,4 @@
+import os.path
 import cherrypy
 from model.User import User
 from model.Notebook import Notebook
@@ -97,8 +98,9 @@ class Forum( object ):
     start = Valid_int( min = 0 ),
     count = Valid_int( min = 1, max = 50 ),
     user_id = Valid_id( none_okay = True ),
+    note_id = Valid_id( none_okay = True ),
   )
-  def index( self, start = 0, count = 50, user_id = None ):
+  def index( self, start = 0, count = 50, note_id = None, user_id = None ):
     """
     Provide the information necessary to display the current threads within a forum (in reverse
     chronological order).
@@ -107,11 +109,16 @@ class Forum( object ):
     @param start: index of first forum thread to display (optional, defaults to 0)
     @type count: integer or NoneType
     @param count: how many forum threads to display (optional, defaults to quite a few)
+    @type note_id: unicode or NoneType
+    @param note_id: id of thread to redirect to (optional, legacy support for old URLs)
     @type user_id: unicode or NoneType
     @param user_id: id of the current user
     @rtype: unicode
     @return: rendered HTML page
     """
+    if note_id:
+      return dict( redirect = os.path.join( cherrypy.request.path, note_id ) )
+
     result = self.__users.current( user_id )
     parents = [ notebook for notebook in result[ u"notebooks" ] if notebook.trash_id and not notebook.deleted ]
     if len( parents ) > 0:
@@ -123,12 +130,19 @@ class Forum( object ):
     if anonymous is None:
       raise Access_error()
 
+    # whether this is a blog determines whether the posts are diplayed in forward or reverse
+    # chronological order
+    if self.__name == u"blog":
+      reverse = False
+    else:
+      reverse = True
+
     # load a slice of the list of the threads in this forum, excluding those with a default name
     threads = self.__database.select_many(
       Notebook,
       anonymous.sql_load_notebooks(
         parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name,
-        exclude_notebook_name = self.DEFAULT_THREAD_NAME, reverse = True,
+        exclude_notebook_name = self.DEFAULT_THREAD_NAME, reverse = reverse,
         start = start, count = count,
       )
     )
@@ -218,6 +232,10 @@ class Forum( object ):
 
     anonymous = self.__database.select_one( User, User.sql_load_by_username( u"anonymous" ), use_cache = True )
     if anonymous is None:
+      raise Access_error()
+
+    # for now, crappy hard-coding to prevent just anyone from creating a blog thread
+    if self.__name == u"blog" and user.username != u"witten":
       raise Access_error()
 
     # create the new notebook thread
