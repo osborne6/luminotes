@@ -66,9 +66,8 @@ function Wiki( invoker ) {
       this.display_message( "Luminotes support for your web browser (" + beta_agent + ") is currently in beta. If you encounter any problems, please contact support so that they can be fixed!" );
   }
 
-  if ( this.notebook.read_write != NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+  if ( this.notebook_has_tag( this.notebook, "forum" ) )
     this.autosaver = Autosaver( this );
-  }
 
   var deleted_id = getElement( "deleted_id" ).value;
   var skip_empty_message = deleted_id ? true : false;
@@ -582,9 +581,8 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       }
     }
 
-    // if the notebook's read_write is NOTEBOOK_READ_WRITE_FOR_OWN_NOTES, then instead of opening
-    // a new post, display an error message
-    if ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+    // if the notebook is a forum, then instead of opening a new post, display an error message
+    if ( this.notebook_has_tag( this.notebook, "forum" ) ) {
       this.display_message( "No such forum post! (A forum link must point to another post in this discussion or an external web page.)" );
       return;
     }
@@ -600,9 +598,8 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
     return;
   }
 
-  // if the notebook's read_write is NOTEBOOK_READ_WRITE_FOR_OWN_NOTES, maintain displayed note
-  // order by opening an existing note on its own page
-  if ( this.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES ) {
+  // if the notebook is a forum, maintain displayed note order by opening an existing note on its own page
+  if ( this.notebook_has_tag( this.notebook, "forum" ) ) {
     window.location = window.location.protocol + '//' + window.location.host + window.location.pathname + '?note_id=' + note_id;
     return;
   }
@@ -1620,8 +1617,8 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       else if ( self.startup_notes[ editor.id ] )
         delete self.startup_notes[ editor.id ];
 
-      // special case to rename a NOTEBOOK_READ_WRITE_FOR_OWN_NOTES when its first note is renamed
-      if ( result.rank == 0 && self.notebook.read_write == NOTEBOOK_READ_WRITE_FOR_OWN_NOTES )
+      // special case to rename a forum notebook when its first note is renamed
+      if ( result.rank == 0 && self.notebook.has_tag( self.notebook, "forum" ) )
         self.end_notebook_rename( editor.title, true );
 
       if ( callback )
@@ -1848,6 +1845,21 @@ Wiki.prototype.load_search_suggestion = function ( note ) {
   }
 }
 
+Wiki.prototype.notebook_has_tag = function ( notebook, tag_name, tag_value ) {
+  // determine whether the given notebook has a tag with tag_name, and (optionally) tag_value
+  for ( var i in notebook.tags ) {
+    var tag = notebook.tags[ i ];
+
+    if ( tag.name == tag_name ) {
+      if ( tag_value && tag.value != tag_value )
+        return false;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 Wiki.prototype.display_search_results = function ( result ) {
   // if there are no search results, indicate that and bail
   if ( !result || result.notes.length == 0 ) {
@@ -1859,7 +1871,7 @@ Wiki.prototype.display_search_results = function ( result ) {
   if ( this.search_results_editor )
     this.search_results_editor.shutdown();
 
-  if ( /^\/forums/.test( window.location.pathname ) )
+  if ( this.notebook_has_tag( this.notebook, "forum" ) )
     var notebook_word = "discussion";
   else
     var notebook_word = "notebook";
