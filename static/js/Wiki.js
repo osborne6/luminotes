@@ -207,8 +207,12 @@ Wiki.prototype.display_storage_usage = function( storage_bytes ) {
     this.storage_usage_high = false;
   }
 
+  var storage_usage_area = getElement( "storage_usage_area" );
+  if ( !storage_usage_area )
+    return;
+
   replaceChildNodes(
-    "storage_usage_area",
+    storage_usage_area,
     createDOM( "div", { "class": storage_usage_class },
     bytes_to_megabytes( storage_bytes ) + " (" + usage_percent + "%) of " + bytes_to_megabytes( quota_bytes ) )
   );
