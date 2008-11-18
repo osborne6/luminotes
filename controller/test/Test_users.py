@@ -184,15 +184,6 @@ class Test_users( Test_controller ):
 
     notebooks = result[ u"notebooks" ]
     notebook = notebooks[ 0 ]
-    assert notebook.object_id == notebooks[ 1 ].trash_id
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_WRITE
-    assert notebook.owner == True
-    assert notebook.rank == None
-
-    notebook = notebooks[ 1 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
@@ -201,7 +192,7 @@ class Test_users( Test_controller ):
     assert notebook.owner == True
     assert notebook.rank == 0
 
-    notebook = notebooks[ 2 ]
+    notebook = notebooks[ 1 ]
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
@@ -273,14 +264,6 @@ class Test_users( Test_controller ):
     assert notebook.owner == False
     assert notebook.rank == 1
 
-    notebook = notebooks.get( self.notebooks[ 0 ].trash_id )
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_ONLY
-    assert notebook.owner == False
-    assert notebook.rank == None
-
     notebook = notebooks.get( self.anon_notebook.object_id )
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
@@ -321,15 +304,6 @@ class Test_users( Test_controller ):
 
     notebooks = result[ u"notebooks" ]
     notebook = notebooks[ 0 ]
-    assert notebook.object_id == notebooks[ 1 ].trash_id
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_WRITE
-    assert notebook.owner == True
-    assert notebook.rank == None
-
-    notebook = notebooks[ 1 ]
     assert notebook.object_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
@@ -338,7 +312,7 @@ class Test_users( Test_controller ):
     assert notebook.owner == True
     assert notebook.rank == 0
 
-    notebook = notebooks[ 2 ]
+    notebook = notebooks[ 1 ]
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
@@ -641,17 +615,9 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].email_address is None
 
     notebooks = result[ u"notebooks" ]
-    assert len( notebooks ) == 3
-    notebook = notebooks[ 0 ]
-    assert notebook.object_id == notebooks[ 1 ].trash_id
-    assert notebook.revision
-    assert notebook.name == u"trash"
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_WRITE
-    assert notebook.owner == True
-    assert notebook.rank == None
+    assert len( notebooks ) == 2
 
-    notebook = notebooks[ 1 ]
+    notebook = notebooks[ 0 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
     assert notebook.name == u"my notebook"
@@ -660,7 +626,7 @@ class Test_users( Test_controller ):
     assert notebook.owner == True
     assert notebook.rank == 0
 
-    notebook = notebooks[ 2 ]
+    notebook = notebooks[ 1 ]
     assert notebook.object_id == self.anon_notebook.object_id
     assert notebook.revision == self.anon_notebook.revision
     assert notebook.name == self.anon_notebook.name
@@ -745,37 +711,25 @@ class Test_users( Test_controller ):
     assert result[ u"user" ]
     assert result[ u"user" ].object_id == self.user.object_id
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == u"trash"
+    assert len( result[ u"notebooks" ] ) == 3
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == None
+    assert result[ u"notebooks" ][ 0 ].rank == 0
     assert result[ u"notebooks" ][ 0 ].tags == []
-    assert result[ u"notebooks" ][ 1 ].object_id
-    assert result[ u"notebooks" ][ 1 ].name == u"trash"
+    assert result[ u"notebooks" ][ 1 ].object_id == self.notebooks[ 1 ].object_id
+    assert result[ u"notebooks" ][ 1 ].name == self.notebooks[ 1 ].name
     assert result[ u"notebooks" ][ 1 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 1 ].owner == True
-    assert result[ u"notebooks" ][ 1 ].rank == None
+    assert result[ u"notebooks" ][ 1 ].rank == 1
     assert result[ u"notebooks" ][ 1 ].tags == []
-    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_WRITE
-    assert result[ u"notebooks" ][ 2 ].owner == True
-    assert result[ u"notebooks" ][ 2 ].rank == 0
+    assert result[ u"notebooks" ][ 2 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 2 ].name == self.anon_notebook.name
+    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_ONLY
+    assert result[ u"notebooks" ][ 2 ].owner == False
+    assert result[ u"notebooks" ][ 2 ].rank == None
     assert result[ u"notebooks" ][ 2 ].tags == []
-    assert result[ u"notebooks" ][ 3 ].object_id == self.notebooks[ 1 ].object_id
-    assert result[ u"notebooks" ][ 3 ].name == self.notebooks[ 1 ].name
-    assert result[ u"notebooks" ][ 3 ].read_write == Notebook.READ_WRITE
-    assert result[ u"notebooks" ][ 3 ].owner == True
-    assert result[ u"notebooks" ][ 3 ].rank == 1
-    assert result[ u"notebooks" ][ 3 ].tags == []
-    assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
-    assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 4 ].read_write == Notebook.READ_ONLY
-    assert result[ u"notebooks" ][ 4 ].owner == False
-    assert result[ u"notebooks" ][ 4 ].rank == None
-    assert result[ u"notebooks" ][ 4 ].tags == []
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
@@ -825,28 +779,16 @@ class Test_users( Test_controller ):
     assert result[ u"user" ]
     assert result[ u"user" ].object_id == self.user.object_id
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
-    assert result[ u"notebooks" ][ 0 ].object_id
-    assert result[ u"notebooks" ][ 0 ].name == u"trash"
+    assert len( result[ u"notebooks" ] ) == 3
+    assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
+    assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
     assert result[ u"notebooks" ][ 0 ].owner == True
-    assert result[ u"notebooks" ][ 0 ].rank == None
-    assert result[ u"notebooks" ][ 0 ].tags == []
-    assert result[ u"notebooks" ][ 1 ].object_id
-    assert result[ u"notebooks" ][ 1 ].name == u"trash"
-    assert result[ u"notebooks" ][ 1 ].read_write == Notebook.READ_WRITE
-    assert result[ u"notebooks" ][ 1 ].owner == True
-    assert result[ u"notebooks" ][ 1 ].rank == None
-    assert result[ u"notebooks" ][ 1 ].tags == []
-    assert result[ u"notebooks" ][ 2 ].object_id == self.notebooks[ 0 ].object_id
-    assert result[ u"notebooks" ][ 2 ].name == self.notebooks[ 0 ].name
-    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_WRITE
-    assert result[ u"notebooks" ][ 2 ].owner == True
-    assert result[ u"notebooks" ][ 2 ].rank == 0
-    assert result[ u"notebooks" ][ 2 ].tags
-    assert len( result[ u"notebooks" ][ 2 ].tags ) == 2
+    assert result[ u"notebooks" ][ 0 ].rank == 0
+    assert result[ u"notebooks" ][ 0 ].tags
+    assert len( result[ u"notebooks" ][ 0 ].tags ) == 2
 
-    tags = result[ u"notebooks" ][ 2 ].tags
+    tags = result[ u"notebooks" ][ 0 ].tags
     assert tags[ 0 ].object_id == new_tag.object_id
     assert tags[ 0 ].notebook_id == new_tag.notebook_id
     assert tags[ 0 ].user_id == new_tag.user_id
@@ -858,18 +800,18 @@ class Test_users( Test_controller ):
     assert tags[ 1 ].name == new_tag2.name
     assert tags[ 1 ].description == new_tag2.description
 
-    assert result[ u"notebooks" ][ 3 ].object_id == self.notebooks[ 1 ].object_id
-    assert result[ u"notebooks" ][ 3 ].name == self.notebooks[ 1 ].name
-    assert result[ u"notebooks" ][ 3 ].read_write == Notebook.READ_WRITE
-    assert result[ u"notebooks" ][ 3 ].owner == True
-    assert result[ u"notebooks" ][ 3 ].rank == 1
-    assert result[ u"notebooks" ][ 3 ].tags == []
-    assert result[ u"notebooks" ][ 4 ].object_id == self.anon_notebook.object_id
-    assert result[ u"notebooks" ][ 4 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 4 ].read_write == Notebook.READ_ONLY
-    assert result[ u"notebooks" ][ 4 ].owner == False
-    assert result[ u"notebooks" ][ 4 ].rank == None
-    assert result[ u"notebooks" ][ 4 ].tags == []
+    assert result[ u"notebooks" ][ 1 ].object_id == self.notebooks[ 1 ].object_id
+    assert result[ u"notebooks" ][ 1 ].name == self.notebooks[ 1 ].name
+    assert result[ u"notebooks" ][ 1 ].read_write == Notebook.READ_WRITE
+    assert result[ u"notebooks" ][ 1 ].owner == True
+    assert result[ u"notebooks" ][ 1 ].rank == 1
+    assert result[ u"notebooks" ][ 1 ].tags == []
+    assert result[ u"notebooks" ][ 2 ].object_id == self.anon_notebook.object_id
+    assert result[ u"notebooks" ][ 2 ].name == self.anon_notebook.name
+    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_ONLY
+    assert result[ u"notebooks" ][ 2 ].owner == False
+    assert result[ u"notebooks" ][ 2 ].rank == None
+    assert result[ u"notebooks" ][ 2 ].tags == []
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
@@ -4834,7 +4776,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -4875,7 +4817,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -4954,7 +4896,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -4992,7 +4934,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5037,7 +4979,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5166,7 +5108,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5214,7 +5156,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5262,7 +5204,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5308,7 +5250,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5357,7 +5299,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5405,7 +5347,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 3
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
