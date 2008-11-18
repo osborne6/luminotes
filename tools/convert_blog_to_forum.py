@@ -71,29 +71,10 @@ class Blog_converter( object ):
     # load the forum tag
     forum_tag = self.database.select_one( Tag, Tag.sql_load_by_name( u"forum", user_id = anonymous.object_id ) )
 
-    # load the blog tag, or create one if it doesn't exist
-    blog_tag = self.database.select_one( Tag, Tag.sql_load_by_name( u"blog", user_id = anonymous.object_id ) )
-    if not blog_tag:
-      tag_id = self.database.next_id( Tag, commit = False )
-      blog_tag = Tag.create(
-        tag_id,
-        notebook_id = None, # this tag is not in the namespace of a single notebook
-        user_id = anonymous.object_id,
-        name = u"blog",
-        description = u"web log"
-      )
-      self.database.save( blog_tag, commit = False )
-
     # associate the forum tag with the previously created notebook thread, and set that
     # association's value to the forum name
     self.database.execute(
       anonymous.sql_save_notebook_tag( notebook_id, forum_tag.object_id, value = u"blog" ),
-      commit = False,
-    )
-
-    # associate the blog tag with the previously created notebook thread
-    self.database.execute(
-      anonymous.sql_save_notebook_tag( notebook_id, blog_tag.object_id ),
       commit = False,
     )
 
