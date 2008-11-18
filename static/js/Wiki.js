@@ -1622,7 +1622,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
         delete self.startup_notes[ editor.id ];
 
       // special case to rename a forum notebook when its first note is renamed
-      if ( result.rank == 0 && self.notebook.has_tag( self.notebook, "forum" ) )
+      if ( result.rank == 0 && self.notebook_has_tag( self.notebook, "forum" ) )
         self.end_notebook_rename( editor.title, true );
 
       if ( callback )
