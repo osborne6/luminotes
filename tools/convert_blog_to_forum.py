@@ -46,7 +46,7 @@ class Blog_converter( object ):
     return blog_notebooks[ 0 ]
 
   def convert_posts_to_forum_threads( self ):
-    notes = self.database.select_many( Note, self.blog_notebook.sql_load_recent_notes( start = 0, count = 1000 ) )
+    notes = self.database.select_many( Note, self.blog_notebook.sql_load_recent_notes( reverse = True, start = 0, count = 1000 ) )
 
     for note in notes:
       self.convert_post( note )
