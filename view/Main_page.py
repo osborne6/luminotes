@@ -226,7 +226,7 @@ class Main_page( Page ):
                 type = u"text/javascript",
               ),
               ( forum_tag and user.username and user.username != u"anonymous" ) and \
-                P( u"If you write a comment, click the save button to publish it.", class_ = u"small_text" ) or None,
+                P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button.", class_ = u"small_text" ) or None,
               Page_navigation(
                 notebook_path, len( notes ), total_notes_count, start, count,
                 return_text = u"return to the discussion",
