@@ -12,7 +12,7 @@ To start Luminotes Desktop on Windows, just click the Start button, click on
 browser, so when you launch it, it will open up in a new browser window or
 tab.
 
-Windows Security: The first time you start Luminotes, you may see a Windows
+ * Windows Security: The first time you start Luminotes, you may see a Windows
 Security Alert about blocking Luminotes. This is basically Windows asking you
 if you want to allow Luminotes to access the internet. If you click "Keep
 Blocking", then that will prevent Luminotes Desktop from accessing the
@@ -25,11 +25,11 @@ with Luminotes.com. If you plan on using this synchronization feature when
 it's available, then you should click "Unblock". Otherwise, you can safely
 click "Keep Blocking".
 
-File storage: In case you're curious, your notes are stored within the
+ * File storage: In case you're curious, your notes are stored within the
 %APPDATA%\Luminotes folder in a database file. Attached files are stored with
 the %APPDATA\Luminotes\files folder.
 
-USB drive: If you'd like to run Luminotes from a USB drive, then when the
+ * USB drive: If you'd like to run Luminotes from a USB drive, then when the
 Luminotes Desktop installer prompts you to select the installation destination
 location, simply select the location of your USB drive. For instance, if your
 USB drive has the Windows drive letter "E:", then just enter "E:" for the
