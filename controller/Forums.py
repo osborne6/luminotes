@@ -13,6 +13,7 @@ from Notebooks import Notebooks
 from Users import Access_error
 from view.Forums_page import Forums_page
 from view.Forum_page import Forum_page
+from view.Forum_rss import Forum_rss
 from view.Main_page import Main_page
 
 
@@ -90,7 +91,7 @@ class Forum( object ):
     self.__users = users
     self.__name = name
 
-  @expose( view = Forum_page )
+  @expose( view = Forum_page, rss = Forum_rss )
   @strongly_expire
   @end_transaction
   @grab_user_id
@@ -102,8 +103,7 @@ class Forum( object ):
   )
   def index( self, start = 0, count = 50, note_id = None, user_id = None ):
     """
-    Provide the information necessary to display the current threads within a forum (in reverse
-    chronological order).
+    Provide the information necessary to display the current threads within a forum.
 
     @type start: integer or NoneType
     @param start: index of first forum thread to display (optional, defaults to 0)
@@ -130,19 +130,12 @@ class Forum( object ):
     if anonymous is None:
       raise Access_error()
 
-    # whether this is a blog determines whether the posts are diplayed in forward or reverse
-    # chronological order
-    if self.__name == u"blog":
-      reverse = False
-    else:
-      reverse = True
-
     # load a slice of the list of the threads in this forum, excluding those with a default name
     threads = self.__database.select_many(
       Notebook,
       anonymous.sql_load_notebooks(
         parents_only = False, undeleted_only = True, tag_name = u"forum", tag_value = self.__name,
-        exclude_notebook_name = self.DEFAULT_THREAD_NAME, reverse = reverse,
+        exclude_notebook_name = self.DEFAULT_THREAD_NAME, reverse = True,
         start = start, count = count,
       )
     )
@@ -262,6 +255,11 @@ class Forum( object ):
     self.__database.save( note, commit = False )
 
     self.__database.commit()
+
+    if self.__name == "blog":
+      return dict(
+        redirect = u"/blog/%s" % thread_id,
+      )
 
     return dict(
       redirect = u"/forums/%s/%s" % ( self.__name, thread_id ),

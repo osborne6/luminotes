@@ -94,14 +94,13 @@ class Main_page( Page ):
       updates_path = None
 
     forum_tags = [ tag for tag in notebook.tags if tag.name == u"forum" ]
+    forum_tag = None
 
     if notebook.name == u"Luminotes":
       notebook_path = u"/"
       updates_path = None   # no RSS feed for the main notebook
     elif notebook.name == u"Luminotes user guide":
       notebook_path = u"/guide"
-    elif notebook.name == u"Luminotes blog":
-      notebook_path = u"/blog"
     elif forum_tags:
       forum_tag = forum_tags[ 0 ]
       notebook_path = u"/forums/%s/%s" % ( forum_tag.value, notebook.object_id )
@@ -125,7 +124,6 @@ class Main_page( Page ):
         "contact info": "contact",
         "meet the team": "team",
         "Luminotes user guide": "guide",
-        "Luminotes blog": "blog",
         "Luminotes privacy policy": "privacy",
       }.get( header_note_title, header_note_title )
 
@@ -136,10 +134,8 @@ class Main_page( Page ):
       self,
       title,
       Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
-      ( notebook.name == u"Luminotes blog" ) \
-        and Link( rel = u"alternate", type = u"application/rss+xml", title = u"Luminotes blog", href = "/blog?rss" ) \
-        or ( updates_path and \
-             Link( rel = u"alternate", type = u"application/rss+xml", title = notebook.name, href = updates_path ) or None ),
+      updates_path and \
+        Link( rel = u"alternate", type = u"application/rss+xml", title = notebook.name, href = updates_path ) or None,
       Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
       Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
@@ -170,7 +166,7 @@ class Main_page( Page ):
             Toolbar(
               notebook,
               hide_toolbar = parent_id or notebook.read_write == Notebook.READ_ONLY,
-              note_word = ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES ) and u"post" or u"note",
+              note_word = forum_tag and u"post" or u"note",
             ),
             notebooks, notebook, parent_id, notebook_path, updates_path, user, rate_plan,
           ),
@@ -212,8 +208,6 @@ class Main_page( Page ):
               Page_navigation(
                 notebook_path, len( notes ), total_notes_count, start, count,
               ),
-              ( notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and user.username and user.username != u"anonymous" ) and \
-                P( u"If you write a comment, click the save button to publish it.", class_ = u"small_text" ) or None,
               Div(
                 Span( id = u"notes_top" ),
                 id = u"notes",
@@ -231,6 +225,8 @@ class Main_page( Page ):
                 u"document.getElementById( 'static_notes' ).style.display = 'none';",
                 type = u"text/javascript",
               ),
+              ( forum_tag and user.username and user.username != u"anonymous" ) and \
+                P( u"If you write a comment, click the save button to publish it.", class_ = u"small_text" ) or None,
               Page_navigation(
                 notebook_path, len( notes ), total_notes_count, start, count,
                 return_text = u"return to the discussion",

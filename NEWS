@@ -6,10 +6,17 @@
  * Improved site navigation by adding more useful links to the page footer.
  * Converted the Luminotes blog to work like a forum, so now you can post
    comments on Luminotes blog posts.
+ * You can now subscribe to an RSS feed in order to follow a whole Luminotes
+   discussion forum.
+ * The listing of threads in a discussion forum now shows how many posts
+   there are in each thread.
  * Fixed a bug in which search result note summaries were not showing the
    portion of the note that matched the search term. (Luminotes Server)
  * Fixed a visual bug in which undoing the deletion of a note didn't always
    make the note reappear, even though the undeletion always worked.
+ * NOTE: After upgrading to this release, you must restart memcached to clear
+   the cache. Failing to do so will cause errors with the Notebook object.
+   This does not apply to Luminotes Desktop.
 
 1.5.6: November 12, 2008
  * Greatly improved the speed of wiki searching for Luminotes Server and

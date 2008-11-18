@@ -15,7 +15,7 @@ class Test_forums( Test_controller ):
     self.notebook = Notebook.create( self.database.next_id( Notebook ), u"my notebook", trash_id = u"foo" )
     self.database.save( self.notebook )
 
-    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes" )
+    self.anon_notebook = Notebook.create( self.database.next_id( Notebook ), u"Luminotes", trash_id = u"bar" )
     self.database.save( self.anon_notebook )
     self.anon_note = Note.create(
       self.database.next_id( Note ), u"<h3>my note</h3>",
@@ -42,6 +42,9 @@ class Test_forums( Test_controller ):
     self.anonymous = User.create( self.database.next_id( User ), u"anonymous" )
     self.database.save( self.anonymous )
     self.database.execute( self.anonymous.sql_save_notebook( self.anon_notebook.object_id ) )
+
+    self.blog_user = User.create( self.database.next_id( User ), u"witten", self.password, self.email_address )
+    self.database.save( self.blog_user )
 
     tag_id = self.database.next_id( Tag )
     self.forum_tag = Tag.create(
@@ -71,14 +74,26 @@ class Test_forums( Test_controller ):
       self.anonymous.sql_save_notebook_tag( self.support_thread.object_id, self.forum_tag.object_id, value = u"support" ),
     )
 
+    self.blog_thread = Notebook.create( self.database.next_id( Notebook ), u"Welcome to the blog!" )
+    self.database.save( self.blog_thread )
+    self.database.execute(
+      self.anonymous.sql_save_notebook( self.blog_thread.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES ),
+    )
+    self.database.execute(
+      self.blog_user.sql_save_notebook( self.blog_thread.object_id, read_write = Notebook.READ_WRITE ),
+    )
+    self.database.execute(
+      self.anonymous.sql_save_notebook_tag( self.blog_thread.object_id, self.forum_tag.object_id, value = u"forum" ),
+    )
+
   def test_index( self ):
     result = self.http_get( "/forums/" )
 
     assert result
     assert result.get( u"redirect" ) is None
     assert result[ u"user" ].username == u"anonymous"
-    assert len( result[ u"notebooks" ] ) == 3
-    assert result[ u"first_notebook" ] == None
+    assert len( result[ u"notebooks" ] ) == 4
+    assert result[ u"first_notebook" ].object_id == self.anon_notebook.object_id
     assert result[ u"login_url" ] == u"https://luminotes.com/notebooks/%s?note_id=%s" % (
       self.anon_notebook.object_id, self.login_note.object_id,
     )
@@ -93,7 +108,7 @@ class Test_forums( Test_controller ):
     assert result
     assert result.get( u"redirect" ) is None
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 4
+    assert len( result[ u"notebooks" ] ) == 5
     assert result[ u"first_notebook" ].object_id == self.notebook.object_id
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
@@ -122,6 +137,18 @@ class Test_forums( Test_controller ):
     assert result[ u"start" ] == 0
     assert result[ u"count" ] == 50
     assert result[ u"total_thread_count" ] == 1
+
+  def test_general_with_note_id( self ):
+    result = self.http_get( "/forums/general?note_id=blah" )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///forums/general/?note_id=blah"
+
+  def test_general_with_trailing_slash_and_note_id( self ):
+    result = self.http_get( "/forums/general/?note_id=blah" )
+
+    assert result.get( "redirect" ) == u"/forums/general/blah"
 
   def test_support( self ):
     result = self.http_get( "/forums/support/" )
@@ -223,7 +250,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( "/forums/general/%s" % self.general_thread.object_id )
 
     assert result.get( u"user" ).object_id == self.anonymous.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 4
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
     assert result.get( u"login_url" )
     assert result.get( u"logout_url" )
@@ -250,7 +277,7 @@ class Test_forums( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 4
+    assert len( result.get( u"notebooks" ) ) == 5
     assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
@@ -322,7 +349,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( "/forums/general/%s" % self.general_thread.object_id )
 
     assert result.get( u"user" ).object_id == self.anonymous.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 4
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
     assert result.get( u"login_url" )
     assert result.get( u"logout_url" )
@@ -352,7 +379,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( "/forums/general/%s?start=1" % self.general_thread.object_id )
 
     assert result.get( u"user" ).object_id == self.anonymous.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 4
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
     assert result.get( u"login_url" )
     assert result.get( u"logout_url" )
@@ -381,7 +408,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( "/forums/general/%s?count=2" % self.general_thread.object_id )
 
     assert result.get( u"user" ).object_id == self.anonymous.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 4
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
     assert result.get( u"login_url" )
     assert result.get( u"logout_url" )
@@ -410,7 +437,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( "/forums/general/%s?start=1&count=1" % self.general_thread.object_id )
 
     assert result.get( u"user" ).object_id == self.anonymous.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 4
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
     assert result.get( u"login_url" )
     assert result.get( u"logout_url" )
@@ -438,7 +465,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( "/forums/general/%s?note_id=%s" % ( self.general_thread.object_id, self.note.object_id ) )
 
     assert result.get( u"user" ).object_id == self.anonymous.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 4
     assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
     assert result.get( u"login_url" )
     assert result.get( u"logout_url" )
@@ -461,7 +488,7 @@ class Test_forums( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
-  def __assert_new_forum_thread( self, thread, expected_id ):
+  def __assert_new_forum_thread( self, thread, expected_id, expected_user_id = None ):
     assert thread
     assert thread.object_id == expected_id
     assert thread.name == u"new discussion"
@@ -469,7 +496,7 @@ class Test_forums( Test_controller ):
     assert thread.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES
     assert thread.owner == False
     assert thread.deleted == False
-    assert thread.user_id == self.user.object_id
+    assert thread.user_id == ( expected_user_id or self.user.object_id )
 
   def test_general_create_thread( self ):
     self.login()
@@ -517,6 +544,62 @@ class Test_forums( Test_controller ):
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
+  def test_blog_create_thread( self ):
+    self.login_blog()
+
+    result = self.http_get(
+      "/blog/create_thread",
+      session_id = self.session_id,
+    )
+
+    redirect = result.get( u"redirect" )
+    assert redirect
+    assert redirect.startswith( u"/blog/" )
+    new_thread_id = redirect.split( "/blog/" )[ -1 ].split( u"?" )[ 0 ]
+
+    thread = cherrypy.root.users.load_notebook( self.blog_user.object_id, new_thread_id, read_write = True )
+    self.__assert_new_forum_thread( thread, new_thread_id, self.blog_user.object_id )
+    tags = self.database.select_many( Tag, thread.sql_load_tags( self.blog_user.object_id ) )
+    assert tags == []
+
+    thread = cherrypy.root.users.load_notebook( self.anonymous.object_id, new_thread_id, read_write = False )
+    self.__assert_new_forum_thread( thread, new_thread_id, self.blog_user.object_id )
+    tags = self.database.select_many( Tag, thread.sql_load_tags( self.anonymous.object_id ) )
+
+    assert tags
+    assert len( tags ) == 1
+    assert tags[ 0 ].name == u"forum"
+    assert tags[ 0 ].value == u"blog"
+
+    notes = self.database.select_many( Note, thread.sql_load_notes() )
+    assert notes
+    assert len( notes ) == 1
+    assert notes[ 0 ].title == None
+    assert notes[ 0 ].contents == u"<h3>"
+    assert notes[ 0 ].notebook_id == thread.object_id
+    assert notes[ 0 ].startup is True
+    assert notes[ 0 ].deleted_from_id is None
+    assert notes[ 0 ].rank == 0
+    assert notes[ 0 ].user_id == self.blog_user.object_id
+
+  def test_blog_create_thread_without_login( self ):
+    path = "/blog/create_thread"
+    result = self.http_get( path )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+
+  def test_blog_create_thread_without_access( self ):
+    self.login()
+
+    result = self.http_get(
+      "/blog/create_thread",
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ u"body" ][ 0 ]
+
   def login( self ):
     result = self.http_post( "/users/login", dict(
       username = self.username,
@@ -532,3 +615,12 @@ class Test_forums( Test_controller ):
       login_button = u"login",
     ) )
     self.session_id = result[ u"session_id" ]
+
+  def login_blog( self ):
+    result = self.http_post( "/users/login", dict(
+      username = self.blog_user.username,
+      password = self.password,
+      login_button = u"login",
+    ) )
+    self.session_id = result[ u"session_id" ]
+

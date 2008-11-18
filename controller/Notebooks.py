@@ -125,19 +125,17 @@ class Notebooks( object ):
       result[ u"notebooks" ] = [
         notebook for notebook in result[ "notebooks" ] if notebook.object_id == notebook_id
       ]
-      if len( result[ u"notebooks" ] ) == 0:
-        raise Access_error()
-      result[ u"notebooks" ][ 0 ].owner = False
+      if len( result[ u"notebooks" ] ) == 1:
+        result[ u"notebooks" ][ 0 ].owner = False
     elif preview == u"viewer":
       read_write = False
       owner = False
       result[ u"notebooks" ] = [
         notebook for notebook in result[ "notebooks" ] if notebook.object_id == notebook_id
       ]
-      if len( result[ u"notebooks" ] ) == 0:
-        raise Access_error()
-      result[ u"notebooks" ][ 0 ].read_write = Notebook.READ_ONLY
-      result[ u"notebooks" ][ 0 ].owner = False
+      if len( result[ u"notebooks" ] ) == 1:
+        result[ u"notebooks" ][ 0 ].read_write = Notebook.READ_ONLY
+        result[ u"notebooks" ][ 0 ].owner = False
     elif preview in ( u"owner", u"default", None ):
       read_write = True
       owner = True
@@ -155,7 +153,10 @@ class Notebooks( object ):
     forum_tags = [ tag for tag in notebook.tags if tag.name == u"forum" ]
     if forum_tags:
       forum_name = forum_tags[ 0 ].value
-      redirect = u"/forums/%s/%s" % ( forum_name, notebook_id )
+      if forum_name == "blog":
+        redirect = u"/blog/%s" % notebook_id
+      else:
+        redirect = u"/forums/%s/%s" % ( forum_name, notebook_id )
       if note_id:
         redirect += u"?note_id=%s" % note_id
 

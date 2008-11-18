@@ -28,16 +28,14 @@ class Link_area( Div ):
     Div.__init__(
       self,
       toolbar,
+      ( user.username == u"anonymous" ) and self.forum_link( forum_tag, forum_name ) or None,
       ( user.username != u"anonymous" ) and Div(
         ( notebook_path != u"/" ) and Div(
           H4(
             u"this %s" % notebook_word,
             id = u"this_notebook_area_title",
           ),
-          forum_tag and Div(
-            A( u"%s forum" % forum_name, href = "/forums/%s" % forum_name ),
-            class_ = u"link_area_item",
-          ) or None,
+          self.forum_link( forum_tag, forum_name ),
 
           ( rate_plan.get( u"notebook_sharing" ) and notebook.name == u"Luminotes blog" ) and Div(
             A(
@@ -207,4 +205,20 @@ class Link_area( Div ):
         id = u"link_area_holder",
       ) or None,
       id = u"link_area",
+    )
+
+  @staticmethod
+  def forum_link( forum_tag, forum_name ):
+    if not forum_tag:
+      return None
+
+    if forum_name == u"blog":
+      return Div(
+        A( u"Luminotes %s" % forum_name, href = "/blog/" ),
+        class_ = u"link_area_item",
+      )
+
+    return Div(
+      A( u"%s forum" % forum_name, href = "/forums/%s" % forum_name ),
+      class_ = u"link_area_item",
     )

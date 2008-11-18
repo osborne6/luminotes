@@ -192,6 +192,33 @@ class Test_notebooks( Test_controller ):
     redirect = result.get( "redirect" )
     assert redirect == u"/forums/chickens/%s" % self.notebook.object_id
 
+  def test_default_blog( self ):
+    self.login()
+
+    tag_id = self.database.next_id( Tag, commit = False )
+    new_tag = Tag.create(
+      tag_id,
+      notebook_id = None, # this tag is not in the namespace of a single notebook
+      user_id = self.user.object_id,
+      name = u"forum",
+      description = u"a discussion forum"
+    )
+    self.database.save( new_tag, commit = False )
+
+    self.database.execute(
+      self.user.sql_save_notebook_tag( self.notebook.object_id, new_tag.object_id, value = u"blog" ),
+      commit = False,
+    )
+    self.database.commit()
+
+    result = self.http_get(
+      "/notebooks/%s" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    redirect = result.get( "redirect" )
+    assert redirect == u"/blog/%s" % self.notebook.object_id
+
   def test_default( self ):
     self.login()
 
@@ -201,10 +228,10 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
-    assert result.get( u"notebooks" )[ 2 ].owner == True
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -309,10 +336,10 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
-    assert result.get( u"notebooks" )[ 2 ].owner == True
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -345,10 +372,7 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 1
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_ONLY
-    assert result.get( u"notebooks" )[ 0 ].owner == False
+    assert len( result.get( u"notebooks" ) ) == 0
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -377,10 +401,7 @@ class Test_notebooks( Test_controller ):
     # even though a collaborator preview is being requested, this user only has preview-level
     # access. so read_write should be False on the returned notebook
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 1
-    assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
-    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_ONLY
-    assert result.get( u"notebooks" )[ 0 ].owner == False
+    assert len( result.get( u"notebooks" ) ) == 0
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -407,14 +428,12 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     notebook = result[ u"notebooks" ][ 0 ]
-    if notebook.name == u"trash":
-      notebook = result[ u"notebooks" ][ 1 ]
 
-    assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.read_write == Notebook.READ_ONLY
-    assert notebook.owner == False
+    assert notebook.object_id == self.notebook.object_id
+    assert notebook.read_write == Notebook.READ_WRITE
+    assert notebook.owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -498,10 +517,10 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
-    assert result.get( u"notebooks" )[ 2 ].owner == True
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -541,10 +560,10 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
-    assert result.get( u"notebooks" )[ 2 ].owner == True
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -590,10 +609,10 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
-    assert result.get( u"notebooks" )[ 2 ].owner == True
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -632,10 +651,10 @@ class Test_notebooks( Test_controller ):
     )
     
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
-    assert result.get( u"notebooks" )[ 2 ].object_id == self.notebook.object_id
-    assert result.get( u"notebooks" )[ 2 ].read_write == Notebook.READ_WRITE
-    assert result.get( u"notebooks" )[ 2 ].owner == True
+    assert len( result.get( u"notebooks" ) ) == 1
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
+    assert result.get( u"notebooks" )[ 0 ].read_write == Notebook.READ_WRITE
+    assert result.get( u"notebooks" )[ 0 ].owner == True
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -4749,7 +4768,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -4779,7 +4798,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -4808,7 +4827,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -4850,7 +4869,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -4880,7 +4899,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
@@ -4909,7 +4928,7 @@ class Test_notebooks( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 3
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
     assert result.get( u"rate_plan" )
