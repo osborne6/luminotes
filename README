@@ -35,6 +35,9 @@ location, simply select the location of your USB drive. For instance, if your
 USB drive has the Windows drive letter "E:", then just enter "E:" for the
 destination location.
 
+(If you have already installed Luminotes Desktop, then you can just manually
+copy the installed \Program Files\Luminotes folder to your USB drive.)
+
 Once Luminotes Desktop is installed, instead of running Luminotes normally,
 open your USB drive as a folder in Windows. Then, run usb_luminotes.bat from
 the USB drive. Your Luminotes data, including all of your notes and notebooks,
