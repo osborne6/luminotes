@@ -103,7 +103,10 @@ class Main_page( Page ):
       notebook_path = u"/guide"
     elif forum_tags:
       forum_tag = forum_tags[ 0 ]
-      notebook_path = u"/forums/%s/%s" % ( forum_tag.value, notebook.object_id )
+      if forum_tag.value == u"blog":
+        notebook_path = u"/blog/%s" % notebook.friendly_id
+      else:
+        notebook_path = u"/forums/%s/%s" % ( forum_tag.value, notebook.object_id )
     else:
       notebook_path = u"/notebooks/%s" % notebook.object_id
 

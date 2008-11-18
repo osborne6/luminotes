@@ -1,4 +1,5 @@
 import cherrypy
+import re
 from cgi import escape
 from Html_cleaner import Html_cleaner
 
@@ -165,6 +166,16 @@ class Valid_int( object ):
       raise ValueError()
 
     return value
+
+
+class Valid_friendly_id( object ):
+  FRIENDLY_ID_PATTERN = re.compile( "^[a-zA-Z0-9\-]+$" )
+
+  def __call__( self, value ):
+    if self.FRIENDLY_ID_PATTERN.search( value ):
+      return value
+
+    raise ValueError()
 
 
 def validate( **expected ):

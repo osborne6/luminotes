@@ -25,6 +25,10 @@ create function log_note_revision() returns trigger as $_$
   end;
   $_$ language plpgsql;
 ALTER FUNCTION public.log_note_revision() OWNER TO luminotes;
+CREATE FUNCTION friendly_id(text) RETURNS text
+    AS $_$select regexp_replace( regexp_replace( lower( $1 ), '\\s+', '-', 'g' ), '[^a-zA-Z0-9\\-]', '', 'g' );$_$
+    LANGUAGE sql IMMUTABLE;
+ALTER FUNCTION public.friendly_id(text) OWNER TO luminotes;
 CREATE TABLE file (
     id text NOT NULL,
     revision timestamp with time zone,
@@ -234,6 +238,8 @@ CREATE INDEX note_current_notebook_id_title_index ON note_current USING btree (n
 CREATE INDEX note_current_user_id_index ON note_current USING btree (user_id);
 
 CREATE INDEX note_current_search_index ON note_current USING gist (search);
+
+CREATE INDEX notebook_friendly_id_index ON notebook USING btree (friendly_id(name));
 
 CREATE INDEX password_reset_email_address_index ON password_reset USING btree (email_address);
 

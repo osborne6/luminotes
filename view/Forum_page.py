@@ -49,7 +49,7 @@ class Forum_page( Product_page ):
         [ Div(
           A(
             thread.name,
-            href = os.path.join( base_path, thread.object_id ),
+            href = os.path.join( base_path, ( forum_name == u"blog" ) and thread.friendly_id or thread.object_id ),
           ),
           Span(
             self.post_count( thread, forum_name ),

@@ -173,6 +173,10 @@ class Test_notebook( object ):
     assert self.notebook.name == new_name
     assert self.notebook.revision > previous_revision
 
+  def test_friendly_id( self ):
+    self.notebook.name = u"This is Bob's  notebook!"
+    assert self.notebook.friendly_id == u"this-is-bobs-notebook"
+
   def test_set_read_write( self ):
     original_revision = self.notebook.revision
     self.notebook.read_write = Notebook.READ_WRITE_FOR_OWN_NOTES
@@ -233,6 +237,7 @@ class Test_notebook( object ):
     d = self.notebook.to_dict()
 
     assert d.get( "name" ) == self.name
+    assert d.get( "friendly_id" ) == u"my-notebook"
     assert d.get( "trash_id" ) == self.trash.object_id
     assert d.get( "read_write" ) == self.read_write
     assert d.get( "deleted" ) == self.notebook.deleted

@@ -6,7 +6,7 @@ from model.Note import Note
 from model.Tag import Tag
 from Expose import expose
 from Expire import strongly_expire
-from Validate import validate, Valid_string, Valid_int
+from Validate import validate, Valid_string, Valid_int, Valid_friendly_id
 from Database import Valid_id, end_transaction
 from Users import grab_user_id
 from Notebooks import Notebooks
@@ -165,7 +165,7 @@ class Forum( object ):
   @end_transaction
   @grab_user_id
   @validate(
-    thread_id = Valid_id(),
+    thread_id = unicode,
     start = Valid_int( min = 0 ),
     count = Valid_int( min = 1, max = 50 ),
     note_id = Valid_id( none_okay = True ),
@@ -176,7 +176,7 @@ class Forum( object ):
     Provide the information necessary to display a forum thread.
 
     @type thread_id: unicode
-    @param thread_id: id of thread notebook to display
+    @param thread_id: id or "friendly id" of thread notebook to display
     @type start: unicode or NoneType
     @param start: index of recent note to start with (defaults to 0, the most recent note)
     @type count: int or NoneType
@@ -187,6 +187,26 @@ class Forum( object ):
     @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid
     """
+    # first try loading the thread by id, and then if not found, try loading by "friendly id"
+    try:
+      Valid_id()( thread_id )
+      if not self.__database.load( Notebook, thread_id ):
+        raise ValueError()
+    except ValueError:
+      try:
+        Valid_friendly_id()( thread_id )
+      except ValueError:
+        raise cherrypy.NotFound
+
+      try:
+        thread = self.__database.select_one( Notebook, Notebook.sql_load_by_friendly_id( thread_id ) )
+      except:
+        raise cherrypy.NotFound
+      if not thread:
+        raise cherrypy.NotFound
+
+      thread_id = thread.object_id
+
     result = self.__users.current( user_id )
     result.update( self.__notebooks.old_notes( thread_id, start, count, user_id ) )
 
@@ -195,8 +215,6 @@ class Forum( object ):
       result[ "notes" ] = [ note for note in result[ "notes" ] if note.object_id == note_id ]
 
     return result
-
-  default.exposed = True
 
   @expose()
   @end_transaction

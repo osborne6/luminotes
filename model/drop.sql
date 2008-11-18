@@ -19,3 +19,4 @@ DROP TABLE schema_version;
 DROP TABLE session;
 DROP FUNCTION drop_html_tags( text ); 
 DROP FUNCTION log_note_revision();
+DROP FUNCTION friendly_id(text);

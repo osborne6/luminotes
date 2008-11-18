@@ -300,8 +300,7 @@ class Test_forums( Test_controller ):
     result = self.http_get( path )
 
     headers = result.get( "headers" )
-    assert headers
-    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+    assert headers.get( "Status" ) == u"404 Not Found"
 
   def __make_notes( self ):
     note_id = self.database.next_id( Note, commit = False )

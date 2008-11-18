@@ -367,33 +367,6 @@ class Test_root( Test_controller ):
     assert result.get( "redirect" )
     assert result.get( "redirect" ).startswith( "https://" )
 
-  def test_blog( self ):
-    result = self.http_get(
-      "/blog",
-    )
-
-    assert result
-    assert u"error" not in result
-    assert result[ u"notebook" ].object_id == self.blog_notebook.object_id
-
-  def test_blog_with_note_id( self ):
-    result = self.http_get(
-      "/blog?note_id=%s" % self.blog_note.object_id,
-    )
-
-    assert result
-    assert u"error" not in result
-    assert result[ u"notebook" ].object_id == self.blog_notebook.object_id
-
-  def test_blog_rss( self ):
-    result = self.http_get(
-      "/blog?rss",
-    )
-
-    assert result
-    assert u"error" not in result
-    assert result[ u"notebook" ].object_id == self.blog_notebook.object_id
-
   def test_guide( self ):
     result = self.http_get(
       "/guide",

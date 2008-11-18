@@ -126,6 +126,10 @@ class Notebook( Persistent ):
   def sql_update( self ):
     return self.sql_create()
 
+  @staticmethod
+  def sql_load_by_friendly_id( friendly_id ):
+    return "select * from notebook_current where friendly_id( name ) = %s;" % quote( friendly_id )
+
   def sql_load_notes( self, start = 0, count = None ):
     """
     Return a SQL string to load a list of all the notes within this notebook.
@@ -340,6 +344,7 @@ class Notebook( Persistent ):
 
     d.update( dict(
       name = self.__name,
+      friendly_id = self.friendly_id,
       trash_id = self.__trash_id,
       read_write = self.__read_write,
       owner = self.__owner,
@@ -354,6 +359,12 @@ class Notebook( Persistent ):
   def __set_name( self, name ):
     self.__name = name
     self.update_revision()
+
+  FRIENDLY_ID_STRIP_PATTERN = re.compile( "[^a-zA-Z0-9\-]+" )
+
+  def __friendly_id( self ):
+    friendly_id = self.WHITESPACE_PATTERN.sub( u"-", self.__name.lower() )
+    return self.FRIENDLY_ID_STRIP_PATTERN.sub( u"", friendly_id )
 
   def __set_read_write( self, read_write ):
     # The read_write member isn't actually saved to the database, so setting it doesn't need to
@@ -390,6 +401,7 @@ class Notebook( Persistent ):
     self.__tags = tags
 
   name = property( lambda self: self.__name, __set_name )
+  friendly_id = property( __friendly_id )
   trash_id = property( lambda self: self.__trash_id )
   read_write = property( lambda self: self.__read_write, __set_read_write )
   owner = property( lambda self: self.__owner, __set_owner )
