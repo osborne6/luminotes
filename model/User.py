@@ -197,7 +197,11 @@ class User( Persistent ):
     return \
       """
       select
-        notebook_current.*, user_notebook.read_write, user_notebook.owner, user_notebook.rank, user_notebook.own_notes_only
+        notebook_current.*, user_notebook.read_write, user_notebook.owner, user_notebook.rank, user_notebook.own_notes_only,
+        ( select count( note_current.id )
+          from note_current
+          where note_current.notebook_id = notebook_current.id and
+                note_current.deleted_from_id is null )
       from
         user_notebook, notebook_current%s
       where

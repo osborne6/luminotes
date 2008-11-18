@@ -31,6 +31,7 @@ class Test_notebook( object ):
     assert self.notebook.owner == self.owner
     assert self.notebook.rank == self.rank
     assert self.notebook.tags == []
+    assert self.notebook.note_count == None
 
     assert self.trash.object_id == self.trash_id
     assert datetime.now( tz = utc ) - self.trash.revision < self.delta
@@ -42,6 +43,7 @@ class Test_notebook( object ):
     assert self.trash.owner == True
     assert self.trash.rank == None
     assert self.trash.tags == []
+    assert self.trash.note_count == None
 
   def test_create_read_write_true( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = True, owner = self.owner, rank = self.rank )
@@ -56,6 +58,7 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
 
   def test_create_read_write_false( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = False, owner = self.owner, rank = self.rank )
@@ -70,6 +73,7 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
 
   def test_create_read_write_none( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = None, owner = self.owner, rank = self.rank )
@@ -84,6 +88,7 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
 
   def test_create_read_write_true_and_own_notes_only_true( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = True, owner = self.owner, rank = self.rank, own_notes_only = True )
@@ -98,6 +103,7 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
 
   def test_create_read_write_false_and_own_notes_only_true( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = False, owner = self.owner, rank = self.rank, own_notes_only = True )
@@ -112,6 +118,7 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
 
   def test_create_read_write_false_and_own_notes_only_false( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = False, owner = self.owner, rank = self.rank, own_notes_only = False )
@@ -126,6 +133,7 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
 
   def test_create_read_write_true_and_own_notes_only_false( self ):
     notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = True, owner = self.owner, rank = self.rank, own_notes_only = False )
@@ -140,6 +148,22 @@ class Test_notebook( object ):
     assert notebook.owner == self.owner
     assert notebook.rank == self.rank
     assert notebook.tags == []
+    assert notebook.note_count == None
+
+  def test_create_with_note_count( self ):
+    notebook = Notebook.create( self.object_id, self.name, trash_id = None, deleted = False, user_id = self.user_id, read_write = True, owner = self.owner, rank = self.rank, note_count = 7 )
+
+    assert notebook.object_id == self.object_id
+    assert datetime.now( tz = utc ) - notebook.revision < self.delta
+    assert notebook.name == self.name
+    assert notebook.trash_id == None
+    assert notebook.deleted == False
+    assert notebook.user_id == self.user_id
+    assert notebook.read_write == Notebook.READ_WRITE
+    assert notebook.owner == self.owner
+    assert notebook.rank == self.rank
+    assert notebook.tags == []
+    assert notebook.note_count == 7
 
   def test_set_name( self ):
     new_name = u"my new notebook"
@@ -213,6 +237,7 @@ class Test_notebook( object ):
     assert d.get( "read_write" ) == self.read_write
     assert d.get( "deleted" ) == self.notebook.deleted
     assert d.get( "user_id" ) == self.notebook.user_id
+    assert d.get( "note_count" ) == self.notebook.note_count
     assert d.get( "object_id" ) == self.notebook.object_id
     assert datetime.now( tz = utc ) - d.get( "revision" ) < self.delta
     assert d.get( "tags" ) == []

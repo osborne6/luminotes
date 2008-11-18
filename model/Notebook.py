@@ -17,7 +17,7 @@ class Notebook( Persistent ):
   READ_WRITE_FOR_OWN_NOTES = 2 # user can only edit their own notes, not notes created by others
 
   def __init__( self, object_id, revision = None, name = None, trash_id = None, deleted = False,
-                user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False ):
+                user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False, note_count = None ):
     """
     Create a new notebook with the given id and name.
 
@@ -42,6 +42,8 @@ class Notebook( Persistent ):
     @param rank: indicates numeric ordering of this note in relation to other notebooks
     @type own_notes_only: bool or NoneType
     @param own_notes_only: True makes read_write be READ_WRITE_FOR_OWN_NOTES (optional, defaults to False)
+    @type note_count: int or NoneType
+    @param note_count: a count of the number of notes within this notebook (optional)
     @rtype: Notebook
     @return: newly constructed notebook
     """
@@ -63,10 +65,11 @@ class Notebook( Persistent ):
     self.__read_write = read_write
     self.__owner = owner
     self.__rank = rank
+    self.__note_count = note_count
     self.__tags = []
 
   @staticmethod
-  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False ):
+  def create( object_id, name = None, trash_id = None, deleted = False, user_id = None, read_write = None, owner = True, rank = None, own_notes_only = False, note_count = None ):
     """
     Convenience constructor for creating a new notebook.
 
@@ -89,10 +92,12 @@ class Notebook( Persistent ):
     @param rank: indicates numeric ordering of this note in relation to other notebooks
     @type own_notes_only: bool or NoneType
     @param own_notes_only: True makes read_write be READ_WRITE_FOR_OWN_NOTES (optional, defaults to False)
+    @type note_count: int or NoneType
+    @param note_count: a count of the number of notes within this notebook (optional)
     @rtype: Notebook
     @return: newly constructed notebook
     """
-    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner, rank = rank, own_notes_only = own_notes_only )
+    return Notebook( object_id, name = name, trash_id = trash_id, user_id = user_id, read_write = read_write, owner = owner, rank = rank, own_notes_only = own_notes_only, note_count = note_count )
 
   @staticmethod
   def sql_load( object_id, revision = None ):
@@ -340,6 +345,7 @@ class Notebook( Persistent ):
       owner = self.__owner,
       deleted = self.__deleted,
       user_id = self.__user_id,
+      note_count = self.__note_count,
       tags = self.__tags,
     ) )
 
@@ -390,4 +396,5 @@ class Notebook( Persistent ):
   deleted = property( lambda self: self.__deleted, __set_deleted )
   user_id = property( lambda self: self.__user_id, __set_user_id )
   rank = property( lambda self: self.__rank, __set_rank )
+  note_count = property( lambda self: self.__note_count )
   tags = property( lambda self: self.__tags, __set_tags )
