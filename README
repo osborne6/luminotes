@@ -12,11 +12,12 @@ To start Luminotes Desktop on Windows, just click the Start button, click on
 browser, so when you launch it, it will open up in a new browser window or
 tab.
 
-The first time you start Luminotes, you may see a Windows Security Alert about
-blocking Luminotes. This is basically Windows asking you if you want to allow
-Luminotes to access the internet. If you click "Keep Blocking", then that will
-prevent Luminotes Desktop from accessing the internet. If you click "Unblock",
-then Luminotes will be able to use your internet connection.
+Windows Security: The first time you start Luminotes, you may see a Windows
+Security Alert about blocking Luminotes. This is basically Windows asking you
+if you want to allow Luminotes to access the internet. If you click "Keep
+Blocking", then that will prevent Luminotes Desktop from accessing the
+internet. If you click "Unblock", then Luminotes will be able to use your
+internet connection.
 
 Right now, Luminotes does not use the internet at all. However, a future
 release will include the optional ability for you to synchronize your notes
@@ -24,16 +25,22 @@ with Luminotes.com. If you plan on using this synchronization feature when
 it's available, then you should click "Unblock". Otherwise, you can safely
 click "Keep Blocking".
 
-In case you're curious, your notes and attached files are stored within the
-%APPDATA%\Luminotes folder in a database file.
+File storage: In case you're curious, your notes are stored within the
+%APPDATA%\Luminotes folder in a database file. Attached files are stored with
+the %APPDATA\Luminotes\files folder.
 
-If you'd like to run Luminotes from a USB drive, first install Luminotes
-Desktop normally. Once it's installed, instead of running Luminotes, manually
-copy the whole \Program Files\Luminotes folder to your USB drive.  Then, run
-usb_luminotes.bat from the USB drive. Your Luminotes data, including all of
-your notes and notebooks, will be stored on the USB drive instead of on the
-computer itself. Then, anytime you want to start Luminotes on the USB drive,
-run usb_luminotes.bat from it.
+USB drive: If you'd like to run Luminotes from a USB drive, then when the
+Luminotes Desktop installer prompts you to select the installation destination
+location, simply select the location of your USB drive. For instance, if your
+USB drive has the Windows drive letter "E:", then just enter "E:" for the
+destination location.
+
+Once Luminotes Desktop is installed, instead of running Luminotes normally,
+open your USB drive as a folder in Windows. Then, run usb_luminotes.bat from
+the USB drive. Your Luminotes data, including all of your notes and notebooks,
+will be stored on the USB drive instead of on the computer itself. Then,
+anytime you want to start Luminotes on the USB drive, run usb_luminotes.bat
+from it.
 
 
 Linux / Mac OS X / BSD
