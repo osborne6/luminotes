@@ -684,6 +684,8 @@ Editor.prototype.focus = function () {
 }
 
 Editor.prototype.contents = function () {
+  if ( !this.document || !this.document.body )
+    return "";
   return this.document.body.innerHTML;
 }
 
