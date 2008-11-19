@@ -34,9 +34,9 @@ class Forum_rss( Rss_channel ):
       full_forum_name,
       [ Rss_item(
         title = cgi.escape( thread.name ),
-        link = os.path.join( forum_path, thread.object_id ),
+        link = os.path.join( forum_path, ( forum_name == u"blog" ) and thread.friendly_id or thread.object_id ),
         description = cgi.escape( thread.name ),
         date = thread.revision.strftime( "%Y-%m-%dT%H:%M:%SZ" ),
-        guid = os.path.join( forum_path, thread.object_id ),
+        guid = os.path.join( forum_path, ( forum_name == u"blog" ) and thread.friendly_id or thread.object_id ),
       ) for thread in threads ],
     )
