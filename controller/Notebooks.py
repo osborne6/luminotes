@@ -154,7 +154,7 @@ class Notebooks( object ):
     if forum_tags:
       forum_name = forum_tags[ 0 ].value
       if forum_name == "blog":
-        redirect = u"/blog/%s" % notebook_id
+        redirect = u"/blog/%s" % notebook.friendly_id
       else:
         redirect = u"/forums/%s/%s" % ( forum_name, notebook_id )
       if note_id:
