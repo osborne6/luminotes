@@ -1611,7 +1611,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       editor.mark_clean();
 
       var save_button = getElement( "save_button" );
-      if ( save_button ) {
+      if ( save_button && self.focused_editor && !self.focused_editor.dirty() ) {
         save_button.disabled = true;
         save_button.value = "saved";
       }
@@ -1632,7 +1632,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
     }, null, synchronous, fire_and_forget );
   } else {
     var save_button = getElement( "save_button" );
-    if ( save_button ) {
+    if ( save_button && this.focused_editor && !this.focused_editor.dirty() ) {
       save_button.disabled = true;
       save_button.value = "saved";
     }
