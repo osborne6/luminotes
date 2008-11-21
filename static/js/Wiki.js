@@ -66,7 +66,7 @@ function Wiki( invoker ) {
       this.display_message( "Luminotes support for your web browser (" + beta_agent + ") is currently in beta. If you encounter any problems, please contact support so that they can be fixed!" );
   }
 
-  if ( this.notebook_has_tag( this.notebook, "forum" ) )
+  if ( !this.notebook_has_tag( this.notebook, "forum" ) )
     this.autosaver = Autosaver( this );
 
   var deleted_id = getElement( "deleted_id" ).value;

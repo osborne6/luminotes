@@ -417,19 +417,20 @@ class User( Persistent ):
   def sql_calculate_storage( self, database_backend ):
     """
     Return a SQL string to calculate the total bytes of storage usage by this user. This includes
-    storage for all the user's notes (including past revisions) and their uploaded files. It does
+    storage for all the user's notes (excluding past revisions) and their uploaded files. It does
     not include storage for the notebooks themselves.
     """
     if database_backend == Persistent.POSTGRESQL_BACKEND:
       # this counts bytes for the contents of each column
-      note_size_clause = "pg_column_size( note.* )"
+      note_size_clause = "pg_column_size( note_current.* )"
     else:
       # this isn't perfect, because length() counts UTF-8 characters instead of bytes.
       # some columns are left out because they can be null, which screws up the addition
       note_size_clause = \
         """
-        length( note.id ) + length( note.revision ) + length( note.title ) + length( note.contents ) +
-        length( note.notebook_id ) + length( note.startup ) + length( note.user_id )
+        length( note_current.id ) + length( note_current.revision ) + length( note_current.title ) +
+        length( note_current.contents ) + length( note_current.notebook_id ) +
+        length( note_current.startup ) + length( note_current.user_id )
         """
 
     return \
@@ -438,11 +439,11 @@ class User( Persistent ):
         select
           coalesce( sum( %s ), 0 )
         from
-          user_notebook, note
+          user_notebook, note_current
         where
           user_notebook.user_id = %s and
           user_notebook.owner = 't' and
-          note.notebook_id = user_notebook.notebook_id
+          note_current.notebook_id = user_notebook.notebook_id
       ) as note_storage,
       (
         select

@@ -1,3 +1,6 @@
+1.5.8:
+ * Fixed a bug that prevented the autosaver from working on all notebooks.
+
 1.5.7: November 18, 2008
  * Rearranged the links on the left and right side of the wiki editing page
    so that the note title links have a little more horizontal breathing room.
