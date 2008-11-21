@@ -360,11 +360,15 @@ class Notebook( Persistent ):
     self.__name = name
     self.update_revision()
 
+  HTML_REFERENCE_PATTERN = re.compile( "&[a-zA-Z]+;|&#\d+;" )
   FRIENDLY_ID_STRIP_PATTERN = re.compile( "[^a-zA-Z0-9\-]+" )
 
   def __friendly_id( self ):
-    friendly_id = self.WHITESPACE_PATTERN.sub( u"-", self.__name.lower() )
-    return self.FRIENDLY_ID_STRIP_PATTERN.sub( u"", friendly_id )
+    # convert to lowercase, remove HTML character/entity refs, collapse whitespace to dashes, strip
+    # other punctuation. strip leading/trailing dashes
+    friendly_id = self.HTML_REFERENCE_PATTERN.sub( u" ", self.__name.lower() )
+    friendly_id = self.WHITESPACE_PATTERN.sub( u"-", friendly_id )
+    return self.FRIENDLY_ID_STRIP_PATTERN.sub( u"", friendly_id ).strip( "-" )
 
   def __set_read_write( self, read_write ):
     # The read_write member isn't actually saved to the database, so setting it doesn't need to

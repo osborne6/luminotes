@@ -26,7 +26,18 @@ create function log_note_revision() returns trigger as $_$
   $_$ language plpgsql;
 ALTER FUNCTION public.log_note_revision() OWNER TO luminotes;
 CREATE FUNCTION friendly_id(text) RETURNS text
-    AS $_$select regexp_replace( regexp_replace( lower( $1 ), '\\s+', '-', 'g' ), '[^a-zA-Z0-9\\-]', '', 'g' );$_$
+    AS $_$select trim( both '-' from
+      regexp_replace(
+        regexp_replace(
+          regexp_replace(
+            lower( $1 ),
+            '&[a-zA-Z]+;|&#\\d+;', ' ', 'g'
+          ),
+          '\\s+', '-', 'g'
+        ),
+        '[^a-zA-Z0-9\\-]', '', 'g'
+      )
+    );$_$
     LANGUAGE sql IMMUTABLE;
 ALTER FUNCTION public.friendly_id(text) OWNER TO luminotes;
 CREATE TABLE file (

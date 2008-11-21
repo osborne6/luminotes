@@ -177,6 +177,14 @@ class Test_notebook( object ):
     self.notebook.name = u"This is Bob's  notebook!"
     assert self.notebook.friendly_id == u"this-is-bobs-notebook"
 
+  def test_friendly_id_with_html_entity_reference( self ):
+    self.notebook.name = u"This is Bob's &quot;notebook&quot;!"
+    assert self.notebook.friendly_id == u"this-is-bobs-notebook"
+
+  def test_friendly_id_with_html_character_reference( self ):
+    self.notebook.name = u"This is Bob's &#165; notebook!"
+    assert self.notebook.friendly_id == u"this-is-bobs-notebook"
+
   def test_set_read_write( self ):
     original_revision = self.notebook.revision
     self.notebook.read_write = Notebook.READ_WRITE_FOR_OWN_NOTES
