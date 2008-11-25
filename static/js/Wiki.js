@@ -8,8 +8,7 @@ function Wiki( invoker ) {
   this.next_id = null;
   this.focused_editor = null;
   this.blank_editor_id = null;
-  this.notebook = null;
-  this.notebook_id = getElement( "notebook_id" ).value;
+  this.notebook = evalJSON( getElement( "notebook" ).value );
   this.parent_id = getElement( "parent_id" ).value; // id of the notebook containing this one
   this.startup_notes = new Array();  // map of startup notes: note id to bool
   this.open_editors = new Array();   // map of open notes: lowercase note title to editor
@@ -36,10 +35,9 @@ function Wiki( invoker ) {
     this.total_notes_count = null;
 
   if ( getElement( "note_tree_root_table" ) )
-    this.note_tree = new Note_tree( this, this.notebook_id, this.invoker );
-  this.recent_notes = new Recent_notes( this, this.notebook_id, this.invoker );
+    this.note_tree = new Note_tree( this, this.notebook.object_id, this.invoker );
+  this.recent_notes = new Recent_notes( this, this.notebook.object_id, this.invoker );
 
-  // grab the current notebook from the list of available notebooks
   this.notebooks = evalJSON( getElement( "notebooks" ).value );
   this.notebooks_by_id = {};
 
@@ -48,9 +46,6 @@ function Wiki( invoker ) {
 
     if ( !this.notebooks_by_id[ notebook.object_id ] )
       this.notebooks_by_id[ notebook.object_id ] = notebook;
-
-    if ( !this.notebook && notebook.object_id == this.notebook_id )
-      this.notebook = notebook;
   }
 
   if ( this.notebook && this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
@@ -532,7 +527,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
     if ( iframe ) {
       iframe.editor.highlight();
       if ( link )
-        link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note_id;
+        link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + note_id;
       return;
     }
   }
@@ -580,7 +575,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
       if ( editor ) {
         editor.highlight();
         if ( link )
-          link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+          link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + editor.id;
         return;
       }
     }
@@ -593,7 +588,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
 
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
-        "notebook_id": this.notebook_id,
+        "notebook_id": this.notebook.object_id,
         "note_title": note_title,
         "revision": revision
       },
@@ -610,7 +605,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
 
   this.invoker.invoke(
     "/notebooks/load_note", "GET", {
-      "notebook_id": this.notebook_id,
+      "notebook_id": this.notebook.object_id,
       "note_id": note_id,
       "revision": revision,
       "previous_revision": previous_revision
@@ -630,7 +625,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, force, callback ) {
     link.removeAttribute( "target" );
 
   if ( note_title == "search results" || note_title == "share this notebook" || note_title == "account settings" ) {
-    link.href = "/notebooks/" + this.notebook_id + "?" + queryString(
+    link.href = "/notebooks/" + this.notebook.object_id + "?" + queryString(
       [ "title", "note_id" ],
       [ note_title, "null" ]
     );
@@ -661,7 +656,7 @@ Wiki.prototype.resolve_link = function ( note_title, link, force, callback ) {
   var editor = this.open_editors[ note_title.toLowerCase() ];
   if ( editor ) {
     if ( link )
-      link.href = "/notebooks/" + this.notebook_id + "?note_id=" + editor.id;
+      link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + editor.id;
     if ( callback )
       callback( editor.summarize() );
     return;
@@ -671,20 +666,20 @@ Wiki.prototype.resolve_link = function ( note_title, link, force, callback ) {
   if ( callback ) {
     this.invoker.invoke(
       "/notebooks/load_note_by_title", "GET", {
-        "notebook_id": this.notebook_id,
+        "notebook_id": this.notebook.object_id,
         "note_title": note_title,
         "summarize": true
       },
       function ( result ) {
         if ( result && result.note ) {
-          link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note.object_id;
+          link.href = "/notebooks/" + self.notebook.object_id + "?note_id=" + result.note.object_id;
         } else if ( title_looks_like_url ) {
           link.target = "_new";
           link.href = note_title;
           callback( "web link" );
           return;
         } else {
-          link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
+          link.href = "/notebooks/" + self.notebook.object_id + "?" + queryString(
             [ "title", "note_id" ],
             [ note_title, "null" ]
           );
@@ -698,17 +693,17 @@ Wiki.prototype.resolve_link = function ( note_title, link, force, callback ) {
 
   this.invoker.invoke(
     "/notebooks/lookup_note_id", "GET", {
-      "notebook_id": this.notebook_id,
+      "notebook_id": this.notebook.object_id,
       "note_title": note_title
     },
     function ( result ) {
       if ( result && result.note_id ) {
-        link.href = "/notebooks/" + self.notebook_id + "?note_id=" + result.note_id;
+        link.href = "/notebooks/" + self.notebook.object_id + "?note_id=" + result.note_id;
       } else if ( title_looks_like_url ) {
         link.target = "_new";
         link.href = note_title;
       } else {
-        link.href = "/notebooks/" + self.notebook_id + "?" + queryString(
+        link.href = "/notebooks/" + self.notebook.object_id + "?" + queryString(
           [ "title", "note_id" ],
           [ note_title, "null" ]
         );
@@ -776,7 +771,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
 
   // if a link that launched this editor was provided, update it with the created note's id
   if ( link && id )
-    link.href = "/notebooks/" + this.notebook_id + "?note_id=" + id;
+    link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + id;
 }
 
 Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revision, creation, read_write, highlight, focus, position_after, user_id, username ) {
@@ -814,7 +809,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     var note_id = id.split( ' ' )[ 0 ];
     note_text = '<p>Previous revision from ' + short_revision + '</p>' +
       '<form id="revert_form" target="/notebooks/revert_note">' +
-      '<input type="hidden" name="notebook_id" value="' + this.notebook_id + '">' +
+      '<input type="hidden" name="notebook_id" value="' + this.notebook.object_id + '">' +
       '<input type="hidden" name="note_id" value="' + note_id + '">' +
       '<input type="hidden" name="revision" value="' + revision + '">' +
       '<input type="submit" class="button" value="revert to this revision" title="Roll back to this earlier version of the note.">' + 
@@ -827,7 +822,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   }
 
   var startup = this.startup_notes[ id ];
-  var editor = new Editor( id, this.notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty, own_notes_only );
+  var editor = new Editor( id, this.notebook.object_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty, own_notes_only );
 
   if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
@@ -947,7 +942,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
     this.clear_pulldowns();
     var self = this;
-    var suggest_pulldown = new Suggest_pulldown( this, this.notebook_id, this.invoker, link, editor.iframe, title, editor.document );
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.iframe, title, editor.document );
     connect( suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_link_with_suggestion( editor, link, note )
     } );
@@ -979,12 +974,12 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
       this.clear_pulldowns();
       // display a different pulldown depending on whether the link is a note link or a file link
       if ( link.target || !/\/files\//.test( link.href ) )
-        new Link_pulldown( this, this.notebook_id, this.invoker, editor, link, ephemeral );
+        new Link_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
       else {
         if ( /\/files\/new$/.test( link.href ) )
-          new Upload_pulldown( this, this.notebook_id, this.invoker, editor, link, ephemeral );
+          new Upload_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
         else
-          new File_link_pulldown( this, this.notebook_id, this.invoker, editor, link, ephemeral );
+          new File_link_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
       }
     }
   }
@@ -1000,7 +995,7 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
     selection.collapseToEnd();
   }
 
-  link.href = "/notebooks/" + this.notebook_id + "?note_id=" + note.object_id;
+  link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + note.object_id;
 
   link.pulldown.shutdown();
   link.pulldown = null;
@@ -1404,7 +1399,7 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_messages();
     this.clear_pulldowns();
 
-    new Upload_pulldown( this, this.notebook_id, this.invoker, this.focused_editor, link );
+    new Upload_pulldown( this, this.notebook.object_id, this.invoker, this.focused_editor, link );
   }
 
   event.stop();
@@ -1470,7 +1465,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
   this.save_editor( editor, false, function () {
     if ( self.notebook.read_write != NOTEBOOK_READ_ONLY && editor.read_write ) {
       self.invoker.invoke( "/notebooks/delete_note", "POST", { 
-        "notebook_id": self.notebook_id,
+        "notebook_id": self.notebook.object_id,
         "note_id": editor.id
       }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
     }
@@ -1541,7 +1536,7 @@ Wiki.prototype.undelete_editor_via_undo = function( event, editor, position_afte
     if ( this.notebook.read_write != NOTEBOOK_READ_ONLY && editor.read_write ) {
       var self = this;
       this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
-        "notebook_id": this.notebook_id,
+        "notebook_id": this.notebook.object_id,
         "note_id": editor.id
       }, function ( result ) {
         self.display_storage_usage( result.storage_bytes );
@@ -1561,7 +1556,7 @@ Wiki.prototype.undelete_editor_via_undelete = function( event, note_id, position
   if ( this.notebook.read_write != NOTEBOOK_READ_ONLY ) {
     var self = this;
     this.invoker.invoke( "/notebooks/undelete_note", "POST", { 
-      "notebook_id": this.notebook_id,
+      "notebook_id": this.notebook.object_id,
       "note_id": note_id
     }, function ( result ) {
       self.display_storage_usage( result.storage_bytes );
@@ -1600,7 +1595,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
     editor.scrape_title();
 
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
-      "notebook_id": this.notebook_id,
+      "notebook_id": this.notebook.object_id,
       "note_id": editor.id,
       "contents": editor.contents(),
       "startup": editor.startup,
@@ -1761,7 +1756,7 @@ Wiki.prototype.editor_button_clicked = function ( editor, button ) {
     var invite_id = button.id.split( "_" ).pop();
 
     this.invoker.invoke( "/users/revoke_invite", "POST", {
-      "notebook_id": this.notebook_id,
+      "notebook_id": this.notebook.object_id,
       "invite_id": invite_id
     }, function ( result ) {
       if ( !result.invites ) return;
@@ -1800,7 +1795,7 @@ Wiki.prototype.search = function ( event ) {
 
   var self = this;
   this.invoker.invoke( "/notebooks/search", "GET", {
-      "notebook_id": this.notebook_id
+      "notebook_id": this.notebook.object_id
     },
     function( result ) { self.display_search_results( result ); },
     "search_form"
@@ -1830,7 +1825,7 @@ Wiki.prototype.search_key_released = function ( event ) {
   if ( search_text.pulldown ) {
     search_text.pulldown.update_suggestions( search_text.value );
   } else if ( event.key().code != 13 ) {
-    search_text.pulldown = new Suggest_pulldown( this.wiki, this.notebook_id, this.invoker, search_text, null, search_text.value, search_text );
+    search_text.pulldown = new Suggest_pulldown( this.wiki, this.notebook.object_id, this.invoker, search_text, null, search_text.value, search_text );
     connect( search_text.pulldown, "suggestion_selected", function ( note ) {
       self.load_search_suggestion( note )
     } );
@@ -1904,7 +1899,7 @@ Wiki.prototype.display_search_results = function ( result ) {
     // when a link is clicked for a note from a notebook other than the current one, open it in a
     // new window
     var link_attributes = { "href": "/notebooks/" + note.notebook_id + "?note_id=" + note.object_id };
-    if ( note.notebook_id != this.notebook_id ) {
+    if ( note.notebook_id != this.notebook.object_id ) {
       link_attributes[ "target" ] = "_new";
 
       if ( !other_notebooks_section ) {
@@ -1989,7 +1984,7 @@ Wiki.prototype.share_notebook = function () {
 
   var div = createDOM( "div", {}, 
     createDOM( "form", { "id": "invite_form", "target": "/users/send_invites" },
-      createDOM( "input", { "type": "hidden", "name": "notebook_id", "value": this.notebook_id } ),
+      createDOM( "input", { "type": "hidden", "name": "notebook_id", "value": this.notebook.object_id } ),
       createDOM( "p", {},
         createDOM( "b", {}, "people to invite" ),
         createDOM( "br", {} ),
@@ -2008,13 +2003,13 @@ Wiki.prototype.share_notebook = function () {
     ),
     createDOM( "div", {},
       createDOM(
-        "a", { "href": "/notebooks/" + this.notebook_id + "?preview=viewer", "target": "_new" },
+        "a", { "href": "/notebooks/" + this.notebook.object_id + "?preview=viewer", "target": "_new" },
         "Preview this notebook as a viewer."
       )
     ),
     this.rate_plan.notebook_collaboration ? createDOM( "div", {},
       createDOM(
-        "a", { "href": "/notebooks/" + this.notebook_id + "?preview=collaborator", "target": "_new" },
+        "a", { "href": "/notebooks/" + this.notebook.object_id + "?preview=collaborator", "target": "_new" },
         "Preview this notebook as a collaborator."
       )
     ) : null
@@ -2463,7 +2458,7 @@ Wiki.prototype.move_current_notebook_up = function ( event ) {
 
   var self = this;
   this.invoker.invoke( "/notebooks/move_up", "POST", { 
-    "notebook_id": this.notebook_id
+    "notebook_id": this.notebook.object_id
   } );
 }
 
@@ -2488,7 +2483,7 @@ Wiki.prototype.move_current_notebook_down = function ( event ) {
 
   var self = this;
   this.invoker.invoke( "/notebooks/move_down", "POST", { 
-    "notebook_id": this.notebook_id
+    "notebook_id": this.notebook.object_id
   } );
 }
 
@@ -2638,7 +2633,7 @@ Wiki.prototype.delete_all_editors = function ( event ) {
   if ( this.notebook.read_write == NOTEBOOK_READ_WRITE ) {
     var self = this;
     this.invoker.invoke( "/notebooks/delete_all_notes", "POST", { 
-      "notebook_id": this.notebook_id
+      "notebook_id": this.notebook.object_id
     }, function ( result ) { self.display_storage_usage( result.storage_bytes ); } );
   }
 
@@ -2741,7 +2736,7 @@ Wiki.prototype.export_clicked = function () {
     return;
   }
 
-  new Export_pulldown( this, this.notebook_id, this.invoker, getElement( "export_link" ) );
+  new Export_pulldown( this, this.notebook.object_id, this.invoker, getElement( "export_link" ) );
 }
 
 Wiki.prototype.import_clicked = function () {
@@ -2753,7 +2748,7 @@ Wiki.prototype.import_clicked = function () {
     return;
   }
 
-  new Import_pulldown( this, this.notebook_id, this.invoker, getElement( "import_link" ) );
+  new Import_pulldown( this, this.notebook.object_id, this.invoker, getElement( "import_link" ) );
 }
 
 Wiki.prototype.start_notebook_rename = function () {
@@ -2866,7 +2861,7 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
 
   this.notebook.name = new_notebook_name;
   this.invoker.invoke( "/notebooks/rename", "POST", {
-    "notebook_id": this.notebook_id,
+    "notebook_id": this.notebook.object_id,
     "name": new_notebook_name
   } );
 }
@@ -2876,14 +2871,14 @@ Wiki.prototype.delete_notebook = function () {
     var self = this;
     this.save_editor( this.focused_editor, false, function () {
       self.invoker.invoke( "/notebooks/delete", "POST", {
-        "notebook_id": self.notebook_id
+        "notebook_id": self.notebook.object_id
       } );
     } )
     return;
   }
 
   this.invoker.invoke( "/notebooks/delete", "POST", {
-    "notebook_id": this.notebook_id
+    "notebook_id": this.notebook.object_id
   } );
 }
 
@@ -2925,7 +2920,7 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
   // if there's already a cached revision list, or the editor doesn't have a revision yet, then
   // display the changes pulldown and bail
   if ( ( editor.user_revisions && editor.user_revisions.length > 0 ) || !editor.revision ) {
-    new Changes_pulldown( this, this.notebook_id, this.invoker, editor );
+    new Changes_pulldown( this, this.notebook.object_id, this.invoker, editor );
     return;
   }
 
@@ -2933,12 +2928,12 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
   var self = this;
   this.invoker.invoke(
     "/notebooks/load_note_revisions", "GET", {
-      "notebook_id": this.notebook_id,
+      "notebook_id": this.notebook.object_id,
       "note_id": editor.id
     },
     function ( result ) {
       editor.user_revisions = result.revisions;
-      new Changes_pulldown( self, self.notebook_id, self.invoker, editor );
+      new Changes_pulldown( self, self.notebook.object_id, self.invoker, editor );
     }
   );
 }
@@ -2953,7 +2948,7 @@ Wiki.prototype.toggle_editor_options = function ( event, editor ) {
     return;
   }
 
-  new Options_pulldown( this, this.notebook_id, this.invoker, editor );
+  new Options_pulldown( this, this.notebook.object_id, this.invoker, editor );
   event.stop();
 }
 

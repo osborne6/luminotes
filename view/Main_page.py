@@ -147,7 +147,7 @@ class Main_page( Page ):
       Input( type = u"hidden", name = u"rate_plan", id = u"rate_plan", value = json( rate_plan ) ),
       Input( type = u"hidden", name = u"yearly", id = u"yearly", value = json( signup_yearly ) ),
       Input( type = u"hidden", name = u"notebooks", id = u"notebooks", value = json( notebooks ) ),
-      Input( type = u"hidden", name = u"notebook_id", id = u"notebook_id", value = notebook.object_id ),
+      Input( type = u"hidden", name = u"notebook", id = u"notebook", value = json( notebook ) ),
       Input( type = u"hidden", name = u"parent_id", id = u"parent_id", value = parent_id or "" ),
       Input( type = u"hidden", name = u"startup_notes", id = u"startup_notes", value = json( startup_note_dicts ) ),
       Input( type = u"hidden", name = u"current_notes", id = u"current_notes", value = json( note_dicts ) ),

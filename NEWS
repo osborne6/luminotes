@@ -1,8 +1,10 @@
-1.5.8:
- * Fixed a bug that prevented the autosaver from working on all notebooks.
+1.5.8: November 24, 2008
+ * Fixed a bug that prevented notes from being automatically saved in certain
+   notebooks.
  * Fixed a rare bug in which Luminotes sometimes indicated that the current
-   note was saved even when it wasn't. Fortunately, this was just a visual
-   bug, and the current note was always saved correctly.
+   note was saved even when it wasn't.
+ * Fixed a bug that prevented deleted notes from being displayed within the
+   trash.
 
 1.5.7: November 18, 2008
  * Rearranged the links on the left and right side of the wiki editing page
