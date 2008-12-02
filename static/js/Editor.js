@@ -1,5 +1,6 @@
 GECKO = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.userAgent );
 WEBKIT = /WebKit/.test( navigator.userAgent );
+IE6 = /MSIE 6\.0/.test( navigator.userAgent );
 
 
 function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty, own_notes_only ) {
@@ -20,24 +21,21 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.link_started = null;
   this.hover_target = null;
   this.hover_timer = null;
-  var iframe_id = "note_" + id;
-
-  var self = this;
   this.document = null;
-  this.iframe = createDOM( "iframe", {
-    "src": "/static/html/blank_note.html",
-    "frameBorder": "0",
-    "scrolling": "no",
-    "id": iframe_id,
-    "name": iframe_id,
-    "class": "note_frame",
-    "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
-    "onload": function () { setTimeout( function () { self.resize(); if ( !highlight ) scroll( 0, 0 ); }, 250 ); }
-  } );
-  this.iframe.editor = this;
+  this.iframe = null;
+  this.div = null;
   this.title = "";
 
-  if ( read_write ) {
+  // if the Editor is to be focused, create an editable iframe. otherwise just create a static div
+  if ( highlight || focus )
+    this.create_iframe( position_after );
+  else
+    this.create_div( position_after );
+}
+
+Editor.prototype.create_note_controls = function () {
+  var iframe_id = "note_" + this.id;
+  if ( this.read_write ) {
     this.delete_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",
@@ -45,7 +43,6 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
       "value": "delete" + ( this.deleted_from_id ? " forever" : "" ),
       "title": "delete note [ctrl-d]"
     } );
-    connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
 
     if ( this.deleted_from_id ) {
       this.undelete_button = createDOM( "input", {
@@ -55,8 +52,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
         "value": "undelete",
         "title": "undelete note"
       } );
-      connect( this.undelete_button, "onclick", function ( event ) { signal( self, "undelete_clicked", event ); } );
-    } else if ( !own_notes_only ) {
+    } else if ( !this.own_notes_only ) {
       this.changes_button = createDOM( "input", {
         "type": "button",
         "class": "note_button",
@@ -64,7 +60,6 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
         "value": "changes",
         "title": "previous revisions"
       } );
-      connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
 
       this.options_button = createDOM( "input", {
         "type": "button",
@@ -73,11 +68,10 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
         "value": "options",
         "title": "note options"
       } );
-      connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
     }
   }
 
-  if ( !this.deleted_from_id && ( read_write || !startup ) && !own_notes_only ) {
+  if ( !this.deleted_from_id && ( this.read_write || !this.startup ) && !this.own_notes_only ) {
     this.hide_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",
@@ -85,10 +79,10 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
       "value": "hide",
       "title": "hide note [ctrl-h]"
     } );
-    connect( this.hide_button, "onclick", function ( event ) { signal( self, "hide_clicked", event ); } );
   }
 
-  this.note_controls = createDOM( "span", { "class": "note_controls" },
+  this.note_controls = createDOM(
+    "div", { "class": "note_controls", "id": "note_controls_" + this.id },
     this.delete_button ? this.delete_button : null,
     this.delete_button ? " " : null,
     this.changes_button ? this.changes_button : null,
@@ -99,19 +93,106 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
     this.undelete_button ? " " : null,
     this.hide_button ? this.hide_button : null
   );
+}
 
-  if ( position_after && position_after.parentNode ) {
-    insertSiblingNodesAfter( position_after, this.note_controls );
-    insertSiblingNodesAfter( this.note_controls, this.iframe );
+Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
+  if ( store_control_buttons ) {
+    var iframe_id = "note_" + this.id;
+    this.delete_button = getElement( "delete_" + iframe_id );
+    this.undelete_button = getElement( "undelete_" + iframe_id );
+    this.changes_button = getElement( "changes_" + iframe_id );
+    this.options_button = getElement( "options_" + iframe_id );
+    this.hide_button = getElement( "hide_" + iframe_id );
+  }
+
+  var self = this;
+  if ( this.delete_button )
+    connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
+  if ( this.undelete_button )
+    connect( this.undelete_button, "onclick", function ( event ) { signal( self, "undelete_clicked", event ); } );
+  if ( this.changes_button )
+    connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
+  if ( this.options_button )
+    connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
+  if ( this.hide_button )
+    connect( this.hide_button, "onclick", function ( event ) { signal( self, "hide_clicked", event ); } );
+}
+
+Editor.prototype.create_iframe = function ( position_after ) {
+  var iframe_id = "note_" + this.id;
+  var self = this;
+  this.iframe = createDOM( "iframe", {
+    // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
+    "src": IE6 && "/static/html/blank_note.html" || "",
+    "frameBorder": "0",
+    "scrolling": "no",
+    "id": iframe_id,
+    "name": iframe_id,
+    "class": "note_frame",
+    "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
+    "onload": function () { setTimeout( function () { self.resize(); if ( !this.init_highlight ) scroll( 0, 0 ); }, 250 ); }
+  } );
+  this.iframe.editor = this;
+
+  // if there is already a static note open for this editor, replace its div with the new iframe
+  // and note controls
+  if ( getElement( "static_note_" + this.id ) ) {
+    var note_holder = getElement( "note_holder_" + this.id );
+    this.note_controls = getElement( "note_controls_" + this.id );
+    this.connect_note_controls( true );
+
+    replaceChildNodes( note_holder, this.iframe );
+    insertSiblingNodesBefore( this.iframe, this.note_controls );
   } else {
-    appendChildNodes( "notes", this.note_controls );
-    appendChildNodes( "notes", this.iframe );
+    this.create_note_controls();
+    this.connect_note_controls();
+
+    var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
+      this.note_controls,
+      this.iframe
+    );
+
+    if ( position_after && position_after.parentNode )
+      insertSiblingNodesAfter( position_after, note_holder );
+    else
+      appendChildNodes( "notes", note_holder );
   }
 
   connect( this.iframe, "onload", function ( event ) { self.init_document(); } );
 }
 
-// second stage of construction, invoked by editor_loaded(). do not call directly
+Editor.prototype.create_div = function ( position_after ) {
+  // if there is already a static note div for this Editor, connect up the note controls and bail
+  var static_note_div = getElement( "static_note_" + this.id );
+  if ( static_note_div ) {
+    this.note_controls = getElement( "note_controls_" + this.id );
+    this.connect_note_controls( true );
+    this.div = static_note_div;
+    return;
+  }
+
+  this.div = createDOM(
+    "div", { "class": "static_note_div", "id": "static_note_" + this.id },
+    this.initial_text
+  );
+
+  this.create_note_controls();
+  this.connect_note_controls();
+
+  var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
+    this.note_controls,
+    this.div
+  );
+
+  if ( position_after && position_after.parentNode )
+    insertSiblingNodesAfter( position_after, note_holder );
+  else
+    appendChildNodes( "notes", note_holder );
+
+  signal( self, "init_complete" );
+}
+
+// second stage of construction after create_iframe(), invoked by iframe onload. do not call directly
 Editor.prototype.init_document = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 

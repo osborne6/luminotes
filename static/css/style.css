@@ -455,7 +455,7 @@ h1 {
 
 #static_notes {
   text-align: left;
-  margin: 1em;
+  margin: 0em;
   line-height: 140%;
 }
 
@@ -488,7 +488,7 @@ h1 {
 }
 
 .note_controls {
-  float: right;
+  text-align: right;
   margin-right: 1.5em;
 }
 
@@ -527,6 +527,18 @@ h1 {
 
 .focused_note_frame {
   border: 2px solid black;
+}
+
+.static_note_div {
+  display: block;
+  margin: 0em;
+  padding: 0.5em 1.5em 1em 1.5em;
+  font-family: sans-serif;
+  overflow: hidden;
+  border: 1px solid #999999;
+  margin-bottom: 0.75em;
+  background-color: #ffffff;
+  overflow-x: auto;
 }
 
 .page_title a {

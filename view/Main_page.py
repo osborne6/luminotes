@@ -43,17 +43,62 @@ class Main_page( Page ):
   ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
-    static_notes = Div(
-      notes and [ Div(
-        note.contents,
-        id = "static_note_%s" % note.object_id,
-      ) for note in notes ] or
-      [ Div(
-        startup_note.contents,
-        id = "static_note_%s" % startup_note.object_id
-      ) for startup_note in startup_notes ],
-      id = "static_notes",
-    )
+    def note_controls( note, read_write ):
+      return Div(
+        ( read_write != Notebook.READ_ONLY ) and Input(
+          type = "button",
+          class_ = "note_button",
+          id = "delete_note_%s" % note.object_id,
+          value = "delete" + ( note.deleted_from_id and " forever" or "" ),
+          title = "delete note [ctrl-d]"
+        ) or None,
+        ( read_write != Notebook.READ_ONLY ) and note.deleted_from_id and Input(
+          type = "button",
+          class_ = "note_button",
+          id = "undelete_note_%s" % note.object_id,
+          value = "undelete",
+          title = "undelete note"
+        ) or None,
+        ( read_write == Notebook.READ_WRITE ) and not note.deleted_from_id and Input(
+          type = "button",
+          class_ = "note_button",
+          id = "changes_note_%s" % note.object_id,
+          value = "changes",
+          title = "previous revisions",
+        ) or None,
+        ( read_write == Notebook.READ_WRITE ) and not note.deleted_from_id and Input(
+          type = "button",
+          class_ = "note_button",
+          id = "options_note_%s" % note.object_id,
+          value = "options",
+          title = "note options",
+        ) or None,
+        ( read_write != Notebook.READ_ONLY or not note.startup ) and not note.deleted_from_id and \
+          ( read_write != Notebook.READ_WRITE_FOR_OWN_NOTES ) and Input(
+          type = "button",
+          class_ = "note_button",
+          id = "hide_note_%s" % note.object_id,
+          value = "hide",
+          title = "hide note [ctrl-h]",
+        ) or None,
+        id = u"note_controls_%s" % note.object_id,
+        class_ = u"note_controls",
+      )
+
+    def static_note_divs( notes, read_write ):
+      return [ Div(
+        note_controls( note, read_write ),
+        Div(
+          note.contents,
+          id = "static_note_%s" % note.object_id,
+          class_ = u"static_note_div",
+        ),
+        id = u"note_holder_%s" % note.object_id,
+        class_ = u"note_holder",
+      ) for note in notes ]
+
+    static_notes = notes and static_note_divs( notes, note_read_write and notebook.read_write or Notebook.READ_ONLY ) or \
+                   static_note_divs( startup_notes, notebook.read_write )
 
     # Since the contents of these notes are included in the static_notes section below, don't
     # include them again in the hidden fields here. Accomplish this by making custom dicts for
@@ -213,21 +258,13 @@ class Main_page( Page ):
               ),
               Div(
                 Span( id = u"notes_top" ),
+                static_notes,
                 id = u"notes",
               ),
               ( notebook.read_write == Notebook.READ_WRITE ) and Div(
                 id = u"blank_note_stub",
                 class_ = u"blank_note_stub_hidden_border",
               ) or None,
-              static_notes,
-              # Sort of simulate the <noscript> tag by hiding the static version of the notes.
-              # This code won't be executed if JavaScript is disabled. I'm not actually using
-              # <noscript> because I want to be able to programmatically read the hidden static
-              # notes when JavaScript is enabled.
-              Script(
-                u"document.getElementById( 'static_notes' ).style.display = 'none';",
-                type = u"text/javascript",
-              ),
               ( forum_tag and user.username and user.username != u"anonymous" ) and \
                 P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button.", class_ = u"small_text" ) or None,
               Page_navigation(
