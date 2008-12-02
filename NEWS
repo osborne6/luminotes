@@ -1,3 +1,6 @@
+1.5.9: 
+ * Switching between notebooks and loading notebooks is now even faster.
+
 1.5.8: November 24, 2008
  * Fixed a bug that prevented notes from being automatically saved in certain
    notebooks.
