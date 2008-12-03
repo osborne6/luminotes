@@ -1,4 +1,7 @@
 1.5.9: 
+ * When you hover the mouse over a link and a link pulldown appears, that
+   pulldown will now automatically disappear soon after you move the mouse
+   away.
  * Changed the "new note" key from ctrl-N to ctrl-M so as not to conflict with
    the "new browser window" key used in most web browsers.
  * Fixed a Chrome/Safari bug in which ending a link didn't always work.

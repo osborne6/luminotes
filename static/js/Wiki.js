@@ -2975,10 +2975,14 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
 
   if ( this.ephemeral ) {
     // when the mouse cursor is moved into the pulldown, it becomes non-ephemeral (in other words,
-    // it will no longer disappear in a few seconds)
+    // it will no longer disappear in a few seconds). but as soon as the mouse leaves, it becomes
+    // ephemeral again
     var self = this;
     connect( this.div, "onmouseover", function ( event ) {
       self.ephemeral = false;
+    } );
+    connect( this.div, "onmouseout", function ( event ) {
+      self.ephemeral = true;
     } );
   }
 }
@@ -3306,10 +3310,16 @@ Link_pulldown.prototype.display_summary = function ( title, summary ) {
 }
 
 Link_pulldown.prototype.title_field_clicked = function ( event ) {
+  disconnectAll( this.div );
+  this.ephemeral = false;
+
   event.stop();
 }
 
 Link_pulldown.prototype.title_field_focused = function ( event ) {
+  disconnectAll( this.div );
+  this.ephemeral = false;
+
   this.title_field.select();
 }
 
