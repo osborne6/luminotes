@@ -1073,6 +1073,10 @@ Wiki.prototype.key_pressed = function ( event ) {
     if ( code == 78 )
       this.create_blank_editor( event );
   }
+
+  // prevent backspace from going back to the previous page
+  if ( code == 8 )
+    event.stop();
 }
 
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {

@@ -329,9 +329,13 @@ Editor.prototype.key_released = function ( event ) {
 Editor.prototype.cleanup_html = function ( key_code ) {
   if ( WEBKIT ) {
     // if enter is pressed while in a title, end title mode, since WebKit doesn't do that for us
-    var ENTER = 13;
+    var ENTER = 13; BACKSPACE = 8;
     if ( key_code == ENTER && this.state_enabled( "h3" ) )
       this.exec_command( "h3" );
+
+    // if backspace is pressed, skip WebKit style scrubbing since it can cause problems
+    if ( key_code == BACKSPACE )
+      return null;
 
     // as of this writing, WebKit doesn't support execCommand( "styleWithCSS" ). for more info, see
     // https://bugs.webkit.org/show_bug.cgi?id=13490

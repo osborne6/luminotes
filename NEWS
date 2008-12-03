@@ -1,5 +1,7 @@
 1.5.9: 
  * Fixed a Chrome/Safari bug in which ending a link didn't always work.
+ * Fixed a rare Chrome/Safari bug in which pressing backspace sometimes made
+   the text cursor vanish.
 
 1.5.8: November 24, 2008
  * Fixed a bug that prevented notes from being automatically saved in certain
