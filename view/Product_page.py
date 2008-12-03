@@ -27,7 +27,7 @@ class Product_page( Page ):
               Ul(
                 Li( u"About", class_ = u"footer_category" ),
                 Li( A( u"tour", href = u"/tour" ) ),
-                Li( A( u"demo", href = u"/demo" ) ),
+                Li( A( u"demo", href = u"/users/demo" ) ),
                 Li( A( u"faq", href = u"/faq" ) ),
                 Li( A( u"team", href = u"/meet_the_team" ) ),
                 Li( A( u"user guide", href = u"/guide" ) ),
