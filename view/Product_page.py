@@ -21,7 +21,6 @@ class Product_page( Page ):
 
       Div(
         Div(
-          # TODO make into a table kinda like on the footer of change.gov?
           Div(
             Div(
               Ul(
