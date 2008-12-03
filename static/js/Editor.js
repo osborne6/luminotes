@@ -602,7 +602,9 @@ Editor.prototype.end_link = function () {
     // end of the link if it's not already there
     if ( link && WEBKIT ) {
       var selection = this.iframe.contentWindow.getSelection();
-      selection.collapse( link, 1 );
+      var sentinel = this.document.createTextNode( Editor.title_placeholder_char );
+      insertSiblingNodesAfter( link, sentinel );
+      selection.collapse( sentinel, 1 );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     // if some text is already selected, unlink it and bail
