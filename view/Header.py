@@ -18,8 +18,8 @@ class Header( Div ):
           Div(
             u"version", VERSION, u" | ",
             A( u"upgrade", href = u"http://luminotes.com/download?upgrade=True", target = "_new" ), u" | ",
-            A( u"support", href = u"http://luminotes.com/support", target = "_new" ), u" | ",
-            A( u"blog", href = u"http://luminotes.com/blog", target = "_new" ),
+            A( u"community", href = u"http://luminotes.com/community", target = "_new" ), u" | ",
+            A( u"blog", href = u"http://luminotes.com/blog/", target = "_new" ),
             class_ = u"header_links",
           ),
           class_ = u"wide_center_area",
