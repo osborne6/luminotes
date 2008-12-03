@@ -230,6 +230,8 @@ class Main_page( Page ):
               ),
               ( forum_tag and user.username and user.username != u"anonymous" ) and \
                 P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button.", class_ = u"small_text" ) or None,
+              ( forum_tag and ( not user.username or user.username == u"anonymous" ) ) and \
+                P( u"To write a comment, please login first. No account?", A( u"Sign up", href = u"/pricing" ), u"to get a free account.", class_ = "small_text" ) or None,
               Page_navigation(
                 notebook_path, len( notes ), total_notes_count, start, count,
                 return_text = u"return to the discussion",
