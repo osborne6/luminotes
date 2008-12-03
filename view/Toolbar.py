@@ -10,7 +10,7 @@ class Toolbar( Div ):
         P(
           Div( Input(
             type = u"image",
-            id = u"newNote", title = u"new %s [ctrl-N]" % ( note_word or u"note" ),
+            id = u"newNote", title = u"make a new %s [ctrl-M]" % ( note_word or u"note" ),
             src = u"/static/images/toolbar/new_note_button.png",
             width = u"40", height = u"40",
             class_ = "image_button",

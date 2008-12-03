@@ -1069,8 +1069,8 @@ Wiki.prototype.key_pressed = function ( event ) {
 
   var code = event.key().code;
   if ( event.modifier().ctrl ) {
-    // ctrl-n: new note
-    if ( code == 78 )
+    // ctrl-m: make a new note
+    if ( code == 77 )
       this.create_blank_editor( event );
   }
 
@@ -1116,8 +1116,8 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-l: link
     } else if ( code == 76 ) {
       this.toggle_link_button( event );
-    // ctrl-n: new note
-    } else if ( code == 78 ) {
+    // ctrl-m: make a new note
+    } else if ( code == 77 ) {
       this.create_blank_editor( event );
     // ctrl-h: hide note
     } else if ( code == 72 ) {
