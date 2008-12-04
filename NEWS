@@ -1,3 +1,8 @@
+1.5.10: December 4, 2008
+ * Fixed a bug in which certain new installations of Luminotes Desktop
+   on Windows yielded an "uh oh" error on initial launch. This bug did
+   not occur during upgrades. It only affected new installations.
+
 1.5.9: December 3, 2008
  * When you hover the mouse over a link and a link pulldown appears, that
    pulldown will now automatically disappear soon after you move the mouse
