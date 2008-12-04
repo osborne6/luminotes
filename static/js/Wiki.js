@@ -1154,8 +1154,10 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   } else if ( code == 8 && editor.document.selection ) {
     var range = editor.document.selection.createRange();
     range.moveStart( "character", -1 );
-    range.text = "";
-    event.stop();
+    if ( range.text != "" ) {
+      range.text = "";
+      event.stop();
+    }
   }
 }
 
