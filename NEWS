@@ -1,6 +1,8 @@
 1.5.11: 
+ * Added a font selection button to the toolbar.
  * Decreased the default note text font size, so now you can see more of your
-   notes at once.
+   note text at once.
+ * Added more rounded corners to several display elements.
 
 1.5.10: December 4, 2008
  * Fixed a bug in which certain new installations of Luminotes Desktop

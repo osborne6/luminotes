@@ -186,6 +186,16 @@ class Main_page( Page ):
           ) or None,
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
+            parent_id and Span(
+              A( u"empty", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
+              u" | ",
+              A( u"go back", href = u"/notebooks/%s" % parent_id ),
+              id = u"notebook_header_links",
+            ) or Span(
+              A( u"rename", href = u"#", id = u"rename_notebook_link", title = u"Rename this notebook." ),
+              id = u"notebook_header_links",
+              class_ = u"invisible",
+            ),
             ( notebook.name == u"Luminotes" and title == u"source code" ) and \
               Strong( "%s %s" % ( notebook.name, VERSION ) ) or \
               Span(
@@ -193,12 +203,6 @@ class Main_page( Page ):
                   and Strong( notebook.name ) \
                   or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
               ),
-            parent_id and Span(
-              u" | ",
-              A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
-              u" | ",
-              A( u"return to notebook", href = u"/notebooks/%s" % parent_id ),
-            ) or None,
             id = u"notebook_header_area",
             corners = ( u"tl", u"tr", u"br" ),
           ),

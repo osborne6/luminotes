@@ -330,7 +330,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
     connect( "strikethrough", "onclick", function ( event ) { self.toggle_button( event, "strikethrough" ); } );
-    connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title" ); } );
+    connect( "font", "onclick", this, "toggle_font_button" );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
 
@@ -342,7 +342,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
     this.make_image_button( "strikethrough" );
-    this.make_image_button( "title" );
+    this.make_image_button( "font" );
     this.make_image_button( "insertUnorderedList", "bullet_list" );
     this.make_image_button( "insertOrderedList", "numbered_list" );
 
@@ -390,6 +390,17 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( notebook_header_name, "onclick", function ( event ) {
       self.start_notebook_rename();
       event.stop();
+    } );
+  }
+
+  // FIXME: don't do this (hide and show the links on hover) if this is the trash
+  var notebook_header_area = getElement( "notebook_header_area" );
+  if ( notebook_header_area ) {
+    connect( notebook_header_area, "onmouseover", function ( event ) {
+      removeElementClass( "notebook_header_links", "invisible" );
+    } );
+    connect( notebook_header_area, "onmouseout", function ( event ) {
+      setTimeout( function () { addElementClass( "notebook_header_links", "invisible" ); }, 1000 );
     } );
   }
 
@@ -1332,7 +1343,7 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "italic", "i", node_names );
   this.update_button( "underline", "u", node_names );
   this.update_button( "strikethrough", "strike", node_names );
-  this.update_button( "title", "h3", node_names );
+  this.update_button( "font", "font", node_names );
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
 
@@ -1402,6 +1413,30 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_pulldowns();
 
     new Upload_pulldown( this, this.notebook.object_id, this.invoker, this.focused_editor, link );
+  }
+
+  event.stop();
+}
+
+Wiki.prototype.toggle_font_button = function ( event ) {
+  if ( this.focused_editor && this.focused_editor.read_write ) {
+    this.focused_editor.focus();
+
+    // if a pulldown is already open, then just close it
+    var existing_div = getElement( "font_pulldown" );
+
+    if ( existing_div ) {
+      this.up_image_button( "font" );
+      existing_div.pulldown.shutdown();
+      existing_div.pulldown = null;
+      return;
+    }
+
+    this.down_image_button( "font" );
+    this.clear_messages();
+    this.clear_pulldowns();
+
+    new Font_pulldown( this, this.notebook.object_id, this.invoker, event.target(), this.focused_editor );
   }
 
   event.stop();
@@ -2792,7 +2827,9 @@ Wiki.prototype.start_notebook_rename = function () {
     "form", { "id": "rename_form" }, notebook_name_field, ok_button
   );
 
-  replaceChildNodes( "notebook_header_area", rename_form );
+  replaceChildNodes( "notebook_header_name", rename_form );
+  disconnectAll( "notebook_header_area" );
+  addElementClass( "notebook_header_links", "invisible" );
 
   var self = this;
   connect( rename_form, "onsubmit", function ( event ) {
@@ -2809,6 +2846,7 @@ Wiki.prototype.start_notebook_rename = function () {
 }
 
 Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_rename_on_click ) {
+  try{
   if ( !new_notebook_name )
     new_notebook_name = getElement( "notebook_name_field" ).value;
 
@@ -2827,14 +2865,16 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
       "span", {},
       createDOM( "strong", {}, new_notebook_name )
     );
-    replaceChildNodes( "notebook_header_area", notebook_header_name );
+    replaceChildNodes( "notebook_header_name", notebook_header_name );
+    removeElementClass( "notebook_header_links", "invisible" );
   } else {
     var notebook_header_name = createDOM(
       "span",
       { "id": "notebook_header_name", "title": "Rename this notebook." },
       createDOM( "strong", {}, new_notebook_name )
     );
-    replaceChildNodes( "notebook_header_area", notebook_header_name );
+    replaceChildNodes( "notebook_header_name", notebook_header_name );
+    removeElementClass( "notebook_header_links", "invisible" );
 
     var self = this;
     connect( notebook_header_name, "onclick", function ( event ) {
@@ -2842,6 +2882,14 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
       event.stop();
     } );
   }
+
+  var notebook_header_area = getElement( "notebook_header_area" );
+  connect( notebook_header_area, "onmouseover", function ( event ) {
+    removeElementClass( "notebook_header_links", "invisible" );
+  } );
+  connect( notebook_header_area, "onmouseout", function ( event ) {
+    setTimeout( function () { addElementClass( "notebook_header_links", "invisible" ); }, 1000 );
+  } );
 
   // rename the notebook link on the right side of the page
   var notebook_link = getElement( "notebook_" + this.notebook.object_id );
@@ -2866,6 +2914,7 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
     "notebook_id": this.notebook.object_id,
     "name": new_notebook_name
   } );
+  }catch(e){console.log(e); }
 }
 
 Wiki.prototype.delete_notebook = function () {
@@ -4193,6 +4242,63 @@ Suggest_pulldown.prototype.shutdown = function () {
   this.anchor.pulldown = null;
   disconnectAll( this );
   disconnect( this.key_handler );
+}
+
+
+function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
+  anchor.pulldown = this;
+  this.anchor = anchor;
+  this.editor = editor;
+
+  Pulldown.call( this, wiki, notebook_id, "font_pulldown", anchor );
+
+  this.invoker = invoker;
+
+  var fonts = [
+    [ "Sans Serif", "sans-serif" ],
+    [ "Serif", "serif" ],
+    [ "Monospace", "monospace" ],
+    [ "Comic", "comic sans ms,sans-serif" ],
+    [ "Garamond", "garamond,serif" ],
+    [ "Georgia", "georgia,serif" ],
+    [ "Tahoma", "tahoma,sans-serif" ],
+    [ "Trebuchet", "trebuchet ms,sans-serif" ],
+    [ "Verdana", "verdana,sans-serif" ]
+  ];
+
+  var self = this;
+  for ( var i in fonts ) {
+    var font = fonts[ i ];
+    var font_name = font[ 0 ];
+    var font_family = font[ 1 ];
+
+    var label = createDOM( "label", { "class": "pulldown_label font_label", "style": "font-family: " + font_family + ";" },
+      font_name
+    );
+    label.font_family = font_family;
+    appendChildNodes( this.div, createDOM( "div", {}, label ) );
+    connect( label, "onclick", function ( event ) { self.font_name_clicked( event ); } );
+  }
+
+  Pulldown.prototype.finish_init.call( this );
+}
+
+Font_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Font_pulldown.prototype.constructor = Font_pulldown;
+
+Font_pulldown.prototype.font_name_clicked = function ( event ) {
+  var label = event.src();
+  this.editor.focus();
+  // FIXME: this doesn't work in IE 7 from this click handler, but it works elsewhere (like in the constructor)
+  this.editor.exec_command( "fontname", label.font_family );
+  this.shutdown();
+}
+
+Font_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
+  this.anchor.pulldown = null;
+  disconnectAll( this );
 }
 
 

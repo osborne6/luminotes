@@ -107,10 +107,10 @@ h1 {
   background-image: url(/static/images/toolbar/strikethrough_button_hover.png);
 }
 
-#title_button_hover_preload {
+#font_button_hover_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/title_button_hover.png);
+  background-image: url(/static/images/toolbar/font_button_hover.png);
 }
 
 #bullet_list_button_hover_preload {
@@ -167,10 +167,10 @@ h1 {
   background-image: url(/static/images/toolbar/strikethrough_button_down_hover.png);
 }
 
-#title_button_down_hover_preload {
+#font_button_down_hover_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/title_button_down_hover.png);
+  background-image: url(/static/images/toolbar/font_button_down_hover.png);
 }
 
 #bullet_list_button_down_hover_preload {
@@ -227,10 +227,10 @@ h1 {
   background-image: url(/static/images/toolbar/strikethrough_button_down.png);
 }
 
-#title_button_down_preload {
+#font_button_down_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/title_button_down.png);
+  background-image: url(/static/images/toolbar/font_button_down.png);
 }
 
 #bullet_list_button_down_preload {
@@ -427,6 +427,12 @@ h1 {
   color: #ff6600;
 }
 
+#notebook_header_links {
+  position: absolute;
+  top: 1.7em;
+  right: 1em;
+}
+
 #rename_form {
   margin: 0;
 }
@@ -493,6 +499,9 @@ h1 {
 }
 
 .note_button {
+  -moz-border-radius-topleft: 4px;
+  -moz-border-radius-topright: 4px;
+  -webkit-border-radius: 4px;
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
@@ -511,9 +520,12 @@ h1 {
 
 #save_button {
   margin-left: 0.5em;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
 }
 
 .note_frame {
+  -moz-border-radius: 5px;
   margin: 0em;
   padding: 0em;
   overflow: hidden;
@@ -549,6 +561,7 @@ h1 {
 }
 
 .pulldown {
+  -moz-border-radius: 4px;
   position: absolute;
   font-size: 72%;
   text-align: left;
@@ -579,8 +592,13 @@ h1 {
 }
 
 .pulldown_label {
+  -moz-user-select: none;
   color: #000000;
   text-decoration: none;
+}
+
+.font_label {
+  font-size: 125%;
 }
 
 .pulldown_label:hover {
@@ -589,6 +607,8 @@ h1 {
 }
 
 .message {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   padding: 0.5em;
   margin-bottom: 0.5em;
   font-weight: bold;
@@ -596,12 +616,16 @@ h1 {
 }
 
 .message_inner {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   padding: 0.5em;
   line-height: 140%;
   background-color: #ffaa44;
 }
 
 .error {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   padding: 0.5em;
   border: 1px solid #550000;
   margin-bottom: 0.5em;
@@ -611,6 +635,8 @@ h1 {
 }
 
 .error_inner {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   padding: 0.5em;
   line-height: 140%;
   color: #ffffff;
@@ -618,6 +644,8 @@ h1 {
 }
 
 .message_button {
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
   margin-left: 0.5em;
   border-style: outset;
   border-width: 0px;
@@ -861,6 +889,8 @@ h1 {
 }
 
 .hook_action_area {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   background-color: #ffff99;
   font-weight: bold;
   padding: 1em;

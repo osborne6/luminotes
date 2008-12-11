@@ -26,7 +26,7 @@ settings = {
     "session_filter.storage_type": "ram",
     "session_filter.timeout": 60 * 24 * 365, # one year
     "static_filter.root": os.getcwd(),
-    "server.log_to_screen": False,
+    "server.log_to_screen": True,
     "server.log_file": os.path.join( gettempdir(), "luminotes_error%s.log" % username_postfix ),
     "server.log_access_file": os.path.join( gettempdir(), "luminotes%s.log" % username_postfix ),
     "server.log_tracebacks": True,

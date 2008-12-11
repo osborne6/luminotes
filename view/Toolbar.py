@@ -62,8 +62,8 @@ class Toolbar( Div ):
           ) ),
           Div( Input(
             type = u"image",
-            id = u"title", title = u"title",
-            src = u"/static/images/toolbar/title_button.png",
+            id = u"font", title = u"font",
+            src = u"/static/images/toolbar/font_button.png",
             width = u"40", height = u"40",
             class_ = "image_button",
           ) ),
@@ -94,7 +94,7 @@ class Toolbar( Div ):
       Span( id = "italic_button_hover_preload" ),
       Span( id = "underline_button_hover_preload" ),
       Span( id = "strikethrough_button_hover_preload" ),
-      Span( id = "title_button_hover_preload" ),
+      Span( id = "font_button_hover_preload" ),
       Span( id = "bullet_list_button_hover_preload" ),
       Span( id = "numbered_list_button_hover_preload" ),
 
@@ -105,7 +105,7 @@ class Toolbar( Div ):
       Span( id = "italic_button_down_hover_preload" ),
       Span( id = "underline_button_down_hover_preload" ),
       Span( id = "strikethrough_button_down_hover_preload" ),
-      Span( id = "title_button_down_hover_preload" ),
+      Span( id = "font_button_down_hover_preload" ),
       Span( id = "bullet_list_button_down_hover_preload" ),
       Span( id = "numbered_list_button_down_hover_preload" ),
 
@@ -116,7 +116,7 @@ class Toolbar( Div ):
       Span( id = "italic_button_down_preload" ),
       Span( id = "underline_button_down_preload" ),
       Span( id = "strikethrough_button_down_preload" ),
-      Span( id = "title_button_down_preload" ),
+      Span( id = "font_button_down_preload" ),
       Span( id = "bullet_list_button_down_preload" ),
       Span( id = "numbered_list_button_down_preload" ),
 

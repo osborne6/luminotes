@@ -741,7 +741,9 @@ class Notebooks( object ):
 
     # if the note is already in the given notebook, load it and update it
     if note and note.notebook_id == notebook.object_id:
+      print "LOADING OLD NOTE..."
       old_note = self.__database.load( Note, note_id, previous_revision )
+      print "OLD NOTE: %s" % old_note
 
       previous_user = self.__database.load( User, note.user_id )
       previous_revision = User_revision( note.revision, note.user_id, previous_user and previous_user.username or None )

@@ -105,16 +105,6 @@ class Link_area( Div ):
 
             ( notebook.owner and notebook.name != u"trash" ) and Div(
               A(
-                u"rename",
-                href = u"#",
-                id = u"rename_notebook_link",
-                title = u"Change the name of this %s." % notebook_word,
-              ),
-              class_ = u"link_area_item",
-            ) or None,
-
-            ( notebook.owner and notebook.name != u"trash" ) and Div(
-              A(
                 u"delete",
                 href = u"#",
                 id = u"delete_notebook_link",

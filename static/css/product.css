@@ -40,10 +40,10 @@
   background-image: url(/static/images/toolbar/strikethrough_button.png);
 }
 
-#title_button_preload {
+#font_button_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/title_button.png);
+  background-image: url(/static/images/toolbar/font_button.png);
 }
 
 #bullet_list_button_preload {
@@ -65,6 +65,8 @@
 }
 
 .hook_area {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   padding-top: 1.5em;
   padding-bottom: 1.5em;
   width: 100%;
@@ -156,6 +158,8 @@
 }
 
 .thumbnail_area {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
   background-color: #fffece;
   padding-bottom: 0.5em;
 }
