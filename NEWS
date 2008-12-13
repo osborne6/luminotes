@@ -2,9 +2,11 @@
  * Added a font selection button to the toolbar.
  * Decreased the default note text font size, so now you can see more of your
    note text at once.
- * Added more rounded corners to several display elements.
+ * Added rounded corners to several display elements.
  * Fixed a Luminotes Desktop bug in which creating and then clicking on a new
    note link sometimes caused a red error message.
+ * Fixed a bug in which forum post permalinks didn't work on posts after the
+   first ten in a particular thread.
 
 1.5.10: December 4, 2008
  * Fixed a bug in which certain new installations of Luminotes Desktop
