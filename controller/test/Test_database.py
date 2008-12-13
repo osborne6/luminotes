@@ -66,6 +66,40 @@ class Test_database( object ):
     assert obj.revision.replace( tzinfo = utc ) == original_revision
     assert obj.value == basic_obj.value
 
+  def test_select_datetime( self ):
+    # this revision (with .504099) happens to test for a bug caused by floating point rounding errors
+    original_revision = "2008-01-01 01:00:42.504099+00:00"
+    basic_obj = Stub_object( object_id = "5", revision = original_revision, value = 1 )
+
+    self.database.save( basic_obj )
+    obj = self.database.select_one( Stub_object, Stub_object.sql_load( basic_obj.object_id ) )
+
+    assert obj.object_id == basic_obj.object_id
+    assert str( obj.revision.replace( tzinfo = utc ) ) == original_revision
+    assert obj.value == basic_obj.value
+
+  def test_select_datetime_with_many_fractional_digits( self ):
+    original_revision = "2008-01-01 01:00:42.5032429489284+00:00"
+    basic_obj = Stub_object( object_id = "5", revision = original_revision, value = 1 )
+
+    self.database.save( basic_obj )
+    obj = self.database.select_one( Stub_object, Stub_object.sql_load( basic_obj.object_id ) )
+
+    assert obj.object_id == basic_obj.object_id
+    assert str( obj.revision.replace( tzinfo = utc ) ) == "2008-01-01 01:00:42.503242+00:00"
+    assert obj.value == basic_obj.value
+
+  def test_select_datetime_with_zero_fractional_seconds( self ):
+    original_revision = "2008-01-01 01:00:42.0+00:00"
+    basic_obj = Stub_object( object_id = "5", revision = original_revision, value = 1 )
+
+    self.database.save( basic_obj )
+    obj = self.database.select_one( Stub_object, Stub_object.sql_load( basic_obj.object_id ) )
+
+    assert obj.object_id == basic_obj.object_id
+    assert str( obj.revision.replace( tzinfo = utc ) ) == "2008-01-01 01:00:42+00:00"
+    assert obj.value == basic_obj.value
+
   def test_select_one_tuple( self ):
     obj = self.database.select_one( tuple, Stub_object.sql_tuple() )
 
@@ -185,7 +219,7 @@ class Test_database( object ):
     self.connection.rollback()
     assert self.database.load( Stub_object, next_id ) == None
 
-  def test_next_id_with_explit_commit( self ):
+  def test_next_id_with_explicit_commit( self ):
     next_id = self.database.next_id( Stub_object, commit = False )
     self.database.commit()
     assert next_id
