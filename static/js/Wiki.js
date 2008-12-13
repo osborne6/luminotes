@@ -391,17 +391,16 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       self.start_notebook_rename();
       event.stop();
     } );
-  }
 
-  // FIXME: don't do this (hide and show the links on hover) if this is the trash
-  var notebook_header_area = getElement( "notebook_header_area" );
-  if ( notebook_header_area ) {
-    connect( notebook_header_area, "onmouseover", function ( event ) {
-      removeElementClass( "notebook_header_links", "invisible" );
-    } );
-    connect( notebook_header_area, "onmouseout", function ( event ) {
-      setTimeout( function () { addElementClass( "notebook_header_links", "invisible" ); }, 1000 );
-    } );
+    var notebook_header_area = getElement( "notebook_header_area" );
+    if ( notebook_header_area ) {
+      connect( notebook_header_area, "onmouseover", function ( event ) {
+        removeElementClass( "notebook_header_links", "invisible" );
+      } );
+      connect( notebook_header_area, "onmouseout", function ( event ) {
+        setTimeout( function () { addElementClass( "notebook_header_links", "invisible" ); }, 1000 );
+      } );
+    }
   }
 
   var delete_notebook_link = getElement( "delete_notebook_link" );
