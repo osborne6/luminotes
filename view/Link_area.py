@@ -87,13 +87,13 @@ class Link_area( Div ):
 
           ( notebook.read_write == Notebook.READ_WRITE ) and Span(
             Div(
-              A(
+              ( notebook.name != u"trash" ) and A(
                 u"import",
                 href = u"#",
                 id = u"import_link",
                 title = u"Import %ss from other software into Luminotes." % note_word,
-              ),
-              u"|",
+              ) or None,
+              ( notebook.name != u"trash" ) and u"|" or None,
               A(
                 u"export",
                 href = u"#",
@@ -103,7 +103,7 @@ class Link_area( Div ):
               class_ = u"link_area_item",
             ) or None,
 
-            Div(
+            ( notebook.name != u"trash" ) and Div(
               notebook.trash_id and A(
                 u"trash",
                 href = u"/notebooks/%s?parent_id=%s" % ( notebook.trash_id, notebook.object_id ),
@@ -118,9 +118,20 @@ class Link_area( Div ):
                 title = u"Move this %s to the trash." % notebook_word,
               ) or None,
               class_ = u"link_area_item",
-            ),
+            ) or None,
 
-            ( notebook.owner and user.username and rate_plan.get( u"notebook_sharing" ) ) and Div(
+            ( notebook.owner and notebook.name != u"trash" ) and Div(
+              A(
+                u"rename",
+                href = u"#",
+                id = u"rename_notebook_link",
+                title = u"Change the name of this %s." % notebook_word,
+               ),
+               class_ = u"link_area_item",
+            ) or None,
+
+            ( notebook.owner and notebook.name != u"trash" and
+              user.username and rate_plan.get( u"notebook_sharing" ) ) and Div(
               A(
                 u"share",
                 href = u"#",

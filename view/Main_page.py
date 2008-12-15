@@ -191,11 +191,7 @@ class Main_page( Page ):
               u" | ",
               A( u"go back", href = u"/notebooks/%s" % parent_id ),
               id = u"notebook_header_links",
-            ) or Span(
-              A( u"rename", href = u"#", id = u"rename_notebook_link", title = u"Rename this notebook." ),
-              id = u"notebook_header_links",
-              class_ = u"invisible",
-            ),
+            ) or None,
             ( notebook.name == u"Luminotes" and title == u"source code" ) and \
               Strong( "%s %s" % ( notebook.name, VERSION ) ) or \
               Span(

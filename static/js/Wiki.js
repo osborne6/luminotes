@@ -391,16 +391,6 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       self.start_notebook_rename();
       event.stop();
     } );
-
-    var notebook_header_area = getElement( "notebook_header_area" );
-    if ( notebook_header_area ) {
-      connect( notebook_header_area, "onmouseover", function ( event ) {
-        removeElementClass( "notebook_header_links", "invisible" );
-      } );
-      connect( notebook_header_area, "onmouseout", function ( event ) {
-        setTimeout( function () { addElementClass( "notebook_header_links", "invisible" ); }, 1000 );
-      } );
-    }
   }
 
   var delete_notebook_link = getElement( "delete_notebook_link" );
@@ -2827,8 +2817,6 @@ Wiki.prototype.start_notebook_rename = function () {
   );
 
   replaceChildNodes( "notebook_header_name", rename_form );
-  disconnectAll( "notebook_header_area" );
-  addElementClass( "notebook_header_links", "invisible" );
 
   var self = this;
   connect( rename_form, "onsubmit", function ( event ) {
@@ -2865,7 +2853,6 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
       createDOM( "strong", {}, new_notebook_name )
     );
     replaceChildNodes( "notebook_header_name", notebook_header_name );
-    removeElementClass( "notebook_header_links", "invisible" );
   } else {
     var notebook_header_name = createDOM(
       "span",
@@ -2873,7 +2860,6 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
       createDOM( "strong", {}, new_notebook_name )
     );
     replaceChildNodes( "notebook_header_name", notebook_header_name );
-    removeElementClass( "notebook_header_links", "invisible" );
 
     var self = this;
     connect( notebook_header_name, "onclick", function ( event ) {
@@ -2881,14 +2867,6 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
       event.stop();
     } );
   }
-
-  var notebook_header_area = getElement( "notebook_header_area" );
-  connect( notebook_header_area, "onmouseover", function ( event ) {
-    removeElementClass( "notebook_header_links", "invisible" );
-  } );
-  connect( notebook_header_area, "onmouseout", function ( event ) {
-    setTimeout( function () { addElementClass( "notebook_header_links", "invisible" ); }, 1000 );
-  } );
 
   // rename the notebook link on the right side of the page
   var notebook_link = getElement( "notebook_" + this.notebook.object_id );
