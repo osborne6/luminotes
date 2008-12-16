@@ -285,6 +285,10 @@ Editor.prototype.insert_html = function ( html ) {
   }
 }
 
+Editor.prototype.query_command_value = function ( command ) {
+  return this.document.queryCommandValue( command );
+}
+
 // resize the editor's frame to fit the dimensions of its content
 Editor.prototype.resize = function () {
   if ( !this.document ) return;
