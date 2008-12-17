@@ -4226,7 +4226,7 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   anchor.pulldown = this;
   this.anchor = anchor;
   this.editor = editor;
-  this.initial_check_mark = null;
+  this.initial_selected_mark = null;
 
   Pulldown.call( this, wiki, notebook_id, "font_pulldown", anchor );
 
@@ -4254,18 +4254,18 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
       font_name
     );
 
-    var check_mark_char = document.createTextNode( "\u2714" );
+    var selected_mark_char = document.createTextNode( "\u25cf" );
     if ( editor.query_command_value( "fontname" ) == font_family ) {
-      var check_mark = createDOM( "span", {}, check_mark_char );
-      this.initial_check_mark = check_mark;
+      var selected_mark = createDOM( "span", {}, selected_mark_char );
+      this.initial_selected_mark = selected_mark;
     } else {
-      var check_mark = createDOM( "span", { "class": "invisible" }, check_mark_char );
+      var selected_mark = createDOM( "span", { "class": "invisible" }, selected_mark_char );
     }
 
-    var div = createDOM( "div", {}, check_mark, " ", label );
+    var div = createDOM( "div", {}, selected_mark, " ", label );
 
     label.font_family = font_family;
-    label.check_mark = check_mark;
+    label.selected_mark = selected_mark;
     appendChildNodes( this.div, div );
     connect( label, "onclick", function ( event ) { self.font_name_clicked( event ); } );
   }
@@ -4278,14 +4278,13 @@ Font_pulldown.prototype.constructor = Font_pulldown;
 
 Font_pulldown.prototype.font_name_clicked = function ( event ) {
   var label = event.src();
-  if ( this.initial_check_mark )
-    addElementClass( this.initial_check_mark, "invisible" );
-  removeElementClass( label.check_mark, "invisible" );
+  if ( this.initial_selected_mark )
+    addElementClass( this.initial_selected_mark, "invisible" );
+  removeElementClass( label.selected_mark, "invisible" );
 
   var self = this;
   setTimeout( function () {
     self.editor.focus();
-    // FIXME: this doesn't work in IE 7 from this click handler, but it works elsewhere (like in the constructor)
     self.editor.exec_command( "fontname", label.font_family );
     self.shutdown();
   }, 100 );
