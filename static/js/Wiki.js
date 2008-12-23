@@ -3083,6 +3083,13 @@ function calculate_position( node, anchor, relative_to, always_left_align ) {
 Pulldown.prototype.update_position = function ( always_left_align ) {
   var position = calculate_position( this.div, this.anchor, this.relative_to, always_left_align );
   setElementPosition( this.div, position );
+
+  var div_height = getElementDimensions( this.div ).h;
+  var viewport_bottom = getViewportPosition().y + getViewportDimensions().h;
+
+  // if the pulldown is now partially off the bottom of the window, move it up until it isn't
+  if ( position.y + div_height > viewport_bottom )
+    new Move( this.div, { "x": position.x, "y": viewport_bottom - div_height, "mode": "absolute", "duration": 0.25 } );
 }
 
 Pulldown.prototype.shutdown = function () {
@@ -4259,7 +4266,7 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
     );
 
     var selected_mark_char = document.createTextNode( "\u25cf" );
-    if ( font_family.search( current_font_family ) == 0 ) {
+    if ( current_font_family && font_family.search( current_font_family ) == 0 ) {
       var selected_mark = createDOM( "span", {}, selected_mark_char );
       this.initial_selected_mark = selected_mark;
     } else {
