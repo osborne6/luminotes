@@ -4245,6 +4245,10 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   ];
 
   var self = this;
+  var current_font_family = editor.query_command_value( "fontname" );
+  if ( WEBKIT )
+    current_font_family = current_font_family.replace( /'/g, "" ).replace( /-webkit-/, "" );
+
   for ( var i in fonts ) {
     var font = fonts[ i ];
     var font_name = font[ 0 ];
@@ -4255,7 +4259,7 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
     );
 
     var selected_mark_char = document.createTextNode( "\u25cf" );
-    if ( editor.query_command_value( "fontname" ) == font_family ) {
+    if ( font_family.search( current_font_family ) == 0 ) {
       var selected_mark = createDOM( "span", {}, selected_mark_char );
       this.initial_selected_mark = selected_mark;
     } else {

@@ -362,8 +362,6 @@ Editor.prototype.cleanup_html = function ( key_code ) {
         continue;
 
       var replacement = withDocument( this.document, function () {
-        if ( style == undefined )
-          return createDOM( "span" );
         // font-size is set when ending title mode
         if ( style.indexOf( "font-size: " ) != -1 )
           return null;
