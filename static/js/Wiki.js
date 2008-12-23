@@ -331,6 +331,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
     connect( "strikethrough", "onclick", function ( event ) { self.toggle_button( event, "strikethrough" ); } );
     connect( "font", "onclick", this, "toggle_font_button" );
+    connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
 
@@ -343,6 +344,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     this.make_image_button( "underline" );
     this.make_image_button( "strikethrough" );
     this.make_image_button( "font" );
+    this.make_image_button( "title" );
     this.make_image_button( "insertUnorderedList", "bullet_list" );
     this.make_image_button( "insertOrderedList", "numbered_list" );
 
@@ -1333,6 +1335,7 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "underline", "u", node_names );
   this.update_button( "strikethrough", "strike", node_names );
   this.update_button( "font", "font", node_names );
+  this.update_button( "title", "h3", node_names );
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
 
