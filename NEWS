@@ -8,6 +8,8 @@
    note link sometimes caused a red error message.
  * Fixed a bug in which forum post permalinks didn't work on posts after the
    first ten in a particular thread.
+ * Fixed a bug in which yellow pulldowns opened towards the bottom of the page
+   appeared partially off the page.
 
 1.5.10: December 4, 2008
  * Fixed a bug in which certain new installations of Luminotes Desktop

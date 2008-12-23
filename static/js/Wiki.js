@@ -4242,7 +4242,7 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   var fonts = [
     [ "Sans Serif", "sans-serif" ],
     [ "Serif", "serif" ],
-    [ "Monospace", "monospace" ],
+    [ "Monospace", "courier new,monospace" ],
     [ "Comic", "comic sans ms,sans-serif" ],
     [ "Garamond", "garamond,serif" ],
     [ "Georgia", "georgia,serif" ],
@@ -4253,8 +4253,11 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
 
   var self = this;
   var current_font_family = editor.query_command_value( "fontname" );
-  if ( WEBKIT )
-    current_font_family = current_font_family.replace( /'/g, "" ).replace( /-webkit-/, "" );
+  if ( current_font_family ) {
+    current_font_family = current_font_family.toLowerCase();
+    if ( WEBKIT )
+      current_font_family = current_font_family.replace( /'/g, "" ).replace( /-webkit-/, "" );
+  }
 
   for ( var i in fonts ) {
     var font = fonts[ i ];
