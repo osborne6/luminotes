@@ -54,9 +54,11 @@ function Wiki( invoker ) {
 
     if ( /Opera/.test( navigator.userAgent ) )
       unsupported_agent = "Opera";
+    if ( /MSIE 6\./.test( navigator.userAgent ) )
+      unsupported_agent = "Internet Explorer version 6.0";
 
     if ( unsupported_agent )
-      this.display_message( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use Firefox or Internet Explorer instead. " + unsupported_agent + " support will be added in a future release. Sorry for the inconvenience." );
+      this.display_message( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use a recent version of Firefox, Internet Explorer, Chrome, or Safari. Sorry for the inconvenience." );
     else if ( beta_agent )
       this.display_message( "Luminotes support for your web browser (" + beta_agent + ") is currently in beta. If you encounter any problems, please contact support so that they can be fixed!" );
   }
