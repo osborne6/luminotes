@@ -4273,10 +4273,10 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
 
     var selected_mark_char = document.createTextNode( "\u25cf" );
     if ( current_font_family && font_family.search( current_font_family ) == 0 ) {
-      var selected_mark = createDOM( "span", {}, selected_mark_char );
+      var selected_mark = createDOM( "span", { "class": "selected_mark" }, selected_mark_char );
       this.initial_selected_mark = selected_mark;
     } else {
-      var selected_mark = createDOM( "span", { "class": "invisible" }, selected_mark_char );
+      var selected_mark = createDOM( "span", { "class": "selected_mark invisible" }, selected_mark_char );
     }
 
     var div = createDOM( "div", {}, selected_mark, " ", label );

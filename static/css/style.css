@@ -583,6 +583,10 @@ h1 {
   text-decoration: none;
 }
 
+.selected_mark {
+  vertical-align: top;
+}
+
 .suggestion {
   padding: 0.25em 0.5em 0.25em 0.5em;
 }
@@ -599,7 +603,7 @@ h1 {
 
 .font_label_button {
   font-size: 125%;
-  border-style: outset;
+  border-style: none;
   border-width: 0px;
   text-align: left;
   background-color: #ffff99;
