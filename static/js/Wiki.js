@@ -4258,8 +4258,8 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   var current_font_family = editor.query_command_value( "fontname" );
   if ( current_font_family ) {
     current_font_family = current_font_family.toLowerCase();
-    if ( WEBKIT )
-      current_font_family = current_font_family.replace( /'/g, "" ).replace( /-webkit-/, "" );
+    current_font_family = current_font_family.replace( /'/g, "" ).replace( /-webkit-/, "" );
+    current_font_family = current_font_family.split( ',' )[ 0 ];
   }
 
   for ( var i in fonts ) {
