@@ -2830,13 +2830,15 @@ Wiki.prototype.start_notebook_rename = function () {
     self.end_notebook_rename();
     event.stop();
   } );
+  connect( notebook_name_field, "onclick", function ( event ) {
+    event.stop();
+  } );
 
   notebook_name_field.focus();
   notebook_name_field.select();
 }
 
 Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_rename_on_click ) {
-  try{
   if ( !new_notebook_name )
     new_notebook_name = getElement( "notebook_name_field" ).value;
 
@@ -2855,14 +2857,14 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
       "span", {},
       createDOM( "strong", {}, new_notebook_name )
     );
-    replaceChildNodes( "notebook_header_name", notebook_header_name );
+    replaceChildNodes( "notebook_header_area", notebook_header_name );
   } else {
     var notebook_header_name = createDOM(
       "span",
       { "id": "notebook_header_name", "title": "Rename this notebook." },
       createDOM( "strong", {}, new_notebook_name )
     );
-    replaceChildNodes( "notebook_header_name", notebook_header_name );
+    replaceChildNodes( "notebook_header_area", notebook_header_name );
 
     var self = this;
     connect( notebook_header_name, "onclick", function ( event ) {
@@ -2894,7 +2896,6 @@ Wiki.prototype.end_notebook_rename = function ( new_notebook_name, prevent_renam
     "notebook_id": this.notebook.object_id,
     "name": new_notebook_name
   } );
-  }catch(e){console.log(e); }
 }
 
 Wiki.prototype.delete_notebook = function () {
