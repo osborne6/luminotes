@@ -597,8 +597,16 @@ h1 {
   text-decoration: none;
 }
 
-.font_label {
+.font_label_button {
   font-size: 125%;
+  border-style: outset;
+  border-width: 0px;
+  text-align: left;
+  background-color: #ffff99;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
 }
 
 .pulldown_label:hover {

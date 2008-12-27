@@ -4267,9 +4267,9 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
     var font_name = font[ 0 ];
     var font_family = font[ 1 ];
 
-    var label = createDOM( "label", { "class": "pulldown_label font_label", "style": "font-family: " + font_family + ";" },
-      font_name
-    );
+    // using a button here instead of a <label> to make IE happy: when a <label> is used, clicking
+    // on the label steals focus from the editor iframe and prevents the font from being changed
+    var label = createDOM( "input", { "type": "button", "value": font_name, "class": "pulldown_label font_label_button", "style": "font-family: " + font_family + ";" } );
 
     var selected_mark_char = document.createTextNode( "\u25cf" );
     if ( current_font_family && font_family.search( current_font_family ) == 0 ) {
