@@ -4243,10 +4243,10 @@ function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   this.invoker = invoker;
 
   var fonts = [
-    [ "Sans Serif", "sans-serif" ],
-    [ "Serif", "serif" ],
-    [ "Monospace", "courier new,monospace" ],
-    [ "Comic", "comic sans ms,sans-serif" ],
+    [ "Arial", "arial,sans-serif" ],
+    [ "Times New Roman", "times new roman,serif" ],
+    [ "Courier", "courier new,monospace" ],
+    [ "Comic Sans", "comic sans ms,sans-serif" ],
     [ "Garamond", "garamond,serif" ],
     [ "Georgia", "georgia,serif" ],
     [ "Tahoma", "tahoma,sans-serif" ],
