@@ -3,6 +3,7 @@
    renaming prematurely.
  * Potential fix for a bug in which product downloads and attached file
    downloads occasionally did not complete in Internet Explorer.
+ * Added 30-day trial to all Luminotes subscription plans.
 
 1.5.11: December 27, 2008
  * Added a font selection button to the toolbar.
