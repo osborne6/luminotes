@@ -1,6 +1,8 @@
 1.5.12:
  * Fixed a bug in which clicking on the notebook rename text field ended the
    renaming prematurely.
+ * Potential fix for a bug in which product downloads and attached file
+   downloads occasionally did not complete in Internet Explorer.
 
 1.5.11: December 27, 2008
  * Added a font selection button to the toolbar.
