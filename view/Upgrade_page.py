@@ -36,9 +36,8 @@ class Upgrade_page( Product_page ):
             ),
           ),
           P(
-            """
-            Upgrade, downgrade, or cancel anytime. 60-day money-back guarantee.
-            """,
+            u"30-day free trial on all plans.",
+            Span( u"Upgrade, downgrade, or cancel anytime.", class_ = u"upgrade_downgrade_text" ),
             class_ = u"upgrade_subtitle",
           ),
           P(
@@ -329,19 +328,37 @@ class Upgrade_page( Product_page ):
               """,
               class_ = u"upgrade_text",
             ),
+            H4( u"How does the 30-day free trial work?", class_ = u"upgrade_question" ),
+            P(
+              """
+              When you subscribe to Luminotes, your first 30 days are completely free. And if you
+              cancel during that period, you aren't charged a thing. During those 30 days, you have
+              full access to all features of your selected subscription plan. That way, you can see
+              whether Luminotes works for you without any sort of commitment.
+              """,
+              class_ = u"upgrade_text",
+            ),
             H4( u"Once I subscribe, can I cancel anytime?", class_ = u"upgrade_question" ),
             P(
               """
-              Of course. This isn't a cell phone plan. There are no contracts or cancellation fees.
-              You can upgrade, downgrade, or cancel your account anytime. Simply login to your
-              account and return to this pricing page.
+              Of course. There are no contracts or cancellation fees. There are no hidden fees. You
+              can upgrade, downgrade, or cancel your account anytime. Simply login to your account
+              and return to this pricing page.
+              """,
+              class_ = u"upgrade_text",
+            ),
+            P(
+              """
+              And if you cancel during your trial period, then you are not charged anything at all.
               """,
               class_ = u"upgrade_text",
             ),
             H4( u"What is your refund policy?", class_ = u"upgrade_question" ),
             P(
               """
-              It's this simple: Luminotes comes with a 60-day money-back guarantee. No questions asked.
+              It's this simple: Luminotes comes with a 30-day money-back guarantee, starting from
+              the end of the 30-day free trial. No questions asked. So that gives you a full 60
+              days to see whether Luminotes meets your needs.
               """,
               class_ = u"upgrade_text",
             ),

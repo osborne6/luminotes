@@ -305,6 +305,10 @@
   padding-bottom: 0.5em;
 }
 
+.upgrade_downgrade_text {
+  color: #ff6600;
+}
+
 .upgrade_question {
   text-align: left;
 }
