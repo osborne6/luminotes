@@ -50,7 +50,7 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   plan[ u"designed_for" ],
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -60,7 +60,7 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br>%s users" % plan[ u"included_users" ],
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -82,7 +82,7 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   plan[ u"storage_quota_bytes" ] and "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ) or u"unlimited",
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -104,7 +104,7 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -125,7 +125,7 @@ class Upgrade_page( Product_page ):
                 ),
                 [ Td(
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -147,7 +147,7 @@ class Upgrade_page( Product_page ):
                 [ Td(
                   plan[ u"notebook_sharing" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -170,7 +170,7 @@ class Upgrade_page( Product_page ):
                 [ Td(
                   plan[ u"notebook_collaboration" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -195,7 +195,7 @@ class Upgrade_page( Product_page ):
                 [ Td(
                   plan[ u"user_admin" ] and
                   Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                  class_ = u"feature_value" + self.displayed( index ),
+                  class_ = u"feature_value",
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
@@ -213,25 +213,6 @@ class Upgrade_page( Product_page ):
               id = u"upgrade_table",
             ),
             class_ = u"upgrade_table_area",
-          ),
-
-          Script(
-            """
-            function toggle_plans() {
-              var nodes = getElementsByTagAndClassName( null, "hidden_plans" );
-              for ( var i in nodes ) { var node = nodes[ i ]; toggleElementClass( "undisplayed", node ); }
-
-              toggleElementClass( "undisplayed", "more_plans_link" );
-              toggleElementClass( "undisplayed", "fewer_plans_link" );
-              return false;
-            }
-            """,
-            type = u"text/javascript",
-          ),
-          Div(
-            A( "Show me plans for teams.", id = "more_plans_link", href = u"#", onclick = u"return toggle_plans();" ),
-            A( "Show me fewer plans.", id = "fewer_plans_link", class_ = u"undisplayed", href = u"#", onclick = u"return toggle_plans();" ),
-            class_ = u"small_text",
           ),
 
           user and user.username not in ( u"anonymous", None ) and P(
@@ -443,10 +424,6 @@ class Upgrade_page( Product_page ):
           ),
           class_ = u"sign_up_button_area",
         ) or None,
-        class_ = u"plan_name" + self.displayed( index, yearly ),
+        class_ = u"plan_name",
       ) for ( index, plan ) in enumerate( rate_plans ) ],
     )
-
-  @staticmethod
-  def displayed( index, yearly = False ):
-    return ( index >= Upgrade_page.HIDDEN_PLAN_THRESHOLD and not yearly ) and " undisplayed hidden_plans" or ""
