@@ -3,7 +3,7 @@ from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li,
 
 
 class Upgrade_page( Product_page ):
-  HIDDEN_PLAN_THRESHOLD = 3
+  FOCUSED_PLAN = 2 
 
   def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, rate_plans, unsubscribe_button ):
     MEGABYTE = 1024 * 1024
@@ -36,179 +36,42 @@ class Upgrade_page( Product_page ):
             ),
           ),
           P(
-            u"30-day free trial on all plans.",
+            ( user.rate_plan == 0 ) and u"30-day free trial on all plans." or None,
             Span( u"Upgrade, downgrade, or cancel anytime.", class_ = u"upgrade_downgrade_text" ),
             class_ = u"upgrade_subtitle",
           ),
           P(
             Table(
-              self.fee_row( rate_plans, user ),
+              self.fee_row( rate_plans ),
+              self.spacer_row( rate_plans ),
               Tr(
-                Td(
-                  u"Designed for",
-                  class_ = u"feature_name",
-                ),
                 [ Td(
-                  plan[ u"designed_for" ],
-                  class_ = u"feature_value",
+                  ( plan[ u"included_users" ] == 1 ) and
+                    Span( Span( u"Single", class_ = u"highlight" ), u"user", title = u"This plan includes one user account, so it's ideal for individuals." ) or
+                    Span( u"Up to", Span( "%s" % plan[ u"included_users" ], class_ = u"highlight" ), u"users", title = "This plan includes multiple accounts, including an admin area where you can create and manage users for your organization." ),
+                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
-                Td(
-                  A( u"Included accounts", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'users_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
                 [ Td(
-                  ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br>%s users" % plan[ u"included_users" ],
-                  class_ = u"feature_value",
+                  plan[ u"storage_quota_bytes" ] and
+                    Span( "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ), class_ = u"highlight" ) or
+                    Span( u"unlimited", class_ = u"highlight" ),
+                  u"storage",
+                  title = u"Storage space lets you store your your notes, documents, and files.",
+                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"Collaborate on a wiki with multiple people in your organization." ),
-                    Li( u"Even collaborate with other Luminotes users beyond your included accounts." ),
-                    Li( u"Only one subscription is necessary." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"users_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
-                  A( u"Included storage space", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'storage_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
-                [ Td(
-                  plan[ u"storage_quota_bytes" ] and "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ) or u"unlimited",
-                  class_ = u"feature_value",
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"More space for your wiki notes." ),
-                    Li( u"More space for your documents and files." ),
-                    Li( u"All of your users share a common pool of storage space." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"storage_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
-                  A( u"Unlimited wiki notebooks", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'notebooks_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
-                [ Td(
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  class_ = u"feature_value",
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"Create a unique notebook for each subject." ),
-                    Li( u"Keep work and personal notebooks separate." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"notebooks_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
-                  A( u"Friendly email support", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'support_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
-                [ Td(
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  class_ = u"feature_value",
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"Fast email responses to your support questions. From a real live human." ),
-                    Li( u"No waiting on hold with a call center." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"support_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
-                  A( u"Invite people to view your wiki", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'view_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
-                [ Td(
-                  plan[ u"notebook_sharing" ] and
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                  class_ = u"feature_value",
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"Invite specific people to read your wiki." ),
-                    Li( u"Invite as many people as you want." ),
-                    Li( u"Share only the notebooks you want to share. Keep the others private." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"view_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
-                  A( u"Invite people to edit your wiki", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'edit_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
+              plan[ u"notebook_sharing"] and Tr(
                 [ Td(
                   plan[ u"notebook_collaboration" ] and
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                  class_ = u"feature_value",
+                    Span( u"Invite", Span( u"editors", class_ = u"highlight"  ), title = u"Invite people to collaborate on your wiki. Share only the notebooks you want. Keep the others private." ) or
+                    Span( u"Invite", Span( u"viewers", class_ = u"highlight" ), title = u"Invite people to view your wiki. Share only the notebooks you want. Keep the others private." ),
+                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"Invite specific people to collaborate on your wiki." ),
-                    Li( u"Decide who can edit and who can only view." ),
-                    Li( u"Invite as many people as you want. They only need free Luminotes accounts." ),
-                    Li( u"Revoke collaboration access with a single click." ),
-                    Li( u"Share only the notebooks you want to share. Keep the others private." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"edit_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
-              Tr(
-                Td(
-                  A( u"User administration", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'admin_description' ); return false;" ),
-                  class_ = u"feature_name",
-                ),
-                [ Td(
-                  plan[ u"user_admin" ] and
-                  Img( src = u"/static/images/check.png", width = u"22", height = u"22" ) or u"&nbsp",
-                  class_ = u"feature_value",
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                Td(
-                  Ul(
-                    Li( u"Manage all Luminotes accounts for your organization from one web page." ),
-                    Li( u"Create and delete users as needed." ),
-                  ),
-                  colspan = len( rate_plans ) + 1,
-                  id = u"admin_description",
-                  class_ = u"feature_description undisplayed",
-                ),
-              ),
+              ) or None,
+              self.button_row( rate_plans, user ),
+              self.spacer_row( rate_plans, bottom = True ),
               border = u"1",
               id = u"upgrade_table",
             ),
@@ -363,18 +226,36 @@ class Upgrade_page( Product_page ):
                 class_ = u"upgrade_subtitle",
                 colspan = u"%d" % len( rate_plans ),
               ), colspan = u"%d" % len( rate_plans ) ),
-              self.fee_row( rate_plans, user, include_blank = False, yearly = True ),
+              self.fee_row( rate_plans, yearly = True ),
+              self.spacer_row( rate_plans ),
               Tr(
                 [ Td(
-                  ( plan[ u"included_users" ] == 1 ) and u"1 user" or "up to<br />%s users" % plan[ u"included_users" ],
-                  class_ = u"feature_value",
-                ) for plan in rate_plans ],
+                  ( plan[ u"included_users" ] == 1 ) and
+                    Span( Span( u"Single", class_ = u"highlight" ), u"user", title = u"This plan includes one user account, so it's ideal for individuals." ) or
+                    Span( u"Up to", Span( "%s" % plan[ u"included_users" ], class_ = u"highlight" ), u"users", title = "This plan includes multiple accounts, including an admin area where you can create and manage users for your organization." ),
+                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
               Tr(
                 [ Td(
-                  plan[ u"storage_quota_bytes" ] and "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ) or u"unlimited",
-                ) for plan in rate_plans ],
+                  plan[ u"storage_quota_bytes" ] and
+                    Span( "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ), class_ = u"highlight" ) or
+                    Span( u"unlimited", class_ = u"highlight" ),
+                  u"storage",
+                  title = u"Storage space lets you store your your notes, documents, and files.",
+                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
+              plan[ u"notebook_sharing"] and Tr(
+                [ Td(
+                  plan[ u"notebook_collaboration" ] and
+                    Span( u"Invite", Span( u"editors", class_ = u"highlight"  ), title = u"Invite people to collaborate on your wiki. Share only the notebooks you want. Keep the others private." ) or
+                    Span( u"Invite", Span( u"viewers", class_ = u"highlight" ), title = u"Invite people to view your wiki. Share only the notebooks you want. Keep the others private." ),
+                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
+                ) for ( index, plan ) in enumerate( rate_plans ) ],
+              ) or None,
+              self.button_row( rate_plans, user, yearly = True ),
+              self.spacer_row( rate_plans, bottom = True ),
               border = u"1",
               id = u"upgrade_table_small",
             ),
@@ -396,34 +277,53 @@ class Upgrade_page( Product_page ):
       ),
     )
 
-  def fee_row( self, rate_plans, user, include_blank = True, yearly = False ):
+  def fee_row( self, rate_plans, yearly = False ):
     return Tr(
-      include_blank and Th( u"&nbsp;" ) or None,
       [ Th(
-        plan[ u"name" ].capitalize(),
-        plan[ u"fee" ] and Div(
-          yearly and Span(
-            u"$%s" % plan[ u"yearly_fee" ],
-            Span( u"/year", class_ = u"month_text" ),
-            class_ = u"price_text",
-            separator = u"",
-          ) or Span(
-            u"$%s" % plan[ u"fee" ],
-            Span( u"/month", class_ = u"month_text" ),
-            class_ = u"price_text",
-            separator = u"",
+        A(
+          Span( plan[ u"name" ].capitalize(), class_ = u"plan_name" ),
+          plan[ u"fee" ] and Div(
+            yearly and Span(
+              u"$%s" % plan[ u"yearly_fee" ],
+              Span( u"/year", class_ = u"month_text" ),
+              class_ = u"price_text",
+              separator = u"",
+            ) or Div(
+              u"$%s" % plan[ u"fee" ],
+              Span( u"/month", class_ = u"month_text" ),
+              class_ = u"price_text",
+              separator = u"",
+            ),
+          ) or Div( Div( u"No fee", class_ = u"price_text" ) ),
+          Div(
+            u"For", plan[ u"designed_for" ],
+            class_ = u"small_text",
           ),
-          user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
-               and ( yearly and ( plan.get( u"yearly_button" ).strip() and plan.get( u"yearly_button" ) % user.object_id or None ) or \
-                                ( plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None ) ) or None,
-        ) or Div( Span( u"No fee", class_ = u"price_text" ) ),
-        ( not user or user.username in ( u"anonymous", None ) ) and Div(
-          A(
-            Img( src = u"/static/images/sign_up_button.png", width = "76", height = "23" ),
-            href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),
-          ),
-          class_ = u"sign_up_button_area",
-        ) or None,
-        class_ = u"plan_name",
+          href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),
+        ),
+        class_ = u"plan_name_area plan_width" + ( index == self.FOCUSED_PLAN and u" focused_plan_name_area" or u"" ),
       ) for ( index, plan ) in enumerate( rate_plans ) ],
     )
+
+  def button_row( self, rate_plans, user, yearly = False ):
+    return Tr(
+      [ Td(
+        Div(
+          user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
+               and ( yearly and ( plan.get( u"yearly_button" ) and plan.get( u"yearly_button" ).strip() and plan.get( u"yearly_button" ) % user.object_id or None ) or \
+                                ( plan.get( u"button" ) and plan.get( u"button" ).strip() and plan.get( u"button" ) % user.object_id or None ) ) or None,
+          ( not user or user.username in ( u"anonymous", None ) ) and A(
+              Img( src = u"/static/images/sign_up_button.png", width = "76", height = "23" ),
+              href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),
+          ) or None,
+          class_ = u"subscribe_button_area",
+        ),
+        ( user.rate_plan == 0 ) and Div( "30-day free trial", class_ = u"small_text" ) or None,
+        class_ = ( index == self.FOCUSED_PLAN and u"focused_feature_value" or u"" ),
+       ) for ( index, plan ) in enumerate( rate_plans ) ],
+    )
+
+  def spacer_row( self, rate_plans, bottom = False ):
+    border_bottom = bottom and " focused_border_bottom" or ""
+
+    return Tr( [ Td( class_ = ( i == self.FOCUSED_PLAN and u"focused_feature_value" + border_bottom or u"" ) ) for i in range( len( rate_plans ) ) ] )

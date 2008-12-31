@@ -60,167 +60,64 @@ class Download_page( Product_page ):
             P(
               Table(
                 Tr(
-                  Th( u"&nbsp;" ),
                   Th(
-                    u"Luminotes Desktop",
+                    Span( u"Luminotes Desktop", class_ = u"plan_name" ),
                     Div(
                       A( "version", VERSION, href = news_url ),
                       class_ = u"version_text",
                     ),
+                    class_ = u"plan_name_area download_plan_width",
+                  )
+                ),
+                Tr( Td() ),
+                Tr(
+                  Td(
+                    Span( u"Solo", class_ = u"highlight" ), u"note taking", title = u"Luminotes Desktop is designed for individuals."
+                  ),
+                ),
+                Tr(
+                  Td(
+                    u"Runs on your", Span( u"own computer", class_ = u"highlight" ),
+                    title = u"All of your notes are stored privately on your own computer or on a USB drive.",
+                    class_ = u"feature_value",
+                  ),
+                ),
+                Tr(
+                  Td(
+                    Span( u"Unlimited", class_ = u"highlight" ), u"storage",
+                    title = u"Add as many notes, documents, or files as you want.",
+                    class_ = u"feature_value",
+                  ),
+                ),
+                Tr(
+                  Td(
+                    u"Works", Span( "offline", class_ = u"highlight" ),
+                    title = u"Take notes in meetings, in class, or while on the go. Runs in a web browser, but doesn't need an internet connection.",
+                    class_ = u"feature_value",
+                  ),
+                ),
+                Tr( Td() ),
+                Tr(
+                  Td(
+                    u"Windows XP/Vista,", A( u"Linux source", href = u"/source_code" ),
+                    class_ = u"small_text",
+                  ),
+                ),
+                Tr(
+                  Td(
+                    u"Firefox, Internet Explorer, Chrome, Safari",
+                    class_ = u"small_text",
+                  ),
+                ),
+                Tr(
+                  Td(
                     Div(
                       download_button,
                       class_ = u"download_button_area",
                     ),
-                    class_ = u"plan_name",
-                  )
-                ),
-                Tr(
-                  Td(
-                    A( u"Unlimited storage space", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'storage_description' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
                   ),
                 ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"More space for your wiki notes." ),
-                      Li( u"More space for your documents and files." ),
-                    ),
-                    colspan = u"2",
-                    id = u"storage_description",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    A( u"Unlimited wiki notebooks", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'notebooks_description' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  ),
-                ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"Create a unique notebook for each subject." ),
-                      Li( u"Keep work and personal notebooks separate." ),
-                    ),
-                    colspan = u"2",
-                    id = u"notebooks_description",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    A( u"Friendly email support", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'support_description' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  ),
-                ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"Fast email responses to your support questions. From a real live human." ),
-                      Li( u"No waiting on hold with a call center." ),
-                    ),
-                    colspan = u"2",
-                    id = u"support_description",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    A( u"Notes stored on your own computer", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'local_storage' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  ),
-                ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"All of your notes are stored privately on your own computer." ),
-                      Li( u"You can also run Luminotes Desktop from a USB drive." ),
-                      Li( u"A future release will support optional online syncing." ),
-                    ),
-                    colspan = u"2",
-                    id = u"local_storage",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    A( u"Works without an internet connection", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'works_offline' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    Img( src = u"/static/images/check.png", width = u"22", height = u"22" ),
-                  ),
-                ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"Take notes in meetings, in class, or while on the go." ),
-                      Li( u"Runs in a web browser, but no internet connection is needed." ),
-                      Li( u'Absolutely no DRM. Does not "phone home".' ),
-                    ),
-                    colspan = u"2",
-                    id = u"works_offline",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    A( u"Supported operating systems", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'supported_oses' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    u"Windows XP/Vista, Linux",
-                    class_ = u"small_text",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"Fully supports Windows XP and Windows Vista." ),
-                      Li( u"Linux", A( u"source code", href = u"/source_code" ), "is available." ),
-                      Li( u"Future releases will include Mac OS X support." ),
-                    ),
-                    colspan = u"2",
-                    id = u"supported_oses",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    A( u"Supported web browsers", href = u"#", onclick = u"toggleElementClass( 'undisplayed', 'supported_browsers' ); return false;" ),
-                    class_ = u"feature_name",
-                  ),
-                  Td(
-                    u"Firefox, Internet Explorer,", Br(),
-                    U"Chrome, Safari",
-                    class_ = u"small_text",
-                  ),
-                ),
-                Tr(
-                  Td(
-                    Ul(
-                      Li( u"Fully supports Firefox and Internet Explorer." ),
-                      Li( u"Beta support for Chrome and Safari." ),
-                      Li( u"Future upgrades will support Opera." ),
-                    ),
-                    colspan = u"2",
-                    id = u"supported_browsers",
-                    class_ = u"feature_description undisplayed",
-                  ),
-                ),
+                Tr( Td() ),
                 border = u"1",
                 id = u"upgrade_table",
               ),
@@ -232,7 +129,7 @@ class Download_page( Product_page ):
             u"Don't want to install anything? Need collaboration features? ",
             A( u"Use Luminotes online", href = u"/pricing" ),
             u".",
-            class_ = u"small_text",
+            class_ = u"small_text luminotes_online_link_area",
             separator = u"",
           ),
 
@@ -321,13 +218,17 @@ class Download_page( Product_page ):
             Table(
               Tr(
                 Th(
-                  u"Luminotes Desktop",
+                  Span( u"Luminotes Desktop", class_ = u"plan_name" ),
+                  class_ = u"plan_name_area",
+                )
+              ),
+              Tr(
+                Td(
                   Div(
                     download_button,
                     class_ = u"download_button_area",
                   ),
-                  class_ = u"plan_name",
-                )
+                ),
               ),
               id = u"upgrade_table_small",
             ),

@@ -306,7 +306,7 @@
 }
 
 .upgrade_downgrade_text {
-  color: #ff6600;
+  color: #267dff;
 }
 
 .upgrade_question {
@@ -332,6 +332,11 @@
   text-align: center;
 }
 
+.luminotes_online_link_area {
+  margin-top: 1em;
+  clear: both;
+}
+
 #upgrade_table {
   border-collapse: collapse;
   border: 1px solid #999999;
@@ -345,43 +350,71 @@
 }
 
 #upgrade_table th {
-  padding: 0.5em;
+  padding: 1em 1.5em 1em 1.5em;
   border: 1px solid #999999;
+  border-bottom: 1px solid #cccccc;
+}
+
+.plan_width {
+  width: 20%;
+}
+
+.download_plan_width {
+  width: 400px;
 }
 
 #upgrade_table td {
   text-align: center;
   background-color: #fafafa;
-  padding: 0.5em;
-  border: 1px solid #999999;
+  padding: 0.25em;
+  border-left: 1px solid #999999;
+  border-right: 1px solid #999999;
+}
+
+#upgrade_table .plan_name_area {
+  text-align: center;
+  background-color: #d0e0f0;
+}
+
+#upgrade_table .focused_plan_name_area {
+  text-align: center;
+  background-color: #dde6f0;
+  border-top: 2px solid #000000;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+}
+
+.plan_name_area a {
+  color: #000000;
+  text-decoration: none;
 }
 
 #upgrade_table .plan_name {
-  text-align: center;
-  background-color: #d0e0f0;
+  font-size: 125%;
 }
 
 #upgrade_table ul {
   margin-top: 0;
 }
 
-#upgrade_table .feature_name {
-  font-size: 82%;
-  text-align: left;
-  background-color: #fafafa;
-  border-bottom: 0px;
-}
-
-#upgrade_table .feature_description {
-  font-size: 82%;
-  text-align: left;
-  background-color: #fafafa;
-  padding: 0.25em;
-  border-width: 0px;
-}
-
 #upgrade_table .feature_value {
-  font-size: 82%;
+  font-size: 95%;
+  cursor: pointer;
+}
+
+#upgrade_table .focused_feature_value {
+  background-color: #ffffff;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+}
+
+#upgrade_table .focused_border_bottom {
+  border-bottom: 2px solid #000000;
+}
+
+.highlight {
+  color: #ff6600;
+  font-weight: bold;
 }
 
 #upgrade_table_small {
@@ -394,26 +427,62 @@
 }
 
 #upgrade_table_small th {
-  padding: 0.5em;
+  padding: 1em 1.5em 1em 1.5em;
+  border: 1px solid #999999;
+  border-bottom: 1px solid #cccccc;
+}
+
+#upgrade_table_small tr {
+  border: 0px solid #999999;
 }
 
 #upgrade_table_small td {
   text-align: center;
   background-color: #fafafa;
-  padding: 0.5em;
+  padding: 0.25em;
+  border-left: 1px solid #999999;
+  border-right: 1px solid #999999;
 }
 
-#upgrade_table_small .plan_name {
+#upgrade_table_small .plan_name_area {
   text-align: center;
   background-color: #d0e0f0;
 }
 
+#upgrade_table_small .focused_plan_name_area {
+  text-align: center;
+  background-color: #dde6f0;
+  border-top: 2px solid #000000;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+}
+
+#upgrade_table_small .plan_name {
+  font-size: 125%;
+}
+
 #upgrade_table_small .feature_value {
-  font-size: 82%;
+  font-size: 95%;
+}
+
+#upgrade_table_small .focused_feature_value {
+  background-color: #ffffff;
+  border-left: 2px solid #000000;
+  border-right: 2px solid #000000;
+}
+
+#upgrade_table_small .focused_border_bottom {
+  border-bottom: 2px solid #000000;
+}
+
+.subscribe_button_area {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
 }
 
 .download_button_area {
-  padding-top: 0.5em;
+  padding-top: 1em;
+  padding-bottom: 0.5em;
 }
 
 .yearly_link {
@@ -421,7 +490,8 @@
 }
 
 .price_text {
-  color: #ff6600;
+  margin-top: 0.25em;
+  color: #267dff;
 }
 
 .month_text {
@@ -430,7 +500,7 @@
 }
 
 .version_text {
-  padding-top: 0.25em;
+  padding-top: 0.5em;
   font-size: 72%;
   font-weight: normal;
 }
@@ -438,10 +508,6 @@
 .subscribe_form {
   margin-top: 0.5em;
   margin-bottom: 0;
-}
-
-.sign_up_button_area {
-  margin-top: 0.5em;
 }
 
 .thumbnail_left {
