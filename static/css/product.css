@@ -95,6 +95,8 @@
   background-color: #ffff99;
   font-weight: bold;
   padding: 1em;
+  margin-top: 1em;
+  margin-bottom: 1em;
 }
 
 .hook_action {
@@ -330,6 +332,7 @@
 
 .upgrade_table_area {
   text-align: center;
+  margin-bottom: 1em;
 }
 
 .luminotes_online_link_area {
@@ -350,7 +353,7 @@
 }
 
 #upgrade_table th {
-  padding: 1em 1.5em 1em 1.5em;
+  padding: 0.5em 1.5em 0.5em 1.5em;
   border: 1px solid #999999;
   border-bottom: 1px solid #cccccc;
 }
@@ -367,6 +370,7 @@
   text-align: center;
   background-color: #fafafa;
   padding: 0.25em;
+  border: none;
   border-left: 1px solid #999999;
   border-right: 1px solid #999999;
 }
@@ -387,6 +391,10 @@
 .plan_name_area a {
   color: #000000;
   text-decoration: none;
+}
+
+.spacer_row {
+  height: 0.5em;
 }
 
 #upgrade_table .plan_name {
@@ -412,6 +420,10 @@
   border-bottom: 2px solid #000000;
 }
 
+#upgrade_table .focused_text {
+  margin-top: 0.5em;
+}
+
 .highlight {
   color: #ff6600;
   font-weight: bold;
@@ -427,7 +439,7 @@
 }
 
 #upgrade_table_small th {
-  padding: 1em 1.5em 1em 1.5em;
+  padding: 0.5em 1.5em 0.5em 1.5em;
   border: 1px solid #999999;
   border-bottom: 1px solid #cccccc;
 }
@@ -440,6 +452,7 @@
   text-align: center;
   background-color: #fafafa;
   padding: 0.25em;
+  border: none;
   border-left: 1px solid #999999;
   border-right: 1px solid #999999;
 }
@@ -473,6 +486,10 @@
 
 #upgrade_table_small .focused_border_bottom {
   border-bottom: 2px solid #000000;
+}
+
+#upgrade_table_small .focused_text {
+  margin-top: 0.5em;
 }
 
 .subscribe_button_area {

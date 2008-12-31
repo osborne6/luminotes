@@ -68,7 +68,7 @@ class Download_page( Product_page ):
                     class_ = u"plan_name_area download_plan_width",
                   )
                 ),
-                Tr( Td() ),
+                Tr( Td(), class_ = u"spacer_row" ),
                 Tr(
                   Td(
                     Span( u"Solo", class_ = u"highlight" ), u"note taking",
@@ -97,7 +97,7 @@ class Download_page( Product_page ):
                     class_ = u"feature_value",
                   ),
                 ),
-                Tr( Td() ),
+                Tr( Td(), class_ = u"spacer_row" ),
                 Tr(
                   Td(
                     u"Windows XP/Vista,", A( u"Linux source", href = u"/source_code" ),
@@ -118,7 +118,7 @@ class Download_page( Product_page ):
                     ),
                   ),
                 ),
-                Tr( Td() ),
+                Tr( Td(), class_ = u"spacer_row" ),
                 border = u"1",
                 id = u"upgrade_table",
               ),

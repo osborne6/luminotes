@@ -299,6 +299,7 @@ class Upgrade_page( Product_page ):
             u"For", plan[ u"designed_for" ],
             class_ = u"small_text",
           ),
+          ( index == self.FOCUSED_PLAN ) and Div( u"Best value", class_ = u"focused_text highlight" ) or None,
           href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),
         ),
         class_ = u"plan_name_area plan_width" + ( index == self.FOCUSED_PLAN and u" focused_plan_name_area" or u"" ),
@@ -326,4 +327,4 @@ class Upgrade_page( Product_page ):
   def spacer_row( self, rate_plans, bottom = False ):
     border_bottom = bottom and " focused_border_bottom" or ""
 
-    return Tr( [ Td( class_ = ( i == self.FOCUSED_PLAN and u"focused_feature_value" + border_bottom or u"" ) ) for i in range( len( rate_plans ) ) ] )
+    return Tr( [ Td( class_ = ( i == self.FOCUSED_PLAN and u"focused_feature_value" + border_bottom or u"spacer_row" ) ) for i in range( len( rate_plans ) ) ], class_ = u"spacer_row" )
