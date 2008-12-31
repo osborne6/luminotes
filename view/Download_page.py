@@ -86,7 +86,7 @@ class Download_page( Product_page ):
                 Tr(
                   Td(
                     Span( u"Unlimited", class_ = u"highlight" ), u"storage",
-                    title = u"Add as many notes, documents, or files as you want.",
+                    title = u"Add as many notes, documents, and files as you want.",
                     class_ = u"feature_value",
                   ),
                 ),

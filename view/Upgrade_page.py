@@ -58,7 +58,7 @@ class Upgrade_page( Product_page ):
                     Span( "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ), class_ = u"highlight" ) or
                     Span( u"unlimited", class_ = u"highlight" ),
                   u"storage",
-                  title = u"Storage space lets you store your your notes, documents, and files.",
+                  title = u"Storage space for your notes, documents, and files.",
                   class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
@@ -241,7 +241,7 @@ class Upgrade_page( Product_page ):
                     Span( "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ), class_ = u"highlight" ) or
                     Span( u"unlimited", class_ = u"highlight" ),
                   u"storage",
-                  title = u"Storage space lets you store your your notes, documents, and files.",
+                  title = u"Storage space for your notes, documents, and files.",
                   class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
                 ) for ( index, plan ) in enumerate( rate_plans ) ],
               ),
