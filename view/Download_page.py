@@ -31,9 +31,8 @@ class Download_page( Product_page ):
             ),
           ),
           P(
-            """
-            Install Luminotes on your computer. 60-day money-back guarantee.
-            """,
+            u"Install Luminotes on your computer.",
+            Span( u"60-day money-back guarantee.", class_ = u"lighter_text" ),
             class_ = u"upgrade_subtitle",
           ),
           Div(

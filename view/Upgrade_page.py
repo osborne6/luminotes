@@ -37,7 +37,7 @@ class Upgrade_page( Product_page ):
           ),
           P(
             ( user.rate_plan == 0 ) and u"30-day free trial on all plans." or None,
-            Span( u"Upgrade, downgrade, or cancel anytime.", class_ = u"upgrade_downgrade_text" ),
+            Span( u"Upgrade, downgrade, or cancel anytime.", class_ = u"lighter_text" ),
             class_ = u"upgrade_subtitle",
           ),
           P(
