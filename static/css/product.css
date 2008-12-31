@@ -476,6 +476,7 @@
 
 #upgrade_table_small .feature_value {
   font-size: 95%;
+  cursor: pointer;
 }
 
 #upgrade_table_small .focused_feature_value {
