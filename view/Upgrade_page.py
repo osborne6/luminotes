@@ -220,12 +220,11 @@ class Upgrade_page( Product_page ):
 
           P(
             A( name = "yearly" ),
+            Div(
+              u"Get two months free with a yearly subscription!",
+              class_ = u"upgrade_subtitle",
+            ),
             Table(
-              Tr( Td(
-                u"Get two months free with a yearly subscription!",
-                class_ = u"upgrade_subtitle",
-                colspan = u"%d" % len( rate_plans ),
-              ), colspan = u"%d" % len( rate_plans ) ),
               self.fee_row( rate_plans, yearly = True ),
               self.spacer_row( rate_plans ),
               Tr(
