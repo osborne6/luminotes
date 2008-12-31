@@ -71,7 +71,9 @@ class Download_page( Product_page ):
                 Tr( Td() ),
                 Tr(
                   Td(
-                    Span( u"Solo", class_ = u"highlight" ), u"note taking", title = u"Luminotes Desktop is designed for individuals."
+                    Span( u"Solo", class_ = u"highlight" ), u"note taking",
+                    title = u"Luminotes Desktop is designed for individuals.",
+                    class_ = u"feature_value",
                   ),
                 ),
                 Tr(
