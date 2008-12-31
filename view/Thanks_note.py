@@ -2,7 +2,7 @@ from Tags import Span, H3, P, A
 
 
 class Thanks_note( Span ):
-  def __init__( self, rate_plan_name ):
+  def __init__( self, rate_plan_name = None ):
     Span.__init__(
       self,
       H3( u"thank you" ),
@@ -13,9 +13,9 @@ class Thanks_note( Span ):
       ),
       P(
         u"""
-        You are now subscribed to Luminotes %s. Please click on one of your
-        notebooks to the right to get started with your newly upgraded wiki.
-        """ % rate_plan_name,
+        You are now subscribed to Luminotes%s. Please click on one of your
+        notebooks to the left to get started with your newly upgraded wiki.
+        """ % ( rate_plan_name and u" %s" % rate_plan_name or u"" ),
       ),
       P(
         u"""

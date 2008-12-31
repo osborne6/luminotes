@@ -1598,15 +1598,18 @@ class Users( object ):
 
     # if there's no rate plan or we've retried too many times, give up and display an error
     RETRY_TIMEOUT = 15
-    if rate_plan is None or retry_count > RETRY_TIMEOUT:
+    if retry_count > RETRY_TIMEOUT:
       note = Thanks_error_note()
     # if the rate plan of the subscription matches the user's current rate plan, success
     elif rate_plan == result[ u"user" ].rate_plan:
       note = Thanks_note( self.__rate_plans[ rate_plan ][ u"name" ].capitalize() )
       result[ "conversion" ] = "subscribe_%s" % rate_plan
-    # otherwise, display an auto-reloading "processing..." page
-    else:
+    # if a rate plan is given, display an auto-reloading "processing..." page
+    elif rate_plan is not None:
       note = Processing_note( rate_plan, retry_count )
+    # otherwise, assume that this is a free trial and default to a generic thanks page
+    else:
+      note = Thanks_note()
 
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )
