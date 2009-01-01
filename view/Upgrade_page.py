@@ -42,7 +42,7 @@ class Upgrade_page( Product_page ):
           ),
           P(
             Table(
-              self.fee_row( rate_plans ),
+              self.fee_row( rate_plans, user ),
               self.spacer_row( rate_plans ),
               Tr(
                 [ Td(
@@ -225,7 +225,7 @@ class Upgrade_page( Product_page ):
               class_ = u"upgrade_subtitle",
             ),
             Table(
-              self.fee_row( rate_plans, yearly = True ),
+              self.fee_row( rate_plans, user, yearly = True ),
               self.spacer_row( rate_plans ),
               Tr(
                 [ Td(
@@ -276,31 +276,41 @@ class Upgrade_page( Product_page ):
       ),
     )
 
-  def fee_row( self, rate_plans, yearly = False ):
+  def fee_row( self, rate_plans, user, yearly = False ):
+    def make_fee_area( plan, index ):
+      fee_area = (
+        Span( plan[ u"name" ].capitalize(), class_ = u"plan_name" ),
+        plan[ u"fee" ] and Div(
+          yearly and Span(
+            u"$%s" % plan[ u"yearly_fee" ],
+            Span( u"/year", class_ = u"month_text" ),
+            class_ = u"price_text",
+            separator = u"",
+          ) or Div(
+            u"$%s" % plan[ u"fee" ],
+            Span( u"/month", class_ = u"month_text" ),
+            class_ = u"price_text",
+            separator = u"",
+          ),
+        ) or Div( Div( u"No fee", class_ = u"price_text" ) ),
+        Div(
+          u"For", plan[ u"designed_for" ],
+          class_ = u"small_text",
+        ),
+        ( index == self.FOCUSED_PLAN ) and Div( u"Best value", class_ = u"focused_text highlight" ) or None,
+      )
+
+      # if this is a demo/guest user, then make the fee area a big link to the sign up page
+      if not user or user.username in ( u"anonymous", None ):
+        fee_area = A( href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ), *fee_area )
+      else:
+        fee_area = Span( *fee_area )
+
+      return fee_area
+
     return Tr(
       [ Th(
-        A(
-          Span( plan[ u"name" ].capitalize(), class_ = u"plan_name" ),
-          plan[ u"fee" ] and Div(
-            yearly and Span(
-              u"$%s" % plan[ u"yearly_fee" ],
-              Span( u"/year", class_ = u"month_text" ),
-              class_ = u"price_text",
-              separator = u"",
-            ) or Div(
-              u"$%s" % plan[ u"fee" ],
-              Span( u"/month", class_ = u"month_text" ),
-              class_ = u"price_text",
-              separator = u"",
-            ),
-          ) or Div( Div( u"No fee", class_ = u"price_text" ) ),
-          Div(
-            u"For", plan[ u"designed_for" ],
-            class_ = u"small_text",
-          ),
-          ( index == self.FOCUSED_PLAN ) and Div( u"Best value", class_ = u"focused_text highlight" ) or None,
-          href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),
-        ),
+        make_fee_area( plan, index ),
         class_ = u"plan_name_area plan_width" + ( index == self.FOCUSED_PLAN and u" focused_plan_name_area" or u"" ),
       ) for ( index, plan ) in enumerate( rate_plans ) ],
     )
