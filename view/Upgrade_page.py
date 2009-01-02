@@ -319,12 +319,12 @@ class Upgrade_page( Product_page ):
     return Tr(
       [ Td(
         Div(
-          # 1 = modifying an existing subscription rather than a new signup
+          # 1 = modifying an existing subscription, 0 = new subscription
           user and user.username not in ( u"anonymous", None ) and user.rate_plan != index \
                and ( yearly and ( plan.get( u"yearly_button" ) and plan.get( u"yearly_button" ).strip() and
-                                  plan.get( u"yearly_button" ) % ( user.object_id, 1 ) or None ) or \
+                                  plan.get( u"yearly_button" ) % ( user.object_id, user.rate_plan and 1 or 0 ) or None ) or \
                                 ( plan.get( u"button" ) and plan.get( u"button" ).strip() and
-                                  plan.get( u"button" ) % ( user.object_id, 1 ) or None ) ) or None,
+                                  plan.get( u"button" ) % ( user.object_id, user.rate_plan and 1 or 0 ) or None ) ) or None,
           ( not user or user.username in ( u"anonymous", None ) ) and A(
               Img( src = u"/static/images/sign_up_button.png", width = "76", height = "23" ),
               href = u"/sign_up?plan=%s&yearly=%s" % ( index, yearly ),

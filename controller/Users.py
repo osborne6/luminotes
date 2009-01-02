@@ -463,7 +463,7 @@ class Users( object ):
       )
 
     return dict(
-      form = button % ( user_id, 0 ) # 0 = new signup, not modifying an existing subscription
+      form = button % ( user_id, 0 ) # 0 = new subscription, 1 = modify an existing subscription
     )
 
   @expose()
