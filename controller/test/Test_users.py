@@ -542,7 +542,7 @@ class Test_users( Test_controller ):
     form = result.get( u"form" )
     plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
 
-    assert form == plan[ u"button" ] % self.user.object_id
+    assert form == plan[ u"button" ] % ( self.user.object_id, 0 )
 
   def test_subscribe_yearly( self ):
     self.login()
@@ -555,7 +555,7 @@ class Test_users( Test_controller ):
     form = result.get( u"form" )
     plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
 
-    assert form == plan[ u"yearly_button" ] % self.user.object_id
+    assert form == plan[ u"yearly_button" ] % ( self.user.object_id, 0 )
 
   def test_subscribe_with_free_rate_plan( self ):
     self.login()
@@ -4999,7 +4999,7 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].title == u"thank you"
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
-    assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" not in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download( self ):
     access_id = u"wheeaccessid"

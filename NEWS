@@ -1,5 +1,5 @@
 1.5.13: January ??, 2009
- * Fixed various bugs related to online subscription processing.
+ * Fixed various bugs related to the subscription page.
 
 1.5.12: December 30, 2008
  * Fixed a bug in which clicking on the notebook rename text field ended the
