@@ -542,7 +542,7 @@ class Test_users( Test_controller ):
     form = result.get( u"form" )
     plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
 
-    assert form == plan[ u"button" ] % self.user.object_id
+    assert form == plan[ u"button" ] % ( self.user.object_id, 0 )
 
   def test_subscribe_yearly( self ):
     self.login()
@@ -555,7 +555,7 @@ class Test_users( Test_controller ):
     form = result.get( u"form" )
     plan = self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ]
 
-    assert form == plan[ u"yearly_button" ] % self.user.object_id
+    assert form == plan[ u"yearly_button" ] % ( self.user.object_id, 0 )
 
   def test_subscribe_with_free_rate_plan( self ):
     self.login()
@@ -3351,6 +3351,43 @@ class Test_users( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.rate_plan == 0
 
+  def test_paypal_notify_payment_with_trial( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount1" ] = u"0.00"
+    data[ u"period1" ] = u"30 D"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    # being notified of a mere payment should not change the user's rate plan
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_payment_with_trial_invalid_period( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount1" ] = u"0.00"
+    data[ u"period1" ] = u"31 D"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
+  def test_paypal_notify_payment_with_trial_invalid_amount( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"mc_amount1" ] = u"2.50"
+    data[ u"period1" ] = u"30 D"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert result.get( u"error" )
+
   def test_paypal_notify_payment_invalid( self ):
     data = dict( self.PAYMENT_DATA )
     data[ u"custom" ] = self.user.object_id
@@ -4962,7 +4999,7 @@ class Test_users( Test_controller ):
     assert result[ u"notes" ][ 0 ].title == u"thank you"
     assert result[ u"notes" ][ 0 ].notebook_id == self.anon_notebook.object_id
     assert u"Thank you" in result[ u"notes" ][ 0 ].contents
-    assert u"confirmation" in result[ u"notes" ][ 0 ].contents
+    assert u"confirmation" not in result[ u"notes" ][ 0 ].contents
 
   def test_thanks_download( self ):
     access_id = u"wheeaccessid"

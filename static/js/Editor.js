@@ -393,6 +393,10 @@ Editor.prototype.insert_html = function ( html ) {
   }
 }
 
+Editor.prototype.query_command_value = function ( command ) {
+  return this.document.queryCommandValue( command );
+}
+
 // resize the editor's frame to fit the dimensions of its content
 Editor.prototype.resize = function () {
   if ( !this.document ) return;
@@ -437,9 +441,13 @@ Editor.prototype.key_released = function ( event ) {
 Editor.prototype.cleanup_html = function ( key_code ) {
   if ( WEBKIT ) {
     // if enter is pressed while in a title, end title mode, since WebKit doesn't do that for us
-    var ENTER = 13;
+    var ENTER = 13; BACKSPACE = 8;
     if ( key_code == ENTER && this.state_enabled( "h3" ) )
       this.exec_command( "h3" );
+
+    // if backspace is pressed, skip WebKit style scrubbing since it can cause problems
+    if ( key_code == BACKSPACE )
+      return null;
 
     // as of this writing, WebKit doesn't support execCommand( "styleWithCSS" ). for more info, see
     // https://bugs.webkit.org/show_bug.cgi?id=13490
@@ -462,8 +470,6 @@ Editor.prototype.cleanup_html = function ( key_code ) {
         continue;
 
       var replacement = withDocument( this.document, function () {
-        if ( style == undefined )
-          return createDOM( "span" );
         // font-size is set when ending title mode
         if ( style.indexOf( "font-size: " ) != -1 )
           return null;
@@ -712,7 +718,9 @@ Editor.prototype.end_link = function () {
     // end of the link if it's not already there
     if ( link && WEBKIT ) {
       var selection = this.iframe.contentWindow.getSelection();
-      selection.collapse( link, 1 );
+      var sentinel = this.document.createTextNode( Editor.title_placeholder_char );
+      insertSiblingNodesAfter( link, sentinel );
+      selection.collapse( sentinel, 1 );
     }
   } else if ( this.document.selection ) { // browsers such as IE
     // if some text is already selected, unlink it and bail

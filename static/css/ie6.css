@@ -71,3 +71,7 @@
   margin-bottom: 0.25em;
   padding: 0.25em 0.25em 0 0.5em;
 }
+
+#current_notebook_wrapper {
+  margin-right: 1em;
+}

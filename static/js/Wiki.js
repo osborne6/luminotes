@@ -330,6 +330,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
     connect( "strikethrough", "onclick", function ( event ) { self.toggle_button( event, "strikethrough" ); } );
+    connect( "font", "onclick", this, "toggle_font_button" );
     connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
@@ -342,6 +343,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
     this.make_image_button( "strikethrough" );
+    this.make_image_button( "font" );
     this.make_image_button( "title" );
     this.make_image_button( "insertUnorderedList", "bullet_list" );
     this.make_image_button( "insertOrderedList", "numbered_list" );
@@ -1069,8 +1071,8 @@ Wiki.prototype.key_pressed = function ( event ) {
 
   var code = event.key().code;
   if ( event.modifier().ctrl ) {
-    // ctrl-n: new note
-    if ( code == 78 )
+    // ctrl-m: make a new note
+    if ( code == 77 )
       this.create_blank_editor( event );
   }
 }
@@ -1112,8 +1114,8 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-l: link
     } else if ( code == 76 ) {
       this.toggle_link_button( event );
-    // ctrl-n: new note
-    } else if ( code == 78 ) {
+    // ctrl-m: make a new note
+    } else if ( code == 77 ) {
       this.create_blank_editor( event );
     // ctrl-h: hide note
     } else if ( code == 72 ) {
@@ -1150,8 +1152,10 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   } else if ( code == 8 && editor.document.selection ) {
     var range = editor.document.selection.createRange();
     range.moveStart( "character", -1 );
-    range.text = "";
-    event.stop();
+    if ( range.text != "" ) {
+      range.text = "";
+      event.stop();
+    }
   }
 }
 
@@ -1330,6 +1334,7 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "italic", "i", node_names );
   this.update_button( "underline", "u", node_names );
   this.update_button( "strikethrough", "strike", node_names );
+  this.update_button( "font", "font", node_names );
   this.update_button( "title", "h3", node_names );
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
@@ -1400,6 +1405,30 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_pulldowns();
 
     new Upload_pulldown( this, this.notebook.object_id, this.invoker, this.focused_editor, link );
+  }
+
+  event.stop();
+}
+
+Wiki.prototype.toggle_font_button = function ( event ) {
+  if ( this.focused_editor && this.focused_editor.read_write ) {
+    this.focused_editor.focus();
+
+    // if a pulldown is already open, then just close it
+    var existing_div = getElement( "font_pulldown" );
+
+    if ( existing_div ) {
+      this.up_image_button( "font" );
+      existing_div.pulldown.shutdown();
+      existing_div.pulldown = null;
+      return;
+    }
+
+    this.down_image_button( "font" );
+    this.clear_messages();
+    this.clear_pulldowns();
+
+    new Font_pulldown( this, this.notebook.object_id, this.invoker, event.target(), this.focused_editor );
   }
 
   event.stop();
@@ -2790,7 +2819,7 @@ Wiki.prototype.start_notebook_rename = function () {
     "form", { "id": "rename_form" }, notebook_name_field, ok_button
   );
 
-  replaceChildNodes( "notebook_header_area", rename_form );
+  replaceChildNodes( "notebook_header_name", rename_form );
 
   var self = this;
   connect( rename_form, "onsubmit", function ( event ) {
@@ -2799,6 +2828,9 @@ Wiki.prototype.start_notebook_rename = function () {
   } );
   connect( ok_button, "onclick", function ( event ) {
     self.end_notebook_rename();
+    event.stop();
+  } );
+  connect( notebook_name_field, "onclick", function ( event ) {
     event.stop();
   } );
 
@@ -2971,10 +3003,14 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
 
   if ( this.ephemeral ) {
     // when the mouse cursor is moved into the pulldown, it becomes non-ephemeral (in other words,
-    // it will no longer disappear in a few seconds)
+    // it will no longer disappear in a few seconds). but as soon as the mouse leaves, it becomes
+    // ephemeral again
     var self = this;
     connect( this.div, "onmouseover", function ( event ) {
       self.ephemeral = false;
+    } );
+    connect( this.div, "onmouseout", function ( event ) {
+      self.ephemeral = true;
     } );
   }
 }
@@ -3051,6 +3087,13 @@ function calculate_position( node, anchor, relative_to, always_left_align ) {
 Pulldown.prototype.update_position = function ( always_left_align ) {
   var position = calculate_position( this.div, this.anchor, this.relative_to, always_left_align );
   setElementPosition( this.div, position );
+
+  var div_height = getElementDimensions( this.div ).h;
+  var viewport_bottom = getViewportPosition().y + getViewportDimensions().h;
+
+  // if the pulldown is now partially off the bottom of the window, move it up until it isn't
+  if ( position.y + div_height > viewport_bottom )
+    new Move( this.div, { "x": position.x, "y": viewport_bottom - div_height, "mode": "absolute", "duration": 0.25 } );
 }
 
 Pulldown.prototype.shutdown = function () {
@@ -3302,10 +3345,16 @@ Link_pulldown.prototype.display_summary = function ( title, summary ) {
 }
 
 Link_pulldown.prototype.title_field_clicked = function ( event ) {
+  disconnectAll( this.div );
+  this.ephemeral = false;
+
   event.stop();
 }
 
 Link_pulldown.prototype.title_field_focused = function ( event ) {
+  disconnectAll( this.div );
+  this.ephemeral = false;
+
   this.title_field.select();
 }
 
@@ -4181,6 +4230,89 @@ Suggest_pulldown.prototype.shutdown = function () {
   this.anchor.pulldown = null;
   disconnectAll( this );
   disconnect( this.key_handler );
+}
+
+
+function Font_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
+  anchor.pulldown = this;
+  this.anchor = anchor;
+  this.editor = editor;
+  this.initial_selected_mark = null;
+
+  Pulldown.call( this, wiki, notebook_id, "font_pulldown", anchor );
+
+  this.invoker = invoker;
+
+  var fonts = [
+    [ "Arial", "arial,sans-serif" ],
+    [ "Times New Roman", "times new roman,serif" ],
+    [ "Courier", "courier new,monospace" ],
+    [ "Comic Sans", "comic sans ms,sans-serif" ],
+    [ "Garamond", "garamond,serif" ],
+    [ "Georgia", "georgia,serif" ],
+    [ "Tahoma", "tahoma,sans-serif" ],
+    [ "Trebuchet", "trebuchet ms,sans-serif" ],
+    [ "Verdana", "verdana,sans-serif" ]
+  ];
+
+  var self = this;
+  var current_font_family = editor.query_command_value( "fontname" );
+  if ( current_font_family ) {
+    current_font_family = current_font_family.toLowerCase();
+    current_font_family = current_font_family.replace( /'/g, "" ).replace( /-webkit-/, "" );
+    current_font_family = current_font_family.split( ',' )[ 0 ];
+  }
+
+  for ( var i in fonts ) {
+    var font = fonts[ i ];
+    var font_name = font[ 0 ];
+    var font_family = font[ 1 ];
+
+    // using a button here instead of a <label> to make IE happy: when a <label> is used, clicking
+    // on the label steals focus from the editor iframe and prevents the font from being changed
+    var label = createDOM( "input", { "type": "button", "value": font_name, "class": "pulldown_label font_label_button", "style": "font-family: " + font_family + ";" } );
+
+    var selected_mark_char = document.createTextNode( "\u25cf" );
+    if ( current_font_family && font_family.search( current_font_family ) == 0 ) {
+      var selected_mark = createDOM( "span", { "class": "selected_mark" }, selected_mark_char );
+      this.initial_selected_mark = selected_mark;
+    } else {
+      var selected_mark = createDOM( "span", { "class": "selected_mark invisible" }, selected_mark_char );
+    }
+
+    var div = createDOM( "div", {}, selected_mark, " ", label );
+
+    label.font_family = font_family;
+    label.selected_mark = selected_mark;
+    appendChildNodes( this.div, div );
+    connect( label, "onclick", function ( event ) { self.font_name_clicked( event ); } );
+  }
+
+  Pulldown.prototype.finish_init.call( this );
+}
+
+Font_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Font_pulldown.prototype.constructor = Font_pulldown;
+
+Font_pulldown.prototype.font_name_clicked = function ( event ) {
+  var label = event.src();
+  if ( this.initial_selected_mark )
+    addElementClass( this.initial_selected_mark, "invisible" );
+  removeElementClass( label.selected_mark, "invisible" );
+
+  var self = this;
+  setTimeout( function () {
+    self.editor.focus();
+    self.editor.exec_command( "fontname", label.font_family );
+    self.shutdown();
+  }, 100 );
+}
+
+Font_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
+  this.anchor.pulldown = null;
+  disconnectAll( this );
 }
 
 

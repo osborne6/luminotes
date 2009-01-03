@@ -212,7 +212,11 @@ class Forum( object ):
 
     # if a single note was requested, just return that one note
     if note_id:
-      result[ "notes" ] = [ note for note in result[ "notes" ] if note.object_id == note_id ]
+      note = self.__database.load( Note, note_id )
+      if note:
+        result[ "notes" ] = [ note ]
+      else:
+        result[ "notes" ] = []
 
     return result
 

@@ -463,7 +463,7 @@ class Users( object ):
       )
 
     return dict(
-      form = button % user_id,
+      form = button % ( user_id, 0 ) # 0 = new subscription, 1 = modify an existing subscription
     )
 
   @expose()
@@ -1450,7 +1450,12 @@ class Users( object ):
     if mc_gross and mc_gross not in ( fee, yearly_fee ):
       raise Payment_error( u"invalid mc_gross", params )
 
-    # verify mc_amount3
+    # verify mc_amount1 (free 30-day trial)
+    mc_amount1 = params.get( u"mc_amount1" )
+    if mc_amount1 and mc_amount1 != "0.00":
+      raise Payment_error( u"invalid mc_amount1", params )
+
+    # verify mc_amount3 (actual payment)
     mc_amount3 = params.get( u"mc_amount3" )
     if mc_amount3 and mc_amount3 not in ( fee, yearly_fee ):
       raise Payment_error( u"invalid mc_amount3", params )
@@ -1460,9 +1465,14 @@ class Users( object ):
     if item_name and item_name.lower() != u"luminotes " + rate_plan[ u"name" ].lower():
       raise Payment_error( u"invalid item_name", params )
 
-    # verify period1 and period2 (should not be present)
-    if params.get( u"period1" ) or params.get( u"period2" ):
-      raise Payment_error( u"invalid period", params )
+    # verify period1 (free 30-day trial)
+    period1 = params.get( u"period1" )
+    if period1 and period1 != "30 D":
+      raise Payment_error( u"invalid period1", params )
+
+    # verify period2 (should not be present)
+    if params.get( u"period2" ):
+      raise Payment_error( u"invalid period2", params )
 
     # verify period3
     period3 = params.get( u"period3" )
@@ -1509,7 +1519,7 @@ class Users( object ):
       self.__database.save( user, commit = False )
       self.update_groups( user )
       self.__database.commit()
-    elif txn_type in ( u"subscr_payment", u"subscr_failed" ):
+    elif txn_type in ( u"subscr_payment", u"subscr_failed", "subscr_eot" ):
       pass # for now, ignore payments and let paypal handle them
     else:
       raise Payment_error( "unknown txn_type", params )
@@ -1588,15 +1598,18 @@ class Users( object ):
 
     # if there's no rate plan or we've retried too many times, give up and display an error
     RETRY_TIMEOUT = 15
-    if rate_plan is None or retry_count > RETRY_TIMEOUT:
+    if retry_count > RETRY_TIMEOUT:
       note = Thanks_error_note()
     # if the rate plan of the subscription matches the user's current rate plan, success
     elif rate_plan == result[ u"user" ].rate_plan:
       note = Thanks_note( self.__rate_plans[ rate_plan ][ u"name" ].capitalize() )
       result[ "conversion" ] = "subscribe_%s" % rate_plan
-    # otherwise, display an auto-reloading "processing..." page
-    else:
+    # if a rate plan is given, display an auto-reloading "processing..." page
+    elif rate_plan is not None:
       note = Processing_note( rate_plan, retry_count )
+    # otherwise, assume that this is a free trial and default to a generic thanks page
+    else:
+      note = Thanks_note()
 
     result[ "notebook" ] = main_notebook
     result[ "startup_notes" ] = self.__database.select_many( Note, main_notebook.sql_load_startup_notes() )

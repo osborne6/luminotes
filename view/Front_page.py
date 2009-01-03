@@ -367,6 +367,7 @@ class Front_page( Product_page ):
         Span( id = u"italic_button_preload" ),
         Span( id = u"underline_button_preload" ),
         Span( id = u"strikethrough_button_preload" ),
+        Span( id = u"font_button_preload" ),
         Span( id = u"title_button_preload" ),
         Span( id = u"bullet_list_button_preload" ),
         Span( id = u"numbered_list_button_preload" ),

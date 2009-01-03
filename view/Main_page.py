@@ -231,6 +231,12 @@ class Main_page( Page ):
           ) or None,
           Rounded_div(
             ( notebook.name == u"trash" ) and u"trash_notebook" or u"current_notebook",
+            parent_id and Span(
+              A( u"empty", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
+              u" | ",
+              A( u"go back", href = u"/notebooks/%s" % parent_id ),
+              id = u"notebook_header_links",
+            ) or None,
             ( notebook.name == u"Luminotes" and title == u"source code" ) and \
               Strong( "%s %s" % ( notebook.name, VERSION ) ) or \
               Span(
@@ -238,12 +244,6 @@ class Main_page( Page ):
                   and Strong( notebook.name ) \
                   or Span( Strong( notebook.name ), id = u"notebook_header_name", title = "Rename this notebook." ),
               ),
-            parent_id and Span(
-              u" | ",
-              A( u"empty trash", href = u"/notebooks/%s" % notebook.object_id, id = u"empty_trash_link" ),
-              u" | ",
-              A( u"return to notebook", href = u"/notebooks/%s" % parent_id ),
-            ) or None,
             id = u"notebook_header_area",
             corners = ( u"tl", u"tr", u"br" ),
           ),
@@ -267,6 +267,8 @@ class Main_page( Page ):
               ) or None,
               ( forum_tag and user.username and user.username != u"anonymous" ) and \
                 P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button.", class_ = u"small_text" ) or None,
+              ( forum_tag and ( not user.username or user.username == u"anonymous" ) ) and \
+                P( u"To write a comment, please login first. No account?", A( u"Sign up", href = u"/pricing" ), u"to get a free account.", class_ = "small_text" ) or None,
               Page_navigation(
                 notebook_path, len( notes ), total_notes_count, start, count,
                 return_text = u"return to the discussion",

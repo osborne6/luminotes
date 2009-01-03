@@ -39,7 +39,7 @@ class Link_area( Div ):
 
           ( rate_plan.get( u"notebook_sharing" ) and notebook.name == u"Luminotes blog" ) and Div(
             A(
-              u"subscribe to rss",
+              u"follow",
               href = u"%s?rss" % notebook_path,
               id = u"blog_rss_link",
               title = u"Subscribe to the RSS feed for the Luminotes blog.",
@@ -52,7 +52,7 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or ( updates_path and rate_plan.get( u"notebook_sharing" ) and ( not forum_tag ) and Div(
             A(
-              u"subscribe to rss",
+              u"follow",
               href = updates_path,
               id = u"notebook_rss_link",
               title = u"Subscribe to the RSS feed for this %s." % notebook_word,
@@ -87,13 +87,13 @@ class Link_area( Div ):
 
           ( notebook.read_write == Notebook.READ_WRITE ) and Span(
             Div(
-              A(
+              ( notebook.name != u"trash" ) and A(
                 u"import",
                 href = u"#",
                 id = u"import_link",
                 title = u"Import %ss from other software into Luminotes." % note_word,
-              ),
-              u"|",
+              ) or None,
+              ( notebook.name != u"trash" ) and u"|" or None,
               A(
                 u"export",
                 href = u"#",
@@ -103,42 +103,40 @@ class Link_area( Div ):
               class_ = u"link_area_item",
             ) or None,
 
+            ( notebook.name != u"trash" ) and Div(
+              notebook.trash_id and A(
+                u"trash",
+                href = u"/notebooks/%s?parent_id=%s" % ( notebook.trash_id, notebook.object_id ),
+                id = u"trash_link",
+                title = u"Look here for %ss you've deleted." % note_word,
+              ) or None,
+              ( notebook.owner and notebook.name != u"trash" and notebook.trash_id ) and u"|" or None,
+              ( notebook.owner and notebook.name != u"trash" ) and A(
+                u"delete",
+                href = u"#",
+                id = u"delete_notebook_link",
+                title = u"Move this %s to the trash." % notebook_word,
+              ) or None,
+              class_ = u"link_area_item",
+            ) or None,
+
             ( notebook.owner and notebook.name != u"trash" ) and Div(
               A(
                 u"rename",
                 href = u"#",
                 id = u"rename_notebook_link",
                 title = u"Change the name of this %s." % notebook_word,
-              ),
-              class_ = u"link_area_item",
+               ),
+               class_ = u"link_area_item",
             ) or None,
 
-            ( notebook.owner and notebook.name != u"trash" ) and Div(
-              A(
-                u"delete",
-                href = u"#",
-                id = u"delete_notebook_link",
-                title = u"Move this %s to the trash." % notebook_word,
-              ),
-              class_ = u"link_area_item",
-            ) or None,
-
-            ( notebook.owner and user.username and rate_plan.get( u"notebook_sharing" ) ) and Div(
+            ( notebook.owner and notebook.name != u"trash" and
+              user.username and rate_plan.get( u"notebook_sharing" ) ) and Div(
               A(
                 u"share",
                 href = u"#",
                 id = u"share_notebook_link",
                 title = u"Share this %s with others." % notebook_word,
-              ),
-              class_ = u"link_area_item",
-            ) or None,
-
-            notebook.trash_id and Div(
-              A(
-                u"trash",
-                href = u"/notebooks/%s?parent_id=%s" % ( notebook.trash_id, notebook.object_id ),
-                id = u"trash_link",
-                title = u"Look here for %ss you've deleted." % note_word,
               ),
               class_ = u"link_area_item",
             ) or None,

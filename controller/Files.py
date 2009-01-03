@@ -15,7 +15,7 @@ from Expose import expose
 from Validate import validate, Valid_int, Valid_bool, Validation_error
 from Database import Valid_id, end_transaction
 from Users import grab_user_id, Access_error
-from Expire import strongly_expire
+from Expire import strongly_expire, weakly_expire
 from model.File import File
 from model.User import User
 from model.Notebook import Notebook
@@ -262,6 +262,7 @@ class Files( object ):
     self.__download_products = download_products
 
   @expose()
+  @weakly_expire
   @end_transaction
   @grab_user_id
   @validate(
@@ -323,6 +324,7 @@ class Files( object ):
     return stream()
 
   @expose()
+  @weakly_expire
   @end_transaction
   @validate(
     access_id = Valid_id(),
@@ -409,6 +411,7 @@ class Files( object ):
     )
 
   @expose()
+  @weakly_expire
   @end_transaction
   @grab_user_id
   @validate(
@@ -471,6 +474,7 @@ class Files( object ):
     return stream( image_buffer )
 
   @expose()
+  @weakly_expire
   @end_transaction
   @grab_user_id
   @validate(

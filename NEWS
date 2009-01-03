@@ -1,5 +1,44 @@
-1.5.9: 
+1.5.13: January ??, 2009
+ * Fixed various bugs related to the subscription page.
  * Switching between notebooks and loading notebooks is now even faster.
+
+1.5.12: December 30, 2008
+ * Fixed a bug in which clicking on the notebook rename text field ended the
+   renaming prematurely.
+ * Potential fix for a bug in which product downloads and attached file
+   downloads occasionally did not complete in Internet Explorer.
+ * Added a 30-day free trial to all Luminotes subscription plans, and updated
+   the pricing page accordingly.
+
+1.5.11: December 27, 2008
+ * Added a font selection button to the toolbar.
+ * Decreased the default note text font size, so now you can see more of your
+   note text at once.
+ * Added rounded corners to several display elements.
+ * Improved the layout on low-resolution displays (1024x768 and below).
+ * Fixed a Luminotes Desktop bug in which creating and then clicking on a new
+   note link sometimes caused a red error message.
+ * Fixed a bug in which yellow pulldowns that were opened towards the bottom
+   of the page appeared partially off the page.
+ * Fixed a bug in which forum post permalinks didn't work on posts after the
+   first ten in a particular thread.
+
+1.5.10: December 4, 2008
+ * Fixed a bug in which certain new installations of Luminotes Desktop
+   on Windows yielded an "uh oh" error on initial launch. This bug did
+   not occur during upgrades. It only affected new installations.
+
+1.5.9: December 3, 2008
+ * When you hover the mouse over a link and a link pulldown appears, that
+   pulldown will now automatically disappear soon after you move the mouse
+   away.
+ * Changed the "new note" key from ctrl-N to ctrl-M so as not to conflict with
+   the "new browser window" key used in most web browsers.
+ * Fixed a Chrome/Safari bug in which ending a link didn't always work.
+ * Fixed a rare Chrome/Safari bug in which pressing backspace sometimes made
+   the text cursor vanish.
+ * Fixed an Internet Explorer bug in which backspace sometimes didn't work,
+   such as when backspacing an empty list element.
 
 1.5.8: November 24, 2008
  * Fixed a bug that prevented notes from being automatically saved in certain

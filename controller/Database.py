@@ -69,11 +69,17 @@ class Database( object ):
       from pytz import utc
 
       TIMESTAMP_PATTERN = re.compile( "^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d).(\d+)(?:\+\d\d:\d\d$)?" )
+      MICROSECONDS_PER_SECOND = 1000000
 
       def convert_timestamp( value ):
         ( year, month, day, hours, minutes, seconds, fractional_seconds ) = \
           TIMESTAMP_PATTERN.search( value ).groups( 0 )
-        microseconds = int( float ( "0." + fractional_seconds ) * 1000000 )
+
+        # convert fractional seconds (with an arbitrary number of decimal places) to microseconds
+        microseconds = int( fractional_seconds )
+        while microseconds > MICROSECONDS_PER_SECOND:
+          fractional_seconds = fractional_seconds[ : -1 ]
+          microseconds = int( fractional_seconds or 0 )
 
         # ignore time zone in timestamp and assume UTC
         return datetime(

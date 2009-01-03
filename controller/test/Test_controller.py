@@ -80,8 +80,8 @@ class Test_controller( object ):
             u"included_users": 1,
             u"fee": 1.99,
             u"yearly_fee": 19.90,
-            u"button": u"[subscribe here user %s!] button",
-            u"yearly_button": u"[yearly subscribe here user %s!] button",
+            u"button": u"[subscribe here user %s!] button (modify=%s)",
+            u"yearly_button": u"[yearly subscribe here user %s!] button (modify=%s)",
           },
           {
             u"name": "extra super",
@@ -91,8 +91,8 @@ class Test_controller( object ):
             u"included_users": 3,
             u"fee": 9.00,
             u"yearly_fee": 90.00,
-            u"button": u"[or here user %s!] button",
-            u"yearly_button": u"[yearly or here user %s!] button",
+            u"button": u"[or here user %s!] button (modify=%s)",
+            u"yearly_button": u"[yearly or here user %s!] button (modify=%s)",
           },
         ],
         "luminotes.download_products": [
