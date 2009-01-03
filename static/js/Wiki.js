@@ -1010,7 +1010,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
     addElementClass( editor.iframe, "focused_note_frame" );
   }
 
-  if ( this.focused_editor && this.focused_editor != editor ) {
+  if ( this.focused_editor && this.focused_editor != editor && this.focused_editor.iframe ) {
     this.clear_pulldowns();
     removeElementClass( this.focused_editor.iframe, "focused_note_frame" );
 

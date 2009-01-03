@@ -120,26 +120,34 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
 
 Editor.prototype.create_iframe = function ( position_after ) {
   var iframe_id = "note_" + this.id;
+
+  // if there is already an iframe for this Editor, bail
+  var iframe = getElement( iframe_id );
+  if ( iframe )
+    return;
+
   var self = this;
-  this.iframe = createDOM( "iframe", {
-    // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
-    "src": IE6 && "/static/html/blank_note.html" || "",
-    "frameBorder": "0",
-    "scrolling": "no",
-    "id": iframe_id,
-    "name": iframe_id,
-    "class": "note_frame",
-    "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
-    "onload": function () { setTimeout( function () { self.resize(); if ( !this.init_highlight ) scroll( 0, 0 ); }, 250 ); }
-  } );
+  this.iframe = createDOM( "iframe",
+    {
+      // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
+      "src": "/static/html/blank_note.html",
+      "frameBorder": "0",
+      "scrolling": "no",
+      "id": iframe_id,
+      "name": iframe_id,
+      "class": "note_frame",
+      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
+      "onload": function () { setTimeout( function () { self.resize(); if ( !this.init_highlight ) scroll( 0, 0 ); }, 250 ); }
+    }
+  );
   this.iframe.editor = this;
 
   // if there is already a static note open for this editor, replace its div with the new iframe
-  // and note controls
   if ( getElement( "static_note_" + this.id ) ) {
     var note_holder = getElement( "note_holder_" + this.id );
     this.note_controls = getElement( "note_controls_" + this.id );
     this.connect_note_controls( true );
+    this.div = null;
 
     replaceChildNodes( note_holder, this.iframe );
     insertSiblingNodesBefore( this.iframe, this.note_controls );
@@ -162,32 +170,50 @@ Editor.prototype.create_iframe = function ( position_after ) {
 }
 
 Editor.prototype.create_div = function ( position_after ) {
+  var self = this;
+
   // if there is already a static note div for this Editor, connect up the note controls and bail
   var static_note_div = getElement( "static_note_" + this.id );
   if ( static_note_div ) {
     this.note_controls = getElement( "note_controls_" + this.id );
     this.connect_note_controls( true );
     this.div = static_note_div;
+    this.scrape_title();
+    connect( this.div, "onclick", function ( event ) { self.focused( event ); } );
     return;
   }
 
   this.div = createDOM(
-    "div", { "class": "static_note_div", "id": "static_note_" + this.id },
-    this.initial_text
+    "div", { "class": "static_note_div", "id": "static_note_" + this.id }
   );
 
-  this.create_note_controls();
-  this.connect_note_controls();
+  this.div.innerHTML = this.initial_text;
 
-  var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
-    this.note_controls,
-    this.div
-  );
+  // if there is already an iframe open for this editor, replace it with the new static note div
+  if ( getElement( "note_" + this.id ) ) {
+    var note_holder = getElement( "note_holder_" + this.id );
+    this.iframe = null;
+    this.document = null;
 
-  if ( position_after && position_after.parentNode )
-    insertSiblingNodesAfter( position_after, note_holder );
-  else
-    appendChildNodes( "notes", note_holder );
+    replaceChildNodes( note_holder, this.div );
+    insertSiblingNodesBefore( this.div, this.note_controls );
+  } else {
+    this.create_note_controls();
+    this.connect_note_controls();
+
+    var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
+      this.note_controls,
+      this.div
+    );
+
+    if ( position_after && position_after.parentNode )
+      insertSiblingNodesAfter( position_after, note_holder );
+    else
+      appendChildNodes( "notes", note_holder );
+  }
+
+  this.scrape_title();
+  connect( this.div, "onclick", function ( event ) { self.focused( event ); } );
 
   signal( self, "init_complete" );
 }
@@ -240,6 +266,7 @@ Editor.prototype.finish_init = function () {
     connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
     connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
   }
+  connect( this.iframe, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.document, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
   connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
@@ -593,7 +620,7 @@ Editor.prototype.mouse_dragged = function ( event ) {
 
 Editor.prototype.scrape_title = function () {
   // scrape the note title out of the editor
-  var heading = getFirstElementByTagAndClassName( "h3", null, this.document );
+  var heading = getFirstElementByTagAndClassName( "h3", null, this.document || this.div );
   if ( heading )
     var title = scrapeText( heading );
   else
@@ -611,6 +638,8 @@ Editor.prototype.focused = function () {
 
 Editor.prototype.blurred = function () {
   this.scrape_title();
+
+  this.create_div();
 }
 
 Editor.title_placeholder_char = "\u200b";
@@ -707,7 +736,7 @@ Editor.prototype.end_link = function () {
 }
 
 Editor.prototype.find_link_at_cursor = function () {
-  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+  if ( this.iframe && this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
     var link = selection.anchorNode;
     if ( !link ) return null;
@@ -736,7 +765,7 @@ Editor.prototype.find_link_at_cursor = function () {
     if ( link != this.link_started )
       this.link_started = null;
     return link;
-  } else if ( this.document.selection ) { // browsers such as IE
+  } else if ( this.document && this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
     var link = range.parentElement();
 
@@ -793,7 +822,7 @@ Editor.prototype.state_enabled = function ( state_name, node_names ) {
 Editor.prototype.current_node_names = function () {
   var node_names = new Array();
 
-  if ( !this.edit_enabled )
+  if ( !this.edit_enabled || !this.iframe )
     return node_names;
 
   // to determine whether the specified state is enabled, see whether the current selection is
@@ -919,6 +948,9 @@ function normalize_html( html ) {
 }
 
 Editor.prototype.dirty = function () {
+  if ( !this.iframe || !this.document )
+    return false;
+
   var original_html = normalize_html( this.initial_text )
   var current_html = normalize_html( this.document.body.innerHTML )
 
