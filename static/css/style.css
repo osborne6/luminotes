@@ -541,6 +541,7 @@ h1 {
 }
 
 .static_note_div {
+  font-size: 90%;
   display: block;
   margin: 0em;
   padding: 0.5em 1.5em 1em 1.5em;
