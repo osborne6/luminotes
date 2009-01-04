@@ -541,6 +541,7 @@ h1 {
 }
 
 .static_note_div {
+  -moz-border-radius: 5px;
   font-size: 90%;
   display: block;
   margin: 0em;
