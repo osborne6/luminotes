@@ -459,14 +459,12 @@ h1 {
   margin: 0.25em;
 }
 
-#static_notes {
+#notes {
   text-align: left;
   margin: 0em;
-  line-height: 140%;
 }
 
-#static_notes h3 {
-  margin-bottom: 0.5em;
+#notes h3 {
 }
 
 #notes {
@@ -526,11 +524,11 @@ h1 {
 
 .note_frame {
   -moz-border-radius: 5px;
-  margin: 0em;
   padding: 0em;
   overflow: hidden;
   width: 100%;
-  border: 1px solid #999999;
+  border: 2px solid #999999;
+  margin: 0em;
   margin-bottom: 0.75em;
   background-color: #ffffff;
   overflow-x: auto;
@@ -542,18 +540,213 @@ h1 {
 
 .static_note_div {
   -moz-border-radius: 5px;
-  font-size: 90%;
   display: block;
-  margin: 0em;
-  padding: 0.5em 1.5em 1em 1.5em;
+  padding: 0.5em 1em 1em 1.5em;
   font-family: sans-serif;
   overflow: hidden;
-  border: 1px solid #999999;
-  margin-bottom: 0.75em;
+  border: 2px solid #999999;
+  margin: 0em;
+  margin-bottom: 0.95em;
   background-color: #ffffff;
   overflow-x: auto;
 }
 
+.static_note_contents {
+  font-size: 90%;
+  line-height: 140%;
+}
+
+.static_note_contents h3 {
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid #dddddd;
+  margin-bottom: 0.75em;
+}
+
+.static_note_contents a[target ^= "_new"] {
+  background: url(/static/images/web_icon_tiny.png) right center no-repeat;
+  padding-right: 13px;
+}
+
+.diff a[target ^= "_new"] {
+  background-image: none;
+  padding-right: 0;
+}
+
+.static_note_contents a:hover {
+  color: #ff6600;
+}
+
+.static_note_contents ins {
+  color: green;
+  text-decoration: none;
+}
+
+.static_note_contents ins a {
+  color: green;
+}
+
+.static_note_contents del {
+  color: red;
+  text-decoration: line-through;
+}
+
+.static_note_contents del a {
+  color: red;
+}
+
+.static_note_contents img {
+  border-width: 0;
+}
+
+.static_note_contents .left_justified {
+  float: left;
+  margin: 0.5em 1.5em 0.5em 0;
+}
+
+.static_note_contents .center_justified {
+  display: block;
+  margin: 0.5em auto 0.5em auto;
+  text-align: center;
+}
+
+.static_note_contents .right_justified {
+  float: right;
+  margin: 0.5em 0 0.5em 1.5em;
+}
+
+.static_note_contents hr {
+  border: 0;
+  color: #000000;
+  background-color: #000000;
+  height: 1px;
+}
+
+.static_note_contents .button {
+  border-style: outset;
+  border-width: 0px;
+  background-color: #d0e0f0;
+  font-size: 100%;
+  outline: none;
+  cursor: pointer;
+}
+
+.static_note_contents .button:hover {
+  background-color: #ffcc66;
+}
+
+.static_note_contents .revoke_button {
+  margin-left: 0.5em;
+  font-size: 90%;
+}
+
+.static_note_contents .admin_button {
+  margin-left: 0.5em;
+  font-size: 90%;
+}
+
+.static_note_contents .remove_user_button {
+  margin-left: 0.5em;
+  font-size: 90%;
+}
+
+.static_note_contents .text_field {
+  margin-top: 0.25em;
+  padding: 0.25em;
+  border: #999999 1px solid;
+}
+
+.static_note_contents .textarea_field {
+  margin-top: 0.25em;
+  padding: 0.25em;
+  border: #999999 1px solid;
+  overflow: auto;
+}
+
+.static_note_contents ul {
+  list-style-type: disc;
+}
+
+.static_note_contents ul li {
+  margin-top: 0.5em;
+}
+
+.static_note_contents ol li {
+  margin-top: 0.5em;
+}
+
+.center_text {
+  text-align: center;
+}
+
+.static_note_contents .small_text {
+  padding-top: 0.5em;
+  font-size: 90%;
+}
+
+.static_note_contents .radio_label {
+  color: #000000;
+}
+
+.static_note_contents .radio_label:hover {
+  color: #ff6600;
+  cursor: pointer;
+}
+
+.static_note_contents .indented {
+  margin-left: 1em;
+}
+
+.static_note_contents .radio_table td {
+  padding-right: 1em;
+}
+
+.static_note_contents #import_notebook_table {
+  font-size: 72%;
+  border-collapse: collapse;
+  border: 1px solid #999999;
+}
+
+.static_note_contents #import_notebook_table td {
+  border: 1px solid #999999;
+  padding: 0.5em;
+}
+
+.static_note_contents #import_notebook_table .heading_row {
+  font-weight: bold;
+}
+
+.static_note_contents .thumbnail_left {
+  float: left;
+  margin: 0.5em;
+  margin-right: 1em;
+  margin-bottom: 0.5em;
+  border: 1px solid #999999;
+}
+
+.static_note_contents .thumbnail_right {
+  float: right;
+  margin: 0.5em;
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+  border: 1px solid #999999;
+}
+
+.static_note_contents .search_results_summary {
+  font-size: 82%;
+}
+
+.static_note_contents .invite_status {
+  font-size: 82%;
+}
+
+.static_note_contents .invite_link_area {
+  font-size: 82%;
+  margin-left: 2em;
+}
+
+.static_note_contents .user_status {
+  font-size: 82%;
+}
 .page_title a {
   color: #000000;
   text-decoration: none;

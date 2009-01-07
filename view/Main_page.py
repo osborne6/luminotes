@@ -89,7 +89,10 @@ class Main_page( Page ):
       return [ Div(
         note_controls( note, read_write ),
         Div(
-          note.contents,
+          Span(
+            note.contents,
+            class_ = u"static_note_contents",
+          ),
           id = "static_note_%s" % note.object_id,
           class_ = u"static_note_div",
         ),

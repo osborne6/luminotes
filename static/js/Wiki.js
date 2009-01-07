@@ -825,6 +825,8 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 
   var startup = this.startup_notes[ id ];
   var editor = new Editor( id, this.notebook.object_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty, own_notes_only );
+  if ( focus )
+    this.editor_focused( editor );
 
   if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );

@@ -130,7 +130,7 @@ Editor.prototype.create_iframe = function ( position_after ) {
   this.iframe = createDOM( "iframe",
     {
       // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
-      "src": "/static/html/blank_note.html",
+      //"src": "/static/html/blank_note.html",
       "frameBorder": "0",
       "scrolling": "no",
       "id": iframe_id,
@@ -143,13 +143,14 @@ Editor.prototype.create_iframe = function ( position_after ) {
   this.iframe.editor = this;
 
   // if there is already a static note open for this editor, replace its div with the new iframe
-  if ( getElement( "static_note_" + this.id ) ) {
+  var static_note = getElement( "static_note_" + this.id );
+  if ( static_note ) {
     var note_holder = getElement( "note_holder_" + this.id );
     this.note_controls = getElement( "note_controls_" + this.id );
     this.connect_note_controls( true );
     this.div = null;
 
-    replaceChildNodes( note_holder, this.iframe );
+    swapDOM( static_note, this.iframe );
     insertSiblingNodesBefore( this.iframe, this.note_controls );
   } else {
     this.create_note_controls();
@@ -166,7 +167,7 @@ Editor.prototype.create_iframe = function ( position_after ) {
       appendChildNodes( "notes", note_holder );
   }
 
-  connect( this.iframe, "onload", function ( event ) { self.init_document(); } );
+  this.init_document();
 }
 
 Editor.prototype.create_div = function ( position_after ) {
@@ -186,7 +187,6 @@ Editor.prototype.create_div = function ( position_after ) {
   this.div = createDOM(
     "div", { "class": "static_note_div", "id": "static_note_" + this.id }
   );
-
   this.div.innerHTML = this.initial_text;
 
   // if there is already an iframe open for this editor, replace it with the new static note div
@@ -228,7 +228,7 @@ Editor.prototype.init_document = function () {
     if ( this.edit_enabled )
       this.document.designMode = "On";    
 
-    setTimeout( function () { self.finish_init(); }, 1 );
+//    setTimeout( function () { self.finish_init(); }, 1 );
   } else { // browsers such as IE
     this.document = this.iframe.contentWindow.document;
 
@@ -237,8 +237,17 @@ Editor.prototype.init_document = function () {
       // work-around for IE bug: reget the document after designMode is turned on
       this.document = this.iframe.contentWindow.document;
     }
-    setTimeout( function () { self.finish_init(); }, 100 );
+//    setTimeout( function () { self.finish_init(); }, 100 );
   }
+
+  this.document.open();
+  this.document.write(
+    '<html><head><style>html { padding: 0.5em 1em 1em 1em; } body { font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } ins { color: green; text-decoration: none; } ins a { color: green; } del { color: red; text-decoration: line-through; } del a { color: red; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } .button { border-style: outset; border-width: 0px; background-color: #d0e0f0; font-size: 100%; outline: none; cursor: pointer; } .button:hover { background-color: #ffcc66; } .revoke_button { margin-left: 0.5em; font-size: 90%; } .admin_button { margin-left: 0.5em; font-size: 90%; } .remove_user_button { margin-left: 0.5em; font-size: 90%; } .text_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; } .textarea_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; overflow: auto; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .radio_label { color: #000000; } .radio_label:hover { color: #ff6600; cursor: pointer; } .indented { margin-left: 1em; } .radio_table td { padding-right: 1em; } #import_notebook_table { font-size: 72%; border-collapse: collapse; border: 1px solid #999999; } #import_notebook_table td { border: 1px solid #999999; padding: 0.5em; } #import_notebook_table .heading_row { font-weight: bold; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .search_results_summary { font-size: 82%; } .invite_status { font-size: 82%; } .invite_link_area { font-size: 82%; margin-left: 2em; } .user_status { font-size: 82%; }</style>' +
+    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + this.initial_text + '</body></html>'
+  );
+  this.document.close();
+
+  this.finish_init();
 }
 
 // third and final stage of construction, invoked by init_document(). do not call directly
@@ -252,7 +261,7 @@ Editor.prototype.finish_init = function () {
       this.initial_text += "&#8203;";
   }
 
-  this.insert_html( this.initial_text );
+//  this.insert_html( this.initial_text );
 
   // since the browser may subtly tweak the html when it's inserted, save off the browser's version
   // of the html here. this yields more accurate comparisons within the dirty() method
@@ -639,6 +648,8 @@ Editor.prototype.scrape_title = function () {
 }
 
 Editor.prototype.focused = function () {
+  this.create_iframe();
+
   signal( this, "focused", this );
 }
 
@@ -830,7 +841,7 @@ Editor.prototype.state_enabled = function ( state_name, node_names ) {
 Editor.prototype.current_node_names = function () {
   var node_names = new Array();
 
-  if ( !this.edit_enabled || !this.iframe )
+  if ( !this.edit_enabled || !this.iframe || !this.document )
     return node_names;
 
   // to determine whether the specified state is enabled, see whether the current selection is
