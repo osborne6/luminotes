@@ -541,7 +541,7 @@ h1 {
 .static_note_div {
   -moz-border-radius: 5px;
   display: block;
-  padding: 0.5em 1em 1em 1.5em;
+  padding: 1em 1em 1em 1.5em;
   font-family: sans-serif;
   overflow: hidden;
   border: 2px solid #999999;
@@ -559,6 +559,7 @@ h1 {
 .static_note_contents h3 {
   padding-bottom: 0.25em;
   border-bottom: 1px solid #dddddd;
+  margin-top: 0em;
   margin-bottom: 0.75em;
 }
 

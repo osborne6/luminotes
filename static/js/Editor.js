@@ -145,13 +145,17 @@ Editor.prototype.create_iframe = function ( position_after ) {
   // if there is already a static note open for this editor, replace its div with the new iframe
   var static_note = getElement( "static_note_" + this.id );
   if ( static_note ) {
-    var note_holder = getElement( "note_holder_" + this.id );
     this.note_controls = getElement( "note_controls_" + this.id );
     this.connect_note_controls( true );
-    this.div = null;
+
+    disconnectAll( this.div );
 
     swapDOM( static_note, this.iframe );
     insertSiblingNodesBefore( this.iframe, this.note_controls );
+
+    this.init_iframe();
+
+    this.div = null;
   } else {
     this.create_note_controls();
     this.connect_note_controls();
@@ -165,9 +169,11 @@ Editor.prototype.create_iframe = function ( position_after ) {
       insertSiblingNodesAfter( position_after, note_holder );
     else
       appendChildNodes( "notes", note_holder );
+
+    this.init_iframe();
   }
 
-  this.init_document();
+  this.finish_init();
 }
 
 Editor.prototype.create_div = function ( position_after ) {
@@ -184,19 +190,23 @@ Editor.prototype.create_div = function ( position_after ) {
     return;
   }
 
+  var static_contents = createDOM( "span", { "class": "static_note_contents" } );
+  static_contents.innerHTML = this.contents();
   this.div = createDOM(
-    "div", { "class": "static_note_div", "id": "static_note_" + this.id }
+    "div", { "class": "static_note_div", "id": "static_note_" + this.id }, static_contents
   );
-  this.div.innerHTML = this.initial_text;
 
   // if there is already an iframe open for this editor, replace it with the new static note div
   if ( getElement( "note_" + this.id ) ) {
-    var note_holder = getElement( "note_holder_" + this.id );
+    disconnectAll( this.iframe.contentWindow );
+    disconnectAll( this.document.body );
+    disconnectAll( this.document );
+
+    swapDOM( this.iframe, this.div );
+    insertSiblingNodesBefore( this.div, this.note_controls );
+
     this.iframe = null;
     this.document = null;
-
-    replaceChildNodes( note_holder, this.div );
-    insertSiblingNodesBefore( this.div, this.note_controls );
   } else {
     this.create_note_controls();
     this.connect_note_controls();
@@ -218,8 +228,7 @@ Editor.prototype.create_div = function ( position_after ) {
   signal( self, "init_complete" );
 }
 
-// second stage of construction after create_iframe(), invoked by iframe onload. do not call directly
-Editor.prototype.init_document = function () {
+Editor.prototype.init_iframe = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
@@ -243,14 +252,11 @@ Editor.prototype.init_document = function () {
   this.document.open();
   this.document.write(
     '<html><head><style>html { padding: 0.5em 1em 1em 1em; } body { font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } ins { color: green; text-decoration: none; } ins a { color: green; } del { color: red; text-decoration: line-through; } del a { color: red; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } .button { border-style: outset; border-width: 0px; background-color: #d0e0f0; font-size: 100%; outline: none; cursor: pointer; } .button:hover { background-color: #ffcc66; } .revoke_button { margin-left: 0.5em; font-size: 90%; } .admin_button { margin-left: 0.5em; font-size: 90%; } .remove_user_button { margin-left: 0.5em; font-size: 90%; } .text_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; } .textarea_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; overflow: auto; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .radio_label { color: #000000; } .radio_label:hover { color: #ff6600; cursor: pointer; } .indented { margin-left: 1em; } .radio_table td { padding-right: 1em; } #import_notebook_table { font-size: 72%; border-collapse: collapse; border: 1px solid #999999; } #import_notebook_table td { border: 1px solid #999999; padding: 0.5em; } #import_notebook_table .heading_row { font-weight: bold; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .search_results_summary { font-size: 82%; } .invite_status { font-size: 82%; } .invite_link_area { font-size: 82%; margin-left: 2em; } .user_status { font-size: 82%; }</style>' +
-    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + this.initial_text + '</body></html>'
+    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + this.contents() + '</body></html>'
   );
   this.document.close();
-
-  this.finish_init();
 }
 
-// third and final stage of construction, invoked by init_document(). do not call directly
 Editor.prototype.finish_init = function () {
   if ( !this.initial_text ) {
     this.initial_text = "<h3>";
@@ -809,9 +815,16 @@ Editor.prototype.focus = function () {
 }
 
 Editor.prototype.contents = function () {
-  if ( !this.document || !this.document.body )
-    return "";
-  return this.document.body.innerHTML;
+  if ( this.div ) {
+    var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
+    if ( static_contents )
+      return static_contents.innerHTML;
+  }
+
+  if ( this.document && this.document.body )
+    return this.document.body.innerHTML;
+
+  return this.initial_text || "";
 }
 
 // return true if the given state_name is currently enabled, optionally using a given list of node

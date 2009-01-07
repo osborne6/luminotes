@@ -272,10 +272,16 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 
     // don't actually create an editor if a particular list of notes was provided in the result
     if ( current_notes.length == 0 ) {
+      var static_note = getElement( "static_note_" + startup_note.object_id );
+      if ( !static_note ) continue;
+      var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", static_note );
+      if ( !static_contents ) continue;
+      var contents_text = static_contents.innerHTML;
+
       var editor = this.create_editor(
         startup_note.object_id,
         // grab this note's contents from the static notes area
-        getElement( "static_note_" + startup_note.object_id ).innerHTML,
+        contents_text,
         startup_note.deleted_from_id,
         startup_note.revision,
         startup_note.creation,
@@ -300,9 +306,15 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     else
       var read_write = this.notebook.read_write;
 
+    var static_note = getElement( "static_note_" + startup_note.object_id );
+    if ( !static_note ) continue;
+    var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", static_note );
+    if ( !static_contents ) continue;
+    var contents_text = static_contents.innerHTML;
+
     this.create_editor(
       note.object_id,
-      getElement( "static_note_" + note.object_id ).innerHTML,
+      contents_text,
       note.deleted_from_id,
       note.revision,
       note.creation,
