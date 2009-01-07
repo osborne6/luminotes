@@ -136,8 +136,7 @@ Editor.prototype.create_iframe = function ( position_after ) {
       "id": iframe_id,
       "name": iframe_id,
       "class": "note_frame",
-      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
-      "onload": function () { setTimeout( function () { self.resize(); if ( !this.init_highlight ) scroll( 0, 0 ); }, 250 ); }
+      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
     }
   );
   this.iframe.editor = this;
@@ -675,10 +674,7 @@ Editor.title_placeholder_pattern = /\u200b/g;
 Editor.title_placeholder_html = "&#8203;&#8203;";
 
 Editor.prototype.empty = function () {
-  if ( !this.document || !this.document.body )
-    return true; // consider it empty as of now
-
-  return ( scrapeText( this.document.body ).replace( Editor.title_placeholder_pattern, "" ).length == 0 );
+  return this.contents( true ).length == 0;
 }
 
 Editor.prototype.insert_link = function ( url ) {
@@ -823,7 +819,7 @@ Editor.prototype.focus = function () {
     this.iframe.contentWindow.focus();
 }
 
-Editor.prototype.contents = function () {
+Editor.prototype.contents = function ( no_initial_text ) {
   if ( this.div ) {
     var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
     if ( static_contents )
@@ -832,6 +828,9 @@ Editor.prototype.contents = function () {
 
   if ( this.document && this.document.body )
     return this.document.body.innerHTML;
+
+  if ( no_initial_text )
+    return "";
 
   return this.initial_text || "";
 }
