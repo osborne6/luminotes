@@ -1027,3 +1027,7 @@ function link_title( link, query ) {
 
   return link_title.replace( Editor.title_placeholder_pattern, "" );
 }
+
+function normalize_title( title ) {
+  return title.replace( Editor.title_placeholder_pattern, "" ) || "untitled note";
+}

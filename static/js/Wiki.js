@@ -4400,7 +4400,7 @@ Note_tree.prototype.add_root_link = function ( note_id, title, contents, startup
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + note_id,
    "id": "note_tree_link_" + note_id,
    "class": "note_tree_link"
-  }, title || "untitled note" );
+  }, normalize_title( title ) );
 
   insertSiblingNodesBefore( "new_note_tree_link_row", createDOM(
     "tr",
@@ -4427,7 +4427,7 @@ Note_tree.prototype.remove_link = function ( note_id ) {
 Note_tree.prototype.rename_link = function ( editor, new_title ) {
   var link = getElement( "note_tree_link_" + editor.id );
   if ( link )
-    replaceChildNodes( link, new_title || "untitled note" );
+    replaceChildNodes( link, normalize_title( new_title ) );
 }
 
 Note_tree.prototype.update_link = function ( editor ) {
@@ -4816,7 +4816,7 @@ Recent_notes.prototype.append_links = function ( result ) {
     link_td.innerHTML =
       '<a href="/notebooks/' + this.notebook_id + '?note_id=' + note.object_id +
       '" id="recent_note_link_' + note.object_id + '" class="recent_note_link">' +
-      ( note.title || 'untitled note' ) + '</a>';
+      ( normalize_title( note.title ) ) + '</a>';
 
     connect( "recent_note_link_" + note.object_id, "onclick", function ( event ) { self.link_clicked( event ); } );
 
@@ -4863,7 +4863,7 @@ Recent_notes.prototype.add_link = function ( editor ) {
    "href": "/notebooks/" + this.notebook_id + "?note_id=" + editor.id,
    "id": "recent_note_link_" + editor.id,
    "class": "recent_note_link"
-  }, editor.title || "untitled note" );
+  }, normalize_title( editor.title ) );
 
   insertSiblingNodesAfter( "recent_notes_top", createDOM(
     "tr",
@@ -4895,7 +4895,7 @@ Recent_notes.prototype.update_link = function ( editor ) {
 
   // the link is already in the recent notes list, so just move it to the top of the list
   removeElement( item );
-  replaceChildNodes( link, editor.title || "untitled note" );
+  replaceChildNodes( link, normalize_title( editor.title ) );
   insertSiblingNodesAfter( "recent_notes_top", item );
 }
 
