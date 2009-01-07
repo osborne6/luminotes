@@ -976,20 +976,17 @@ function normalize_html( html ) {
 }
 
 Editor.prototype.dirty = function () {
-  if ( !this.iframe || !this.document )
-    return false;
-
   var original_html = normalize_html( this.initial_text )
-  var current_html = normalize_html( this.document.body.innerHTML )
+  var current_html = normalize_html( this.contents() );
 
-  if ( current_html == original_html )
+  if ( current_html == "" || current_html == original_html )
     return false;
 
   return true;
 }
 
 Editor.prototype.mark_clean = function () {
-  this.initial_text = this.document.body.innerHTML;
+  this.initial_text = this.contents();
 }
 
 Editor.prototype.mark_dirty = function () {
