@@ -250,25 +250,34 @@ Editor.prototype.init_iframe = function () {
   }
 
   this.document.open();
+  var contents_text = this.contents();
+  if ( !contents_text ) {
+    // hack: add a zero-width space to make the horizontal line under title show up in the
+    // correct position, even before there is a title
+    contents_text = "<h3>&#8203;";
+  }
+
   this.document.write(
     '<html><head><style>html { padding: 1em; } body { font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } ins { color: green; text-decoration: none; } ins a { color: green; } del { color: red; text-decoration: line-through; } del a { color: red; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } .button { border-style: outset; border-width: 0px; background-color: #d0e0f0; font-size: 100%; outline: none; cursor: pointer; } .button:hover { background-color: #ffcc66; } .revoke_button { margin-left: 0.5em; font-size: 90%; } .admin_button { margin-left: 0.5em; font-size: 90%; } .remove_user_button { margin-left: 0.5em; font-size: 90%; } .text_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; } .textarea_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; overflow: auto; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .radio_label { color: #000000; } .radio_label:hover { color: #ff6600; cursor: pointer; } .indented { margin-left: 1em; } .radio_table td { padding-right: 1em; } #import_notebook_table { font-size: 72%; border-collapse: collapse; border: 1px solid #999999; } #import_notebook_table td { border: 1px solid #999999; padding: 0.5em; } #import_notebook_table .heading_row { font-weight: bold; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .search_results_summary { font-size: 82%; } .invite_status { font-size: 82%; } .invite_link_area { font-size: 82%; margin-left: 2em; } .user_status { font-size: 82%; }</style>' +
-    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + this.contents() + '</body></html>'
+    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + contents_text + '</body></html>'
   );
   this.document.close();
+
+  // move the text cursor to the end of the text
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    var last_node = this.document.body.lastChild;
+    if ( last_node.nodeValue == "\n" && last_node.previousSibling )
+      last_node = last_node.previousSibling;
+
+    selection.selectAllChildren( last_node );
+    selection.collapseToEnd();
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+  }
 }
 
 Editor.prototype.finish_init = function () {
-  if ( !this.initial_text ) {
-    this.initial_text = "<h3>";
-
-    // WebKit hack: add a zero-width space to make the horizontal line under title show up in the
-    // correct position, even before there is a title
-    if ( WEBKIT )
-      this.initial_text += "&#8203;";
-  }
-
-//  this.insert_html( this.initial_text );
-
   // since the browser may subtly tweak the html when it's inserted, save off the browser's version
   // of the html here. this yields more accurate comparisons within the dirty() method
   if ( this.start_dirty )
