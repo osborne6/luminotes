@@ -275,12 +275,8 @@ Editor.prototype.finish_init = function () {
     connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
     connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
   }
-  connect( this.iframe, "onblur", function ( event ) { self.blurred( event ); } );
-  connect( this.document, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
-  connect( this.document.body, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
-  connect( this.iframe.contentWindow, "onblur", function ( event ) { self.blurred( event ); } );
   connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
   connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
   connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );

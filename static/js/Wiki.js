@@ -1017,6 +1017,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   if ( this.focused_editor && this.focused_editor != editor && this.focused_editor.iframe ) {
     this.clear_pulldowns();
     removeElementClass( this.focused_editor.iframe, "focused_note_frame" );
+    this.focused_editor.blurred();
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
