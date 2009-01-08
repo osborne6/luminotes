@@ -677,7 +677,14 @@ Editor.title_placeholder_pattern = /\u200b/g;
 Editor.title_placeholder_html = "&#8203;&#8203;";
 
 Editor.prototype.empty = function () {
-  return this.contents( true ).length == 0;
+  if ( this.div )
+    var node = this.div;
+  else if ( this.document && this.document.body )
+    var node = this.document.body;
+  else
+    return true;
+
+  return ( scrapeText( node ).replace( Editor.title_placeholder_pattern, "" ).length == 0 );
 }
 
 Editor.prototype.insert_link = function ( url ) {
@@ -822,7 +829,7 @@ Editor.prototype.focus = function () {
     this.iframe.contentWindow.focus();
 }
 
-Editor.prototype.contents = function ( no_initial_text ) {
+Editor.prototype.contents = function () {
   if ( this.div ) {
     var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
     if ( static_contents )
@@ -831,9 +838,6 @@ Editor.prototype.contents = function ( no_initial_text ) {
 
   if ( this.document && this.document.body )
     return this.document.body.innerHTML;
-
-  if ( no_initial_text )
-    return "";
 
   return this.initial_text || "";
 }
