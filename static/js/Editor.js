@@ -272,6 +272,7 @@ Editor.prototype.init_iframe = function () {
     selection.selectAllChildren( last_node );
     selection.collapseToEnd();
   } else if ( this.document.selection ) { // browsers such as IE
+    // TODO: finish this for IE
     var range = this.document.selection.createRange();
   }
 }
@@ -295,6 +296,8 @@ Editor.prototype.finish_init = function () {
   connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
   connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
   connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
+  connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
+  connect( this.iframe.contentWindow, "oncut", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
 
   // handle each form submit event by forwarding it on as a custom event
   function connect_form( form ) {
