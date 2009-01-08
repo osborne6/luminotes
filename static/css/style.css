@@ -473,6 +473,7 @@ h1 {
 }
 
 #blank_note_stub {
+  -moz-border-radius: 5px;
   text-align: left;
   padding: 0.5em;
   background-color: #fafafa;
