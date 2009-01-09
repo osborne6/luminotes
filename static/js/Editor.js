@@ -963,6 +963,9 @@ Editor.prototype.shutdown = function( event ) {
 }
 
 Editor.prototype.summarize = function () {
+  if ( this.div )
+    return summarize_html( scrapeText( this.div ), this.title );
+
   if ( this.document && this.document.body )
     return summarize_html( scrapeText( this.document.body ), this.title );
 
