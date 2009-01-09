@@ -187,8 +187,9 @@ Editor.prototype.create_iframe = function ( position_after ) {
     else
       appendChildNodes( "notes", note_holder );
 
+    var self = this;
     this.set_iframe_contents( this.contents() );
-    this.resize();
+    setTimeout( function() { self.resize(); }, 1 );
     removeElementClass( this.iframe, "invisible" );
     this.enable_design_mode();
   }
