@@ -376,13 +376,18 @@ Editor.prototype.highlight = function ( scroll ) {
   var self = this;
 
   function do_highlight() {
+    if ( self.div ) {
+      new Highlight( self.div, options = { "queue": { "scope": "highlight", "limit": 1 } } );
+      return;
+    }
+
     if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight for iframes is broken in Opera
       pulsate( self.iframe, options = { "pulses": 1, "duration": 0.5 } );
     } else if ( self.iframe.contentDocument ) { // browsers such as Firefox
-      Highlight( self.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
+      new Highlight( self.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
     } else { // browsers such as IE
       if ( self.document && self.document.body )
-        Highlight( self.document.body, options = { "queue": { "scope": "highlight", "limit": 1 } } );
+        new Highlight( self.document.body, options = { "queue": { "scope": "highlight", "limit": 1 } } );
     }
   }
 
@@ -391,10 +396,12 @@ Editor.prototype.highlight = function ( scroll ) {
   this.focus();
 
   if ( scroll ) {
+    var editor_node = this.iframe || this.div;
+
     // if the editor is already completely on-screen, then there's no need to scroll
     var viewport_position = getViewportPosition();
     if ( getElementPosition( this.note_controls ).y < viewport_position.y ||
-         getElementPosition( this.iframe ).y + getElementDimensions( this.iframe ).h > viewport_position.y + getViewportDimensions().h ) {
+         getElementPosition( editor_node ).y + getElementDimensions( editor_node ).h > viewport_position.y + getViewportDimensions().h ) {
       new ScrollTo( this.note_controls, { "afterFinish": do_highlight, "duration": 0.25 } );
       return;
     }
