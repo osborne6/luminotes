@@ -174,7 +174,6 @@ Editor.prototype.create_iframe = function ( position_after ) {
 
     this.div = null;
   } else {
-    // TODO: rewrite this portion of the function as above
     this.create_note_controls();
     this.connect_note_controls();
 
@@ -189,6 +188,8 @@ Editor.prototype.create_iframe = function ( position_after ) {
       appendChildNodes( "notes", note_holder );
 
     this.set_iframe_contents( this.contents() );
+    this.resize();
+    removeElementClass( this.iframe, "invisible" );
     this.enable_design_mode();
   }
 
