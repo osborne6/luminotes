@@ -306,7 +306,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     else
       var read_write = this.notebook.read_write;
 
-    var static_note = getElement( "static_note_" + startup_note.object_id );
+    var static_note = getElement( "static_note_" + note.object_id );
     if ( !static_note ) continue;
     var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", static_note );
     if ( !static_contents ) continue;
