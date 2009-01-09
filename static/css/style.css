@@ -552,6 +552,10 @@ h1 {
   overflow-x: auto;
 }
 
+.focused_note_frame {
+  border: 2px solid black;
+}
+
 .static_note_contents {
   font-size: 90%;
   line-height: 140%;

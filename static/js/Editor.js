@@ -130,13 +130,13 @@ Editor.prototype.create_iframe = function ( position_after ) {
   this.iframe = createDOM( "iframe",
     {
       // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
-      //"src": "/static/html/blank_note.html",
+      "src": "about:blank",
       "frameBorder": "0",
       "scrolling": "no",
       "id": iframe_id,
       "name": iframe_id,
-      "class": "note_frame",
-      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
+      "class": "note_frame invisible",
+      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
     }
   );
   this.iframe.editor = this;
@@ -148,14 +148,33 @@ Editor.prototype.create_iframe = function ( position_after ) {
     this.connect_note_controls( true );
 
     disconnectAll( this.div );
+    addElementClass( static_note, "focused_note_frame" );
 
-    swapDOM( static_note, this.iframe );
+    var frame_height = elementDimensions( static_note ).h;
+    insertSiblingNodesAfter( static_note, this.iframe );
+
+    // give the invisible iframe the exact same position as the div it will replace
+    setStyle( this.iframe, { "position": "fixed" } );
+    setElementPosition( this.iframe, getElementPosition( static_note ) );
+
+    // give the iframe the note's current contents and then resize it based on the size of the div
+    this.set_iframe_contents( this.contents() );
+    this.resize( frame_height );
+
+    // make the completed iframe visible, and now remove the static div
+    removeElementClass( this.iframe, "invisible" );
+    removeElement( static_note );
+
+    // set the iframe positioning back to standard static positioning and move the note controls
+    setStyle( this.iframe, { "position": "static" } );
     insertSiblingNodesBefore( this.iframe, this.note_controls );
 
-    this.init_iframe();
+    // finally, turn on design mode so the iframe is editable
+    this.enable_design_mode();
 
     this.div = null;
   } else {
+    // TODO: rewrite this portion of the function as above
     this.create_note_controls();
     this.connect_note_controls();
 
@@ -169,10 +188,59 @@ Editor.prototype.create_iframe = function ( position_after ) {
     else
       appendChildNodes( "notes", note_holder );
 
-    this.init_iframe();
+    this.set_iframe_contents( this.contents() );
+    this.enable_design_mode();
   }
 
   this.finish_init();
+}
+
+Editor.prototype.set_iframe_contents = function ( contents_text ) {
+  if ( this.iframe.contentDocument ) { // browsers such as Firefox
+    this.document = this.iframe.contentDocument;
+  } else { // browsers such as IE
+    this.document = this.iframe.contentWindow.document;
+  }
+
+  this.document.open();
+  if ( !contents_text ) {
+    // hack: add a zero-width space to make the horizontal line under title show up in the
+    // correct position, even before there is a title
+    contents_text = "<h3>&#8203;";
+  }
+
+  this.document.write(
+    '<html><head><style>html { padding: 1em; } body { font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } ins { color: green; text-decoration: none; } ins a { color: green; } del { color: red; text-decoration: line-through; } del a { color: red; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } .button { border-style: outset; border-width: 0px; background-color: #d0e0f0; font-size: 100%; outline: none; cursor: pointer; } .button:hover { background-color: #ffcc66; } .revoke_button { margin-left: 0.5em; font-size: 90%; } .admin_button { margin-left: 0.5em; font-size: 90%; } .remove_user_button { margin-left: 0.5em; font-size: 90%; } .text_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; } .textarea_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; overflow: auto; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .radio_label { color: #000000; } .radio_label:hover { color: #ff6600; cursor: pointer; } .indented { margin-left: 1em; } .radio_table td { padding-right: 1em; } #import_notebook_table { font-size: 72%; border-collapse: collapse; border: 1px solid #999999; } #import_notebook_table td { border: 1px solid #999999; padding: 0.5em; } #import_notebook_table .heading_row { font-weight: bold; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .search_results_summary { font-size: 82%; } .invite_status { font-size: 82%; } .invite_link_area { font-size: 82%; margin-left: 2em; } .user_status { font-size: 82%; }</style>' +
+    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + contents_text + '</body></html>'
+  );
+  this.document.close();
+}
+
+Editor.prototype.enable_design_mode = function () {
+  if ( this.iframe.contentDocument ) { // browsers such as Firefox
+    if ( this.edit_enabled )
+      this.document.designMode = "On";    
+  } else { // browsers such as IE
+    if ( this.edit_enabled ) {
+      this.document.designMode = "On";   
+      // work-around for IE bug: reget the document after designMode is turned on
+      this.document = this.iframe.contentWindow.document;
+    }
+  }
+
+  // move the text cursor to the end of the text
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    var last_node = this.document.body.lastChild;
+    if ( last_node.nodeValue == "\n" && last_node.previousSibling )
+      last_node = last_node.previousSibling;
+
+    selection.selectAllChildren( last_node );
+    selection.collapseToEnd();
+  } else if ( this.document.selection ) { // browsers such as IE
+    // TODO: finish this for IE
+    var range = this.document.selection.createRange();
+  }
 }
 
 Editor.prototype.create_div = function ( position_after ) {
@@ -225,56 +293,6 @@ Editor.prototype.create_div = function ( position_after ) {
   connect( this.div, "onclick", function ( event ) { self.focused( event ); } );
 
   signal( self, "init_complete" );
-}
-
-Editor.prototype.init_iframe = function () {
-  var self = this; // necessary so that the member functions of this editor object are used
-
-  if ( this.iframe.contentDocument ) { // browsers such as Firefox
-    this.document = this.iframe.contentDocument;
-
-    if ( this.edit_enabled )
-      this.document.designMode = "On";    
-
-//    setTimeout( function () { self.finish_init(); }, 1 );
-  } else { // browsers such as IE
-    this.document = this.iframe.contentWindow.document;
-
-    if ( this.edit_enabled ) {
-      this.document.designMode = "On";   
-      // work-around for IE bug: reget the document after designMode is turned on
-      this.document = this.iframe.contentWindow.document;
-    }
-//    setTimeout( function () { self.finish_init(); }, 100 );
-  }
-
-  this.document.open();
-  var contents_text = this.contents();
-  if ( !contents_text ) {
-    // hack: add a zero-width space to make the horizontal line under title show up in the
-    // correct position, even before there is a title
-    contents_text = "<h3>&#8203;";
-  }
-
-  this.document.write(
-    '<html><head><style>html { padding: 1em; } body { font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } ins { color: green; text-decoration: none; } ins a { color: green; } del { color: red; text-decoration: line-through; } del a { color: red; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } .button { border-style: outset; border-width: 0px; background-color: #d0e0f0; font-size: 100%; outline: none; cursor: pointer; } .button:hover { background-color: #ffcc66; } .revoke_button { margin-left: 0.5em; font-size: 90%; } .admin_button { margin-left: 0.5em; font-size: 90%; } .remove_user_button { margin-left: 0.5em; font-size: 90%; } .text_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; } .textarea_field { margin-top: 0.25em; padding: 0.25em; border: #999999 1px solid; overflow: auto; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .radio_label { color: #000000; } .radio_label:hover { color: #ff6600; cursor: pointer; } .indented { margin-left: 1em; } .radio_table td { padding-right: 1em; } #import_notebook_table { font-size: 72%; border-collapse: collapse; border: 1px solid #999999; } #import_notebook_table td { border: 1px solid #999999; padding: 0.5em; } #import_notebook_table .heading_row { font-weight: bold; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .search_results_summary { font-size: 82%; } .invite_status { font-size: 82%; } .invite_link_area { font-size: 82%; margin-left: 2em; } .user_status { font-size: 82%; }</style>' +
-    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + contents_text + '</body></html>'
-  );
-  this.document.close();
-
-  // move the text cursor to the end of the text
-  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
-    var selection = this.iframe.contentWindow.getSelection();
-    var last_node = this.document.body.lastChild;
-    if ( last_node.nodeValue == "\n" && last_node.previousSibling )
-      last_node = last_node.previousSibling;
-
-    selection.selectAllChildren( last_node );
-    selection.collapseToEnd();
-  } else if ( this.document.selection ) { // browsers such as IE
-    // TODO: finish this for IE
-    var range = this.document.selection.createRange();
-  }
 }
 
 Editor.prototype.finish_init = function () {
@@ -336,7 +354,6 @@ Editor.prototype.finish_init = function () {
     this.exec_command( "insertbronreturn", true );
   }
 
-  this.resize();
   if ( this.init_highlight ) self.highlight();
 
   this.scrape_title();
@@ -420,21 +437,25 @@ Editor.prototype.query_command_value = function ( command ) {
 }
 
 // resize the editor's frame to fit the dimensions of its content
-Editor.prototype.resize = function () {
+Editor.prototype.resize = function ( height ) {
   if ( !this.document ) return;
+  var FRAME_BORDER_HEIGHT = 4; // 2 pixels at the top and 2 at the bottom
 
-  var height;
-
-  if ( WEBKIT ) {
-    var self = this;
-    withDocument( this.document, function () {
-      var body = getFirstElementByTagAndClassName( "body" );
-      height = elementDimensions( body ).h;
-    } );
-  } else if ( this.iframe.contentDocument ) { // Gecko and other sane browsers
-    height = elementDimensions( this.document.documentElement ).h;
-  } else { // IE
-    height = this.document.body.scrollHeight;
+  if ( height ) {
+    height -= FRAME_BORDER_HEIGHT;
+  // if no height is given, get the height from this editor's document body
+  } else {
+    if ( WEBKIT ) {
+      var self = this;
+      withDocument( this.document, function () {
+        var body = getFirstElementByTagAndClassName( "body" );
+        height = elementDimensions( body ).h;
+      } );
+    } else if ( this.iframe.contentDocument ) { // Gecko and other sane browsers
+      height = elementDimensions( this.document.documentElement ).h;
+    } else { // IE
+      height = this.document.body.scrollHeight;
+    }
   }
 
   setElementDimensions( this.iframe, { "h": height } );
