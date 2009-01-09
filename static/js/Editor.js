@@ -929,24 +929,35 @@ Editor.prototype.current_node_names = function () {
 Editor.prototype.shutdown = function( event ) {
   signal( this, "title_changed", this, this.title, null );
   this.closed = true;
-  var iframe = this.iframe;
   var note_controls = this.note_controls;
-  disconnectAll( this );
-  disconnectAll( this.delete_button );
-  disconnectAll( this.changes_button );
-  disconnectAll( this.options_button );
-  disconnectAll( this.hide_button );
-  disconnectAll( iframe );
+
+  if ( this.iframe ) {
+    var iframe = this.iframe;
+    this.iframe = null;
+    disconnectAll( this );
+    disconnectAll( this.delete_button );
+    disconnectAll( this.changes_button );
+    disconnectAll( this.options_button );
+    disconnectAll( this.hide_button );
+    disconnectAll( iframe );
+    var editor_node = iframe;
+  }
 
   if ( this.document ) {
     disconnectAll( this.document.body );
     disconnectAll( this.document );
   }
 
-  blindUp( iframe, options = { "duration": 0.25, afterFinish: function () {
+  if ( this.div ) {
+    disconnectAll( this.div );
+    var editor_node = this.div;
+    this.div = null;
+  }
+
+  blindUp( editor_node, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( note_controls );
-      removeElement( iframe );
+      removeElement( editor_node );
     } catch ( e ) { }
   } } );
 }
