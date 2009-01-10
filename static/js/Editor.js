@@ -299,7 +299,7 @@ Editor.prototype.create_div = function ( position_after ) {
 }
 
 Editor.prototype.connect_handlers = function () {
-  if ( this.edit_enabled ) {
+  if ( this.document && this.document.body ) {
     // since the browser may subtly tweak the html when it's inserted, save off the browser's version
     // of the html here. this yields more accurate comparisons within the dirty() method
     if ( this.start_dirty )
@@ -311,8 +311,7 @@ Editor.prototype.connect_handlers = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 
   if ( this.div ) {
-    connect( this.div, "onfocus", function ( event ) { self.focused( event ); } );
-    connect( this.div, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.div, "onclick", function ( event ) { self.focused( event ); self.mouse_clicked( event ); } );
     connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
   } else {
@@ -867,10 +866,8 @@ Editor.prototype.find_link_at_cursor = function () {
 }
 
 Editor.prototype.focus = function () {
-  if ( this.div ) {
-    this.div.focus();
+  if ( this.div )
     return;
-  }
 
   if ( OPERA )
     this.iframe.focus();
