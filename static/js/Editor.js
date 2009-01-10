@@ -1,6 +1,7 @@
 GECKO = /Gecko/.test( navigator.userAgent ) && !/like Gecko/.test( navigator.userAgent );
 WEBKIT = /WebKit/.test( navigator.userAgent );
 IE6 = /MSIE 6\.0/.test( navigator.userAgent );
+OPERA = /Opera/.test( navigator.userAgent );
 
 
 function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty, own_notes_only ) {
@@ -27,7 +28,7 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.title = "";
 
   // if the Editor is to be focused, create an editable iframe. otherwise just create a static div
-  if ( highlight || focus )
+  if ( ( highlight || focus ) && this.edit_enabled )
     this.create_iframe( position_after );
   else
     this.create_div( position_after );
@@ -194,7 +195,7 @@ Editor.prototype.create_iframe = function ( position_after ) {
     this.enable_design_mode();
   }
 
-  this.finish_init();
+  this.connect_handlers();
 }
 
 Editor.prototype.set_iframe_contents = function ( contents_text ) {
@@ -255,7 +256,7 @@ Editor.prototype.create_div = function ( position_after ) {
     this.connect_note_controls( true );
     this.div = static_note_div;
     this.scrape_title();
-    connect( this.div, "onclick", function ( event ) { self.focused( event ); } );
+    this.connect_handlers();
     return;
   }
 
@@ -292,32 +293,42 @@ Editor.prototype.create_div = function ( position_after ) {
   }
 
   this.scrape_title();
-  connect( this.div, "onclick", function ( event ) { self.focused( event ); } );
+  this.connect_handlers();
 
   signal( self, "init_complete" );
 }
 
-Editor.prototype.finish_init = function () {
-  // since the browser may subtly tweak the html when it's inserted, save off the browser's version
-  // of the html here. this yields more accurate comparisons within the dirty() method
-  if ( this.start_dirty )
-    this.initial_text = "";
-  else
-    this.initial_text = this.document.body.innerHTML;
+Editor.prototype.connect_handlers = function () {
+  if ( this.edit_enabled ) {
+    // since the browser may subtly tweak the html when it's inserted, save off the browser's version
+    // of the html here. this yields more accurate comparisons within the dirty() method
+    if ( this.start_dirty )
+      this.initial_text = "";
+    else
+      this.initial_text = this.document.body.innerHTML;
+  }
 
   var self = this; // necessary so that the member functions of this editor object are used
-  if ( this.edit_enabled ) {
-    connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
-    connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
+
+  if ( this.div ) {
+    connect( this.div, "onfocus", function ( event ) { self.focused( event ); } );
+    connect( this.div, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
+    connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
+  } else {
+    if ( this.edit_enabled ) {
+      connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
+      connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
+    }
+    connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
+    connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
+    connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
+    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
+    connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
+    connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
+    connect( this.iframe.contentWindow, "oncut", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
   }
-  connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
-  connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
-  connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
-  connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
-  connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
-  connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
-  connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
-  connect( this.iframe.contentWindow, "oncut", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
 
   // handle each form submit event by forwarding it on as a custom event
   function connect_form( form ) {
@@ -351,7 +362,7 @@ Editor.prototype.finish_init = function () {
   }
 
   // browsers such as Firefox, but not Opera
-  if ( this.iframe.contentDocument && !/Opera/.test( navigator.userAgent ) && this.edit_enabled ) {
+  if ( !OPERA && this.iframe && this.iframe.contentDocument && this.edit_enabled ) {
     this.exec_command( "styleWithCSS", false );
     this.exec_command( "insertbronreturn", true );
   }
@@ -362,10 +373,12 @@ Editor.prototype.finish_init = function () {
   if ( this.init_focus ) {
     this.focus();
 
-    // special-case: focus any username field
-    var username = withDocument( this.document, function () { return getElement( "username" ); } );
-    if ( username )
-      username.focus();
+    // special-case: focus any username field found within this div
+    if ( this.div ) {
+      var username = getElement( "username" );
+      if ( username && isChildNode( username, this.div ) )
+        username.focus();
+    }
   }
 
   signal( self, "init_complete" );
@@ -383,7 +396,7 @@ Editor.prototype.highlight = function ( scroll ) {
       return;
     }
 
-    if ( /Opera/.test( navigator.userAgent ) ) { // MochiKit's Highlight for iframes is broken in Opera
+    if ( OPERA ) { // MochiKit's Highlight for iframes is broken in Opera
       pulsate( self.iframe, options = { "pulses": 1, "duration": 0.5 } );
     } else if ( self.iframe.contentDocument ) { // browsers such as Firefox
       new Highlight( self.iframe, options = { "queue": { "scope": "highlight", "limit": 1 } } );
@@ -691,7 +704,8 @@ Editor.prototype.scrape_title = function () {
 }
 
 Editor.prototype.focused = function () {
-  this.create_iframe();
+  if ( this.edit_enabled )
+    this.create_iframe();
 
   signal( this, "focused", this );
 }
@@ -853,7 +867,12 @@ Editor.prototype.find_link_at_cursor = function () {
 }
 
 Editor.prototype.focus = function () {
-  if ( /Opera/.test( navigator.userAgent ) )
+  if ( this.div ) {
+    this.div.focus();
+    return;
+  }
+
+  if ( OPERA )
     this.iframe.focus();
   else
     this.iframe.contentWindow.focus();

@@ -1022,9 +1022,8 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
 }
 
 Wiki.prototype.editor_focused = function ( editor, synchronous ) {
-  if ( editor ) {
-    addElementClass( editor.iframe, "focused_note_frame" );
-  }
+  if ( editor )
+    addElementClass( editor.iframe || editor.div, "focused_note_frame" );
 
   if ( this.focused_editor && this.focused_editor != editor && this.focused_editor.iframe ) {
     this.clear_pulldowns();
