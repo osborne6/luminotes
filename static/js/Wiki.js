@@ -533,13 +533,10 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
   // if the note corresponding to the link's id is already open, highlight it and bail, but only if
   // we didn't pull a title from an open link pulldown
   if ( !pulldown_title ) {
-    if ( revision )
-      var iframe = getElement( "note_" + note_id + " " + revision );
-    else
-      var iframe = getElement( "note_" + note_id );
+    var editor = editor_by_id( note_id, revision );
 
-    if ( iframe ) {
-      iframe.editor.highlight();
+    if ( editor ) {
+      editor.highlight();
       if ( link )
         link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + note_id;
       return;
@@ -1022,13 +1019,9 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
 }
 
 Wiki.prototype.editor_focused = function ( editor, synchronous ) {
-  if ( editor )
-    addElementClass( editor.iframe || editor.div, "focused_note_frame" );
-
   if ( this.focused_editor && this.focused_editor != editor && this.focused_editor.iframe ) {
     this.clear_pulldowns();
-    removeElementClass( this.focused_editor.iframe, "focused_note_frame" );
-    this.focused_editor.blurred();
+    this.focused_editor.blur();
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
@@ -1762,10 +1755,9 @@ Wiki.prototype.submit_form = function ( form ) {
       else
         self.display_message( "The note is already at that revision." );
 
-      var frame = getElement( "note_" + form.note_id.value );
+      var editor = editor_by_id( form.note_id.value );
 
-      if ( frame ) {
-        var editor = frame.editor;
+      if ( editor ) {
         self.update_editor_revisions( result, editor );
         editor.mark_clean();
 
@@ -3311,10 +3303,10 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
 
   // if this link has an actual destination note id set, then see if that note is already open. if
   // so, display its title and a summary of its contents
-  var iframe = getElement( "note_" + id );
-  if ( iframe ) {
-    this.title_field.value = iframe.editor.title;
-    this.display_summary( iframe.editor.title, iframe.editor.summarize() );
+  var destination_editor = editor_by_id( id );
+  if ( destination_editor ) {
+    this.title_field.value = destination_editor.title;
+    this.display_summary( destination_editor.title, destination_editor.summarize() );
     Pulldown.prototype.finish_init.call( this );
     return;
   }
@@ -4686,9 +4678,9 @@ Note_tree.prototype.save_and_display_startup_note = function ( note ) {
 
   // mark the note as a startup note on the client
   this.wiki.startup_notes[ note.object_id ] = true;
-  var frame = getElement( "note_" + note.object_id );
-  if ( frame )
-    frame.editor.startup = true;
+  var editor = editor_by_id( note.object_id );
+  if ( editor )
+    editor.startup = true;
 
   // save the note as a startup note on the server, and then add it to the note tree
   var self = this;

@@ -149,8 +149,6 @@ Editor.prototype.create_iframe = function ( position_after ) {
     this.connect_note_controls( true );
 
     disconnectAll( this.div );
-    addElementClass( static_note, "focused_note_frame" );
-
     var frame_height = elementDimensions( static_note ).h;
     insertSiblingNodesAfter( static_note, this.iframe );
 
@@ -265,6 +263,7 @@ Editor.prototype.create_div = function ( position_after ) {
   this.div = createDOM(
     "div", { "class": "static_note_div", "id": "static_note_" + this.id }, static_contents
   );
+  this.div.editor = this;
 
   // if there is already an iframe open for this editor, replace it with the new static note div
   if ( getElement( "note_" + this.id ) ) {
@@ -311,7 +310,7 @@ Editor.prototype.connect_handlers = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 
   if ( this.div ) {
-    connect( this.div, "onclick", function ( event ) { self.focused( event ); self.mouse_clicked( event ); } );
+    connect( this.div, "onclick", function ( event ) { self.focus( event ); self.mouse_clicked( event ); } );
     connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
   } else {
@@ -319,10 +318,7 @@ Editor.prototype.connect_handlers = function () {
       connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
       connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
     }
-    connect( this.document, "onfocus", function ( event ) { self.focused( event ); } );
-    connect( this.document.body, "onfocus", function ( event ) { self.focused( event ); } );
-    connect( this.iframe.contentWindow, "onfocus", function ( event ) { self.focused( event ); } );
-    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.document, "onclick", function ( event ) { self.focus(); self.mouse_clicked( event ); } );
     connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
     connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
@@ -366,11 +362,13 @@ Editor.prototype.connect_handlers = function () {
     this.exec_command( "insertbronreturn", true );
   }
 
-  if ( this.init_highlight ) self.highlight();
+  if ( this.init_highlight && this.iframe )
+    this.highlight();
 
   this.scrape_title();
   if ( this.init_focus ) {
-    this.focus();
+    if ( this.iframe )
+      this.focus();
 
     // special-case: focus any username field found within this div
     if ( this.div ) {
@@ -702,19 +700,6 @@ Editor.prototype.scrape_title = function () {
   this.title = title;
 }
 
-Editor.prototype.focused = function () {
-  if ( this.edit_enabled )
-    this.create_iframe();
-
-  signal( this, "focused", this );
-}
-
-Editor.prototype.blurred = function () {
-  this.scrape_title();
-
-  this.create_div();
-}
-
 Editor.title_placeholder_char = "\u200b";
 Editor.title_placeholder_pattern = /\u200b/g;
 Editor.title_placeholder_html = "&#8203;&#8203;";
@@ -866,13 +851,26 @@ Editor.prototype.find_link_at_cursor = function () {
 }
 
 Editor.prototype.focus = function () {
-  if ( this.div )
-    return;
+  if ( this.div && this.edit_enabled )
+      this.create_iframe();
 
-  if ( OPERA )
-    this.iframe.focus();
-  else
-    this.iframe.contentWindow.focus();
+  addElementClass( this.div || this.iframe, "focused_note_frame" );
+
+  if ( this.iframe ) {
+    if ( OPERA )
+      this.iframe.focus();
+    else
+      this.iframe.contentWindow.focus();
+  }
+
+  signal( this, "focused", this );
+}
+
+Editor.prototype.blur = function () {
+  this.scrape_title();
+  this.create_div();
+
+  removeElementClass( this.div || this.iframe, "focused_note_frame" );
 }
 
 Editor.prototype.contents = function () {
@@ -1096,4 +1094,21 @@ function link_title( link, query ) {
 
 function normalize_title( title ) {
   return title.replace( Editor.title_placeholder_pattern, "" ) || "untitled note";
+}
+
+function editor_by_id( note_id, revision ) {
+  if ( revision )
+    var iframe = getElement( "note_" + note_id + " " + revision );
+  else
+    var iframe = getElement( "note_" + note_id );
+
+  if ( iframe )
+    return iframe.editor;
+
+  var div = getElement( "static_note_" + note_id );
+
+  if ( div )
+    return div.editor;
+
+  return null;
 }
