@@ -310,7 +310,7 @@ Editor.prototype.connect_handlers = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 
   if ( this.div ) {
-    connect( this.div, "onclick", function ( event ) { self.focus( event ); self.mouse_clicked( event ); } );
+    connect( this.div, "onclick", function ( event ) { self.mouse_clicked( event ); } );
     connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
   } else {
@@ -318,7 +318,7 @@ Editor.prototype.connect_handlers = function () {
       connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
       connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
     }
-    connect( this.document, "onclick", function ( event ) { self.focus(); self.mouse_clicked( event ); } );
+    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
     connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
     connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
@@ -640,6 +640,10 @@ Editor.prototype.mouse_clicked = function ( event ) {
   }
 
   var link_clicked = handle_click( event );
+
+  // if no link was clicked, then just focus the clicked editor
+  if ( !link_clicked )
+    this.focus();
 
   // in case the cursor has moved, update the state
   if ( this.edit_enabled )
