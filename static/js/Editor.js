@@ -873,7 +873,7 @@ Editor.prototype.find_link_at_cursor = function () {
 
 Editor.prototype.focus = function () {
   if ( this.div && this.edit_enabled )
-      this.create_iframe();
+    this.create_iframe();
 
   addElementClass( this.div || this.iframe, "focused_note_frame" );
 
