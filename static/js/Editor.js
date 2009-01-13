@@ -362,11 +362,14 @@ Editor.prototype.connect_handlers = function () {
     this.exec_command( "insertbronreturn", true );
   }
 
-  if ( this.init_highlight && this.iframe )
+  if ( this.init_highlight ) {
     this.highlight();
+    this.init_highlight = false;
+  }
 
   this.scrape_title();
   if ( this.init_focus ) {
+    this.init_focus = false;
     if ( this.iframe )
       this.focus();
 
