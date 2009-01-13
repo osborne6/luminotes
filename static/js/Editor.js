@@ -107,16 +107,26 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
   }
 
   var self = this;
-  if ( this.delete_button )
+  if ( this.delete_button ) {
+    disconnectAll( this.delete_button );
     connect( this.delete_button, "onclick", function ( event ) { signal( self, "delete_clicked", event ); } );
-  if ( this.undelete_button )
+  }
+  if ( this.undelete_button ) {
+    disconnectAll( this.undelete_button );
     connect( this.undelete_button, "onclick", function ( event ) { signal( self, "undelete_clicked", event ); } );
-  if ( this.changes_button )
+  }
+  if ( this.changes_button ) {
+    disconnectAll( this.changes_button );
     connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
-  if ( this.options_button )
+  }
+  if ( this.options_button ) {
+    disconnectAll( this.options_button );
     connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
-  if ( this.hide_button )
+  }
+  if ( this.hide_button ) {
+    disconnectAll( this.hide_button );
     connect( this.hide_button, "onclick", function ( event ) { signal( self, "hide_clicked", event ); } );
+  }
 }
 
 Editor.prototype.create_iframe = function ( position_after ) {
