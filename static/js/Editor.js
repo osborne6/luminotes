@@ -479,13 +479,7 @@ Editor.prototype.resize = function ( height ) {
     height -= FRAME_BORDER_HEIGHT;
   // if no height is given, get the height from this editor's document body
   } else {
-    if ( WEBKIT ) {
-      var self = this;
-      withDocument( this.document, function () {
-        var body = getFirstElementByTagAndClassName( "body" );
-        height = elementDimensions( body ).h;
-      } );
-    } else if ( this.iframe.contentDocument ) { // Gecko and other sane browsers
+    if ( this.iframe.contentDocument && !WEBKIT ) { // Gecko and other sane browsers
       height = elementDimensions( this.document.documentElement ).h;
     } else { // IE
       height = this.document.body.scrollHeight;
