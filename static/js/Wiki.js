@@ -1019,19 +1019,21 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
 }
 
 Wiki.prototype.editor_focused = function ( editor, synchronous ) {
-  if ( this.focused_editor && this.focused_editor != editor && this.focused_editor.iframe ) {
-    this.clear_pulldowns();
+  if ( this.focused_editor && this.focused_editor != editor ) {
     this.focused_editor.blur();
+    this.clear_pulldowns();
 
-    // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
-    if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
-      signal( this, "note_removed", this.focused_editor.id );
-      this.focused_editor.shutdown();
-      this.decrement_total_notes_count();
-      this.display_empty_message();
-    } else {
-      // when switching editors, save the one being left
-      this.save_editor( null, null, null, synchronous );
+    if ( this.focused_editor.iframe ) {
+      // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
+      if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
+        signal( this, "note_removed", this.focused_editor.id );
+        this.focused_editor.shutdown();
+        this.decrement_total_notes_count();
+        this.display_empty_message();
+      } else {
+        // when switching editors, save the one being left
+        this.save_editor( null, null, null, synchronous );
+      }
     }
   }
 
