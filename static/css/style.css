@@ -633,6 +633,8 @@ h1 {
 }
 
 .static_note_contents .button {
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
