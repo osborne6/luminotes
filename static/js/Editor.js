@@ -1131,8 +1131,12 @@ function editor_by_id( note_id, revision ) {
 
   var div = getElement( "static_note_" + note_id );
 
-  if ( div )
+  if ( div ) {
+    if ( revision && div.editor && div.editor.revision != revision )
+      return null;
+
     return div.editor;
+  }
 
   return null;
 }
