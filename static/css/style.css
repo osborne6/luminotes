@@ -535,10 +535,6 @@ h1 {
   overflow-x: auto;
 }
 
-.focused_note_frame {
-  border: 2px solid black;
-}
-
 .static_note_div {
   -moz-border-radius: 5px;
   display: block;
