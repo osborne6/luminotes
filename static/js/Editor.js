@@ -981,6 +981,9 @@ Editor.prototype.shutdown = function( event ) {
     this.div = null;
   }
 
+  if ( !editor_node )
+    return;
+
   blindUp( editor_node, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( note_controls );
