@@ -653,6 +653,10 @@ Editor.prototype.mouse_clicked = function ( event ) {
 HOVER_DURATION_MILLISECONDS = 1000;
 
 Editor.prototype.mouse_hovered = function ( event ) {
+  // ignore mouse hover events for static div notes
+  if ( this.div )
+    return;
+
   // search through the tree of elements containing the hover target for a link
   var link = event.target()
   if ( !link ) false;
