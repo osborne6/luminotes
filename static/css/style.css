@@ -542,7 +542,7 @@ h1 {
 .static_note_div {
   -moz-border-radius: 5px;
   display: block;
-  padding: 1.5em 1em 1em 1.5em;
+  padding: 1.5em 1.25em 1em 1.5em;
   font-family: sans-serif;
   overflow: hidden;
   border: 2px solid #999999;
