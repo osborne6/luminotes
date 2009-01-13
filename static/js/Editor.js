@@ -147,7 +147,7 @@ Editor.prototype.create_iframe = function ( position_after ) {
       "id": iframe_id,
       "name": iframe_id,
       "class": "note_frame invisible",
-      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); },
+      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
     }
   );
   this.iframe.editor = this;
