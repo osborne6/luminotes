@@ -1752,11 +1752,6 @@ Wiki.prototype.submit_form = function ( form ) {
     }
   } else if ( url == "/notebooks/revert_note" ) {
     callback = function ( result ) {
-      if ( result.new_revision )
-        self.display_message( "The note has been reverted to an earlier revision." );
-      else
-        self.display_message( "The note is already at that revision." );
-
       var editor = editor_by_id( form.note_id.value );
 
       if ( editor ) {
@@ -1764,7 +1759,11 @@ Wiki.prototype.submit_form = function ( form ) {
         editor.mark_clean();
 
         if ( result.new_revision ) {
-          editor.document.body.innerHTML = result.contents;
+          if ( editor.document && editor.document.body )
+            editor.document.body.innerHTML = result.contents;
+          else if ( editor.div )
+            editor.div.innerHTML = result.contents;
+
           editor.resize();
           editor.scrape_title();
         }
@@ -1772,9 +1771,14 @@ Wiki.prototype.submit_form = function ( form ) {
         editor.highlight();
 
         signal( self, "note_saved", editor );
-      } else {
-        self.load_editor( "Note not found.", form.note_id.value );
       }
+
+      if ( result.new_revision )
+        self.display_message( "The note has been reverted to an earlier revision.", [],
+                               editor && ( editor.iframe || editor.div ) || null );
+      else
+        self.display_message( "The note is already at that revision.", [],
+                              editor && ( editor.iframe || editor.div ) || null );
 
       self.display_storage_usage( result.storage_bytes );
     }
@@ -2548,7 +2552,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
   else if ( this.focused_editor )
-    insertSiblingNodesAfter( this.focused_editor.iframe, div )
+    insertSiblingNodesAfter( this.focused_editor.iframe || this.focused_editor.div, div )
   else
     appendChildNodes( "notes", div );
 

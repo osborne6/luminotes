@@ -337,6 +337,7 @@ Editor.prototype.connect_handlers = function () {
 
   // handle each form submit event by forwarding it on as a custom event
   function connect_form( form ) {
+    disconnectAll( form );
     connect( form, "onsubmit", function ( event ) {
       signal( self, "submit_form", form );
       event.stop();
@@ -351,6 +352,7 @@ Editor.prototype.connect_handlers = function () {
 
   // connect each (non-submit) button to issue an event
   function connect_button( button ) {
+    disconnectAll( button );
     connect( button, "onclick", function ( event ) {
       signal( self, "button_clicked", this, button );
       event.stop();
