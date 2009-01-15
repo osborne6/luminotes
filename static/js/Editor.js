@@ -181,7 +181,6 @@ Editor.prototype.create_iframe = function ( position_after ) {
 
     // finally, turn on design mode so the iframe is editable
     this.enable_design_mode();
-
     this.div = null;
   } else {
     this.create_note_controls();
@@ -201,10 +200,20 @@ Editor.prototype.create_iframe = function ( position_after ) {
     this.set_iframe_contents( this.contents() );
     setTimeout( function() { self.resize(); }, 1 );
     removeElementClass( this.iframe, "invisible" );
+
     this.enable_design_mode();
   }
 
-  this.connect_handlers();
+  function finish_init() {
+    self.position_cursor();
+    self.connect_handlers();
+  }
+
+  // this small delay gives IE enough lag time after design mode is enabled to setup document.body
+  if ( MSIE )
+    setTimeout( finish_init, 1 );
+  else
+    finish_init();
 }
 
 Editor.prototype.set_iframe_contents = function ( contents_text ) {
@@ -247,6 +256,24 @@ Editor.prototype.enable_design_mode = function () {
       this.document = this.iframe.contentWindow.document;
     }
   }
+}
+
+Editor.prototype.position_cursor = function () {
+  if ( this.init_focus ) {
+    this.init_focus = false;
+    if ( this.iframe )
+      this.focus();
+
+    // special-case: focus any username field found within this div
+    if ( this.div ) {
+      var username = getElement( "username" );
+      if ( username && isChildNode( username, this.div ) )
+        username.focus();
+    }
+  }
+
+  if ( this.div )
+    return;
 
   // move the text cursor to the end of the text
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
@@ -258,8 +285,9 @@ Editor.prototype.enable_design_mode = function () {
     selection.selectAllChildren( last_node );
     selection.collapseToEnd();
   } else if ( this.document.selection ) { // browsers such as IE
-    // TODO: finish this for IE
     var range = this.document.selection.createRange();
+    range.move( "textedit" );
+    range.select();
   }
 }
 
@@ -273,6 +301,7 @@ Editor.prototype.create_div = function ( position_after ) {
     this.connect_note_controls( true );
     this.div = static_note_div;
     this.scrape_title();
+    this.position_cursor();
     this.connect_handlers();
     return;
   }
@@ -311,6 +340,7 @@ Editor.prototype.create_div = function ( position_after ) {
   }
 
   this.scrape_title();
+  this.position_cursor();
   this.connect_handlers();
 
   signal( self, "init_complete" );
@@ -659,13 +689,16 @@ Editor.prototype.mouse_clicked = function ( event ) {
 
   var link_clicked = handle_click( event );
 
-  // if no link was clicked, then just focus the clicked editor
-  if ( !link_clicked )
-    this.focus();
+  if ( this.edit_enabled ) {
+    // if no link was clicked, then make the clicked editor into an iframe
+    if ( !link_clicked && this.div ) {
+      this.init_focus = true;
+      this.create_iframe();
+    }
 
-  // in case the cursor has moved, update the state
-  if ( this.edit_enabled )
+    // in case the cursor has moved, update the state
     signal( this, "state_changed", this, link_clicked );
+  }
 }
 
 HOVER_DURATION_MILLISECONDS = 1000;
