@@ -130,7 +130,7 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
   }
 }
 
-Editor.prototype.create_iframe = function ( position_after ) {
+Editor.prototype.create_iframe = function ( position_after, click_x, click_y ) {
   var iframe_id = "note_" + this.id;
 
   // if there is already an iframe for this Editor, bail
@@ -205,7 +205,7 @@ Editor.prototype.create_iframe = function ( position_after ) {
   }
 
   function finish_init() {
-    self.position_cursor();
+    self.position_cursor( click_x, click_y );
     self.connect_handlers();
   }
 
@@ -258,7 +258,7 @@ Editor.prototype.enable_design_mode = function () {
   }
 }
 
-Editor.prototype.position_cursor = function () {
+Editor.prototype.position_cursor = function ( click_x, click_y ) {
   if ( this.init_focus ) {
     this.init_focus = false;
     if ( this.iframe )
@@ -275,7 +275,24 @@ Editor.prototype.position_cursor = function () {
   if ( this.div )
     return;
 
-  // move the text cursor to the end of the text
+  // if requested, move the text cursor to a specific location
+  if ( click_x && click_y ) {
+    var FRAME_BORDER_WIDTH = 2;
+
+    if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    } else if ( this.document.selection ) { // browsers such as IE
+      var range = this.document.selection.createRange();
+      range.moveToPoint(
+        click_x - this.iframe.offsetLeft - FRAME_BORDER_WIDTH,
+        click_y - this.iframe.offsetTop - FRAME_BORDER_WIDTH
+      );
+      range.select();
+    }
+
+    return;
+  }
+
+  // otherwise, just move the text cursor to the end of the text
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
     var last_node = this.document.body.lastChild;
@@ -512,10 +529,10 @@ Editor.prototype.query_command_value = function ( command ) {
 // resize the editor's frame to fit the dimensions of its content
 Editor.prototype.resize = function ( height ) {
   if ( !this.document ) return;
-  var FRAME_BORDER_HEIGHT = 4; // 2 pixels at the top and 2 at the bottom
+  var FRAME_BORDER_HEIGHT = 2;
 
   if ( height ) {
-    height -= FRAME_BORDER_HEIGHT;
+    height -= FRAME_BORDER_HEIGHT * 2; // 2 pixels at the top and 2 at the bottom
   // if no height is given, get the height from this editor's document body
   } else {
     if ( this.iframe.contentDocument && !WEBKIT ) { // Gecko and other sane browsers
@@ -693,7 +710,11 @@ Editor.prototype.mouse_clicked = function ( event ) {
     // if no link was clicked, then make the clicked editor into an iframe
     if ( !link_clicked && this.div ) {
       this.init_focus = true;
-      this.create_iframe();
+      this.create_iframe(
+        null,
+        event.x || window.event.x,
+        event.y || window.event.y
+      );
     }
 
     // in case the cursor has moved, update the state
