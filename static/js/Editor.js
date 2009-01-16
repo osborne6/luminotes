@@ -280,6 +280,7 @@ Editor.prototype.position_cursor = function ( click_position ) {
     var FRAME_BORDER_WIDTH = 2;
 
     if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+      // TODO
     } else if ( this.document.selection ) { // browsers such as IE
       var range = this.document.selection.createRange();
       range.moveToPoint(
@@ -535,7 +536,7 @@ Editor.prototype.resize = function ( height ) {
     height -= FRAME_BORDER_HEIGHT * 2; // 2 pixels at the top and 2 at the bottom
   // if no height is given, get the height from this editor's document body
   } else {
-    if ( this.iframe.contentDocument && !WEBKIT ) { // Gecko and other sane browsers
+    if ( this.iframe && this.iframe.contentDocument && !WEBKIT ) { // Gecko and other sane browsers
       height = elementDimensions( this.document.documentElement ).h;
     } else { // IE
       height = this.document.body.scrollHeight;
