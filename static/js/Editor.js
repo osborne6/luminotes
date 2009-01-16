@@ -1032,7 +1032,9 @@ Editor.prototype.shutdown = function( event ) {
 
   if ( this.iframe ) {
     var iframe = this.iframe;
-    this.iframe = null;
+    // keeping a reference to the iframe allows removeElement( editor_node ) below to work in IE 6
+    if ( !MSIE6 )
+      this.iframe = null;
     disconnectAll( this );
     disconnectAll( this.delete_button );
     disconnectAll( this.changes_button );
