@@ -25,10 +25,10 @@ with Luminotes.com. If you plan on using this synchronization feature when
 it's available, then you should click "Unblock". Otherwise, you can safely
 click "Keep Blocking".
 
- * File storage: In case you're curious, your notes are stored within the
-%APPDATA%\Luminotes folder in a database file. Attached files are stored with
-the %APPDATA\Luminotes\files folder. (It is not recommended that you modify
-or copy these files.)
+ * File storage: In case you're curious, your notes are stored within
+the %APPDATA%\Luminotes folder in a database file. Attached files are stored
+within the %APPDATA\Luminotes\files folder. (It is not recommended that you
+modify or copy these files.)
 
  * USB drive: If you'd like to run Luminotes from a USB drive, then when the
 Luminotes Desktop installer prompts you to select the installation destination
