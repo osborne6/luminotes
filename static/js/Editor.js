@@ -142,7 +142,7 @@ Editor.prototype.create_iframe = function ( position_after, click_position ) {
   this.iframe = createDOM( "iframe",
     {
       // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
-      "src": "about:blank",
+      "src": MSIE6 && "/static/html/blank.html" || "about:blank",
       "frameBorder": "0",
       "scrolling": "no",
       "id": iframe_id,
@@ -278,15 +278,14 @@ Editor.prototype.position_cursor = function ( click_position ) {
   // if requested, move the text cursor to a specific location
   if ( click_position ) {
     var FRAME_BORDER_WIDTH = 2;
+    click_position.x -= this.iframe.offsetLeft + FRAME_BORDER_WIDTH;
+    click_position.y -= this.iframe.offsetTop + FRAME_BORDER_WIDTH;
 
     if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
       // TODO
     } else if ( this.document.selection ) { // browsers such as IE
       var range = this.document.selection.createRange();
-      range.moveToPoint(
-        click_position.x - this.iframe.offsetLeft - FRAME_BORDER_WIDTH,
-        click_position.y - this.iframe.offsetTop - FRAME_BORDER_WIDTH
-      );
+      range.moveToPoint( click_position.x, click_position.y );
       range.select();
     }
 
