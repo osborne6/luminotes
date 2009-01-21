@@ -285,7 +285,6 @@ Editor.prototype.set_iframe_contents = function ( contents_text ) {
 }
 
 Editor.prototype.enable_design_mode = function () {
-  console.log( "design mode:", this.document.designMode );
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
     if ( this.edit_enabled )
       this.document.designMode = "On";    
