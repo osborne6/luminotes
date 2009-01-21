@@ -773,6 +773,10 @@ h1 {
 
 .invisible {
   visibility: hidden;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
 }
 
 .undisplayed {

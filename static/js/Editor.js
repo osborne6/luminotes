@@ -4,6 +4,15 @@ MSIE6 = /MSIE 6\.0/.test( navigator.userAgent );
 MSIE = /MSIE/.test( navigator.userAgent );
 OPERA = /Opera/.test( navigator.userAgent );
 
+REUSABLE_IFRAME = createDOM( "iframe",
+  {
+    // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
+    "src": MSIE6 && "/static/html/blank.html" || "about:blank",
+    "frameBorder": "0",
+    "scrolling": "no",
+    "class": "note_frame invisible"
+  }
+);
 
 function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty, own_notes_only ) {
   this.id = id;
@@ -28,11 +37,53 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.div = null;
   this.title = "";
 
+  this.create_div( position_after );
+
   // if the Editor is to be focused, create an editable iframe. otherwise just create a static div
   if ( ( highlight || focus ) && this.edit_enabled )
-    this.create_iframe( position_after );
+    this.claim_iframe( position_after );
+}
+
+Editor.prototype.create_div = function ( position_after ) {
+  var self = this;
+
+  // if there is already a static note div for this Editor, connect up the note controls and bail
+  var static_note_div = getElement( "static_note_" + this.id );
+  if ( static_note_div ) {
+    this.note_controls = getElement( "note_controls_" + this.id );
+    this.connect_note_controls( true );
+    this.div = static_note_div;
+    this.scrape_title();
+    this.focus_default_text_field();
+    this.connect_handlers();
+    return;
+  }
+
+  var static_contents = createDOM( "span", { "class": "static_note_contents" } );
+  static_contents.innerHTML = this.contents();
+  this.div = createDOM(
+    "div", { "class": "static_note_div", "id": "static_note_" + this.id }, static_contents
+  );
+  this.div.editor = this;
+
+  this.create_note_controls();
+  this.connect_note_controls();
+
+  var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
+    this.note_controls,
+    this.div
+  );
+
+  if ( position_after && position_after.parentNode )
+    insertSiblingNodesAfter( position_after, note_holder );
   else
-    this.create_div( position_after );
+    appendChildNodes( "notes", note_holder );
+
+  this.scrape_title();
+  this.focus_default_text_field();
+  this.connect_handlers();
+
+  signal( self, "init_complete" );
 }
 
 Editor.prototype.create_note_controls = function () {
@@ -130,7 +181,8 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
   }
 }
 
-Editor.prototype.create_iframe = function ( position_after, click_position ) {
+Editor.prototype.claim_iframe = function ( position_after, click_position ) {
+  var self = this;
   var iframe_id = "note_" + this.id;
 
   // if there is already an iframe for this Editor, bail
@@ -138,74 +190,60 @@ Editor.prototype.create_iframe = function ( position_after, click_position ) {
   if ( iframe )
     return;
 
-  var self = this;
-  this.iframe = createDOM( "iframe",
-    {
-      // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
-      "src": MSIE6 && "/static/html/blank.html" || "about:blank",
-      "frameBorder": "0",
-      "scrolling": "no",
-      "id": iframe_id,
-      "name": iframe_id,
-      "class": "note_frame invisible",
-      "onresize": function () { setTimeout( function () { self.resize() }, 50 ); }
-    }
-  );
+  // claim the reusable iframe for this note, stealing it from the note that's using it (if any)
+  this.iframe = REUSABLE_IFRAME;
+  this.iframe.setAttribute( "id", iframe_id );
+  this.iframe.setAttribute( "name", iframe_id );
+  var other_div;
+
+  if ( this.iframe.editor ) {
+    disconnectAll( this.iframe.contentWindow );
+    disconnectAll( this.iframe );
+    disconnectAll( this.iframe.editor.document.body );
+    disconnectAll( this.iframe.editor.document );
+    this.iframe.editor.iframe = null;
+    this.iframe.editor.document = null;
+    other_div = this.iframe.editor.div;
+  }
   this.iframe.editor = this;
 
-  // if there is already a static note open for this editor, replace its div with the new iframe
-  var static_note = getElement( "static_note_" + this.id );
-  if ( static_note ) {
-    this.note_controls = getElement( "note_controls_" + this.id );
-    this.connect_note_controls( true );
+  // hide the iframe and show a div in its place
+  setStyle( this.iframe, { "position": "fixed" } );
+  if ( other_div )
+    removeElementClass( other_div, "invisible" );
+  addElementClass( this.iframe, "invisible" );
 
-    disconnectAll( this.div );
-    var frame_height = elementDimensions( static_note ).h;
-    insertSiblingNodesAfter( static_note, this.iframe );
+  // setup the note controls
+  this.note_controls = getElement( "note_controls_" + this.id );
+  this.connect_note_controls( true );
 
-    // give the invisible iframe the exact same position as the div it will replace
-    setStyle( this.iframe, { "position": "fixed" } );
-    setElementPosition( this.iframe, getElementPosition( static_note ) );
+  // hide the iframe to make this transition appear seamless
+  addElementClass( this.iframe, "invisible" );
+  var frame_height = elementDimensions( this.div ).h;
+  insertSiblingNodesAfter( this.div, this.iframe );
 
-    // give the iframe the note's current contents and then resize it based on the size of the div
-    this.set_iframe_contents( this.contents() );
-    this.resize( frame_height );
+  // give the invisible iframe the exact same position as the div it will replace
+  setElementPosition( this.iframe, getElementPosition( this.div ) );
 
-    // make the completed iframe visible, and now remove the static div
-    removeElementClass( this.iframe, "invisible" );
-    removeElement( static_note );
+  // give the iframe the note's current contents and then resize it based on the size of the div
+  var range = this.add_selection_bookmark();
+  this.set_iframe_contents( this.contents() );
+  this.remove_selection_bookmark( range );
+  this.resize( frame_height );
 
-    // set the iframe positioning back to standard static positioning and move the note controls
-    setStyle( this.iframe, { "position": "static" } );
-    insertSiblingNodesBefore( this.iframe, this.note_controls );
+  // make the completed iframe visible and hide the static div
+  addElementClass( this.iframe, "focused_note_frame" );
+  removeElementClass( this.iframe, "invisible" );
+  addElementClass( this.div, "invisible" );
 
-    // finally, turn on design mode so the iframe is editable
-    this.enable_design_mode();
-    this.div = null;
-  } else {
-    this.create_note_controls();
-    this.connect_note_controls();
+  // set the iframe positioning back to standard static positioning
+  setStyle( this.iframe, { "position": "static" } );
 
-    var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
-      this.note_controls,
-      this.iframe
-    );
-
-    if ( position_after && position_after.parentNode )
-      insertSiblingNodesAfter( position_after, note_holder );
-    else
-      appendChildNodes( "notes", note_holder );
-
-    var self = this;
-    this.set_iframe_contents( this.contents() );
-    setTimeout( function() { self.resize(); }, 1 );
-    removeElementClass( this.iframe, "invisible" );
-
-    this.enable_design_mode();
-  }
+  // finally, turn on design mode so the iframe is editable
+  this.enable_design_mode();
 
   function finish_init() {
-    self.position_cursor( click_position );
+    self.position_cursor( click_position, range );
     self.connect_handlers();
   }
 
@@ -238,6 +276,7 @@ Editor.prototype.set_iframe_contents = function ( contents_text ) {
   else if ( WEBKIT )
     padding = '0.4em 1.5em 1em 1.5em';
 
+  // TODO: maybe just replace the document body if the <head> is already set up?
   this.document.write(
     '<html><head><style>html { padding: 0em; margin: 0; } body { padding: ' + padding + '; margin: 0; font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .indented { margin-left: 1em; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; }</style>' +
     '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + contents_text + '</body></html>'
@@ -246,6 +285,7 @@ Editor.prototype.set_iframe_contents = function ( contents_text ) {
 }
 
 Editor.prototype.enable_design_mode = function () {
+  console.log( "design mode:", this.document.designMode );
   if ( this.iframe.contentDocument ) { // browsers such as Firefox
     if ( this.edit_enabled )
       this.document.designMode = "On";    
@@ -258,36 +298,97 @@ Editor.prototype.enable_design_mode = function () {
   }
 }
 
-Editor.prototype.position_cursor = function ( click_position ) {
+Editor.prototype.focus_default_text_field = function () {
+  // special-case: focus any username field found within this div
+  var username = getElement( "username" );
+  if ( username && isChildNode( username, this.div ) )
+    username.focus();
+}
+
+Editor.prototype.add_selection_bookmark = function () {
+  // grab the current range for this editor's div so that it can be duplicated within the iframe
+  var selection =  window.getSelection();
+  if ( selection.rangeCount > 0 )
+    var range = selection.getRangeAt( 0 );
+  else
+    var range = document.createRange();
+
+  // if the current range is not within this editor's static note div, then bail
+  if ( range.startContainer == document || range.endContainer == document )
+    return null;
+  if ( !isChildNode( range.startContainer.parentNode, this.div ) || !isChildNode( range.endContainer.parentNode, this.div ) )
+    return null;
+
+  // mark the nodes that are start and end containers for the current range. we have to mark the
+  // parent node instead of the start/end container itself, because text nodes can't have classes
+  var parent_node = range.startContainer.parentNode
+  addElementClass( parent_node, "range_start_container" );
+  for ( var i in parent_node.childNodes ) {
+    var child_node = parent_node.childNodes[ i ];
+    if ( child_node == range.startContainer )
+      range.start_child_offset = i;
+  }
+
+  var parent_node = range.endContainer.parentNode
+  addElementClass( parent_node, "range_end_container" );
+  for ( var i in parent_node.childNodes ) {
+    var child_node = parent_node.childNodes[ i ];
+    if ( child_node == range.endContainer )
+      range.end_child_offset = i;
+  }
+
+  return range;
+}
+
+Editor.prototype.remove_selection_bookmark = function ( range ) {
+  // unmark the nodes that are start and end containers for the given range
+  if ( range ) {
+    removeElementClass( range.startContainer.parentNode, "range_start_container" );
+    removeElementClass( range.endContainer.parentNode, "range_end_container" );
+  }
+}
+
+Editor.prototype.position_cursor = function ( click_position, div_range ) {
   if ( this.init_focus ) {
     this.init_focus = false;
     if ( this.iframe )
       this.focus();
-
-    // special-case: focus any username field found within this div
-    if ( this.div ) {
-      var username = getElement( "username" );
-      if ( username && isChildNode( username, this.div ) )
-        username.focus();
-    }
   }
 
-  if ( this.div )
-    return;
-
   // if requested, move the text cursor to a specific location
-  if ( click_position ) {
-    var FRAME_BORDER_WIDTH = 2;
-    click_position.x -= this.iframe.offsetLeft + FRAME_BORDER_WIDTH;
-    click_position.y -= this.iframe.offsetTop + FRAME_BORDER_WIDTH;
+  if ( div_range && this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    // position the cursor by using a bookmarked text range
+    var selection = this.iframe.contentWindow.getSelection();
+    if ( selection.rangeCount > 0 )
+      var range = selection.getRangeAt( 0 );
+    else
+      var range = this.document.createRange();
 
-    if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
-      // TODO
-    } else if ( this.document.selection ) { // browsers such as IE
-      var range = this.document.selection.createRange();
-      range.moveToPoint( click_position.x, click_position.y );
-      range.select();
+    var start = getFirstElementByTagAndClassName( null, "range_start_container", this.document );
+    var end = getFirstElementByTagAndClassName( null, "range_end_container", this.document );
+
+    if ( start && end ) {
+      removeElementClass( start, "range_start_container" );
+      removeElementClass( end, "range_end_container" );
+      if ( div_range.start_child_offset )
+        start = start.childNodes[ div_range.start_child_offset ];
+      if ( div_range.end_child_offset )
+        end = end.childNodes[ div_range.end_child_offset ];
+      range.setStart( start, div_range.startOffset );
+      range.setEnd( end, div_range.endOffset );
+      selection.addRange( range );
+      return;
     }
+  } else if ( click_position && this.document.selection ) { // browsers such as IE
+    var FRAME_BORDER_WIDTH = 2;
+
+    // position the cursor by using given click position coordinates
+    var range = this.document.selection.createRange();
+    range.moveToPoint(
+      click_position.x - this.iframe.offsetLeft - FRAME_BORDER_WIDTH,
+      click_position.y - this.iframe.offsetTop - FRAME_BORDER_WIDTH
+    );
+    range.select();
 
     return;
   }
@@ -308,61 +409,6 @@ Editor.prototype.position_cursor = function ( click_position ) {
   }
 }
 
-Editor.prototype.create_div = function ( position_after ) {
-  var self = this;
-
-  // if there is already a static note div for this Editor, connect up the note controls and bail
-  var static_note_div = getElement( "static_note_" + this.id );
-  if ( static_note_div ) {
-    this.note_controls = getElement( "note_controls_" + this.id );
-    this.connect_note_controls( true );
-    this.div = static_note_div;
-    this.scrape_title();
-    this.position_cursor();
-    this.connect_handlers();
-    return;
-  }
-
-  var static_contents = createDOM( "span", { "class": "static_note_contents" } );
-  static_contents.innerHTML = this.contents();
-  this.div = createDOM(
-    "div", { "class": "static_note_div", "id": "static_note_" + this.id }, static_contents
-  );
-  this.div.editor = this;
-
-  // if there is already an iframe open for this editor, replace it with the new static note div
-  if ( getElement( "note_" + this.id ) ) {
-    disconnectAll( this.iframe.contentWindow );
-    disconnectAll( this.document.body );
-    disconnectAll( this.document );
-
-    swapDOM( this.iframe, this.div );
-    insertSiblingNodesBefore( this.div, this.note_controls );
-
-    this.iframe = null;
-    this.document = null;
-  } else {
-    this.create_note_controls();
-    this.connect_note_controls();
-
-    var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
-      this.note_controls,
-      this.div
-    );
-
-    if ( position_after && position_after.parentNode )
-      insertSiblingNodesAfter( position_after, note_holder );
-    else
-      appendChildNodes( "notes", note_holder );
-  }
-
-  this.scrape_title();
-  this.position_cursor();
-  this.connect_handlers();
-
-  signal( self, "init_complete" );
-}
-
 Editor.prototype.connect_handlers = function () {
   if ( this.document && this.document.body ) {
     // since the browser may subtly tweak the html when it's inserted, save off the browser's version
@@ -375,8 +421,8 @@ Editor.prototype.connect_handlers = function () {
 
   var self = this; // necessary so that the member functions of this editor object are used
 
-  if ( this.div ) {
-    connect( this.div, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+  if ( !this.iframe ) {
+    connect( this.div, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
     connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
   } else {
@@ -384,9 +430,10 @@ Editor.prototype.connect_handlers = function () {
       connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
       connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
     }
-    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.document, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
     connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
+    connect( this.iframe, "onresize", function () { setTimeout( function () { self.resize() }, 50 ); } );
     connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
     connect( this.iframe.contentWindow, "oncut", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
   }
@@ -681,7 +728,6 @@ Editor.prototype.mouse_clicked = function ( event ) {
       // otherwise, this is a read-write editor, so we've got to launch the external link ourselves.
       // note that this ignores what the link target actually contains and assumes it's "_new"
       window.open( link.href );
-      event.stop();
       return true;
     }
 
@@ -689,12 +735,9 @@ Editor.prototype.mouse_clicked = function ( event ) {
     if ( !link.target && /\/files\//.test( link.href ) ) {
       if ( !/\/files\/new$/.test( link.href ) ) {
         window.open( link.href );
-        event.stop();
       }
       return true;
     }
-
-    event.stop();
 
     // load the note corresponding to the clicked link
     var query = parse_query( link );
@@ -716,7 +759,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
       else
         var click_position = event.mouse().page;
 
-      this.create_iframe( null, click_position );
+      this.claim_iframe( null, click_position );
     }
 
     // in case the cursor has moved, update the state
@@ -934,9 +977,9 @@ Editor.prototype.find_link_at_cursor = function () {
 
 Editor.prototype.focus = function () {
   if ( this.div && this.edit_enabled )
-    this.create_iframe();
+    this.claim_iframe();
 
-  addElementClass( this.div || this.iframe, "focused_note_frame" );
+  addElementClass( this.iframe || this.div, "focused_note_frame" );
 
   if ( this.iframe ) {
     if ( OPERA )
@@ -950,9 +993,8 @@ Editor.prototype.focus = function () {
 
 Editor.prototype.blur = function () {
   this.scrape_title();
-  this.create_div();
 
-  removeElementClass( this.div || this.iframe, "focused_note_frame" );
+  removeElementClass( this.iframe || this.div, "focused_note_frame" );
 }
 
 Editor.prototype.contents = function () {
@@ -1040,7 +1082,6 @@ Editor.prototype.shutdown = function( event ) {
     disconnectAll( this.options_button );
     disconnectAll( this.hide_button );
     disconnectAll( iframe );
-    var editor_node = iframe;
   }
 
   if ( this.document ) {
@@ -1048,19 +1089,16 @@ Editor.prototype.shutdown = function( event ) {
     disconnectAll( this.document );
   }
 
-  if ( this.div ) {
-    disconnectAll( this.div );
-    var editor_node = this.div;
-    this.div = null;
-  }
+  disconnectAll( this.div );
+  var div = this.div;
+  this.div = null;
 
-  if ( !editor_node )
-    return;
-
-  blindUp( editor_node, options = { "duration": 0.25, afterFinish: function () {
+  blindUp( iframe || div, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( note_controls );
-      removeElement( editor_node );
+      removeElement( div );
+      if ( iframe )
+        addElementClass( iframe, "invisible" );
     } catch ( e ) { }
   } } );
 }
