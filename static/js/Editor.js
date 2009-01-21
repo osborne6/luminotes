@@ -229,7 +229,6 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   var range = this.add_selection_bookmark();
   this.set_iframe_contents( this.contents() );
   this.remove_selection_bookmark( range );
-  this.resize( frame_height );
 
   // make the completed iframe visible and hide the static div
   addElementClass( this.iframe, "focused_note_frame" );
@@ -433,6 +432,7 @@ Editor.prototype.connect_handlers = function () {
     connect( this.document, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
     connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
+    connect( this.iframe, "onload", function () { self.resize(); } );
     connect( this.iframe, "onresize", function () { setTimeout( function () { self.resize() }, 50 ); } );
     connect( this.iframe.contentWindow, "onpaste", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
     connect( this.iframe.contentWindow, "oncut", function ( event ) { setTimeout( function () { self.resize() }, 50 ); } );
