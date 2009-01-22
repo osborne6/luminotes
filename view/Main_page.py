@@ -276,6 +276,9 @@ class Main_page( Page ):
                 notebook_path, len( notes ), total_notes_count, start, count,
                 return_text = u"return to the discussion",
               ),
+              Div(
+                id = u"iframe_area",
+              ),
               id = u"notebook_background",
               corners = ( u"tl", ),
             ),
@@ -283,9 +286,6 @@ class Main_page( Page ):
             class_ = ( notebook.name == u"trash" ) and u"trash_notebook_color" or u"current_notebook_color",
           ),
           id = u"center_content_area",
-        ),
-        Div(
-          id = u"iframe_area",
         ),
         Div(
           Note_tree_area(

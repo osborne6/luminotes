@@ -237,17 +237,20 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
 
   // hide the iframe to make this transition appear seamless
   addElementClass( this.iframe, "invisible" );
-  var frame_height = elementDimensions( this.div ).h;
-  var frame_width = elementDimensions( this.div ).w;
 
-  // give the invisible iframe the exact same position as the div it will replace
-  setElementPosition( this.iframe, getElementPosition( this.div ) );
+  // give the invisible iframe the exact same position as the div it will replace. subtract the
+  // position of the center_content_area container, which is relatively positioned
+  position = getElementPosition( this.div );
+  container_position = getElementPosition( "center_content_area" );
+  position.x -= container_position.x;
+  position.y -= container_position.y;
+  setElementPosition( this.iframe, position );
 
   // give the iframe the note's current contents and then resize it based on the size of the div
   var range = this.add_selection_bookmark();
   this.set_iframe_contents( this.contents() );
   this.remove_selection_bookmark( range );
-  this.resize( frame_height, frame_width );
+  this.resize( true );
 
   // make the completed iframe visible and hide the static div
   addElementClass( this.iframe, "focused_note_frame" );
@@ -557,10 +560,17 @@ Editor.prototype.query_command_value = function ( command ) {
 }
 
 // resize the editor's frame to fit the dimensions of its content
-Editor.prototype.resize = function ( height, width ) {
+Editor.prototype.resize = function ( get_height_from_div ) {
   if ( !this.document ) return;
+  var height = null;
+  var width = elementDimensions( this.div.parentNode ).w;
 
-  if ( height ) {
+  var size = { "w": width };
+  setElementDimensions( this.iframe, size );
+  setElementDimensions( this.div, size );
+
+  if ( get_height_from_div ) {
+    height = elementDimensions( this.div ).h;
     height -= FRAME_BORDER_HEIGHT * 2; // 2 pixels at the top and 2 at the bottom
   // if no height is given, get the height from this editor's document body
   } else {
@@ -571,13 +581,9 @@ Editor.prototype.resize = function ( height, width ) {
     }
   }
 
-  var size = { "h": height };
-  if ( width ) {
-    width -= FRAME_BORDER_WIDTH * 2; // 2 pixels at the top and 2 at the bottom
-    size[ "w" ] = width;
-  }
-
+  size = { "h": height };
   setElementDimensions( this.iframe, size );
+  setElementDimensions( this.div, size );
 }
 
 Editor.prototype.key_pressed = function ( event ) {
