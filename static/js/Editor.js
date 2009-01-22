@@ -1094,6 +1094,10 @@ Editor.prototype.shutdown = function( event ) {
       removeElement( div );
     } catch ( e ) { }
   } } );
+
+  if ( !iframe )
+    return;
+
   blindUp( iframe, options = { "duration": 0.25, afterFinish: function () {
     try {
       if ( iframe )
