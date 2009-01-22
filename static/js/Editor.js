@@ -1030,7 +1030,6 @@ Editor.prototype.state_enabled = function ( state_name, node_names ) {
 Editor.prototype.current_node_names = function () {
   var node_names = new Array();
 
-  console.log( this.edit_enabled, this.iframe, this.document );
   if ( !this.edit_enabled || !this.iframe || !this.document )
     return node_names;
 
