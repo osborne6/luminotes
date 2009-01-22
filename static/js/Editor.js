@@ -429,6 +429,7 @@ Editor.prototype.connect_handlers = function () {
 
   if ( !this.iframe ) {
     connect( this.div, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.div, "onclick", function ( event ) { event.stop(); } );
     connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
   } else {
@@ -437,6 +438,7 @@ Editor.prototype.connect_handlers = function () {
       connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
     }
     connect( this.document, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
+    connect( this.document, "onclick", function ( event ) { event.stop(); } );
     connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
     connect( this.iframe, "onload", function () { self.resize(); } );
@@ -747,7 +749,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
     var query = parse_query( link );
     var title = link_title( link, query );
     var id = query.note_id;
-    signal( self, "load_editor", title, id, null, null, link, self.iframe );
+    signal( self, "load_editor", title, id, null, null, link, self.div );
     return true;
   }
 
