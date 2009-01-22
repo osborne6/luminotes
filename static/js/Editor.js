@@ -1100,11 +1100,12 @@ Editor.prototype.shutdown = function( event ) {
   if ( !iframe )
     return;
 
+  // overriding afterFinishInternal for the iframe prevents it from being set to "display: none",
+  // which would break subsequent getSelection() calls
   iframe.editor = null;
-  blindUp( iframe, options = { "duration": 0.25, afterFinish: function () {
+  blindUp( iframe, options = { "duration": 0.25, afterFinishInternal: function () {
     try {
-      if ( iframe )
-        addElementClass( iframe, "invisible" );
+      addElementClass( iframe, "invisible" );
     } catch ( e ) { }
   } } );
 }
