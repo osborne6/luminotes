@@ -3921,7 +3921,6 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   connect( this.center_justify_radio, "onclick", function ( event ) { self.justify_image( event, "center" ); } );
   connect( this.right_justify_radio, "onclick", function ( event ) { self.justify_image( event, "right" ); } );
 
-  // FIXME: when this is called, the text cursor moves to an unexpected location
   editor.focus();
   Pulldown.prototype.finish_init.call( this );
 }
