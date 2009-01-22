@@ -1034,12 +1034,8 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
     }
   }
 
-  if ( !this.focused_editor ) {
-    this.focused_editor = editor;
-    this.update_toolbar();
-  } else {
-    this.focused_editor = editor;
-  }
+  this.focused_editor = editor;
+  this.update_toolbar();
 }
 
 Wiki.prototype.make_byline = function ( username, creation, note_id ) {

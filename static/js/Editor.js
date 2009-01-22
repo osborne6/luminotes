@@ -260,6 +260,7 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   function finish_init() {
     self.position_cursor( click_position, range );
     self.connect_handlers();
+    signal( self, "focused", self );
   }
 
   // this small delay gives the browser enough lag time after set_iframe_contents() to process the HTML
@@ -351,7 +352,7 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
   if ( this.init_focus ) {
     this.init_focus = false;
     if ( this.iframe )
-      this.focus();
+      this.focus( true );
   }
 
   // if requested, move the text cursor to a specific location
@@ -970,7 +971,7 @@ Editor.prototype.find_link_at_cursor = function () {
   return null;
 }
 
-Editor.prototype.focus = function () {
+Editor.prototype.focus = function ( suppress_signal ) {
   if ( this.div && this.edit_enabled )
     this.claim_iframe();
 
@@ -983,7 +984,8 @@ Editor.prototype.focus = function () {
       this.iframe.contentWindow.focus();
   }
 
-  signal( this, "focused", this );
+  if ( !suppress_signal )
+    signal( this, "focused", this );
 }
 
 Editor.prototype.blur = function () {
@@ -1028,6 +1030,7 @@ Editor.prototype.state_enabled = function ( state_name, node_names ) {
 Editor.prototype.current_node_names = function () {
   var node_names = new Array();
 
+  console.log( this.edit_enabled, this.iframe, this.document );
   if ( !this.edit_enabled || !this.iframe || !this.document )
     return node_names;
 
