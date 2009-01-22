@@ -1098,6 +1098,7 @@ Editor.prototype.shutdown = function( event ) {
   if ( !iframe )
     return;
 
+  iframe.editor = null;
   blindUp( iframe, options = { "duration": 0.25, afterFinish: function () {
     try {
       if ( iframe )

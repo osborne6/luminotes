@@ -860,7 +860,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 }
 
 Wiki.prototype.resize_editor = function () {
-  if ( Editor.shared_iframe.editor )
+  if ( Editor.shared_frame && Editor.shared_iframe.editor )
     Editor.shared_iframe.editor.resize();
 }
 
@@ -2695,8 +2695,6 @@ Wiki.prototype.delete_all_editors = function ( event ) {
 }
 
 Wiki.prototype.display_empty_message = function ( replace_messages ) {
-  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
-
   if ( !replace_messages ) {
     // if there are any messages already open, bail
     var messages = getElementsByTagAndClassName( "div", "message" );
@@ -2708,11 +2706,10 @@ Wiki.prototype.display_empty_message = function ( replace_messages ) {
   }
 
   // if there are any open editors, bail
-  for ( var i in iframes ) {
-    var iframe = iframes[ i ];
-    if ( iframe.editor.closed == false )
-      return false;
-  }  
+  if ( Editor.shared_frame && Editor.shared_frame.editor && !Editor.shared_frame.editor.closed )
+    return false;
+  if ( getElementsByTagAndClassName( "div", "static_note_div" ).length > 0 )
+    return false;
 
   if ( !this.total_notes_count ) {
     if ( this.parent_id )
