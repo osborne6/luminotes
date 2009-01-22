@@ -1081,10 +1081,14 @@ Editor.prototype.shutdown = function( event ) {
   var div = this.div;
   this.div = null;
 
-  blindUp( iframe || div, options = { "duration": 0.25, afterFinish: function () {
+  blindUp( div, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( note_controls );
       removeElement( div );
+    } catch ( e ) { }
+  } } );
+  blindUp( iframe, options = { "duration": 0.25, afterFinish: function () {
+    try {
       if ( iframe )
         addElementClass( iframe, "invisible" );
     } catch ( e ) { }
