@@ -7,7 +7,6 @@ NOTEBOOK_READ_WRITE_FOR_OWN_NOTES = 2;
 function Wiki( invoker ) {
   this.next_id = null;
   this.focused_editor = null;
-  this.blank_editor_id = null;
   this.notebook = evalJSON( getElement( "notebook" ).value );
   this.parent_id = getElement( "parent_id" ).value; // id of the notebook containing this one
   this.startup_notes = new Array();  // map of startup notes: note id to bool
@@ -490,18 +489,13 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   }
 
   // if there is already a blank editor, then highlight it and bail
-  if ( this.blank_editor_id != null ) {
-    var blank_iframe_id = "note_" + this.blank_editor_id;
-    var iframe = getElement( blank_iframe_id );
-    if ( iframe && iframe.editor.empty() ) {
-      iframe.editor.highlight();
-      return;
-    }
+  if ( Editor.shared_iframe && Editor.shared_iframe.editor && Editor.shared_iframe.editor.empty() ) {
+    Editor.shared_iframe..editor.highlight();
+    return;
   }
 
   var editor = this.create_editor( undefined, undefined, undefined, undefined, undefined, this.notebook.read_write, true, true, null, this.user.object_id, this.user.username );
   this.increment_total_notes_count();
-  this.blank_editor_id = editor.id;
   signal( this, "note_added", editor );
 }
 
@@ -952,7 +946,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
     this.clear_pulldowns();
     var self = this;
-    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.iframe, title, editor.document );
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.div, title, editor.document );
     connect( suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_link_with_suggestion( editor, link, note )
     } );
@@ -999,11 +993,7 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
   link.innerHTML = note.title;
 
   // manually position the text cursor at the end of the link title
-  if ( editor.iframe.contentWindow && editor.iframe.contentWindow.getSelection ) { // browsers such as Firefox
-    var selection = editor.iframe.contentWindow.getSelection();
-    selection.selectAllChildren( link );
-    selection.collapseToEnd();
-  }
+  editor.position_cursor_after( link );
 
   link.href = "/notebooks/" + this.notebook.object_id + "?note_id=" + note.object_id;
 
@@ -1020,17 +1010,15 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
     this.focused_editor.blur();
     this.clear_pulldowns();
 
-    if ( this.focused_editor.iframe ) {
-      // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
-      if ( this.focused_editor.id == this.blank_editor_id && this.focused_editor.empty() ) {
-        signal( this, "note_removed", this.focused_editor.id );
-        this.focused_editor.shutdown();
-        this.decrement_total_notes_count();
-        this.display_empty_message();
-      } else {
-        // when switching editors, save the one being left
-        this.save_editor( null, null, null, synchronous );
-      }
+    // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
+    if ( this.focused_editor.empty() ) {
+      signal( this, "note_removed", this.focused_editor.id );
+      this.focused_editor.shutdown();
+      this.decrement_total_notes_count();
+      this.display_empty_message();
+    } else {
+      // when switching editors, save the one being left
+      this.save_editor( null, null, null, synchronous );
     }
   }
 
@@ -1452,7 +1440,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
     var id = editor.id;
 
     // if the editor to hide is completely empty, then simply remove it
-    if ( editor.id == this.blank_editor_id && editor.empty() ) {
+    if ( editor.empty() ) {
       signal( this, "note_removed", editor.id );
       editor.shutdown();
       this.decrement_total_notes_count();
@@ -1504,7 +1492,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
     if ( editor == self.focused_editor )
       self.focused_editor = null;
 
-    if ( self.notebook.trash_id && !( editor.id == self.blank_editor_id && editor.empty() ) ) {
+    if ( self.notebook.trash_id && !editor.empty() ) {
       var undo_button = createDOM( "input", {
         "type": "button",
         "class": "message_button",
@@ -1514,7 +1502,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
       var trash_link = createDOM( "a", {
         "href": "/notebooks/" + self.notebook.trash_id + "?parent_id=" + self.notebook.object_id
       }, "trash" );
-      var message_div = self.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ], editor.iframe );
+      var message_div = self.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ], editor.div );
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor, message_div ); } );
     }
 
@@ -1614,7 +1602,7 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
 
   // display a diff between the two revisions for examination by the user
-  this.load_editor( editor.title, editor.id, editor.revision, previous_revision, editor.closed ? null : editor.iframe );
+  this.load_editor( editor.title, editor.id, editor.revision, previous_revision, editor.closed ? null : editor.div );
 }
 
 Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous, suppress_save_signal ) {
@@ -1622,7 +1610,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !( editor.id == this.blank_editor_id && editor.empty() ) && !editor.closed && editor.dirty() ) {
+  if ( editor && editor.read_write && !editor.empty() && !editor.closed && editor.dirty() ) {
     editor.scrape_title();
 
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
@@ -1688,7 +1676,7 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
     this.display_error(
       'Your changes to the note titled "' + editor.title +
       '" have overwritten changes made in another window by ' + ( result.previous_revision.username || 'you' ) + '.',
-      [ compare_button ], editor.iframe
+      [ compare_button ], editor.div
     );
 
     var self = this;
@@ -1768,10 +1756,10 @@ Wiki.prototype.submit_form = function ( form ) {
 
       if ( result.new_revision )
         self.display_message( "The note has been reverted to an earlier revision.", [],
-                               editor && ( editor.iframe || editor.div ) || null );
+                               editor && editor.div || null );
       else
         self.display_message( "The note is already at that revision.", [],
-                              editor && ( editor.iframe || editor.div ) || null );
+                              editor && editor.div || null );
 
       self.display_storage_usage( result.storage_bytes );
     }
@@ -2545,7 +2533,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
   else if ( this.focused_editor )
-    insertSiblingNodesAfter( this.focused_editor.iframe || this.focused_editor.div, div )
+    insertSiblingNodesAfter( this.focused_editor.div, div )
   else
     appendChildNodes( "notes", div );
 
@@ -2586,7 +2574,7 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
   else if ( this.focused_editor )
-    insertSiblingNodesAfter( this.focused_editor.iframe, div )
+    insertSiblingNodesAfter( this.focused_editor.div, div )
   else
     appendChildNodes( "notes", div );
 
@@ -3194,7 +3182,7 @@ Changes_pulldown.prototype.constructor = Changes_pulldown;
 Changes_pulldown.prototype.link_clicked = function( event, note_id ) {
   var revision = event.target().revision;
   var previous_revision = event.target().previous_revision;
-  this.wiki.load_editor( "Revision not found.", note_id, revision, previous_revision, null, this.editor.iframe );
+  this.wiki.load_editor( "Revision not found.", note_id, revision, previous_revision, null, this.editor.div );
   event.stop();
 }
 
@@ -3210,7 +3198,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.div, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;
@@ -3453,7 +3441,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   this.link = link || editor.find_link_at_cursor();
   this.link.pulldown = this;
 
-  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.div, ephemeral );
   wiki.down_image_button( "attachFile" );
 
   var vaguely_random = new Date().getTime();
@@ -3752,7 +3740,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.iframe, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.div, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;

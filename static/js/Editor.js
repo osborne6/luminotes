@@ -407,6 +407,14 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
   }
 }
 
+Editor.prototype.position_cursor_after = function ( node ) {
+  if ( this.iframe && this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    selection.selectAllChildren( node );
+    selection.collapseToEnd();
+  }
+}
+
 Editor.prototype.connect_handlers = function () {
   if ( this.document && this.document.body ) {
     // since the browser may subtly tweak the html when it's inserted, save off the browser's version
@@ -826,10 +834,10 @@ Editor.title_placeholder_pattern = /\u200b/g;
 Editor.title_placeholder_html = "&#8203;&#8203;";
 
 Editor.prototype.empty = function () {
-  if ( this.div )
-    var node = this.div;
-  else if ( this.document && this.document.body )
+  if ( this.iframe && this.document && this.document.body )
     var node = this.document.body;
+  else if ( this.div )
+    var node = this.div;
   else
     return true;
 
