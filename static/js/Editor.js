@@ -565,11 +565,12 @@ Editor.prototype.resize = function ( get_height_from_div ) {
   var height = null;
   var width = elementDimensions( this.div.parentNode ).w;
 
+  // set the width first, because that influence the height of the content
   var size = { "w": width };
   setElementDimensions( this.iframe, size );
   setElementDimensions( this.div, size );
 
-  if ( get_height_from_div ) {
+  if ( get_height_from_div && !this.empty() ) {
     height = elementDimensions( this.div ).h;
     height -= FRAME_BORDER_HEIGHT * 2; // 2 pixels at the top and 2 at the bottom
   // if no height is given, get the height from this editor's document body
