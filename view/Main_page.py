@@ -285,6 +285,9 @@ class Main_page( Page ):
           id = u"center_content_area",
         ),
         Div(
+          id = u"iframe_area",
+        ),
+        Div(
           Note_tree_area(
             notebook,
             root_notes,

@@ -4,15 +4,31 @@ MSIE6 = /MSIE 6\.0/.test( navigator.userAgent );
 MSIE = /MSIE/.test( navigator.userAgent );
 OPERA = /Opera/.test( navigator.userAgent );
 
-REUSABLE_IFRAME = createDOM( "iframe",
-  {
-    // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
-    "src": MSIE6 && "/static/html/blank.html" || "about:blank",
-    "frameBorder": "0",
-    "scrolling": "no",
-    "class": "note_frame invisible"
+FRAME_BORDER_WIDTH = 2;
+FRAME_BORDER_HEIGHT = 2;
+
+
+function Shared_iframe() {
+  this.iframe = createDOM( "iframe",
+    {
+      // iframe src attribute is necessary in IE 6 on an HTTPS site to prevent annoying warnings
+      "src": MSIE6 && "/static/html/blank.html" || "about:blank",
+      "frameBorder": "0",
+      "scrolling": "no",
+      "class": "note_frame invisible"
+    }
+  );
+
+  insertSiblingNodesAfter( "iframe_area", this.iframe );
+
+  // enable design mode
+  if ( this.iframe.contentDocument ) { // browsers such as Firefox
+    this.iframe.contentDocument.designMode = "On";    
+  } else { // browsers such as IE
+    this.iframe.contentWindow.document.designMode = "On";
   }
-);
+}
+
 
 function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty, own_notes_only ) {
   this.id = id;
@@ -36,6 +52,10 @@ function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_wri
   this.iframe = null;
   this.div = null;
   this.title = "";
+
+  // all editors share a common design mode iframe, each claiming use of it as necessary
+  if ( !Editor.shared_iframe )
+    Editor.shared_iframe = new Shared_iframe();
 
   this.create_div( position_after );
 
@@ -191,7 +211,7 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
     return;
 
   // claim the reusable iframe for this note, stealing it from the note that's using it (if any)
-  this.iframe = REUSABLE_IFRAME;
+  this.iframe = Editor.shared_iframe.iframe;
   this.iframe.setAttribute( "id", iframe_id );
   this.iframe.setAttribute( "name", iframe_id );
   var other_div;
@@ -208,10 +228,8 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   this.iframe.editor = this;
 
   // hide the iframe and show a div in its place
-  setStyle( this.iframe, { "position": "fixed" } );
   if ( other_div )
     removeElementClass( other_div, "invisible" );
-  addElementClass( this.iframe, "invisible" );
 
   // setup the note controls
   this.note_controls = getElement( "note_controls_" + this.id );
@@ -220,7 +238,7 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   // hide the iframe to make this transition appear seamless
   addElementClass( this.iframe, "invisible" );
   var frame_height = elementDimensions( this.div ).h;
-  insertSiblingNodesAfter( this.div, this.iframe );
+  var frame_width = elementDimensions( this.div ).w;
 
   // give the invisible iframe the exact same position as the div it will replace
   setElementPosition( this.iframe, getElementPosition( this.div ) );
@@ -229,28 +247,20 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   var range = this.add_selection_bookmark();
   this.set_iframe_contents( this.contents() );
   this.remove_selection_bookmark( range );
+  this.resize( frame_height, frame_width );
 
   // make the completed iframe visible and hide the static div
   addElementClass( this.iframe, "focused_note_frame" );
   removeElementClass( this.iframe, "invisible" );
   addElementClass( this.div, "invisible" );
 
-  // set the iframe positioning back to standard static positioning
-  setStyle( this.iframe, { "position": "static" } );
-
-  // finally, turn on design mode so the iframe is editable
-  this.enable_design_mode();
-
   function finish_init() {
     self.position_cursor( click_position, range );
     self.connect_handlers();
   }
 
-  // this small delay gives IE enough lag time after design mode is enabled to setup document.body
-  if ( MSIE )
-    setTimeout( finish_init, 1 );
-  else
-    finish_init();
+  // this small delay gives the browser enough lag time after set_iframe_contents() to process the HTML
+  setTimeout( finish_init, 1 );
 }
 
 Editor.prototype.set_iframe_contents = function ( contents_text ) {
@@ -282,19 +292,6 @@ Editor.prototype.set_iframe_contents = function ( contents_text ) {
     '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + contents_text + '</body></html>'
   );
   this.document.close();
-}
-
-Editor.prototype.enable_design_mode = function () {
-  if ( this.iframe.contentDocument ) { // browsers such as Firefox
-    if ( this.edit_enabled )
-      this.document.designMode = "On";    
-  } else { // browsers such as IE
-    if ( this.edit_enabled ) {
-      this.document.designMode = "On";   
-      // work-around for IE bug: reget the document after designMode is turned on
-      this.document = this.iframe.contentWindow.document;
-    }
-  }
 }
 
 Editor.prototype.focus_default_text_field = function () {
@@ -379,8 +376,6 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
       return;
     }
   } else if ( click_position && this.document.selection ) { // browsers such as IE
-    var FRAME_BORDER_WIDTH = 2;
-
     // position the cursor by using given click position coordinates
     var range = this.document.selection.createRange();
     range.moveToPoint(
@@ -562,9 +557,8 @@ Editor.prototype.query_command_value = function ( command ) {
 }
 
 // resize the editor's frame to fit the dimensions of its content
-Editor.prototype.resize = function ( height ) {
+Editor.prototype.resize = function ( height, width ) {
   if ( !this.document ) return;
-  var FRAME_BORDER_HEIGHT = 2;
 
   if ( height ) {
     height -= FRAME_BORDER_HEIGHT * 2; // 2 pixels at the top and 2 at the bottom
@@ -577,7 +571,13 @@ Editor.prototype.resize = function ( height ) {
     }
   }
 
-  setElementDimensions( this.iframe, { "h": height } );
+  var size = { "h": height };
+  if ( width ) {
+    width -= FRAME_BORDER_WIDTH * 2; // 2 pixels at the top and 2 at the bottom
+    size[ "w" ] = width;
+  }
+
+  setElementDimensions( this.iframe, size );
 }
 
 Editor.prototype.key_pressed = function ( event ) {
