@@ -946,7 +946,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
     this.clear_pulldowns();
     var self = this;
-    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.div, title, editor.document );
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.holder, title, editor.document );
     connect( suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_link_with_suggestion( editor, link, note )
     } );
@@ -1512,7 +1512,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
       var trash_link = createDOM( "a", {
         "href": "/notebooks/" + self.notebook.trash_id + "?parent_id=" + self.notebook.object_id
       }, "trash" );
-      var message_div = self.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ], editor.div );
+      var message_div = self.display_message( "The note has been moved to the", [ trash_link, ". ", undo_button ], editor.holder );
       connect( undo_button, "onclick", function ( event ) { self.undelete_editor_via_undo( event, editor, message_div ); } );
     }
 
@@ -1612,7 +1612,7 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.clear_pulldowns();
 
   // display a diff between the two revisions for examination by the user
-  this.load_editor( editor.title, editor.id, editor.revision, previous_revision, editor.closed ? null : editor.div );
+  this.load_editor( editor.title, editor.id, editor.revision, previous_revision, editor.closed ? null : editor.holder );
 }
 
 Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous, suppress_save_signal ) {
@@ -1686,7 +1686,7 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
     this.display_error(
       'Your changes to the note titled "' + editor.title +
       '" have overwritten changes made in another window by ' + ( result.previous_revision.username || 'you' ) + '.',
-      [ compare_button ], editor.div
+      [ compare_button ], editor.holder
     );
 
     var self = this;
@@ -1766,10 +1766,10 @@ Wiki.prototype.submit_form = function ( form ) {
 
       if ( result.new_revision )
         self.display_message( "The note has been reverted to an earlier revision.", [],
-                               editor && editor.div || null );
+                               editor && editor.holder || null );
       else
         self.display_message( "The note is already at that revision.", [],
-                              editor && editor.div || null );
+                              editor && editor.holder || null );
 
       self.display_storage_usage( result.storage_bytes );
     }
@@ -2543,7 +2543,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
   else if ( this.focused_editor )
-    insertSiblingNodesAfter( this.focused_editor.div, div )
+    insertSiblingNodesAfter( this.focused_editor.holder, div )
   else
     appendChildNodes( "notes", div );
 
@@ -2584,7 +2584,7 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
   if ( position_after )
     insertSiblingNodesAfter( position_after, div )
   else if ( this.focused_editor )
-    insertSiblingNodesAfter( this.focused_editor.div, div )
+    insertSiblingNodesAfter( this.focused_editor.holder, div )
   else
     appendChildNodes( "notes", div );
 
@@ -3192,7 +3192,7 @@ Changes_pulldown.prototype.constructor = Changes_pulldown;
 Changes_pulldown.prototype.link_clicked = function( event, note_id ) {
   var revision = event.target().revision;
   var previous_revision = event.target().previous_revision;
-  this.wiki.load_editor( "Revision not found.", note_id, revision, previous_revision, null, this.editor.div );
+  this.wiki.load_editor( "Revision not found.", note_id, revision, previous_revision, null, this.editor.holder );
   event.stop();
 }
 
@@ -3208,7 +3208,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.div, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.holder, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;
@@ -3451,7 +3451,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   this.link = link || editor.find_link_at_cursor();
   this.link.pulldown = this;
 
-  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.div, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.holder, ephemeral );
   wiki.down_image_button( "attachFile" );
 
   var vaguely_random = new Date().getTime();
@@ -3750,7 +3750,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.div, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.holder, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;

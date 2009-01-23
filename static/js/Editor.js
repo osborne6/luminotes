@@ -72,6 +72,7 @@ Editor.prototype.create_div = function ( position_after ) {
   var static_note_div = getElement( "static_note_" + this.id );
   if ( static_note_div ) {
     this.note_controls = getElement( "note_controls_" + this.id );
+    this.holder = getElement( "note_holder_" + this.id );
     this.connect_note_controls( true );
     this.div = static_note_div;
     this.scrape_title();
@@ -90,15 +91,15 @@ Editor.prototype.create_div = function ( position_after ) {
   this.create_note_controls();
   this.connect_note_controls();
 
-  var note_holder = createDOM( "div", { "id": "note_holder_" + this.id, "class": "note_holder" },
+  this.holder = createDOM( "div", { "id": "note_holder_" + this.id, "class": "note_holder" },
     this.note_controls,
     this.div
   );
 
   if ( position_after && position_after.parentNode )
-    insertSiblingNodesAfter( position_after, note_holder );
+    insertSiblingNodesAfter( position_after, this.holder );
   else
-    appendChildNodes( "notes", note_holder );
+    appendChildNodes( "notes", this.holder );
 
   this.scrape_title();
   this.focus_default_text_field();
@@ -749,7 +750,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
     var query = parse_query( link );
     var title = link_title( link, query );
     var id = query.note_id;
-    signal( self, "load_editor", title, id, null, null, link, self.div );
+    signal( self, "load_editor", title, id, null, null, link, self.holder );
     return true;
   }
 
@@ -1120,8 +1121,7 @@ Editor.prototype.shutdown = function( event ) {
   }
 
   disconnectAll( this.div );
-  var holder = getElement( "note_holder_" + this.id );
-  this.div = null;
+  var holder = this.holder;
 
   blindUp( holder, options = { "duration": 0.25, afterFinish: function () {
     try {
