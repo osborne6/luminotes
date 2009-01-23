@@ -457,7 +457,7 @@ Editor.prototype.connect_handlers = function () {
     } );
   }
 
-  var forms = getElementsByTagAndClassName( "form", null, this.document );
+  var forms = getElementsByTagAndClassName( "form", null, this.div );
   for ( var i in forms ) {
     var form = forms[ i ];
     connect_form( form );
@@ -472,7 +472,7 @@ Editor.prototype.connect_handlers = function () {
     } );
   }
 
-  var buttons = getElementsByTagAndClassName( "input", "button", this.document );
+  var buttons = getElementsByTagAndClassName( "input", "button", this.div );
   for ( var i in buttons ) {
     var button = buttons[ i ];
     if ( button.getAttribute( "type" ) == "submit")
