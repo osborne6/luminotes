@@ -15,7 +15,8 @@ function Shared_iframe() {
       "src": MSIE6 && "/static/html/blank.html" || "about:blank",
       "frameBorder": "0",
       "scrolling": "no",
-      "class": "note_frame invisible"
+      "class": "note_frame invisible",
+      "height": "0"
     }
   );
 
@@ -1022,6 +1023,7 @@ Editor.prototype.release_iframe = function () {
   if ( this.div )
     removeElementClass( this.div, "invisible" );
   addElementClass( this.iframe, "invisible" );
+  setElementDimensions( this.iframe, { "h": 0 } );
   this.iframe = null;
 }
 
