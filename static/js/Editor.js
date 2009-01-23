@@ -1121,9 +1121,6 @@ Editor.prototype.shutdown = function( event ) {
   var holder = getElement( "note_holder_" + this.id );
   this.div = null;
 
-  // FIXME: if a div editor is vertically above an iframe editor, and the div editor is shutdown()
-  // here, then after blindUp() is done, the iframe is in the wrong location (because its position
-  // was set before blindUp() was called)
   blindUp( holder, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( holder );
