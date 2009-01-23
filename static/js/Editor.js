@@ -388,12 +388,17 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
     var selection = this.iframe.contentWindow.getSelection();
     var last_node = this.document.body.lastChild;
 
-    /// FIXME: sometimes positioning the cursor at the end puts it in a place where you can't type any characters
-    if ( ( last_node.nodeValue == "\n" || last_node.tagName == "BR" ) && last_node.previousSibling )
+    if ( selection.rangeCount > 0 )
+      var range = selection.getRangeAt( 0 );
+    else
+      var range = this.document.createRange();
+
+    while ( ( last_node.nodeValue == "\n" || last_node.tagName == "BR" ) && last_node.previousSibling )
       last_node = last_node.previousSibling;
 
-    selection.selectAllChildren( last_node );
-    selection.collapseToEnd();
+    range.selectNodeContents( last_node );
+    range.collapse( false );
+    selection.addRange( range );
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
     range.move( "textedit" );
