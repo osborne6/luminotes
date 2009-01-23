@@ -984,9 +984,9 @@ Editor.prototype.focus = function ( suppress_signal ) {
   if ( this.div && this.edit_enabled )
     this.claim_iframe();
 
-  addElementClass( this.iframe || this.div, "focused_note_frame" );
-
   if ( this.iframe ) {
+    addElementClass( this.iframe, "focused_note_frame" );
+
     if ( OPERA )
       this.iframe.focus();
     else
