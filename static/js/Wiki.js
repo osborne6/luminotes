@@ -1430,6 +1430,8 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
 
   if ( editor == this.focused_editor )
     this.focused_editor = null;
+  if ( this.focused_editor )
+    this.focused_editor.blur();
 
   if ( !editor ) {
     editor = this.focused_editor;
@@ -1466,6 +1468,9 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
 Wiki.prototype.delete_editor = function ( event, editor ) {
   this.clear_messages();
   this.clear_pulldowns();
+
+  if ( this.focused_editor )
+    this.focused_editor.blur();
 
   if ( !editor ) {
     editor = this.focused_editor;

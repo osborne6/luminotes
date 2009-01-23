@@ -89,7 +89,7 @@ Editor.prototype.create_div = function ( position_after ) {
   this.create_note_controls();
   this.connect_note_controls();
 
-  var note_holder = createDOM( "div", { "id": "note_holder_" + this.id },
+  var note_holder = createDOM( "div", { "id": "note_holder_" + this.id, "class": "note_holder" },
     this.note_controls,
     this.div
   );
@@ -206,37 +206,21 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   var iframe_id = "note_" + this.id;
 
   // if there is already an iframe for this Editor, bail
-  var iframe = getElement( iframe_id );
-  if ( iframe )
+  if ( this.iframe )
     return;
 
   // claim the reusable iframe for this note, stealing it from the note that's using it (if any)
   this.iframe = Editor.shared_iframe.iframe;
   this.iframe.setAttribute( "id", iframe_id );
   this.iframe.setAttribute( "name", iframe_id );
-  var other_div;
 
-  if ( this.iframe.editor ) {
-    disconnectAll( this.iframe.contentWindow );
-    disconnectAll( this.iframe );
-    disconnectAll( this.iframe.editor.document.body );
-    disconnectAll( this.iframe.editor.document );
-    this.iframe.editor.iframe = null;
-    this.iframe.editor.document = null;
-    other_div = this.iframe.editor.div;
-  }
+  if ( this.iframe.editor )
+    this.iframe.editor.blur();
   this.iframe.editor = this;
-
-  // hide the iframe and show a div in its place
-  if ( other_div )
-    removeElementClass( other_div, "invisible" );
 
   // setup the note controls
   this.note_controls = getElement( "note_controls_" + this.id );
   this.connect_note_controls( true );
-
-  // hide the iframe to make this transition appear seamless
-  addElementClass( this.iframe, "invisible" );
 
   // give the invisible iframe the exact same position as the div it will replace. subtract the
   // position of the center_content_area container, which is relatively positioned
@@ -999,9 +983,23 @@ Editor.prototype.focus = function ( suppress_signal ) {
 }
 
 Editor.prototype.blur = function () {
-  this.scrape_title();
+  if ( !this.iframe )
+    return;
 
-  removeElementClass( this.iframe || this.div, "focused_note_frame" );
+  this.scrape_title();
+  var div = null;
+
+  disconnectAll( this.iframe.contentWindow );
+  disconnectAll( this.iframe );
+  disconnectAll( this.document.body );
+  disconnectAll( this.document );
+  this.iframe.editor = null;
+  this.document = null;
+
+  if ( this.div )
+    removeElementClass( this.div, "invisible" );
+  addElementClass( this.iframe, "invisible" );
+  this.iframe = null;
 }
 
 Editor.prototype.contents = function () {
@@ -1097,13 +1095,15 @@ Editor.prototype.shutdown = function( event ) {
   }
 
   disconnectAll( this.div );
-  var div = this.div;
+  var holder = getElement( "note_holder_" + this.id );
   this.div = null;
 
-  blindUp( div, options = { "duration": 0.25, afterFinish: function () {
+  // FIXME: if a div editor is vertically above an iframe editor, and the div editor is shutdown()
+  // here, then after blindUp() is done, the iframe is in the wrong location (because its position
+  // was set before blindUp() was called)
+  blindUp( holder, options = { "duration": 0.25, afterFinish: function () {
     try {
-      removeElement( note_controls );
-      removeElement( div );
+      removeElement( holder );
     } catch ( e ) { }
   } } );
 
