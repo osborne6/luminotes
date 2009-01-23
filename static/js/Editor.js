@@ -215,7 +215,7 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   this.iframe.setAttribute( "name", iframe_id );
 
   if ( this.iframe.editor )
-    this.iframe.editor.blur();
+    this.iframe.editor.release_iframe();
   this.iframe.editor = this;
 
   // setup the note controls
@@ -983,11 +983,16 @@ Editor.prototype.focus = function ( suppress_signal ) {
 }
 
 Editor.prototype.blur = function () {
+  this.scrape_title();
+
+  removeElementClass( this.iframe || this.div, "focused_note_frame" );
+}
+
+Editor.prototype.release_iframe = function () {
   if ( !this.iframe )
     return;
 
-  this.scrape_title();
-  var div = null;
+  var contents = this.contents();
 
   disconnectAll( this.iframe.contentWindow );
   disconnectAll( this.iframe );
@@ -996,6 +1001,9 @@ Editor.prototype.blur = function () {
   this.iframe.editor = null;
   this.document = null;
 
+  var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
+  static_contents.innerHTML = contents;
+
   if ( this.div )
     removeElementClass( this.div, "invisible" );
   addElementClass( this.iframe, "invisible" );
@@ -1003,14 +1011,14 @@ Editor.prototype.blur = function () {
 }
 
 Editor.prototype.contents = function () {
+  if ( this.iframe && this.document && this.document.body )
+    return this.document.body.innerHTML;
+
   if ( this.div ) {
     var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
     if ( static_contents )
       return static_contents.innerHTML;
   }
-
-  if ( this.document && this.document.body )
-    return this.document.body.innerHTML;
 
   return this.initial_text || "";
 }

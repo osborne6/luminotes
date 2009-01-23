@@ -1010,6 +1010,10 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
     this.focused_editor.blur();
     this.clear_pulldowns();
 
+    // if there is no focused editor anymore, release the iframe of the previously focused editor
+    if ( editor == null )
+      this.focused_editor.release_iframe();
+
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
     if ( this.focused_editor.empty() ) {
       signal( this, "note_removed", this.focused_editor.id );
@@ -1024,6 +1028,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
 
   this.focused_editor = editor;
   this.update_toolbar();
+
 }
 
 Wiki.prototype.make_byline = function ( username, creation, note_id ) {
@@ -1431,7 +1436,7 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
   if ( editor == this.focused_editor )
     this.focused_editor = null;
   if ( this.focused_editor )
-    this.focused_editor.blur();
+    this.editor_focused( null );
 
   if ( !editor ) {
     editor = this.focused_editor;
@@ -1470,7 +1475,7 @@ Wiki.prototype.delete_editor = function ( event, editor ) {
   this.clear_pulldowns();
 
   if ( this.focused_editor )
-    this.focused_editor.blur();
+    this.editor_focused( null );
 
   if ( !editor ) {
     editor = this.focused_editor;
