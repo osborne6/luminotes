@@ -351,6 +351,14 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
     var start = getFirstElementByTagAndClassName( null, "range_start_container", this.document );
     var end = getFirstElementByTagAndClassName( null, "range_end_container", this.document );
 
+    // if start and end don't exist, assume that they are the top-level document body node. this
+    // occurs when start and end are set to the div's static_note_contents node, which doesn't exist
+    // within the iframe
+    if ( !start && !end ) {
+      start = this.document.body;
+      end = this.document.body;
+    }
+
     if ( start && end ) {
       removeElementClass( start, "range_start_container" );
       removeElementClass( end, "range_end_container" );
@@ -379,7 +387,9 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
     var last_node = this.document.body.lastChild;
-    if ( last_node.nodeValue == "\n" && last_node.previousSibling )
+
+    /// FIXME: sometimes positioning the cursor at the end puts it in a place where you can't type any characters
+    if ( ( last_node.nodeValue == "\n" || last_node.tagName == "BR" ) && last_node.previousSibling )
       last_node = last_node.previousSibling;
 
     selection.selectAllChildren( last_node );
