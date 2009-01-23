@@ -487,7 +487,7 @@ Editor.prototype.highlight = function ( scroll ) {
   var self = this;
 
   function do_highlight() {
-    if ( self.div ) {
+    if ( !self.iframe ) {
       new Highlight( self.div, options = { "queue": { "scope": "highlight", "limit": 1 } } );
       return;
     }
