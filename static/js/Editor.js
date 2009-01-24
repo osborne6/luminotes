@@ -203,7 +203,7 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
   }
 }
 
-Editor.prototype.claim_iframe = function ( position_after, click_position ) {
+Editor.prototype.claim_iframe = function ( position_after ) {
   var self = this;
   var iframe_id = "note_" + this.id;
 
@@ -244,7 +244,7 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   addElementClass( this.div, "invisible" );
 
   function finish_init() {
-    self.position_cursor( click_position, range );
+    self.position_cursor( range );
     self.connect_handlers();
     signal( self, "focused", self );
   }
@@ -293,52 +293,59 @@ Editor.prototype.focus_default_text_field = function () {
 }
 
 Editor.prototype.add_selection_bookmark = function () {
-  if ( !window.getSelection ) // IE
-    return null;
+  if ( window.getSelection ) { // browsers such as Firefox
+    // grab the current range for this editor's div so that it can be duplicated within the iframe
+    var selection =  window.getSelection();
+    if ( selection.rangeCount > 0 )
+      var range = selection.getRangeAt( 0 );
+    else
+      var range = document.createRange();
 
-  // grab the current range for this editor's div so that it can be duplicated within the iframe
-  var selection =  window.getSelection();
-  if ( selection.rangeCount > 0 )
-    var range = selection.getRangeAt( 0 );
-  else
-    var range = document.createRange();
+    // if the current range is not within this editor's static note div, then bail
+    if ( range.startContainer == document || range.endContainer == document )
+      return null;
+    if ( !isChildNode( range.startContainer.parentNode, this.div ) || !isChildNode( range.endContainer.parentNode, this.div ) )
+      return null;
 
-  // if the current range is not within this editor's static note div, then bail
-  if ( range.startContainer == document || range.endContainer == document )
-    return null;
-  if ( !isChildNode( range.startContainer.parentNode, this.div ) || !isChildNode( range.endContainer.parentNode, this.div ) )
-    return null;
+    // mark the nodes that are start and end containers for the current range. we have to mark the
+    // parent node instead of the start/end container itself, because text nodes can't have classes
+    var parent_node = range.startContainer.parentNode
+    addElementClass( parent_node, "range_start_container" );
+    for ( var i in parent_node.childNodes ) {
+      var child_node = parent_node.childNodes[ i ];
+      if ( child_node == range.startContainer )
+        range.start_child_offset = i;
+    }
 
-  // mark the nodes that are start and end containers for the current range. we have to mark the
-  // parent node instead of the start/end container itself, because text nodes can't have classes
-  var parent_node = range.startContainer.parentNode
-  addElementClass( parent_node, "range_start_container" );
-  for ( var i in parent_node.childNodes ) {
-    var child_node = parent_node.childNodes[ i ];
-    if ( child_node == range.startContainer )
-      range.start_child_offset = i;
+    var parent_node = range.endContainer.parentNode
+    addElementClass( parent_node, "range_end_container" );
+    for ( var i in parent_node.childNodes ) {
+      var child_node = parent_node.childNodes[ i ];
+      if ( child_node == range.endContainer )
+        range.end_child_offset = i;
+    }
+
+    return range;
+  } else if ( document.selection ) { // browsers such as IE
+    var range = document.selection.createRange();
+    if ( !isChildNode( range.parentElement(), this.div ) )
+      return null;
+
+    return range;
   }
 
-  var parent_node = range.endContainer.parentNode
-  addElementClass( parent_node, "range_end_container" );
-  for ( var i in parent_node.childNodes ) {
-    var child_node = parent_node.childNodes[ i ];
-    if ( child_node == range.endContainer )
-      range.end_child_offset = i;
-  }
-
-  return range;
+  return null;
 }
 
 Editor.prototype.remove_selection_bookmark = function ( range ) {
   // unmark the nodes that are start and end containers for the given range
-  if ( range ) {
+  if ( range && range.startContainer && range.endContainer ) {
     removeElementClass( range.startContainer.parentNode, "range_start_container" );
     removeElementClass( range.endContainer.parentNode, "range_end_container" );
   }
 }
 
-Editor.prototype.position_cursor = function ( click_position, div_range ) {
+Editor.prototype.position_cursor = function ( div_range ) {
   if ( this.init_focus ) {
     this.init_focus = false;
     if ( this.iframe )
@@ -377,13 +384,29 @@ Editor.prototype.position_cursor = function ( click_position, div_range ) {
       selection.addRange( range );
       return;
     }
-  } else if ( click_position && this.document.selection ) { // browsers such as IE
-    // position the cursor by using given click position coordinates
+  } else if ( div_range && this.document.selection ) { // browsers such as IE
+    function text_length( text ) {
+      var count = 0;
+      for ( var i = 0; i < text.length; i++ ) {
+        if ( text.charAt( i ) != "\r" )
+          count++;
+      }
+      return count;
+    }
+
+    // create a range that extends from the start of the div to the start of the original range
+    var before_div_range = div_range.duplicate();
+    before_div_range.moveToElementText( this.div );
+    before_div_range.setEndPoint( "EndToStart", div_range );
+
+    // calculate the start offset based on the size of that range in characters
+    var start = text_length( before_div_range.text ) - 1;
+    var end = start + text_length( div_range.text );
+
+    // finally, position the text cursor within the iframe
     var range = this.document.selection.createRange();
-    range.moveToPoint(
-      click_position.x - this.iframe.offsetLeft - FRAME_BORDER_WIDTH,
-      click_position.y - this.iframe.offsetTop - FRAME_BORDER_WIDTH
-    );
+    range.moveEnd( "character", end );
+    range.moveStart( "character", start );
     range.select();
 
     return;
@@ -765,12 +788,7 @@ Editor.prototype.mouse_clicked = function ( event ) {
     if ( !link_clicked && this.div ) {
       this.init_focus = true;
 
-      if ( MSIE )
-        var click_position = { "x": window.event.x, "y": window.event.y };
-      else
-        var click_position = event.mouse().page;
-
-      this.claim_iframe( null, click_position );
+      this.claim_iframe( null );
     }
 
     // in case the cursor has moved, update the state
