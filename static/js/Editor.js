@@ -250,6 +250,8 @@ Editor.prototype.claim_iframe = function ( position_after, click_position ) {
   }
 
   // this small delay gives the browser enough lag time after set_iframe_contents() to process the HTML
+  // FIXME: with this lag time, any selected text briefly flashes. without this lag, selection text doesn't
+  // flash, but if there is no selected text, then the text cursor doesn't show up
   setTimeout( finish_init, 1 );
 }
 
@@ -291,6 +293,9 @@ Editor.prototype.focus_default_text_field = function () {
 }
 
 Editor.prototype.add_selection_bookmark = function () {
+  if ( !window.getSelection ) // IE
+    return null;
+
   // grab the current range for this editor's div so that it can be duplicated within the iframe
   var selection =  window.getSelection();
   if ( selection.rangeCount > 0 )
@@ -474,7 +479,7 @@ Editor.prototype.connect_handlers = function () {
   var buttons = getElementsByTagAndClassName( "input", "button", this.div );
   for ( var i in buttons ) {
     var button = buttons[ i ];
-    if ( button.getAttribute( "type" ) == "submit")
+    if ( button.getAttribute( "type" ) == "submit" )
       continue;
 
     connect_button( button );

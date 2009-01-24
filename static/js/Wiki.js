@@ -490,7 +490,7 @@ Wiki.prototype.create_blank_editor = function ( event ) {
 
   // if there is already a blank editor, then highlight it and bail
   if ( Editor.shared_iframe && Editor.shared_iframe.editor && Editor.shared_iframe.editor.empty() ) {
-    Editor.shared_iframe..editor.highlight();
+    Editor.shared_iframe.editor.highlight();
     return;
   }
 
