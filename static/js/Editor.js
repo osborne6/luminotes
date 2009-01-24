@@ -816,7 +816,7 @@ HOVER_DURATION_MILLISECONDS = 1000;
 
 Editor.prototype.mouse_hovered = function ( event ) {
   // ignore mouse hover events for static div notes
-  if ( this.div )
+  if ( !this.iframe )
     return;
 
   // search through the tree of elements containing the hover target for a link
@@ -1181,11 +1181,11 @@ Editor.prototype.shutdown = function( event ) {
 }
 
 Editor.prototype.summarize = function () {
-  if ( this.div )
-    return summarize_html( scrapeText( this.div ), this.title );
-
   if ( this.document && this.document.body )
     return summarize_html( scrapeText( this.document.body ), this.title );
+
+  if ( this.div )
+    return summarize_html( scrapeText( this.div ), this.title );
 
   return "";
 }

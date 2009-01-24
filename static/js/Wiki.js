@@ -946,7 +946,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
   if ( !pulldown && title.length > 0 && query.note_id == "new" ) {
     this.clear_pulldowns();
     var self = this;
-    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.holder, title, editor.document );
+    var suggest_pulldown = new Suggest_pulldown( this, this.notebook.object_id, this.invoker, link, editor.iframe, title, editor.document );
     connect( suggest_pulldown, "suggestion_selected", function ( note ) {
       self.update_link_with_suggestion( editor, link, note )
     } );
@@ -3208,7 +3208,7 @@ function Link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.holder, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "link_" + editor.id, link, editor.iframe, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;
@@ -3451,7 +3451,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   this.link = link || editor.find_link_at_cursor();
   this.link.pulldown = this;
 
-  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.holder, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe, ephemeral );
   wiki.down_image_button( "attachFile" );
 
   var vaguely_random = new Date().getTime();
@@ -3750,7 +3750,7 @@ function File_link_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral
   link.pulldown = this;
   this.link = link;
 
-  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.holder, ephemeral );
+  Pulldown.call( this, wiki, notebook_id, "file_link_" + editor.id, link, editor.iframe, ephemeral );
 
   this.invoker = invoker;
   this.editor = editor;
