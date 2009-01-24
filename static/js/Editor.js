@@ -364,7 +364,11 @@ Editor.prototype.position_cursor = function ( div_range ) {
   // if requested, move the text cursor to a specific location
   if ( div_range && this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     // position the cursor by using a bookmarked text range
-    var selection = this.iframe.contentWindow.getSelection();
+    if ( WEBKIT )
+      var selection = window.getSelection();
+    else
+      var selection = this.iframe.contentWindow.getSelection();
+
     if ( selection.rangeCount > 0 )
       var range = selection.getRangeAt( 0 );
     else
@@ -423,7 +427,10 @@ Editor.prototype.position_cursor = function ( div_range ) {
 
   // otherwise, just move the text cursor to the end of the text
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
-    var selection = this.iframe.contentWindow.getSelection();
+    if ( WEBKIT )
+      var selection = window.getSelection();
+    else
+      var selection = this.iframe.contentWindow.getSelection();
     var last_node = this.document.body.lastChild;
 
     if ( selection.rangeCount > 0 )
