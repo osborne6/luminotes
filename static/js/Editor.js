@@ -28,6 +28,27 @@ function Shared_iframe() {
   } else { // browsers such as IE
     this.iframe.contentWindow.document.designMode = "On";
   }
+
+  if ( this.iframe.contentDocument ) { // browsers such as Firefox
+    var document = this.iframe.contentDocument;
+  } else { // browsers such as IE
+    var document = this.iframe.contentWindow.document;
+  }
+
+  document.open();
+  var padding = '1.5em';
+  if ( GECKO )
+    padding = '1.5em 1.5em 1em 1.5em';
+  else if ( MSIE )
+    padding = '1.5em 1.5em 2.25em 1.5em';
+  else if ( WEBKIT )
+    padding = '0.4em 1.5em 1em 1.5em';
+
+  document.write(
+    '<html><head><style>html { padding: 0em; margin: 0; } body { padding: ' + padding + '; margin: 0; font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .indented { margin-left: 1em; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; }</style>' +
+    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body></body></html>'
+  );
+  document.close();
 }
 
 
@@ -247,12 +268,15 @@ Editor.prototype.claim_iframe = function ( position_after ) {
     self.position_cursor( range );
     self.connect_handlers();
     signal( self, "focused", self );
+    self.focus( true );
   }
 
-  // this small delay gives the browser enough lag time after set_iframe_contents() to process the HTML
-  // FIXME: with this lag time, any selected text briefly flashes. without this lag, selection text doesn't
-  // flash, but if there is no selected text, then the text cursor doesn't show up
-  setTimeout( finish_init, 1 );
+  // this small delay gives Firefox enough lag time after set_iframe_contents() to display the
+  // blinking text cursor at the end of the iframe contents
+  if ( GECKO && !range )
+    setTimeout( finish_init, 1 );
+  else
+    finish_init();
 }
 
 Editor.prototype.set_iframe_contents = function ( contents_text ) {
@@ -262,27 +286,12 @@ Editor.prototype.set_iframe_contents = function ( contents_text ) {
     this.document = this.iframe.contentWindow.document;
   }
 
-  this.document.open();
-  if ( !contents_text ) {
-    // hack: add a zero-width space to make the horizontal line under title show up in the
-    // correct position, even before there is a title
+  // hack: add a zero-width space to make the horizontal line under title show up in the
+  // correct position, even before there is a title
+  if ( !contents_text )
     contents_text = "<h3>&#8203;";
-  }
 
-  var padding = '1.5em';
-  if ( GECKO )
-    padding = '1.5em 1.5em 1em 1.5em';
-  else if ( MSIE )
-    padding = '1.5em 1.5em 2.25em 1.5em';
-  else if ( WEBKIT )
-    padding = '0.4em 1.5em 1em 1.5em';
-
-  // TODO: maybe just replace the document body if the <head> is already set up?
-  this.document.write(
-    '<html><head><style>html { padding: 0em; margin: 0; } body { padding: ' + padding + '; margin: 0; font-size: 90%; line-height: 140%; font-family: sans-serif; } h3 { padding-bottom: 0.25em; border-bottom: 1px solid #dddddd; margin-bottom: 0.75em; } a[target ^= "_new"] { background: url(/static/images/web_icon_tiny.png) right center no-repeat; padding-right: 13px; } .diff a[target ^= "_new"] { background-image: none; padding-right: 0; } a:hover { color: #ff6600; } img { border-width: 0; } .left_justified { float: left; margin: 0.5em 1.5em 0.5em 0; } .center_justified { display: block; margin: 0.5em auto 0.5em auto; text-align: center; } .right_justified { float: right; margin: 0.5em 0 0.5em 1.5em; } hr { border: 0; color: #000000; background-color: #000000; height: 1px; } ul { list-style-type: disc; } ul li { margin-top: 0.5em; } ol li { margin-top: 0.5em; } .center_text { text-align: center; } .small_text { padding-top: 0.5em; font-size: 90%; } .indented { margin-left: 1em; } .thumbnail_left { float: left; margin: 0.5em; margin-right: 1em; margin-bottom: 0.5em; border: 1px solid #999999; } .thumbnail_right { float: right; margin: 0.5em; margin-left: 1em; margin-bottom: 0.5em; border: 1px solid #999999; }</style>' +
-    '<meta content="text/html; charset=UTF-8" http-equiv="content-type"></meta></head><body>' + contents_text + '</body></html>'
-  );
-  this.document.close();
+  this.document.body.innerHTML = contents_text;
 }
 
 Editor.prototype.focus_default_text_field = function () {
