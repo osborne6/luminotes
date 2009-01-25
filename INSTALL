@@ -30,7 +30,8 @@ packages:
 database setup
 --------------
 
-Initialize the database with the starting schema and default data:
+Initialize the database with the starting schema and default data. You should
+run this command from the base Luminotes directory:
 
   export PYTHONPATH=.
   python2.4 tools/initdb.py -l
@@ -125,7 +126,8 @@ package:
 Note that you can use a different UTF-8 locale if you prefer. For instance, in
 the command above, you can use 'en_GB.UTF-8' instead of 'en_US.UTF-8'.
 
-Initialize the database with the starting schema and default data:
+Initialize the database with the starting schema and default data. You should
+run this command from the base Luminotes directory:
 
   export PYTHONPATH=.
   export PGPASSWORD=mypassword
