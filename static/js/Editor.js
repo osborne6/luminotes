@@ -872,7 +872,7 @@ Editor.prototype.mouse_hovered = function ( event ) {
 
 Editor.prototype.mouse_hover_timeout = function ( hover_target ) {
   // if the mouse is hovering over the same target that it was when the timer started
-  if ( hover_target == this.hover_target )
+  if ( hover_target == this.hover_target && this.iframe )
     signal( this, "mouse_hovered", hover_target );
 }
 
