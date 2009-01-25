@@ -232,6 +232,14 @@ Editor.prototype.claim_iframe = function ( position_after ) {
   if ( this.iframe )
     return;
 
+  // hack to prevent iframe from being incorrectly positioned if there is a closing (and thus
+  // moving) message or error box
+  if ( getElementsByTagAndClassName( "div", "message" ).length > 0 ||
+       getElementsByTagAndClassName( "div", "error" ).length > 0 ) {
+    setTimeout( function() { self.claim_iframe( position_after ); }, 25 );
+    return;
+  }
+
   // claim the reusable iframe for this note, stealing it from the note that's using it (if any)
   this.iframe = Editor.shared_iframe.iframe;
   this.iframe.setAttribute( "id", iframe_id );
