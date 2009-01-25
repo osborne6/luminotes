@@ -2556,14 +2556,6 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
   this.clear_messages();
   this.clear_pulldowns();
 
-  // remove all empty editors, some of which might exist due to a problem reaching the server
-  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
-  for ( var i in iframes ) {
-    var editor = iframes[ i ].editor;
-    if ( editor.empty() )
-      editor.shutdown();
-  }
-
   var inner_div = DIV( { "class": "error_inner" }, text + " " );
   for ( var i in nodes )
     appendChildNodes( inner_div, nodes[ i ] );
