@@ -472,8 +472,8 @@ Editor.prototype.connect_handlers = function () {
   var self = this; // necessary so that the member functions of this editor object are used
 
   if ( !this.iframe ) {
-    connect( this.div, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
-    connect( this.div, "onclick", function ( event ) { event.stop(); } );
+    connect( this.div, "onmouseup", function ( event ) { self.mouse_released( event ); } );
+    connect( this.div, "onclick", function ( event ) { self.mouse_clicked( event ) } );
     connect( this.div, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.div, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
   } else {
@@ -481,8 +481,8 @@ Editor.prototype.connect_handlers = function () {
       connect( this.document, "onkeydown", function ( event ) { self.key_pressed( event ); } );
       connect( this.document, "onkeyup", function ( event ) { self.key_released( event ); } );
     }
-    connect( this.document, "onmouseup", function ( event ) { self.mouse_clicked( event ); } );
-    connect( this.document, "onclick", function ( event ) { event.stop(); } );
+    connect( this.document, "onmouseup", function ( event ) { self.mouse_released( event ); } );
+    connect( this.document, "onclick", function ( event ) { self.mouse_clicked( event ); } );
     connect( this.document, "onmouseover", function ( event ) { self.mouse_hovered( event ); } );
     connect( this.document, "ondragover", function ( event ) { self.mouse_dragged( event ); } );
     connect( this.iframe, "onload", function () { self.resize(); } );
@@ -750,7 +750,7 @@ Editor.prototype.cleanup_html = function ( key_code ) {
   }
 }
 
-Editor.prototype.mouse_clicked = function ( event ) {
+Editor.prototype.mouse_released = function ( event ) {
   this.link_started = null;
   var self = this;
 
@@ -810,6 +810,22 @@ Editor.prototype.mouse_clicked = function ( event ) {
     // in case the cursor has moved, update the state
     signal( this, "state_changed", this, link_clicked );
   }
+}
+
+Editor.prototype.mouse_clicked = function ( event ) {
+  var target = event.target();
+  if ( !target ) return;
+
+  var tag_name = target.tagName;
+  if ( !tag_name ) return;
+  tag_name = tag_name.toLowerCase();
+
+  // allow clicks on buttons, labels, and input fields
+  if ( tag_name == "button" || tag_name == "label" || tag_name == "input" )
+    return;
+
+  // block all other clicks (e.g. on links, to prevent the browser from handling link clicks itself)
+  event.stop();
 }
 
 HOVER_DURATION_MILLISECONDS = 1000;
