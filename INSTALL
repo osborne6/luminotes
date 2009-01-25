@@ -111,7 +111,8 @@ and set a new password, for instance, "mypassword".
 
 Also as the PostgreSQL superuser, setup full-text searching. The path to the
 tsearch2.sql file may be different depending on your Linux distribution or
-PostgreSQL version:
+PostgreSQL version, and is usually found within a PostgreSQL "contrib"
+package:
 
   psql luminotes < /usr/share/postgresql/8.1/contrib/tsearch2.sql
   echo "grant all on pg_ts_cfg to luminotes;" | psql luminotes
