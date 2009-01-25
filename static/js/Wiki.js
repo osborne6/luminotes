@@ -489,8 +489,8 @@ Wiki.prototype.create_blank_editor = function ( event ) {
   }
 
   // if there is already a blank editor, then highlight it and bail
-  if ( Editor.shared_iframe && Editor.shared_iframe.editor && Editor.shared_iframe.editor.empty() ) {
-    Editor.shared_iframe.editor.highlight();
+  if ( Editor.shared_iframe && Editor.shared_iframe.editor() && Editor.shared_iframe.editor().empty() ) {
+    Editor.shared_iframe.editor().highlight();
     return;
   }
 
@@ -854,8 +854,8 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 }
 
 Wiki.prototype.resize_editor = function () {
-  if ( Editor.shared_frame && Editor.shared_iframe.editor )
-    Editor.shared_iframe.editor.resize();
+  if ( Editor.shared_iframe && Editor.shared_iframe.editor() )
+    Editor.shared_iframe.editor().resize();
 }
 
 Wiki.prototype.resize_toolbar = function () {

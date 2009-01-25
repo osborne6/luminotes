@@ -51,6 +51,10 @@ function Shared_iframe() {
   document.close();
 }
 
+Shared_iframe.prototype.editor = function () {
+  return this.iframe.editor;
+}
+
 
 function Editor( id, notebook_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, start_dirty, own_notes_only ) {
   this.id = id;
