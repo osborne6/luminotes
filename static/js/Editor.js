@@ -450,7 +450,8 @@ Editor.prototype.position_cursor = function ( div_range ) {
     else
       var range = this.document.createRange();
 
-    while ( ( last_node.nodeValue == "\n" || last_node.tagName == "BR" ) && last_node.previousSibling )
+    while ( ( last_node.nodeValue == "\n" || ( last_node.tagName && last_node.tagName == "BR" ) ) &&
+            last_node.previousSibling )
       last_node = last_node.previousSibling;
 
     range.selectNodeContents( last_node );
