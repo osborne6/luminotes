@@ -830,6 +830,8 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
   var editor = new Editor( id, this.notebook.object_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty, own_notes_only );
   if ( focus )
     this.editor_focused( editor );
+  else if ( !read_write )
+    this.editor_focused( null );
 
   if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
@@ -1955,7 +1957,7 @@ Wiki.prototype.display_search_results = function ( result ) {
     );
   }
 
-  this.search_results_editor = this.create_editor( "search_results", "<h3>search results</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+  this.search_results_editor = this.create_editor( "search_results", "<h3>search results</h3>" + list.innerHTML, undefined, undefined, undefined, false, true, false, getElement( "notes_top" ) );
 }
 
 Wiki.prototype.share_notebook = function () {
@@ -2047,7 +2049,7 @@ Wiki.prototype.share_notebook = function () {
     ) : null
   );
 
-  this.create_editor( "share_notebook", "<h3>share this notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+  this.create_editor( "share_notebook", "<h3>share this notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, false, getElement( "notes_top" ) );
 }
 
 Wiki.prototype.display_invites = function ( invite_area ) {
@@ -2197,7 +2199,7 @@ Wiki.prototype.display_settings = function () {
     appendChildNodes( group_list, item );
   }
 
-  this.create_editor( "settings", "<h3>account settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "notes_top" ) );
+  this.create_editor( "settings", "<h3>account settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, false, getElement( "notes_top" ) );
 }
 
 Wiki.prototype.display_group_settings = function ( result ) {
@@ -2309,7 +2311,7 @@ Wiki.prototype.display_group_settings = function ( result ) {
   if ( result.other_users.length == 0 )
     appendChildNodes( user_list, createDOM( "div", { "class": "indented" }, "This group has no members." ) );
 
-  this.create_editor( "group_" + result.group.object_id, "<h3>group admin settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, getElement( "note_settings" ) );
+  this.create_editor( "group_" + result.group.object_id, "<h3>group admin settings</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, false, getElement( "note_settings" ) );
 }
 
 Wiki.prototype.display_import_notebook = function ( result ) {
@@ -2415,7 +2417,7 @@ Wiki.prototype.display_import_notebook = function ( result ) {
     createDOM( "p", {}, "Once you begin the import, it may take several seconds to complete." )
   );
   
-  this.create_editor( "import", "<h3>import a notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, true, undefined );
+  this.create_editor( "import", "<h3>import a notebook</h3>" + div.innerHTML, undefined, undefined, undefined, false, true, false, undefined );
 }
 
 Wiki.prototype.declutter_clicked = function () {
