@@ -44,15 +44,18 @@ class Main_page( Page ):
     startup_note_ids = [ startup_note.object_id for startup_note in startup_notes ]
 
     def note_controls( note, read_write ):
+      read_write_access = ( read_write == Notebook.READ_WRITE ) or \
+        ( read_write == Notebook.READ_WRITE_FOR_OWN_NOTES and note.user_id == user.object_id )
+
       return Div(
-        ( read_write != Notebook.READ_ONLY ) and Input(
+        read_write_access and Input(
           type = "button",
           class_ = "note_button",
           id = "delete_note_%s" % note.object_id,
           value = "delete" + ( note.deleted_from_id and " forever" or "" ),
           title = "delete note [ctrl-d]"
         ) or None,
-        ( read_write != Notebook.READ_ONLY ) and note.deleted_from_id and Input(
+        read_write_access and note.deleted_from_id and Input(
           type = "button",
           class_ = "note_button",
           id = "undelete_note_%s" % note.object_id,
