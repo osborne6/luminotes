@@ -100,6 +100,9 @@ Editor.prototype.create_div = function ( position_after ) {
     this.holder = getElement( "note_holder_" + this.id );
     this.connect_note_controls( true );
     this.div = static_note_div;
+    static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
+    if ( static_contents && static_contents.innerHTML != this.initial_text )
+      static_contents.innerHTML = this.initial_text;
     this.scrape_title();
     this.focus_default_text_field();
     this.connect_handlers();
