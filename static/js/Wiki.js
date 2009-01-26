@@ -2547,7 +2547,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
   else if ( this.focused_editor )
     insertSiblingNodesAfter( this.focused_editor.holder, div )
   else
-    appendChildNodes( "notes", div );
+    insertSiblingNodesAfter( "notes_top", div );
 
   this.scroll_to( div );
 
@@ -2580,7 +2580,7 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
   else if ( this.focused_editor )
     insertSiblingNodesAfter( this.focused_editor.holder, div )
   else
-    appendChildNodes( "notes", div );
+    insertSiblingNodesAfter( "notes_top", div );
 
   this.scroll_to( div );
 
