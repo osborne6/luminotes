@@ -785,11 +785,13 @@ Editor.prototype.mouse_released = function ( event ) {
 
     // links with targets are considered to be external links pointing outside of this wiki
     if ( link.target ) {
-      // if this is a read-only editor, bail and let the browser handle the link normally
-      if ( !self.edit_enabled ) return true;
+      // if this is a read-only editor and the link target is "_top", go to the link's URL directly
+      if ( !self.edit_enabled && link.target == "_top" ) {
+        window.location = link.href;
+        return true;
+      }
       
-      // otherwise, this is a read-write editor, so we've got to launch the external link ourselves.
-      // note that this ignores what the link target actually contains and assumes it's "_new"
+      // launch the external link ourselves, assuming that its target is "_new"
       window.open( link.href );
       return true;
     }
