@@ -99,6 +99,7 @@ class Test_user( object ):
     d = self.user.to_dict()
 
     assert d.get( "username" ) == self.username
+    assert d.get( "email_address" ) == self.email_address
     assert d.get( "storage_bytes" ) == self.user.storage_bytes
     assert d.get( "group_storage_bytes" ) == self.user.group_storage_bytes
     assert d.get( "rate_plan" ) == self.user.rate_plan

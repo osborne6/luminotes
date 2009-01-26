@@ -485,6 +485,7 @@ class User( Persistent ):
     d = Persistent.to_dict( self )
     d.update( dict(
       username = self.username,
+      email_address = self.__email_address,
       storage_bytes = self.__storage_bytes,
       group_storage_bytes = self.__group_storage_bytes,
       rate_plan = self.__rate_plan,
