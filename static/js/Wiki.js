@@ -823,7 +823,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
 
   if ( creation ) {
     var note_id = id.split( ' ' )[ 0 ];
-    note_text = this.make_byline( username, creation, note_id ) + note_text;
+    note_text = note_text + this.make_byline( username, creation, note_id );
   }
 
   var startup = this.startup_notes[ id ];
@@ -1045,7 +1045,7 @@ Wiki.prototype.make_byline = function ( username, creation, note_id ) {
   else
     var timestamp = '';
 
-  return '<p class="byline small_text">Posted' + by + timestamp +
+  return '<div class="byline small_text">Posted' + by + timestamp +
          ' | <a href="' + window.location.pathname + '?note_id=' + note_id + '" target="_top">permalink</a>';
 }
 
@@ -1074,7 +1074,7 @@ Wiki.prototype.key_pressed = function ( event ) {
 
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   if ( editor.document && editor.read_write ) {
-    var byline = getFirstElementByTagAndClassName( "p", "byline", editor.document );
+    var byline = getFirstElementByTagAndClassName( "div", "byline", editor.document );
     if ( byline ) {
       removeElement( byline );
       editor.resize();
