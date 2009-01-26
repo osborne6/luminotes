@@ -337,16 +337,20 @@ Editor.prototype.add_selection_bookmark = function () {
     addElementClass( parent_node, "range_start_container" );
     for ( var i in parent_node.childNodes ) {
       var child_node = parent_node.childNodes[ i ];
-      if ( child_node == range.startContainer )
+      if ( child_node == range.startContainer ) {
         range.start_child_offset = i;
+        break;
+      }
     }
 
     var parent_node = range.endContainer.parentNode
     addElementClass( parent_node, "range_end_container" );
     for ( var i in parent_node.childNodes ) {
       var child_node = parent_node.childNodes[ i ];
-      if ( child_node == range.endContainer )
+      if ( child_node == range.endContainer ) {
         range.end_child_offset = i;
+        break;
+      }
     }
 
     return range;
