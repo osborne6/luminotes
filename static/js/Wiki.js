@@ -1076,7 +1076,21 @@ Wiki.prototype.key_pressed = function ( event ) {
       var search_text = getElement( "search_text" );
       if ( search_text )
         search_text.focus();
+    // ctrl-space: save the current editor
+    } else if ( code == 32 ) {
+      this.save_editor();
     }
+    return;
+  }
+
+  // page up: previous note
+  if ( code == 33 ) {
+    event.stop();
+    this.focus_next_editor();
+  // page down: next note
+  } else if ( code == 34 ) {
+    event.stop();
+    this.focus_previous_editor();
   }
 }
 
@@ -1157,29 +1171,11 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   // page up: previous note
   } else if ( code == 33 ) {
     event.stop();
-
-    if ( !this.focused_editor ) return;
-    var previous_holder = this.focused_editor.holder.previousSibling;
-    if ( !previous_holder ) return;
-    if ( !hasElementClass( previous_holder, "note_holder" ) )
-      previous_holder = previous_holder.previousSibling;
-    if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return;
-    var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
-    if ( !div || !div.editor ) return;
-    div.editor.highlight();
+    this.focus_next_editor();
   // page down: next note
   } else if ( code == 34 ) {
     event.stop();
-
-    if ( !this.focused_editor ) return;
-    var next_holder = this.focused_editor.holder.nextSibling;
-    if ( !next_holder ) return;
-    if ( !hasElementClass( next_holder, "note_holder" ) )
-      next_holder = next_holder.nextSibling;
-    if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return;
-    var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
-    if ( !div || !div.editor ) return;
-    div.editor.highlight();
+    this.focus_previous_editor();
   // IE: hitting space while making a link shouldn't end the link
   } else if ( code == 32 && editor.document.selection && editor.state_enabled( "a" ) ) {
     var range = editor.document.selection.createRange();
@@ -1194,6 +1190,42 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
       event.stop();
     }
   }
+}
+
+Wiki.prototype.focus_next_editor = function () {
+  if ( !this.focused_editor ) {
+    var div = getFirstElementByTagAndClassName( "div", "static_note_div" );
+    if ( !div || !div.editor ) return;
+    div.editor.highlight();
+    return;
+  }
+
+  var previous_holder = this.focused_editor.holder.previousSibling;
+  if ( !previous_holder ) return;
+  if ( !hasElementClass( previous_holder, "note_holder" ) )
+    previous_holder = previous_holder.previousSibling;
+  if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return;
+  var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
+  if ( !div || !div.editor ) return;
+  div.editor.highlight();
+}
+
+Wiki.prototype.focus_previous_editor = function () {
+  if ( !this.focused_editor ) {
+    var div = getFirstElementByTagAndClassName( "div", "static_note_div" );
+    if ( !div || !div.editor ) return;
+    div.editor.highlight();
+    return;
+  }
+
+  var next_holder = this.focused_editor.holder.nextSibling;
+  if ( !next_holder ) return;
+  if ( !hasElementClass( next_holder, "note_holder" ) )
+    next_holder = next_holder.nextSibling;
+  if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return;
+  var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
+  if ( !div || !div.editor ) return;
+  div.editor.highlight();
 }
 
 Wiki.prototype.get_toolbar_image_dir = function ( always_small ) {
