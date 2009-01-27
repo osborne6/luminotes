@@ -239,14 +239,6 @@ Editor.prototype.claim_iframe = function ( position_after ) {
   if ( this.iframe )
     return;
 
-  // hack to prevent iframe from being incorrectly positioned if there is a closing (and thus
-  // moving) message or error box
-  if ( getElementsByTagAndClassName( "div", "message" ).length > 0 ||
-       getElementsByTagAndClassName( "div", "error" ).length > 0 ) {
-    setTimeout( function() { self.claim_iframe( position_after ); }, 25 );
-    return;
-  }
-
   // claim the reusable iframe for this note, stealing it from the note that's using it (if any)
   this.iframe = Editor.shared_iframe.iframe;
   this.iframe.setAttribute( "id", iframe_id );
@@ -259,14 +251,6 @@ Editor.prototype.claim_iframe = function ( position_after ) {
   // setup the note controls
   this.note_controls = getElement( "note_controls_" + this.id );
   this.connect_note_controls( true );
-
-  // give the invisible iframe the exact same position as the div it will replace. subtract the
-  // position of the center_content_area container, which is relatively positioned
-  position = getElementPosition( this.div );
-  container_position = getElementPosition( "center_content_area" );
-  position.x -= container_position.x;
-  position.y -= container_position.y;
-  setElementPosition( this.iframe, position );
 
   // give the iframe the note's current contents and then resize it based on the size of the div
   var range = this.add_selection_bookmark();
@@ -656,6 +640,27 @@ Editor.prototype.resize = function ( get_height_from_div ) {
   size = { "h": height };
   setElementDimensions( this.iframe, size );
   setElementDimensions( this.div, size );
+
+  var self = this;
+  this.reposition();
+}
+
+Editor.prototype.reposition = function ( repeat ) {
+  // give the iframe the exact same position as the div it replaces. subtract the position of the
+  // center_content_area container, which is relatively positioned
+  var position = getElementPosition( this.div );
+  var orig_position = getElementPosition( this.iframe );
+  if ( repeat && position.x == orig_position.x && position.y == orig_position.y )
+    return;
+
+  var container_position = getElementPosition( "center_content_area" );
+  position.x -= container_position.x;
+  position.y -= container_position.y;
+
+  setElementPosition( this.iframe, position );
+
+  var self = this;
+  setTimeout( function () { self.reposition( true ); }, 50 );
 }
 
 Editor.prototype.key_pressed = function ( event ) {

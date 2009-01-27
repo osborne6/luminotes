@@ -2522,6 +2522,7 @@ Wiki.prototype.move_current_notebook_down = function ( event ) {
 }
 
 Wiki.prototype.display_message = function ( text, nodes, position_after ) {
+  var self = this;
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -2536,7 +2537,7 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
     "title": "dismiss this message"
   } );
   appendChildNodes( inner_div, ok_button );
-  connect( ok_button, "onclick", this.clear_messages );
+  connect( ok_button, "onclick", function () { self.clear_messages(); } );
 
   var div = DIV( { "class": "message" }, inner_div );
   div.nodes = nodes;
@@ -2550,11 +2551,13 @@ Wiki.prototype.display_message = function ( text, nodes, position_after ) {
     insertSiblingNodesAfter( "notes_top", div );
 
   this.scroll_to( div );
+  this.resize_editor();
 
   return div;
 }
 
 Wiki.prototype.display_error = function ( text, nodes, position_after ) {
+  var self = this;
   this.clear_messages();
   this.clear_pulldowns();
 
@@ -2569,7 +2572,7 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
     "title": "dismiss this message"
   } );
   appendChildNodes( inner_div, ok_button );
-  connect( ok_button, "onclick", this.clear_messages );
+  connect( ok_button, "onclick", function () { self.clear_messages(); } );
 
   var div = DIV( { "class": "error" }, inner_div );
   div.nodes = nodes;
@@ -2583,6 +2586,7 @@ Wiki.prototype.display_error = function ( text, nodes, position_after ) {
     insertSiblingNodesAfter( "notes_top", div );
 
   this.scroll_to( div );
+  this.resize_editor();
 
   return div;
 }
@@ -2596,10 +2600,11 @@ Wiki.prototype.scroll_to = function ( node ) {
 }
 
 Wiki.prototype.clear_messages = function () {
-  var results = getElementsByTagAndClassName( "div", "message" );
+  var message_results = getElementsByTagAndClassName( "div", "message" );
+  var error_results = getElementsByTagAndClassName( "div", "error" );
 
-  for ( var i in results ) {
-    var result = results[ i ];
+  for ( var i in message_results ) {
+    var result = message_results[ i ];
 
     // only close the message if it's been open at least a quarter second
     if ( new Date() - result.init_time < 250 )
@@ -2614,10 +2619,8 @@ Wiki.prototype.clear_messages = function () {
     } } );
   }
 
-  var results = getElementsByTagAndClassName( "div", "error" );
-
-  for ( var i in results ) {
-    var result = results[ i ];
+  for ( var i in error_results ) {
+    var result = error_results[ i ];
 
     if ( new Date() - result.init_time < 250 )
       continue
@@ -2628,6 +2631,9 @@ Wiki.prototype.clear_messages = function () {
       } catch ( e ) { }
     } } );
   }
+
+  if ( message_results.length || error_results.length )
+    this.resize_editor();
 }
 
 Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
