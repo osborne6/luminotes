@@ -100,6 +100,7 @@ Editor.prototype.create_div = function ( position_after ) {
     this.holder = getElement( "note_holder_" + this.id );
     this.connect_note_controls( true );
     this.div = static_note_div;
+    this.div.editor = this;
     static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
     if ( static_contents && static_contents.innerHTML != this.initial_text )
       static_contents.innerHTML = this.initial_text;
@@ -615,6 +616,9 @@ Editor.prototype.query_command_value = function ( command ) {
 // resize the editor's frame to fit the dimensions of its content
 Editor.prototype.resize = function ( get_height_from_div ) {
   if ( !this.document ) return;
+
+  this.reposition();
+
   var height = null;
   var width = elementDimensions( this.div.parentNode ).w;
 
@@ -642,10 +646,11 @@ Editor.prototype.resize = function ( get_height_from_div ) {
   setElementDimensions( this.div, size );
 
   var self = this;
-  this.reposition();
 }
 
 Editor.prototype.reposition = function ( repeat ) {
+  if ( !this.iframe ) return;
+
   // give the iframe the exact same position as the div it replaces. subtract the position of the
   // center_content_area container, which is relatively positioned
   var position = getElementPosition( this.div );

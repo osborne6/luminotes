@@ -1140,6 +1140,32 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     
     editor.exec_command( "indent" );
     event.stop();
+  // page up: previous note
+  } else if ( code == 33 ) {
+    event.stop();
+
+    if ( !this.focused_editor ) return;
+    var previous_holder = this.focused_editor.holder.previousSibling;
+    if ( !previous_holder ) return;
+    if ( !hasElementClass( previous_holder, "note_holder" ) )
+      previous_holder = previous_holder.previousSibling;
+    if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return;
+    var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
+    if ( !div || !div.editor ) return;
+    div.editor.highlight();
+  // page down: next note
+  } else if ( code == 34 ) {
+    event.stop();
+
+    if ( !this.focused_editor ) return;
+    var next_holder = this.focused_editor.holder.nextSibling;
+    if ( !next_holder ) return;
+    if ( !hasElementClass( next_holder, "note_holder" ) )
+      next_holder = next_holder.nextSibling;
+    if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return;
+    var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
+    if ( !div || !div.editor ) return;
+    div.editor.highlight();
   // IE: hitting space while making a link shouldn't end the link
   } else if ( code == 32 && editor.document.selection && editor.state_enabled( "a" ) ) {
     var range = editor.document.selection.createRange();
