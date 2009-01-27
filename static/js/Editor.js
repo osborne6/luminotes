@@ -387,15 +387,10 @@ Editor.prototype.position_cursor = function ( div_range ) {
   // if requested, move the text cursor to a specific location
   if ( div_range && this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     // position the cursor by using a bookmarked text range
-    if ( WEBKIT )
-      var selection = window.getSelection();
-    else
-      var selection = this.iframe.contentWindow.getSelection();
+    var selection = this.iframe.contentWindow.getSelection();
 
-    if ( selection.rangeCount > 0 )
-      var range = selection.getRangeAt( 0 );
-    else
-      var range = this.document.createRange();
+    selection.removeAllRanges();
+    var range = this.document.createRange();
 
     var start = getFirstElementByTagAndClassName( null, "range_start_container", this.document );
     var end = getFirstElementByTagAndClassName( null, "range_end_container", this.document );
@@ -450,16 +445,11 @@ Editor.prototype.position_cursor = function ( div_range ) {
 
   // otherwise, just move the text cursor to the end of the text
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
-    if ( WEBKIT )
-      var selection = window.getSelection();
-    else
-      var selection = this.iframe.contentWindow.getSelection();
+    var selection = this.iframe.contentWindow.getSelection();
     var last_node = this.document.body.lastChild;
 
-    if ( selection.rangeCount > 0 )
-      var range = selection.getRangeAt( 0 );
-    else
-      var range = this.document.createRange();
+    selection.removeAllRanges();
+    var range = this.document.createRange();
 
     while ( ( last_node.nodeValue == "\n" || ( last_node.tagName && last_node.tagName == "BR" ) ) &&
             last_node.previousSibling )
