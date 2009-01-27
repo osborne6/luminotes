@@ -622,7 +622,7 @@ Editor.prototype.resize = function ( get_height_from_div ) {
   var height = null;
   var width = elementDimensions( this.div.parentNode ).w;
 
-  // set the width first, because that influence the height of the content
+  // set the width first, because that influences the height of the content
   if ( MSIE6 )
     width -= FRAME_BORDER_HEIGHT * 2;
   var size = { "w": width };
