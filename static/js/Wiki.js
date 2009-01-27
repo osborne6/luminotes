@@ -1069,8 +1069,14 @@ Wiki.prototype.key_pressed = function ( event ) {
   var code = event.key().code;
   if ( event.modifier().ctrl ) {
     // ctrl-m: make a new note
-    if ( code == 77 )
+    if ( code == 77 ) {
       this.create_blank_editor( event );
+    // ctrl-slash: start a search
+    } else if ( code == 191 ) {
+      var search_text = getElement( "search_text" );
+      if ( search_text )
+        search_text.focus();
+    }
   }
 }
 
@@ -1121,6 +1127,14 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
     // ctrl-d: delete note
     } else if ( code == 68 ) {
       this.delete_editor( event );
+    // ctrl-slash: start a search
+    } else if ( code == 191 ) {
+      var search_text = getElement( "search_text" );
+      if ( search_text )
+        search_text.focus();
+    // ctrl-space: save the current editor
+    } else if ( code == 32 ) {
+      this.save_editor();
     }
   // shift-tab: outdent
   } else if ( event.modifier().shift && code == 9 ) {

@@ -1,7 +1,10 @@
 1.6.0: January ??, 2009
  * Switching between notebooks and loading notebooks is now much faster.
- * New keyboard shortcuts for switching to next open note and previous open
-   note: Page down and page up.
+ * Several new keyboard shortcuts:
+   * Switch to the next open note: Page down
+   * Switch to the previous open note: Page up
+   * Start a search: Ctrl-slash
+   * Save the current note: Ctrl-space
  * Fixed various bugs related to the subscription page.
 
 1.5.12: December 30, 2008
