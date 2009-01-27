@@ -53,6 +53,8 @@ function Wiki( invoker ) {
 
     if ( OPERA )
       unsupported_agent = "Opera";
+    else if ( MSIE6 )
+      unsupported_agent = "Microsoft Internet Explorer version 6";
 
     if ( unsupported_agent )
       this.display_message( "Luminotes does not currently support the " + unsupported_agent + " web browser for editing. If possible, please use a recent version of Firefox, Internet Explorer, Chrome, or Safari instead. Sorry for the inconvenience." );

@@ -6,6 +6,8 @@
    * Start a search: Ctrl-slash
    * Save the current note: Ctrl-space
  * Fixed various bugs related to the subscription page.
+ * Dropped support for Internet Explorer version 6. But version 7+ is still
+   fully supported!
 
 1.5.12: December 30, 2008
  * Fixed a bug in which clicking on the notebook rename text field ended the
