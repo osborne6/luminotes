@@ -1194,44 +1194,42 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
 }
 
 Wiki.prototype.focus_previous_editor = function () {
-  if ( this.focused_editor ) {
-    var editor = this.focused_editor;
-    this.editor_focused( null );
-  } else {
+  if ( !this.focused_editor ) {
     var div = getFirstElementByTagAndClassName( "div", "static_note_div" );
     if ( !div || !div.editor ) return;
     div.editor.highlight();
     return;
   }
 
-  var previous_holder = editor.holder.previousSibling;
+  var previous_holder = this.focused_editor.holder.previousSibling;
   if ( !previous_holder ) return;
   if ( !hasElementClass( previous_holder, "note_holder" ) )
     previous_holder = previous_holder.previousSibling;
   if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return;
   var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
   if ( !div || !div.editor ) return;
+
+  this.editor_focused( null );
   div.editor.highlight();
 }
 
 Wiki.prototype.focus_next_editor = function () {
-  if ( this.focused_editor ) {
-    var editor = this.focused_editor;
-    this.editor_focused( null );
-  } else {
+  if ( !this.focused_editor ) {
     var div = getFirstElementByTagAndClassName( "div", "static_note_div" );
     if ( !div || !div.editor ) return;
     div.editor.highlight();
     return;
   }
 
-  var next_holder = editor.holder.nextSibling;
+  var next_holder = this.focused_editor.holder.nextSibling;
   if ( !next_holder ) return;
   if ( !hasElementClass( next_holder, "note_holder" ) )
     next_holder = next_holder.nextSibling;
   if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return;
   var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
   if ( !div || !div.editor ) return;
+
+  this.editor_focused( null );
   div.editor.highlight();
 }
 
