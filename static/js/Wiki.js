@@ -1087,11 +1087,11 @@ Wiki.prototype.key_pressed = function ( event ) {
   // page up: previous note
   if ( code == 33 ) {
     event.stop();
-    this.focus_next_editor();
+    this.focus_previous_editor();
   // page down: next note
   } else if ( code == 34 ) {
     event.stop();
-    this.focus_previous_editor();
+    this.focus_next_editor();
   }
 }
 
@@ -1172,11 +1172,11 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   // page up: previous note
   } else if ( code == 33 ) {
     event.stop();
-    this.focus_next_editor();
+    this.focus_previous_editor();
   // page down: next note
   } else if ( code == 34 ) {
     event.stop();
-    this.focus_previous_editor();
+    this.focus_next_editor();
   // IE: hitting space while making a link shouldn't end the link
   } else if ( code == 32 && editor.document.selection && editor.state_enabled( "a" ) ) {
     var range = editor.document.selection.createRange();
@@ -1193,7 +1193,7 @@ Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   }
 }
 
-Wiki.prototype.focus_next_editor = function () {
+Wiki.prototype.focus_previous_editor = function () {
   if ( this.focused_editor ) {
     var editor = this.focused_editor;
     this.editor_focused( null );
@@ -1214,7 +1214,7 @@ Wiki.prototype.focus_next_editor = function () {
   div.editor.highlight();
 }
 
-Wiki.prototype.focus_previous_editor = function () {
+Wiki.prototype.focus_next_editor = function () {
   if ( this.focused_editor ) {
     var editor = this.focused_editor;
     this.editor_focused( null );
