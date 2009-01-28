@@ -823,7 +823,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
       '</form>' + note_text;
   }
 
-  if ( creation ) {
+  if ( creation && note_text != "<h3></h3>" ) {
     var note_id = id.split( ' ' )[ 0 ];
     note_text = note_text + this.make_byline( username, creation, note_id );
   }
