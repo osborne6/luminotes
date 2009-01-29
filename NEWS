@@ -1,6 +1,9 @@
 1.6.1: 
  * Fixed a bug in which hiding a focused note could (temporarily) leave an
    empty gap at the bottom of the page. 
+ * Fixed a bug in which performing a search when search results were already
+   open would just hide the initial search results without showing the new
+   ones.
 
 1.6.0: January 27, 2009
  * Switching between notebooks and loading notebooks is now much faster.

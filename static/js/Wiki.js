@@ -1971,14 +1971,13 @@ Wiki.prototype.notebook_has_tag = function ( notebook, tag_name, tag_value ) {
 Wiki.prototype.display_search_results = function ( result ) {
   // if there are no search results, indicate that and bail
   if ( !result || result.notes.length == 0 ) {
+    if ( this.search_results_editor )
+      this.search_results_editor.shutdown();
     this.display_message( "No matching notes.", undefined, getElement( "notes_top" ) );
     return;
   }
 
-  // create a "magic" search results note. but first close any open search results notes
-  if ( this.search_results_editor )
-    this.search_results_editor.shutdown();
-
+  // create a "magic" search results note
   if ( this.notebook_has_tag( this.notebook, "forum" ) )
     var notebook_word = "discussion";
   else
