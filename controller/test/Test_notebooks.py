@@ -217,7 +217,7 @@ class Test_notebooks( Test_controller ):
     )
 
     redirect = result.get( "redirect" )
-    assert redirect == u"/blog/%s" % self.notebook.object_id
+    assert redirect == u"/blog/%s" % self.notebook.name
 
   def test_default( self ):
     self.login()
