@@ -632,25 +632,20 @@ class Users( object ):
       raise Access_error()
 
     user.group_storage_bytes = self.calculate_group_storage( user )
-
-    # in addition to this user's own notebooks, add to that list the anonymous user's notebooks
     login_url = None
-    anon_notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
 
     if user_id and user_id != anonymous.object_id:
       notebooks = self.__database.select_many( Notebook, user.sql_load_notebooks( parents_only = True ) )
       groups = self.__database.select_many( Group, user.sql_load_groups() )
     # if the user is not logged in, return a login URL
     else:
-      notebooks = []
+      notebooks = self.__database.select_many( Notebook, anonymous.sql_load_notebooks( undeleted_only = True ) )
       groups = []
-      if len( anon_notebooks ) > 0 and anon_notebooks[ 0 ]:
-        main_notebook = anon_notebooks[ 0 ]
+      if len( notebooks ) > 0 and notebooks[ 0 ]:
+        main_notebook = notebooks[ 0 ]
         login_note = self.__database.select_one( Note, main_notebook.sql_load_note_by_title( u"login" ) )
         if login_note:
           login_url = "%s/notebooks/%s?note_id=%s" % ( self.__https_url, main_notebook.object_id, login_note.object_id )
-
-    notebooks += anon_notebooks
 
     for notebook in notebooks:
       notebook.tags = \

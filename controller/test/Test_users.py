@@ -183,6 +183,7 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].email_address == self.new_email_address
 
     notebooks = result[ u"notebooks" ]
+    assert len( notebooks ) == 1
     notebook = notebooks[ 0 ]
     assert notebook.object_id == new_notebook_id
     assert notebook.revision
@@ -191,15 +192,6 @@ class Test_users( Test_controller ):
     assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
-
-    notebook = notebooks[ 1 ]
-    assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.revision == self.anon_notebook.revision
-    assert notebook.name == self.anon_notebook.name
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_ONLY
-    assert notebook.owner == False
-    assert notebook.rank == None
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -264,14 +256,6 @@ class Test_users( Test_controller ):
     assert notebook.owner == False
     assert notebook.rank == 1
 
-    notebook = notebooks.get( self.anon_notebook.object_id )
-    assert notebook.revision == self.anon_notebook.revision
-    assert notebook.name == self.anon_notebook.name
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_ONLY
-    assert notebook.owner == False
-    assert notebook.rank == None
-
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
@@ -303,6 +287,7 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].email_address == self.new_email_address
 
     notebooks = result[ u"notebooks" ]
+    assert len( notebooks ) == 1
     notebook = notebooks[ 0 ]
     assert notebook.object_id
     assert notebook.revision
@@ -311,15 +296,6 @@ class Test_users( Test_controller ):
     assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
-
-    notebook = notebooks[ 1 ]
-    assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.revision == self.anon_notebook.revision
-    assert notebook.name == self.anon_notebook.name
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_ONLY
-    assert notebook.owner == False
-    assert notebook.rank == None
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -615,7 +591,7 @@ class Test_users( Test_controller ):
     assert result[ u"user" ].email_address is None
 
     notebooks = result[ u"notebooks" ]
-    assert len( notebooks ) == 2
+    assert len( notebooks ) == 1
 
     notebook = notebooks[ 0 ]
     assert notebook.object_id == new_notebook_id
@@ -625,15 +601,6 @@ class Test_users( Test_controller ):
     assert notebook.read_write == Notebook.READ_WRITE
     assert notebook.owner == True
     assert notebook.rank == 0
-
-    notebook = notebooks[ 1 ]
-    assert notebook.object_id == self.anon_notebook.object_id
-    assert notebook.revision == self.anon_notebook.revision
-    assert notebook.name == self.anon_notebook.name
-    assert notebook.trash_id == None
-    assert notebook.read_write == Notebook.READ_ONLY
-    assert notebook.owner == False
-    assert notebook.rank == None
 
     assert result.get( u"login_url" ) is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
@@ -711,7 +678,7 @@ class Test_users( Test_controller ):
     assert result[ u"user" ]
     assert result[ u"user" ].object_id == self.user.object_id
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
@@ -724,12 +691,6 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 1 ].owner == True
     assert result[ u"notebooks" ][ 1 ].rank == 1
     assert result[ u"notebooks" ][ 1 ].tags == []
-    assert result[ u"notebooks" ][ 2 ].object_id == self.anon_notebook.object_id
-    assert result[ u"notebooks" ][ 2 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_ONLY
-    assert result[ u"notebooks" ][ 2 ].owner == False
-    assert result[ u"notebooks" ][ 2 ].rank == None
-    assert result[ u"notebooks" ][ 2 ].tags == []
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
@@ -779,7 +740,7 @@ class Test_users( Test_controller ):
     assert result[ u"user" ]
     assert result[ u"user" ].object_id == self.user.object_id
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     assert result[ u"notebooks" ][ 0 ].object_id == self.notebooks[ 0 ].object_id
     assert result[ u"notebooks" ][ 0 ].name == self.notebooks[ 0 ].name
     assert result[ u"notebooks" ][ 0 ].read_write == Notebook.READ_WRITE
@@ -806,12 +767,6 @@ class Test_users( Test_controller ):
     assert result[ u"notebooks" ][ 1 ].owner == True
     assert result[ u"notebooks" ][ 1 ].rank == 1
     assert result[ u"notebooks" ][ 1 ].tags == []
-    assert result[ u"notebooks" ][ 2 ].object_id == self.anon_notebook.object_id
-    assert result[ u"notebooks" ][ 2 ].name == self.anon_notebook.name
-    assert result[ u"notebooks" ][ 2 ].read_write == Notebook.READ_ONLY
-    assert result[ u"notebooks" ][ 2 ].owner == False
-    assert result[ u"notebooks" ][ 2 ].rank == None
-    assert result[ u"notebooks" ][ 2 ].tags == []
     assert result[ u"login_url" ] is None
     assert result[ u"logout_url" ] == self.settings[ u"global" ][ u"luminotes.https_url" ] + u"/users/logout"
 
@@ -4813,7 +4768,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -4854,7 +4809,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -4933,7 +4888,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -4971,7 +4926,7 @@ class Test_users( Test_controller ):
 
     assert result[ u"user" ].username == self.user.username
     assert result.get( u"conversion" ) == None
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5016,7 +4971,7 @@ class Test_users( Test_controller ):
     ), session_id = self.session_id )
 
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5145,7 +5100,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5193,7 +5148,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5241,7 +5196,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5287,7 +5242,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5336,7 +5291,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name
@@ -5384,7 +5339,7 @@ class Test_users( Test_controller ):
     # an unknown transaction id might just mean we're still waiting for the transaction to come in,
     # so expect a retry
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 3
+    assert len( result[ u"notebooks" ] ) == 2
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebooks[ 0 ].object_id ][ 0 ]
     assert notebook.object_id == self.notebooks[ 0 ].object_id
     assert notebook.name == self.notebooks[ 0 ].name

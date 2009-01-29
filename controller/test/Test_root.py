@@ -129,7 +129,7 @@ class Test_root( Test_controller ):
     assert result
     assert result.get( u"redirect" ) is None
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 1
     assert result[ u"first_notebook" ].object_id == self.notebook.object_id
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
@@ -222,7 +222,7 @@ class Test_root( Test_controller ):
     assert result
     assert result.get( u"redirect" ) is None
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 1
     assert result[ u"first_notebook" ].object_id == self.notebook.object_id
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
@@ -420,7 +420,7 @@ class Test_root( Test_controller ):
     result = self.http_get( "/pricing", session_id = self.session_id )
 
     assert result[ u"user" ].username == self.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 1
     notebook = [ notebook for notebook in result[ u"notebooks" ] if notebook.object_id == self.notebook.object_id ][ 0 ]
     assert notebook.object_id == self.notebook.object_id
     assert notebook.name == self.notebook.name

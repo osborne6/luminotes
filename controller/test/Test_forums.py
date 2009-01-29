@@ -108,7 +108,7 @@ class Test_forums( Test_controller ):
     assert result
     assert result.get( u"redirect" ) is None
     assert result[ u"user" ].username == self.user.username
-    assert len( result[ u"notebooks" ] ) == 5
+    assert len( result[ u"notebooks" ] ) == 1
     assert result[ u"first_notebook" ].object_id == self.notebook.object_id
     assert result[ u"login_url" ] == None
     assert result[ u"logout_url" ] == u"https://luminotes.com/users/logout"
@@ -325,7 +325,7 @@ class Test_forums( Test_controller ):
     )
 
     assert result.get( u"user" ).object_id == self.user.object_id
-    assert len( result.get( u"notebooks" ) ) == 5
+    assert len( result.get( u"notebooks" ) ) == 1
     assert result.get( u"notebooks" )[ 0 ].object_id == self.notebook.object_id
     assert result.get( u"login_url" ) is None
     assert result.get( u"logout_url" )
