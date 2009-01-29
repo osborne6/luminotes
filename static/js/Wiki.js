@@ -1512,8 +1512,6 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
   this.clear_messages();
   this.clear_pulldowns();
 
-  if ( editor == this.focused_editor )
-    this.focused_editor = null;
   if ( this.focused_editor )
     this.editor_focused( null );
 
