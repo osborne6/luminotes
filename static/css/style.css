@@ -569,8 +569,11 @@ h1 {
 .static_note_contents h3 {
   padding-bottom: 0.25em;
   border-bottom: 1px solid #dddddd;
-  margin-top: 0em;
   margin-bottom: 0.75em;
+}
+
+.static_note_contents h3:first-child {
+  margin-top: 0em;
 }
 
 .static_note_contents a[target ^= "_new"] {

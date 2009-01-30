@@ -1,3 +1,7 @@
+1.6.2: January ?, 2009
+ * Fixed a visual bug in which titles in a note after the first one had
+   insufficient vertical spacing above them.
+
 1.6.1: January 29, 2009
  * Fixed a bug in which hiding a focused note could (temporarily) leave an
    empty gap at the bottom of the page. 
