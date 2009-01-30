@@ -4,6 +4,8 @@
  * Fixed a bug in which performing a search when search results were already
    open would just hide the initial search results without showing the new
    ones.
+ * Fixed a bug in which emptying the trash worked but produced a spurious
+   error message.
 
 1.6.0: January 27, 2009
  * Switching between notebooks and loading notebooks is now much faster.

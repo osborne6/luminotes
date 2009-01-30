@@ -2733,6 +2733,7 @@ Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
 Wiki.prototype.delete_all_editors = function ( event ) {
   this.clear_messages();
   this.clear_pulldowns();
+  this.editor_focused( null );
 
   this.startup_notes = new Array();
 
@@ -2745,10 +2746,11 @@ Wiki.prototype.delete_all_editors = function ( event ) {
 
   this.focused_editor = null;
 
-  var iframes = getElementsByTagAndClassName( "iframe", "note_frame" );
-  for ( var i in iframes ) {
-    var editor = iframes[ i ].editor;
-    editor.shutdown();
+  var divs = getElementsByTagAndClassName( "div", "static_note_div" );
+  for ( var i in divs ) {
+    var editor = divs[ i ].editor;
+    if ( editor )
+      editor.shutdown();
   }
 
   this.zero_total_notes_count();
@@ -2776,8 +2778,12 @@ Wiki.prototype.display_empty_message = function ( replace_messages ) {
   // if there are any open editors, bail
   if ( Editor.shared_frame && Editor.shared_frame.editor && !Editor.shared_frame.editor.closed )
     return false;
-  if ( getElementsByTagAndClassName( "div", "static_note_div" ).length > 0 )
-    return false;
+  var divs = getElementsByTagAndClassName( "div", "static_note_div" );
+  for ( var i in divs ) {
+    var editor = divs[ i ].editor;
+    if ( editor && !editor.closed )
+      return;
+  }
 
   if ( !this.total_notes_count ) {
     if ( this.parent_id )
