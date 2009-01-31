@@ -272,7 +272,8 @@ class Root( object ):
     @raise Validation_error: one of the arguments is invalid
     """
     result = self.__users.current( user_id )
-    guide_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes user guide" ]
+    anon_result = self.__users.current( None )
+    guide_notebooks = [ nb for nb in anon_result[ "notebooks" ] if nb.name == u"Luminotes user guide" ]
 
     result.update( self.__notebooks.contents( guide_notebooks[ 0 ].object_id, user_id = user_id ) )
 
@@ -297,7 +298,8 @@ class Root( object ):
     @raise Validation_error: one of the arguments is invalid
     """
     result = self.__users.current( user_id )
-    privacy_notebooks = [ nb for nb in result[ "notebooks" ] if nb.name == u"Luminotes privacy policy" ]
+    anon_result = self.__users.current( None )
+    privacy_notebooks = [ nb for nb in anon_result[ "notebooks" ] if nb.name == u"Luminotes privacy policy" ]
 
     result.update( self.__notebooks.contents( privacy_notebooks[ 0 ].object_id, user_id = user_id ) )
 
