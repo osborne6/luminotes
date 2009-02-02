@@ -165,7 +165,7 @@ class Notebooks( object ):
       )
 
     if notebook.name != u"Luminotes":
-      result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
+      result[ "recent_notes" ] = self.__database.select_many( Note, notebook.sql_load_notes_in_update_order( start = 0, count = 10 ) )
 
     # if the user doesn't have any storage bytes yet, they're a new user, so see what type of
     # conversion this is (demo or signup)
@@ -288,7 +288,7 @@ class Notebooks( object ):
         https_url = self.__https_url,
       )
 
-    recent_notes = self.__database.select_many( Note, notebook.sql_load_notes( start = 0, count = 10 ) )
+    recent_notes = self.__database.select_many( Note, notebook.sql_load_notes_in_update_order( start = 0, count = 10 ) )
 
     return dict(
       recent_notes = [ ( note.object_id, note.revision ) for note in recent_notes ],
@@ -1020,7 +1020,7 @@ class Notebooks( object ):
     if not notebook or notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       raise Access_error()
 
-    notes = self.__database.select_many( Note, notebook.sql_load_notes() )
+    notes = self.__database.select_many( Note, notebook.sql_load_notes_in_update_order() )
 
     for note in notes:
       if notebook.trash_id:
@@ -1153,38 +1153,6 @@ class Notebooks( object ):
 
     return dict(
       notes = notes,
-    )
-
-  @expose( view = Json )
-  @strongly_expire
-  @end_transaction
-  @grab_user_id
-  @validate(
-    notebook_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def all_notes( self, notebook_id, user_id ):
-    """
-    Return ids and titles of all notes in this notebook, sorted by reverse chronological order.
-
-    @type notebook_id: unicode
-    @param notebook_id: id of notebook to pull notes from
-    @type user_id: unicode
-    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype: json dict
-    @return: { 'notes': [ ( noteid, notetitle ) ] }
-    @raise Access_error: the current user doesn't have access to the given notebook
-    @raise Validation_error: one of the arguments is invalid
-    """
-    notebook = self.__users.load_notebook( user_id, notebook_id )
-
-    if not notebook:
-      raise Access_error()
-
-    notes = self.__database.select_many( Note, notebook.sql_load_notes() )
-
-    return dict(
-      notes = [ ( note.object_id, note.title ) for note in notes ]
     )
 
   @expose( view = Html_file )
@@ -1690,7 +1658,7 @@ class Notebooks( object ):
     if notebook is None:
       raise Access_error()
 
-    recent_notes = self.__database.select_many( Note, notebook.sql_load_notes( start = start, count = count ) )
+    recent_notes = self.__database.select_many( Note, notebook.sql_load_notes_in_update_order( start = start, count = count ) )
 
     return dict(
       notes = recent_notes,
@@ -1718,7 +1686,7 @@ class Notebooks( object ):
     if notebook is None:
       raise Access_error()
 
-    notes = self.__database.select_many( Note, notebook.sql_load_recent_notes( start, count ) )
+    notes = self.__database.select_many( Note, notebook.sql_load_notes_in_creation_order( start, count ) )
 
     result = self.__users.current( user_id )
     result.update( self.contents( notebook_id, user_id = user_id ) )
@@ -1749,7 +1717,7 @@ class Notebooks( object ):
     if notebook is None:
       raise Access_error()
 
-    notes = self.__database.select_many( Note, notebook.sql_load_recent_notes( start, count, reverse = True ) )
+    notes = self.__database.select_many( Note, notebook.sql_load_notes_in_creation_order( start, count, reverse = True ) )
 
     result = self.__users.current( user_id )
     result.update( self.contents( notebook_id, user_id = user_id ) )

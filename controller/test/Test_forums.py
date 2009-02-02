@@ -572,7 +572,7 @@ class Test_forums( Test_controller ):
     assert tags[ 0 ].name == u"forum"
     assert tags[ 0 ].value == u"general"
 
-    notes = self.database.select_many( Note, thread.sql_load_notes() )
+    notes = self.database.select_many( Note, thread.sql_load_notes_in_update_order() )
     assert notes
     assert len( notes ) == 1
     assert notes[ 0 ].title == None
@@ -618,7 +618,7 @@ class Test_forums( Test_controller ):
     assert tags[ 0 ].name == u"forum"
     assert tags[ 0 ].value == u"blog"
 
-    notes = self.database.select_many( Note, thread.sql_load_notes() )
+    notes = self.database.select_many( Note, thread.sql_load_notes_in_update_order() )
     assert notes
     assert len( notes ) == 1
     assert notes[ 0 ].title == None

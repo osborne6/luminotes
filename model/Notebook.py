@@ -130,7 +130,25 @@ class Notebook( Persistent ):
   def sql_load_by_friendly_id( friendly_id ):
     return "select * from notebook_current where friendly_id( name ) = %s;" % quote( friendly_id )
 
-  def sql_load_notes( self, start = 0, count = None ):
+  def sql_load_notes_in_rank_order( self, start = 0, count = None ):
+    """
+    Return a SQL string to load a list of all the notes within this notebook.
+    Note: If the database backend is SQLite, a start parameter cannot be given without also
+    providing a count parameter.
+    """
+    if count is not None:
+      limit_clause = " limit %s" % count
+    else:
+      limit_clause = ""
+
+    if start:
+      offset_clause = " offset %s" % start
+    else:
+      offset_clause = ""
+
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s order by rank%s%s;" % ( quote( self.object_id ), limit_clause, offset_clause )
+
+  def sql_load_notes_in_update_order( self, start = 0, count = None ):
     """
     Return a SQL string to load a list of all the notes within this notebook.
     Note: If the database backend is SQLite, a start parameter cannot be given without also
@@ -160,7 +178,7 @@ class Notebook( Persistent ):
     """
     return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and startup = 't' order by rank;" % quote( self.object_id )
 
-  def sql_load_recent_notes( self, start = 0, count = 10, reverse = False ):
+  def sql_load_notes_in_creation_order( self, start = 0, count = 10, reverse = False ):
     """
     Return a SQL string to load a list of the most recently created notes within this notebook.
 
