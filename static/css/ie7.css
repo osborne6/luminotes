@@ -31,3 +31,8 @@
   background: none;
   padding: 0;
 }
+
+.note_grabber {
+  position: relative;
+  left: 4px;
+}

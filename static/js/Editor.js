@@ -98,6 +98,7 @@ Editor.prototype.create_div = function ( position_after ) {
   if ( static_note_div ) {
     this.note_controls = getElement( "note_controls_" + this.id );
     this.holder = getElement( "note_holder_" + this.id );
+    this.grabber = getElement( "note_grabber_" + this.id );
     this.connect_note_controls( true );
     this.div = static_note_div;
     this.div.editor = this;
@@ -120,9 +121,15 @@ Editor.prototype.create_div = function ( position_after ) {
   this.create_note_controls();
   this.connect_note_controls();
 
-  this.holder = createDOM( "div", { "id": "note_holder_" + this.id, "class": "note_holder" },
-    this.note_controls,
-    this.div
+  this.grabber = createDOM( "td", { "id": "note_grabber_" + this.id, "class": "note_grabber" } );
+  this.holder = createDOM( "table", { "id": "note_holder_" + this.id, "class": "note_holder" },
+    createDOM( "tr", {},
+      createDOM( "td", {}, this.note_controls )
+    ),
+    createDOM( "tr", {},
+      createDOM( "td", { "width": "100%" }, this.div ),
+      this.grabber
+    )
   );
 
   if ( position_after && position_after.parentNode )
@@ -263,6 +270,7 @@ Editor.prototype.claim_iframe = function ( position_after ) {
   addElementClass( this.iframe, "focused_note_frame" );
   removeElementClass( this.iframe, "invisible" );
   addElementClass( this.div, "invisible" );
+  addElementClass( this.grabber, "note_grabber_focused" );
 
   function finish_init() {
     self.position_cursor( range );
@@ -620,14 +628,12 @@ Editor.prototype.resize = function ( get_height_from_div ) {
   this.reposition();
 
   var height = null;
-  var width = elementDimensions( this.div.parentNode ).w;
+  var width = elementDimensions( this.div ).w;
 
   // set the width first, because that influences the height of the content
-  if ( MSIE6 )
-    width -= FRAME_BORDER_HEIGHT * 2;
+  width -= FRAME_BORDER_HEIGHT * 2;
   var size = { "w": width };
   setElementDimensions( this.iframe, size );
-  setElementDimensions( this.div, size );
 
   if ( get_height_from_div && !this.empty() ) {
     height = elementDimensions( this.div ).h;
@@ -1085,6 +1091,7 @@ Editor.prototype.blur = function () {
   this.scrape_title();
 
   removeElementClass( this.iframe || this.div, "focused_note_frame" );
+  removeElementClass( this.grabber, "note_grabber_focused" );
 }
 
 Editor.prototype.release_iframe = function () {

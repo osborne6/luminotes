@@ -2,7 +2,7 @@ from urllib import urlencode
 from cgi import escape
 from Page import Page
 from Header import Header
-from Tags import Link, Input, Div, Span, H2, H4, A, Br, Strong, Script, Img, P, Noscript
+from Tags import Link, Input, Div, Span, H2, H4, A, Br, Strong, Script, Img, P, Noscript, Table, Td, Tr
 from Note_tree_area import Note_tree_area
 from Link_area import Link_area
 from Toolbar import Toolbar
@@ -89,15 +89,27 @@ class Main_page( Page ):
       )
 
     def static_note_divs( notes, read_write ):
-      return [ Div(
-        note_controls( note, read_write ),
-        Div(
-          Span(
-            note.contents,
-            class_ = u"static_note_contents",
+      return [ Table(
+        Tr( Td(
+          note_controls( note, read_write ),
+        ) ),
+        Tr(
+          Td(
+            Div(
+              Span(
+                note.contents,
+                class_ = u"static_note_contents",
+              ),
+              id = "static_note_%s" % note.object_id,
+              class_ = u"static_note_div",
+            ),
+            width = "100%",
           ),
-          id = "static_note_%s" % note.object_id,
-          class_ = u"static_note_div",
+          Td(
+            u".....",
+            id = u"note_grabber_%s" % note.object_id,
+            class_ = u"note_grabber",
+          ),
         ),
         id = u"note_holder_%s" % note.object_id,
         class_ = u"note_holder",
@@ -302,4 +314,5 @@ class Main_page( Page ):
         ),
         id = u"everything_area",
       ),
+      Span( id = "grabber_hover_preload" ),
     )

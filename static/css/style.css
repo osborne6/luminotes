@@ -275,6 +275,12 @@ h1 {
   background-image: url(/static/images/tree_arrow_down_hover.png);
 }
 
+#grabber_hover_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/grabber_hover.png);
+}
+
 #note_tree_area {
   position: fixed;
   width: 20em;
@@ -535,6 +541,51 @@ h1 {
   overflow-x: auto;
 }
 
+.note_holder {
+  border-width: 0;
+  border-spacing: 0;
+  border-style: none;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+
+.note_holder td {
+  border-width: 0;
+  padding: 0;
+  border-style: none;
+}
+
+.note_grabber {
+  -moz-border-radius-topright: 5px;
+  -moz-border-radius-bottomright: 5px;
+  -moz-user-select: none;
+  color: #fafafa;
+  background-color: #fafafa;
+  min-width: 20px;
+  width: 20px;
+  max-width: 20px;
+}
+
+.note_grabber:hover {
+  color: #ffcc66;
+  background-color: #ffcc66;
+  background: url(/static/images/grabber_hover.png) center top repeat-y;
+  cursor: move;
+}
+
+.note_grabber_focused {
+  color: #d0e0f0;
+  background-color: #d0e0f0;
+  background: url(/static/images/grabber.png) center top repeat-y;
+}
+
+.note_grabber_focused:hover {
+  color: #ffcc66;
+  background-color: #ffcc66;
+  background: url(/static/images/grabber_hover.png) center top repeat-y;
+  cursor: move;
+}
+
 .static_note_div {
   -moz-border-radius: 5px;
   display: block;
@@ -544,7 +595,6 @@ h1 {
   overflow: hidden;
   width: 100%;
   border: 2px solid #999999;
-  margin-bottom: 1em;
   background-color: #ffffff;
   overflow-x: auto;
 }
@@ -763,6 +813,7 @@ h1 {
 .static_note_contents .user_status {
   font-size: 82%;
 }
+
 .page_title a {
   color: #000000;
   text-decoration: none;
