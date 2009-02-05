@@ -121,7 +121,6 @@ Editor.prototype.create_div = function ( position_after ) {
   this.create_note_controls();
   this.connect_note_controls();
 
-  this.grabber = createDOM( "td", { "id": "note_grabber_" + this.id, "class": "note_grabber" } );
   this.holder = createDOM( "table", { "id": "note_holder_" + this.id, "class": "note_holder" },
     createDOM( "tr", {},
       createDOM( "td", {}, this.note_controls )
@@ -147,6 +146,8 @@ Editor.prototype.create_div = function ( position_after ) {
 Editor.prototype.create_note_controls = function () {
   var iframe_id = "note_" + this.id;
   if ( this.read_write ) {
+    this.grabber = createDOM( "td", { "id": "note_grabber_" + this.id, "class": "note_grabber" }, "....." );
+
     this.delete_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",
