@@ -1213,7 +1213,7 @@ Editor.prototype.shutdown = function( event ) {
   disconnectAll( this.div );
   var holder = this.holder;
 
-  blindUp( holder, options = { "duration": 0.25, afterFinish: function () {
+  blindUp( this.div, options = { "duration": 0.25, afterFinish: function () {
     try {
       removeElement( holder );
     } catch ( e ) { }
