@@ -723,8 +723,8 @@ Editor.prototype.start_drag = function ( event ) {
   signal( this, "grabber_pressed", event );
 
   var self = this;
-  connect( window, "onmousemove", function ( event ) { self.drag( event ) } );
-  connect( window, "onmouseup", function ( event ) { self.drop( event ) } );
+  this.drag_signal = connect( window, "onmousemove", function ( event ) { self.drag( event ) } );
+  this.drop_signal = connect( window, "onmouseup", function ( event ) { self.drop( event ) } );
 }
 
 Editor.prototype.drag = function( event ) {
@@ -752,7 +752,8 @@ Editor.prototype.drag = function( event ) {
 }
 
 Editor.prototype.drop = function( event ) {
-  disconnectAll( window );
+  disconnect( this.drag_signal );
+  disconnect( this.drop_signal );
 
   removeElementClass( this.div, "note_div_dragging" );
   removeElementClass( this.holder, "note_holder_dragging" );
