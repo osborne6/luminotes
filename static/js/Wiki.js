@@ -464,6 +464,9 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
 }
 
 Wiki.prototype.background_clicked = function ( event ) {
+  if ( !event.target().tagName )
+    return;
+
   var tag_name = event.target().tagName.toLowerCase();
 
   if ( tag_name == "input" || tag_name == "label" )
