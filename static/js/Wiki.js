@@ -845,6 +845,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     connect( editor, "options_clicked", function ( event ) { self.toggle_editor_options( event, editor ) } );
     connect( editor, "focused", this, "editor_focused" );
     connect( editor, "mouse_hovered", function ( target ) { self.editor_mouse_hovered( editor, target ) } );
+    connect( editor, "grabber_pressed", function ( event ) { self.editor_focused( null ); } );
   }
 
   connect( editor, "load_editor", this, "load_editor" );

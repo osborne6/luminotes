@@ -111,6 +111,13 @@ class Main_page( Page ):
             class_ = u"note_grabber",
           ),
         ),
+        Tr(
+          Td(
+            Div( class_ = "note_shadow_corner" ),
+            id = u"note_shadow_%s" % note.object_id,
+            class_ = u"note_shadow undisplayed",
+          ),
+        ),
         id = u"note_holder_%s" % note.object_id,
         class_ = u"note_holder",
       ) for note in notes ]

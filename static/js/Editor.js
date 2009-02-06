@@ -128,6 +128,9 @@ Editor.prototype.create_div = function ( position_after ) {
     createDOM( "tr", {},
       createDOM( "td", { "width": "100%" }, this.div ),
       this.grabber
+    ),
+    createDOM( "tr", { "id": "note_shadow_" + this.id, "class": "note_shadow undisplayed" },
+      createDOM( "div", { "class": "note_shadow_corner" } )
     )
   );
 
@@ -237,6 +240,11 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
   if ( this.hide_button ) {
     disconnectAll( this.hide_button );
     connect( this.hide_button, "onclick", function ( event ) { signal( self, "hide_clicked", event ); } );
+  }
+
+  if ( this.grabber ) {
+    disconnectAll( this.grabber );
+    connect( this.grabber, "onmousedown", function ( event ) { self.pop_out( event ); } );
   }
 }
 
@@ -673,6 +681,76 @@ Editor.prototype.reposition = function ( repeat ) {
 
   var self = this;
   setTimeout( function () { self.reposition( true ); }, 50 );
+}
+
+Editor.prototype.pop_out = function ( event ) {
+  var size = { "h": 100 };
+  this.drag_mouse_position = event.mouse().page;
+
+  if ( getElementDimensions( this.div ).h > size.h ) {
+    if ( this.iframe )
+      setElementDimensions( this.iframe, size );
+    setElementDimensions( this.div, size );
+  }
+
+  // add a blank div to the area where the editor is popping out from. this lets the user easily
+  // see where the editor came from
+  var blank_div = createDOM( "div", { "class": "note_drop_target" } );
+  insertSiblingNodesAfter( this.holder, blank_div );
+  setElementDimensions( blank_div, getElementDimensions( this.holder ) );
+
+  // vertically reposition the editor so that at least some part of it is under the mouse cursor
+  var position = getElementPosition( this.div );
+  var new_position = null;
+  setElementDimensions( this.holder, { "w": getElementDimensions( this.holder ).w } );
+
+  // if the click position is above the editor, then move the top of the editor up to it
+  if ( this.drag_mouse_position.y < position.y )
+    new_position = { "y": this.drag_mouse_position.y };
+  // if the click position is below the editor, then move the bottom of the editor down to it
+  else if ( this.drag_mouse_position.y > position.y + size.h )
+    new_position = { "y": this.drag_mouse_position.y - size.h };
+
+  if ( new_position ) {
+    new_position.y -= getElementPosition( "center_content_area" ).y;
+
+    if ( this.iframe )
+      setElementPosition( this.iframe, new_position );
+    setElementPosition( this.holder, new_position );
+  }
+
+  addElementClass( this.holder, "note_holder_dragging" );
+  addElementClass( this.note_controls, "invisible" );
+  addElementClass( this.grabber, "note_grabber_focused" );
+  removeElementClass( getElement( "note_shadow_" + this.id ), "undisplayed" );
+  signal( this, "grabber_pressed", event );
+
+  var self = this;
+  connect( window, "onmousemove", function ( event ) { self.drag( event ) } );
+}
+
+Editor.prototype.drag = function( event ) {
+  if ( !this.drag_mouse_position )
+    return;
+
+  var new_mouse_position = event.mouse().page;
+  var delta = {
+    "x": new_mouse_position.x - this.drag_mouse_position.x,
+    "y": new_mouse_position.y - this.drag_mouse_position.y
+  }
+
+  if ( delta.x == 0 && delta.y == 0 )
+    return;
+
+  // move the editor based on how far the mouse has moved from its previous position
+  var position = getElementPosition( this.holder );
+  var container_position = getElementPosition( "center_content_area" );
+  setElementPosition( this.holder, {
+    "x": position.x + delta.x - container_position.x,
+    "y": position.y + delta.y - container_position.y
+  } );
+
+  this.drag_mouse_position = new_mouse_position;
 }
 
 Editor.prototype.key_pressed = function ( event ) {
@@ -1202,6 +1280,7 @@ Editor.prototype.shutdown = function( event ) {
     disconnectAll( this.changes_button );
     disconnectAll( this.options_button );
     disconnectAll( this.hide_button );
+    disconnectAll( this.grabber );
     disconnectAll( iframe );
   }
 

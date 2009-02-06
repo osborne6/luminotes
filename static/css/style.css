@@ -555,6 +555,28 @@ h1 {
   border-style: none;
 }
 
+.note_holder_dragging {
+  position: absolute;
+  z-index: 2;
+}
+
+.note_drop_target {
+  margin-bottom: 0.75em;
+}
+
+.note_shadow {
+  background: url(/static/images/note_shadow.png) left top repeat-x;
+  height: 3px;
+  filter:alpha(opacity=50);
+  opacity: 0.5;
+}
+
+.note_shadow_corner {
+  background-color: #fafafa;
+  height: 3px;
+  width: 4px;
+}
+
 .note_grabber {
   -moz-border-radius-topright: 5px;
   -moz-border-radius-bottomright: 5px;
