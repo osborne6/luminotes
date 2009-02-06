@@ -244,7 +244,7 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
 
   if ( this.grabber ) {
     disconnectAll( this.grabber );
-    connect( this.grabber, "onmousedown", function ( event ) { self.pop_out( event ); } );
+    connect( this.grabber, "onmousedown", function ( event ) { self.start_drag( event ); } );
   }
 }
 
@@ -683,15 +683,11 @@ Editor.prototype.reposition = function ( repeat ) {
   setTimeout( function () { self.reposition( true ); }, 50 );
 }
 
-Editor.prototype.pop_out = function ( event ) {
-  var size = { "h": 100 };
+Editor.prototype.start_drag = function ( event ) {
+  var note_height = 100;
   this.drag_mouse_position = event.mouse().page;
 
-  if ( getElementDimensions( this.div ).h > size.h ) {
-    if ( this.iframe )
-      setElementDimensions( this.iframe, size );
-    setElementDimensions( this.div, size );
-  }
+  addElementClass( this.div, "note_div_dragging" );
 
   // add a blank div to the area where the editor is popping out from. this lets the user easily
   // see where the editor came from
@@ -708,14 +704,15 @@ Editor.prototype.pop_out = function ( event ) {
   if ( this.drag_mouse_position.y < position.y )
     new_position = { "y": this.drag_mouse_position.y };
   // if the click position is below the editor, then move the bottom of the editor down to it
-  else if ( this.drag_mouse_position.y > position.y + size.h )
-    new_position = { "y": this.drag_mouse_position.y - size.h };
+  else if ( this.drag_mouse_position.y > position.y + note_height )
+    new_position = { "y": this.drag_mouse_position.y - note_height };
 
   if ( new_position ) {
     new_position.y -= getElementPosition( "center_content_area" ).y;
-
-    if ( this.iframe )
-      setElementPosition( this.iframe, new_position );
+    setElementPosition( this.holder, new_position );
+  } else {
+    new_position = { "y": getElementPosition( this.holder ).y };
+    new_position.y -= getElementPosition( "center_content_area" ).y;
     setElementPosition( this.holder, new_position );
   }
 
@@ -727,6 +724,7 @@ Editor.prototype.pop_out = function ( event ) {
 
   var self = this;
   connect( window, "onmousemove", function ( event ) { self.drag( event ) } );
+  connect( window, "onmouseup", function ( event ) { self.drop( event ) } );
 }
 
 Editor.prototype.drag = function( event ) {
@@ -751,6 +749,30 @@ Editor.prototype.drag = function( event ) {
   } );
 
   this.drag_mouse_position = new_mouse_position;
+}
+
+Editor.prototype.drop = function( event ) {
+  disconnectAll( window );
+
+  removeElementClass( this.div, "note_div_dragging" );
+  removeElementClass( this.holder, "note_holder_dragging" );
+  removeElementClass( this.note_controls, "invisible" );
+  removeElementClass( this.grabber, "note_grabber_focused" );
+  addElementClass( getElement( "note_shadow_" + this.id ), "undisplayed" );
+
+  this.drag_mouse_position = null;
+
+  var drop_targets = getElementsByTagAndClassName( "div", "note_drop_target" );
+  var target_position = getElementPosition( drop_targets[ 0 ] );
+  for ( var i in drop_targets ) {
+    removeElement( drop_targets[ i ] );
+  }
+
+  var container_position = getElementPosition( "center_content_area" );
+  setElementPosition( this.holder, {
+    "x": target_position.x - container_position.x,
+    "y": target_position.y - container_position.y
+  } );
 }
 
 Editor.prototype.key_pressed = function ( event ) {

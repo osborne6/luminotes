@@ -555,6 +555,10 @@ h1 {
   border-style: none;
 }
 
+.note_div_dragging {
+  max-height: 100px;
+}
+
 .note_holder_dragging {
   position: absolute;
   z-index: 2;
