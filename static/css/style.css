@@ -560,7 +560,7 @@ h1 {
 }
 
 .note_holder_dragging {
-  position: absolute;
+  position: fixed;
   z-index: 2;
 }
 

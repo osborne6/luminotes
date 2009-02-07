@@ -685,7 +685,7 @@ Editor.prototype.reposition = function ( repeat ) {
 
 Editor.prototype.start_drag = function ( event ) {
   var note_height = 100;
-  this.drag_mouse_position = event.mouse().page;
+  mouse_position = event.mouse().page;
 
   addElementClass( this.div, "note_div_dragging" );
 
@@ -696,25 +696,29 @@ Editor.prototype.start_drag = function ( event ) {
   setElementDimensions( blank_div, getElementDimensions( this.holder ) );
 
   // vertically reposition the editor so that at least some part of it is under the mouse cursor
+  var viewport_position = getViewportPosition();
   var position = getElementPosition( this.div );
+
   var new_position = null;
   setElementDimensions( this.holder, { "w": getElementDimensions( this.holder ).w } );
 
   // if the click position is above the editor, then move the top of the editor up to it
-  if ( this.drag_mouse_position.y < position.y )
-    new_position = { "y": this.drag_mouse_position.y };
+  if ( mouse_position.y < position.y )
+    new_position = { "y": mouse_position.y };
   // if the click position is below the editor, then move the bottom of the editor down to it
-  else if ( this.drag_mouse_position.y > position.y + note_height )
-    new_position = { "y": this.drag_mouse_position.y - note_height };
-
-  if ( new_position ) {
-    new_position.y -= getElementPosition( "center_content_area" ).y;
-    setElementPosition( this.holder, new_position );
-  } else {
+  else if ( mouse_position.y > position.y + note_height )
+    new_position = { "y": mouse_position.y - note_height };
+  else
     new_position = { "y": getElementPosition( this.holder ).y };
-    new_position.y -= getElementPosition( "center_content_area" ).y;
-    setElementPosition( this.holder, new_position );
-  }
+
+  // save the offset of the mouse click from the top-left of the holder
+  this.drag_click_offset = {
+    "x": mouse_position.x - getElementPosition( this.holder ).x,
+    "y": mouse_position.y - new_position.y
+  };
+
+  new_position.y -= viewport_position.y;
+  setElementPosition( this.holder, new_position );
 
   addElementClass( this.holder, "note_holder_dragging" );
   addElementClass( this.note_controls, "invisible" );
@@ -723,37 +727,59 @@ Editor.prototype.start_drag = function ( event ) {
   signal( this, "grabber_pressed", event );
 
   var self = this;
-  this.drag_signal = connect( window, "onmousemove", function ( event ) { self.drag( event ) } );
-  this.drop_signal = connect( window, "onmouseup", function ( event ) { self.drop( event ) } );
+  this.drag_signal = connect( window, "onmousemove", function ( event ) { self.drag( event ); } );
+  this.drop_signal = connect( window, "onmouseup", function ( event ) { self.drop( event ); } );
 }
 
 Editor.prototype.drag = function( event ) {
-  if ( !this.drag_mouse_position )
-    return;
+  var mouse_position = event.mouse().page;
 
-  var new_mouse_position = event.mouse().page;
-  var delta = {
-    "x": new_mouse_position.x - this.drag_mouse_position.x,
-    "y": new_mouse_position.y - this.drag_mouse_position.y
-  }
-
-  if ( delta.x == 0 && delta.y == 0 )
-    return;
-
-  // move the editor based on how far the mouse has moved from its previous position
-  var position = getElementPosition( this.holder );
-  var container_position = getElementPosition( "center_content_area" );
+  // move the editor based on the original click's offset
+  var viewport_position = getViewportPosition();
   setElementPosition( this.holder, {
-    "x": position.x + delta.x - container_position.x,
-    "y": position.y + delta.y - container_position.y
+    "x": mouse_position.x - this.drag_click_offset.x - viewport_position.x,
+    "y": mouse_position.y - this.drag_click_offset.y - viewport_position.y
   } );
 
-  this.drag_mouse_position = new_mouse_position;
+  this.drag_scroll( event.mouse().client );
+}
+
+Editor.prototype.drag_scroll = function( mouse_viewport_position ) {
+  if ( this.drag_scroll_timer )
+    clearTimeout( this.drag_scroll_timer );
+
+  // if the mouse is near the top or the bottom of the viewport, scroll the page accordingly. this
+  // allows the user to reach other notes while dragging a note
+  var viewport_size = getViewportDimensions();
+  var scroll_height = 0;
+  var SCROLL_TRIGGER_AREA_HEIGHT = 50;
+  var SCROLL_RATE = 40;
+
+  if ( mouse_viewport_position.y > viewport_size.h - SCROLL_TRIGGER_AREA_HEIGHT )
+    scroll_height = SCROLL_RATE;
+  else if ( mouse_viewport_position.y < SCROLL_TRIGGER_AREA_HEIGHT )
+    scroll_height = -SCROLL_RATE;
+  else {
+    return;
+  }
+
+  var page_top = document.body.scrollTop || window.pageYOffset;
+  window.scrollBy( 0, scroll_height );
+  var new_page_top = document.body.scrollTop || window.pageYOffset;
+
+  // if scrolling didn't work, then we're at the top or the bottom of the page, so bail
+  if ( page_top == new_page_top )
+    return;
+
+  var self = this;
+  this.drag_scroll_timer = setTimeout( function () { self.drag_scroll( mouse_viewport_position ); }, 50 );
 }
 
 Editor.prototype.drop = function( event ) {
   disconnect( this.drag_signal );
   disconnect( this.drop_signal );
+  if ( this.drag_scroll_timer )
+    clearTimeout( this.drag_scroll_timer );
 
   removeElementClass( this.div, "note_div_dragging" );
   removeElementClass( this.holder, "note_holder_dragging" );
@@ -769,11 +795,7 @@ Editor.prototype.drop = function( event ) {
     removeElement( drop_targets[ i ] );
   }
 
-  var container_position = getElementPosition( "center_content_area" );
-  setElementPosition( this.holder, {
-    "x": target_position.x - container_position.x,
-    "y": target_position.y - container_position.y
-  } );
+  setElementPosition( this.holder, target_position );
 }
 
 Editor.prototype.key_pressed = function ( event ) {
