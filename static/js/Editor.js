@@ -691,9 +691,25 @@ Editor.prototype.start_drag = function ( event ) {
 
   // add a blank div to the area where the editor is popping out from. this lets the user easily
   // see where the editor came from
-  var blank_div = createDOM( "div", { "class": "note_drop_target" } );
-  insertSiblingNodesAfter( this.holder, blank_div );
-  setElementDimensions( blank_div, getElementDimensions( this.holder ) );
+  var drop_target = createDOM( "div", { "class": "note_drop_target" } );
+  insertSiblingNodesAfter( this.holder, drop_target );
+  var div_size = getElementDimensions( this.div );
+  div_size.w -= FRAME_BORDER_WIDTH * 2;
+  setElementDimensions( drop_target, div_size );
+
+  // add drop target divs between every note
+  var holders = getElementsByTagAndClassName( "table", "note_holder" );
+  for ( var i in holders ) {
+    var holder = holders[ i ];
+    i = parseInt( i );
+    var next_holder = ( i + 1 < holders.length ) && holders[ i + 1 ] || null;
+
+    if ( holder == this.holder || next_holder == this.holder ) continue;
+
+    drop_target = createDOM( "div", { "class": "note_drop_target" } );
+    insertSiblingNodesAfter( holder, drop_target );
+    setElementDimensions( drop_target, { "w": div_size.w } );
+  }
 
   // vertically reposition the editor so that at least some part of it is under the mouse cursor
   var viewport_position = getViewportPosition();

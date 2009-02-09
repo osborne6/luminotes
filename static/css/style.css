@@ -565,7 +565,14 @@ h1 {
 }
 
 .note_drop_target {
+  -moz-border-radius: 5px;
+  height: 2em;
   margin-bottom: 0.75em;
+  border: 2px dashed #ffcc66;
+}
+
+.note_drop_target_hover {
+  border: 2px dashed #000000;
 }
 
 .note_shadow {
