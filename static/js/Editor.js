@@ -691,14 +691,20 @@ Editor.prototype.start_drag = function ( event ) {
 
   // add a blank div to the area where the editor is popping out from. this lets the user easily
   // see where the editor came from
-  var drop_target = createDOM( "div", { "class": "note_drop_target" } );
+  var drop_target = createDOM( "div", { "class": "note_drag_source_area", "id": "note_drag_source_area" } );
   insertSiblingNodesAfter( this.holder, drop_target );
   var div_size = getElementDimensions( this.div );
   div_size.w -= FRAME_BORDER_WIDTH * 2;
   setElementDimensions( drop_target, div_size );
 
-  // add drop target divs between every note
+  // add drop target divs between every note and before the first note
   var holders = getElementsByTagAndClassName( "table", "note_holder" );
+  if ( holders[ 0 ] != this.holder ) {
+    drop_target = createDOM( "div", { "class": "note_drop_target" } );
+    insertSiblingNodesBefore( holders[ 0 ], drop_target );
+    setElementDimensions( drop_target, { "w": div_size.w } );
+  }
+
   for ( var i in holders ) {
     var holder = holders[ i ];
     i = parseInt( i );
@@ -806,12 +812,12 @@ Editor.prototype.drop = function( event ) {
   this.drag_mouse_position = null;
 
   var drop_targets = getElementsByTagAndClassName( "div", "note_drop_target" );
-  var target_position = getElementPosition( drop_targets[ 0 ] );
-  for ( var i in drop_targets ) {
+  for ( var i in drop_targets )
     removeElement( drop_targets[ i ] );
-  }
 
-  setElementPosition( this.holder, target_position );
+  var drag_source_area = getElement( "note_drag_source_area" );
+  setElementPosition( this.holder, getElementPosition( drag_source_area ) );
+  removeElement( drag_source_area );
 }
 
 Editor.prototype.key_pressed = function ( event ) {

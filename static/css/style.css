@@ -564,14 +564,19 @@ h1 {
   z-index: 2;
 }
 
+.note_drag_source_area {
+  margin-bottom: 0.75em;
+}
+
 .note_drop_target {
   -moz-border-radius: 5px;
-  height: 2em;
-  margin-bottom: 0.75em;
-  border: 2px dashed #ffcc66;
+  position: relative;
+  top: -0.5em;
+  border-top: 2px dashed #999999;
 }
 
 .note_drop_target_hover {
+  height: 2em;
   border: 2px dashed #000000;
 }
 
