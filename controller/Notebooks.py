@@ -783,7 +783,7 @@ class Notebooks( object ):
     # otherwise, create a new note
     else:
       if position_after or position_before:
-        note.rank = calculate_rank( position_after, position_before )
+        rank = calculate_rank( position_after, position_before )
       else:
         rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
   

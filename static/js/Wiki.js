@@ -848,7 +848,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     connect( editor, "options_clicked", function ( event ) { self.toggle_editor_options( event, editor ) } );
     connect( editor, "focused", this, "editor_focused" );
     connect( editor, "mouse_hovered", function ( target ) { self.editor_mouse_hovered( editor, target ) } );
-    connect( editor, "grabber_pressed", function ( event ) { self.editor_focused( null ); } );
+    connect( editor, "grabber_pressed", function ( event ) { self.editor_focused( null, false, false ); } );
     connect( editor, "moved", function ( editor, position_after, position_before ) {
       self.editor_moved( editor, position_after, position_before );
     } );
@@ -1016,7 +1016,10 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
   this.display_link_pulldown( editor, link );
 }
 
-Wiki.prototype.editor_focused = function ( editor, synchronous ) {
+Wiki.prototype.editor_focused = function ( editor, synchronous, remove_empty ) {
+  if ( remove_empty == undefined )
+    remove_empty = true;
+
   if ( this.focused_editor && this.focused_editor != editor ) {
     this.focused_editor.blur();
     this.clear_pulldowns();
@@ -1026,7 +1029,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
       this.focused_editor.release_iframe();
 
     // if the formerly focused editor is completely empty, then remove it as the user leaves it and switches to this editor
-    if ( this.focused_editor.empty() ) {
+    if ( this.focused_editor.empty() && remove_empty ) {
       signal( this, "note_removed", this.focused_editor.id );
       this.focused_editor.shutdown();
       this.decrement_total_notes_count();
@@ -1698,8 +1701,8 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !editor.empty() && !editor.closed &&
-       ( editor.dirty() || position_after || position_before ) ) {
+  if ( editor && editor.read_write && !editor.closed &&
+       ( ( !editor.empty() && editor.dirty() ) || position_after || position_before ) ) {
     editor.scrape_title();
 
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
