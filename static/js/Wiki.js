@@ -1206,8 +1206,7 @@ Wiki.prototype.focus_previous_editor = function () {
   }
 
   var previous_holder = this.focused_editor.holder.previousSibling;
-  if ( !previous_holder ) return;
-  if ( !hasElementClass( previous_holder, "note_holder" ) )
+  while ( previous_holder && previous_holder.nodeValue == "\n" )
     previous_holder = previous_holder.previousSibling;
   if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return;
   var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
@@ -1226,8 +1225,7 @@ Wiki.prototype.focus_next_editor = function () {
   }
 
   var next_holder = this.focused_editor.holder.nextSibling;
-  if ( !next_holder ) return;
-  if ( !hasElementClass( next_holder, "note_holder" ) )
+  while ( next_holder && next_holder.nodeValue == "\n" )
     next_holder = next_holder.nextSibling;
   if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return;
   var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
