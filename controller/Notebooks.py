@@ -735,7 +735,7 @@ class Notebooks( object ):
       elif after_note:
         return float( after_note.rank ) + 1.0
       elif before_note:
-        return max( float( before_note.rank ) - 1.0, 0.0 )
+        return float( before_note.rank ) - 1.0
       return 0.0
 
     # check whether the provided note contents have been changed since the previous revision

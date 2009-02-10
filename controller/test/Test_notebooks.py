@@ -1776,7 +1776,260 @@ class Test_notebooks( Test_controller ):
   def test_save_startup_note( self ):
     self.test_save_note( startup = True )
 
-  def test_save_note_in_notebook_with_read_write_for_own_notes( self ):
+  def test_save_note_with_position_after( self ):
+    self.login()
+
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 0.0
+
+    # save over an existing note, giving it a particular relative position
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = previous_revision,
+      position_after = after_note_id,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "rank" ] == 1.0
+
+    # make sure the old title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents
+    assert note.startup == False
+    assert note.user_id == self.user.object_id
+    assert note.rank == 1.0 
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+
+  def test_save_note_with_position_before( self ):
+    self.login()
+
+    before_note_id = u"someid1"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 0.0
+
+    # save over an existing note, giving it a particular relative position
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = previous_revision,
+      position_before = before_note_id,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "rank" ] == -1.0
+
+    # make sure the old title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents
+    assert note.startup == False
+    assert note.user_id == self.user.object_id
+    assert note.rank == -1.0
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+
+  def test_save_note_with_position_after_and_before( self ):
+    self.login()
+
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 0.0
+
+    before_note_id = u"someid2"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 1.0
+
+    # save over an existing note, giving it a particular relative position
+    previous_revision = self.note.revision
+    new_note_contents = u"<h3>new title</h3>new blah"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = previous_revision,
+      position_after = after_note_id,
+      position_before = before_note_id,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ].revision != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    current_revision = result[ "new_revision" ].revision
+    assert result[ "previous_revision" ].revision == previous_revision
+    assert result[ "previous_revision" ].user_id == self.user.object_id
+    assert result[ "previous_revision" ].username == self.username
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "rank" ] == 0.5
+
+    # make sure the old title can no longer be loaded
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "my title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+    assert note == None
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = "new title",
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == self.note.object_id
+    assert note.title == "new title"
+    assert note.contents == new_note_contents
+    assert note.startup == False
+    assert note.user_id == self.user.object_id
+    assert note.rank == 0.5
+
+    # make sure that the correct revisions are returned and are in chronological order
+    result = self.http_post( "/notebooks/load_note_revisions/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = self.note.object_id,
+    ), session_id = self.session_id )
+
+    revisions = result[ "revisions" ]
+    assert revisions != None
+    assert len( revisions ) == 3
+    assert revisions[ 1 ].revision == previous_revision
+    assert revisions[ 1 ].user_id == self.user.object_id
+    assert revisions[ 1 ].username == self.username
+    assert revisions[ 2 ].revision == current_revision
+    assert revisions[ 2 ].user_id == self.user.object_id
+    assert revisions[ 2 ].username == self.username
+
+  def test_save_note_in_notebook_with_read_write_for_own_notes( self, after_note_id = None, before_note_id = None ):
     self.login()
 
     self.database.execute( self.user.sql_update_access( 
@@ -1791,6 +2044,8 @@ class Test_notebooks( Test_controller ):
       contents = new_note_contents,
       startup = False,
       previous_revision = previous_revision,
+      position_after = after_note_id,
+      position_before = before_note_id,
     ), session_id = self.session_id )
 
     assert result[ "new_revision" ]
@@ -1842,6 +2097,58 @@ class Test_notebooks( Test_controller ):
     assert revisions[ 2 ].revision == current_revision
     assert revisions[ 2 ].user_id == self.user.object_id
     assert revisions[ 2 ].username == self.username
+
+  def test_save_note_in_notebook_with_read_write_for_own_notes_with_position_after( self ):
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    # after_position should be ignored for such notebooks
+    self.test_save_note_in_notebook_with_read_write_for_own_notes( after_note_id )
+
+  def test_save_note_in_notebook_with_read_write_for_own_notes_with_position_before( self ):
+    before_note_id = u"someid1"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    # before_position should be ignored for such notebooks
+    self.test_save_note_in_notebook_with_read_write_for_own_notes( None, before_note_id )
+
+  def test_save_note_in_notebook_with_read_write_for_own_notes_with_position_after_and_before( self ):
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    before_note_id = u"someid2"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    # before_position should be ignored for such notebooks
+    self.test_save_note_in_notebook_with_read_write_for_own_notes( after_note_id, before_note_id )
 
   def test_save_note_by_different_user( self, startup = False ):
     self.login2()
@@ -2455,7 +2762,176 @@ class Test_notebooks( Test_controller ):
   def test_save_new_startup_note( self ):
     self.test_save_new_note( startup = True )
 
-  def test_save_new_note_with_notebook_read_write_for_own_notes( self ):
+  def test_save_new_note_with_position_after( self ):
+    self.login()
+
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 0.0
+
+    # save a completely new note
+    new_note = Note.create( "55", u"<h3>newest title</h3>foo" )
+    previous_revision = new_note.revision
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
+      startup = False,
+      previous_revision = None,
+      position_after = after_note_id,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ] == None
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "rank" ] == 1.0
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = new_note.title,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == new_note.contents
+    assert note.startup == False
+    assert note.user_id == self.user.object_id
+    assert note.rank == 1.0 
+
+  def test_save_new_note_with_position_before( self ):
+    self.login()
+
+    before_note_id = u"someid1"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 0.0
+
+    # save a completely new note
+    new_note = Note.create( "55", u"<h3>newest title</h3>foo" )
+    previous_revision = new_note.revision
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
+      startup = False,
+      previous_revision = None,
+      position_before = before_note_id,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ] == None
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "rank" ] == -1.0
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = new_note.title,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == new_note.contents
+    assert note.startup == False
+    assert note.user_id == self.user.object_id
+    assert note.rank == -1.0
+
+  def test_save_new_note_with_position_after_and_before( self ):
+    self.login()
+
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 0.0
+
+    before_note_id = u"someid2"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    assert result[ "rank" ] == 1.0
+
+    # save a completely new note
+    new_note = Note.create( "55", u"<h3>newest title</h3>foo" )
+    previous_revision = new_note.revision
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = new_note.object_id,
+      contents = new_note.contents,
+      startup = False,
+      previous_revision = None,
+      position_after = after_note_id,
+      position_before = before_note_id,
+    ), session_id = self.session_id )
+
+    assert result[ "new_revision" ]
+    assert result[ "new_revision" ] != previous_revision
+    assert result[ "new_revision" ].user_id == self.user.object_id
+    assert result[ "new_revision" ].username == self.username
+    assert result[ "previous_revision" ] == None
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes > 0
+    assert result[ "storage_bytes" ] == user.storage_bytes
+    assert result[ "rank" ] == 0.5
+
+    # make sure the new title is now loadable
+    result = self.http_post( "/notebooks/load_note_by_title/", dict(
+      notebook_id = self.notebook.object_id,
+      note_title = new_note.title,
+    ), session_id = self.session_id )
+
+    note = result[ "note" ]
+
+    assert note.object_id == new_note.object_id
+    assert note.title == new_note.title
+    assert note.contents == new_note.contents
+    assert note.startup == False
+    assert note.user_id == self.user.object_id
+    assert note.rank == 0.5
+
+  def test_save_new_note_in_notebook_with_read_write_for_own_notes( self, after_note_id = None, before_note_id = None ):
     self.login()
 
     self.database.execute( self.user.sql_update_access( 
@@ -2471,6 +2947,8 @@ class Test_notebooks( Test_controller ):
       contents = new_note.contents,
       startup = False,
       previous_revision = None,
+      position_after = after_note_id,
+      position_before = before_note_id,
     ), session_id = self.session_id )
 
     assert result[ "new_revision" ]
@@ -2497,6 +2975,58 @@ class Test_notebooks( Test_controller ):
     assert note.startup == True # startup is forced to True in READ_WRITE_FOR_OWN_NOTES notebook
     assert note.user_id == self.user.object_id
     assert note.rank == 0.0 
+
+  def test_save_new_note_in_notebook_with_read_write_for_own_notes_with_position_after( self ):
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    # after_position should be ignored for such notebooks
+    self.test_save_new_note_in_notebook_with_read_write_for_own_notes( after_note_id )
+
+  def test_save_new_note_in_notebook_with_read_write_for_own_notes_with_position_before( self ):
+    before_note_id = u"someid1"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    # before_position should be ignored for such notebooks
+    self.test_save_new_note_in_notebook_with_read_write_for_own_notes( None, before_note_id )
+
+  def test_save_note_in_notebook_with_read_write_for_own_notes_with_position_after_and_before( self ):
+    after_note_id = u"someid1"
+    new_note_contents = u"<h3>after this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = after_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    before_note_id = u"someid2"
+    new_note_contents = u"<h3>before this</h3>"
+    result = self.http_post( "/notebooks/save_note/", dict(
+      notebook_id = self.notebook.object_id,
+      note_id = before_note_id,
+      contents = new_note_contents,
+      startup = False,
+      previous_revision = None,
+    ), session_id = self.session_id )
+
+    # before_position should be ignored for such notebooks
+    self.test_save_new_note_in_notebook_with_read_write_for_own_notes( after_note_id, before_note_id )
 
   def test_save_new_note_with_disallowed_tags( self ):
     self.login()
