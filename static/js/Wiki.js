@@ -1213,6 +1213,8 @@ Wiki.prototype.focus_previous_editor = function () {
   }
 
   var previous_editor = this.focused_editor.previous_editor();
+  if ( !previous_editor ) return;
+
   this.editor_focused( null );
   previous_editor.highlight();
 }
@@ -1226,6 +1228,8 @@ Wiki.prototype.focus_next_editor = function () {
   }
 
   var next_editor = this.focused_editor.next_editor();
+  if ( !next_editor ) return;
+
   this.editor_focused( null );
   next_editor.highlight();
 }
