@@ -572,12 +572,13 @@ h1 {
   -moz-border-radius: 5px;
   position: relative;
   top: -0.5em;
-  border-top: 2px dashed #999999;
+  border-top: 2px dashed #000000;
 }
 
 .note_drop_target_hover {
   height: 2em;
   border: 2px dashed #000000;
+  background-color: #ffcc66;
 }
 
 .note_shadow {

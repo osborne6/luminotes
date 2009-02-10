@@ -847,6 +847,7 @@ Editor.prototype.drop = function( event ) {
     setElementPosition( this.holder, getElementPosition( hover_drop_target ) );
     swapDOM( hover_drop_target, this.holder );
     removeElement( "note_drag_source_area" );
+    this.highlight();
   }
 
   var drop_targets = getElementsByTagAndClassName( "div", "note_drop_target" );
