@@ -720,9 +720,11 @@ class Notebooks( object ):
     note = self.__database.load( Note, note_id )
 
     # if the user has read-write access only to their own notes in this notebook, force the startup
-    # flag to be True for this note
+    # flag to be True for this note. also ignore note positioning parameters
     if notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       startup = True
+      position_before = None
+      position_after = None
 
     def calculate_rank( position_after, position_before ):
       after_note = position_after and self.__database.load( Note, position_after ) or None

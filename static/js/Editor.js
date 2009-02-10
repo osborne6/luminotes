@@ -150,6 +150,8 @@ Editor.prototype.create_note_controls = function () {
   var iframe_id = "note_" + this.id;
   if ( this.read_write ) {
     this.grabber = createDOM( "td", { "id": "note_grabber_" + this.id, "class": "note_grabber" }, "....." );
+    if ( !this.read_write )
+      addElementClass( this.grabber, "invisible" );
 
     this.delete_button = createDOM( "input", {
       "type": "button",

@@ -108,7 +108,7 @@ class Main_page( Page ):
           Td(
             u".....",
             id = u"note_grabber_%s" % note.object_id,
-            class_ = u"note_grabber",
+            class_ = u"note_grabber" + ( read_write != Notebook.READ_WRITE and " invisible" or "" ),
           ),
         ),
         Tr(
