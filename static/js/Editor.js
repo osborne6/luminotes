@@ -841,13 +841,24 @@ Editor.prototype.drop = function( event ) {
 
   this.drag_mouse_position = null;
 
+  // if there is a hovered drop target, move the editor to it
+  var hover_drop_target = getFirstElementByTagAndClassName( "div", "note_drop_target_hover" );
+  if ( hover_drop_target ) {
+    setElementPosition( this.holder, getElementPosition( hover_drop_target ) );
+    swapDOM( hover_drop_target, this.holder );
+    removeElement( "note_drag_source_area" );
+  }
+
   var drop_targets = getElementsByTagAndClassName( "div", "note_drop_target" );
   for ( var i in drop_targets )
     removeElement( drop_targets[ i ] );
 
-  var drag_source_area = getElement( "note_drag_source_area" );
-  setElementPosition( this.holder, getElementPosition( drag_source_area ) );
-  removeElement( drag_source_area );
+  // if there is no hovered drop target, just move the editor back to its original location
+  if ( !hover_drop_target ) {
+    var drag_source_area = getElement( "note_drag_source_area" );
+    setElementPosition( this.holder, getElementPosition( drag_source_area ) );
+    removeElement( drag_source_area );
+  }
 }
 
 Editor.prototype.key_pressed = function ( event ) {
