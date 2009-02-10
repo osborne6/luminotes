@@ -848,6 +848,7 @@ Editor.prototype.drop = function( event ) {
     swapDOM( hover_drop_target, this.holder );
     removeElement( "note_drag_source_area" );
     this.highlight();
+    signal( this, "moved", this, this.previous_editor(), this.next_editor() );
   }
 
   var drop_targets = getElementsByTagAndClassName( "div", "note_drop_target" );
@@ -861,6 +862,28 @@ Editor.prototype.drop = function( event ) {
     removeElement( drag_source_area );
     this.highlight();
   }
+}
+
+Editor.prototype.previous_editor = function () {
+  var previous_holder = this.holder.previousSibling;
+  while ( previous_holder && previous_holder.nodeValue == "\n" )
+    previous_holder = previous_holder.previousSibling;
+  if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return null;
+  var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
+  if ( !div || !div.editor ) return null;
+
+  return div.editor;
+}
+
+Editor.prototype.next_editor = function () {
+  var next_holder = this.holder.nextSibling;
+  while ( next_holder && next_holder.nodeValue == "\n" )
+    next_holder = next_holder.nextSibling;
+  if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return null;
+  var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
+  if ( !div || !div.editor ) return null;
+
+  return div.editor;
 }
 
 Editor.prototype.key_pressed = function ( event ) {

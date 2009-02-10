@@ -849,6 +849,9 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     connect( editor, "focused", this, "editor_focused" );
     connect( editor, "mouse_hovered", function ( target ) { self.editor_mouse_hovered( editor, target ) } );
     connect( editor, "grabber_pressed", function ( event ) { self.editor_focused( null ); } );
+    connect( editor, "moved", function ( editor, position_after, position_before ) {
+      self.editor_moved( editor, position_after, position_before );
+    } );
   }
 
   connect( editor, "load_editor", this, "load_editor" );
@@ -1038,6 +1041,10 @@ Wiki.prototype.editor_focused = function ( editor, synchronous ) {
   this.update_toolbar();
 }
 
+Wiki.prototype.editor_moved = function ( editor, position_after, position_before ) {
+  this.save_editor( editor, false, null, null, null, position_after, position_before );  
+}
+
 Wiki.prototype.make_byline = function ( username, creation, note_id ) {
   if ( username == "anonymous" )
     username = "admin";
@@ -1205,15 +1212,9 @@ Wiki.prototype.focus_previous_editor = function () {
     return;
   }
 
-  var previous_holder = this.focused_editor.holder.previousSibling;
-  while ( previous_holder && previous_holder.nodeValue == "\n" )
-    previous_holder = previous_holder.previousSibling;
-  if ( !previous_holder || !hasElementClass( previous_holder, "note_holder" ) ) return;
-  var div = getFirstElementByTagAndClassName( "div", "static_note_div", previous_holder );
-  if ( !div || !div.editor ) return;
-
+  var previous_editor = this.focused_editor.previous_editor();
   this.editor_focused( null );
-  div.editor.highlight();
+  previous_editor.highlight();
 }
 
 Wiki.prototype.focus_next_editor = function () {
@@ -1224,15 +1225,9 @@ Wiki.prototype.focus_next_editor = function () {
     return;
   }
 
-  var next_holder = this.focused_editor.holder.nextSibling;
-  while ( next_holder && next_holder.nodeValue == "\n" )
-    next_holder = next_holder.nextSibling;
-  if ( !next_holder || !hasElementClass( next_holder, "note_holder" ) ) return;
-  var div = getFirstElementByTagAndClassName( "div", "static_note_div", next_holder );
-  if ( !div || !div.editor ) return;
-
+  var next_editor = this.focused_editor.next_editor();
   this.editor_focused( null );
-  div.editor.highlight();
+  next_editor.highlight();
 }
 
 Wiki.prototype.get_toolbar_image_dir = function ( always_small ) {
@@ -1694,12 +1689,13 @@ Wiki.prototype.compare_versions = function( event, editor, previous_revision ) {
   this.load_editor( editor.title, editor.id, editor.revision, previous_revision, editor.closed ? null : editor.holder );
 }
 
-Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous, suppress_save_signal ) {
+Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synchronous, suppress_save_signal, position_after, position_before ) {
   if ( !editor )
     editor = this.focused_editor;
 
   var self = this;
-  if ( editor && editor.read_write && !editor.empty() && !editor.closed && editor.dirty() ) {
+  if ( editor && editor.read_write && !editor.empty() && !editor.closed &&
+       ( editor.dirty() || position_after || position_before ) ) {
     editor.scrape_title();
 
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
@@ -1707,7 +1703,9 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
       "note_id": editor.id,
       "contents": editor.contents(),
       "startup": editor.startup,
-      "previous_revision": editor.revision ? editor.revision : "None"
+      "previous_revision": editor.revision ? editor.revision : "None",
+      "position_after": position_after ? position_after.id : "None",
+      "position_before": position_before ? position_before.id : "None"
     }, function ( result ) {
       self.update_editor_revisions( result, editor );
       self.display_storage_usage( result.storage_bytes );

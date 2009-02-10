@@ -1105,6 +1105,7 @@ class Test_notebooks( Test_controller ):
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
       contents = new_note_contents,
+      startup = False,
     ), session_id = self.session_id )
 
     # load the note by the old revision
@@ -1122,7 +1123,7 @@ class Test_notebooks( Test_controller ):
     assert note.title == previous_title
     assert note.contents == previous_contents
     user = self.database.load( User, self.user.object_id )
-    assert user.storage_bytes == 0
+    assert user.storage_bytes > 0
 
   def test_load_note_with_previous_revision( self ):
     self.login()
@@ -1730,11 +1731,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-
-    if startup:
-      assert result[ "rank" ] == 0.0
-    else:
-      assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -1758,11 +1755,7 @@ class Test_notebooks( Test_controller ):
     assert note.contents == new_note_contents
     assert note.startup == startup
     assert note.user_id == self.user.object_id
-
-    if startup:
-      assert note.rank == 0.0 
-    else:
-      assert note.rank is None
+    assert note.rank == 0.0 
 
     # make sure that the correct revisions are returned and are in chronological order
     result = self.http_post( "/notebooks/load_note_revisions/", dict(
@@ -1872,7 +1865,7 @@ class Test_notebooks( Test_controller ):
     assert result[ "previous_revision" ].revision == previous_revision
     assert result[ "previous_revision" ].user_id == self.user.object_id
     assert result[ "previous_revision" ].username == self.username
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     self.login()
 
@@ -1898,11 +1891,7 @@ class Test_notebooks( Test_controller ):
     assert note.contents == new_note_contents
     assert note.startup == startup
     assert note.user_id == self.user2.object_id
-
-    if startup:
-      assert note.rank == 0.0 
-    else:
-      assert note.rank is None
+    assert note.rank == 0.0 
 
     # make sure that the correct revisions are returned and are in chronological order
     result = self.http_post( "/notebooks/load_note_revisions/", dict(
@@ -2004,7 +1993,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2028,11 +2017,7 @@ class Test_notebooks( Test_controller ):
     assert note.contents == new_note_contents.replace( u"<span>", "" )
     assert note.startup == startup
     assert note.user_id == self.user.object_id
-
-    if startup:
-      assert note.rank == 0.0 
-    else:
-      assert note.rank is None
+    assert note.rank == 0.0 
 
     # make sure that the correct revisions are returned and are in chronological order
     result = self.http_post( "/notebooks/load_note_revisions/", dict(
@@ -2081,7 +2066,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     # make sure the old title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2155,7 +2140,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == previous_storage_bytes
     assert result[ "storage_bytes" ] == 0
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -2209,7 +2194,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == previous_storage_bytes
     assert result[ "storage_bytes" ] == 0
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -2325,7 +2310,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == previous_storage_bytes
     assert result[ "storage_bytes" ] == 0
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
       notebook_id = self.notebook.object_id,
@@ -2377,7 +2362,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-    assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     # make sure the first title can no longer be loaded
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2450,11 +2435,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-
-    if startup:
-      assert result[ "rank" ] == 0.0
-    else:
-      assert result[ "rank" ] is None
+    assert result[ "rank" ] == 0.0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2469,11 +2450,7 @@ class Test_notebooks( Test_controller ):
     assert note.contents == new_note.contents
     assert note.startup == startup
     assert note.user_id == self.user.object_id
-
-    if startup:
-      assert note.rank == 0.0 
-    else:
-      assert note.rank is None
+    assert note.rank == 0.0 
 
   def test_save_new_startup_note( self ):
     self.test_save_new_note( startup = True )
@@ -2547,7 +2524,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-    assert result[ "rank" ] == None
+    assert result[ "rank" ] == 0.0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2588,7 +2565,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-    assert result[ "rank" ] == None
+    assert result[ "rank" ] == 0.0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2639,11 +2616,7 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > 0
     assert result[ "storage_bytes" ] == user.storage_bytes
-
-    if startup:
-      assert result[ "rank" ] == 1.0
-    else:
-      assert result[ "rank" ] is None
+    assert result[ "rank" ] == 1.0
 
     # make sure the new title is now loadable
     result = self.http_post( "/notebooks/load_note_by_title/", dict(
@@ -2658,11 +2631,7 @@ class Test_notebooks( Test_controller ):
     assert note.contents == new_note.contents
     assert note.startup == startup
     assert note.user_id == self.user.object_id
-
-    if startup:
-      assert note.rank == 1 # one greater than the previous new note's rank 
-    else:
-      assert note.rank is None
+    assert note.rank == 1.0 # one greater than the previous new note's rank 
 
   def test_save_two_new_startup_notes( self ):
     self.test_save_two_new_notes( startup = True )

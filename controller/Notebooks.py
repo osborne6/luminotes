@@ -672,9 +672,12 @@ class Notebooks( object ):
     contents = Valid_string( min = 1, max = 50000, escape_html = False ),
     startup = Valid_bool(),
     previous_revision = Valid_revision( none_okay = True ),
+    position_after = Valid_id( none_okay = True ),
+    position_before = Valid_id( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def save_note( self, notebook_id, note_id, contents, startup, previous_revision, user_id ):
+  def save_note( self, notebook_id, note_id, contents, startup, previous_revision = None,
+                 position_after = None, position_before = None, user_id = None ):
     """
     Save a new revision of the given note. This function will work both for creating a new note and
     for updating an existing note. If the note exists and the given contents are identical to the
@@ -692,6 +695,10 @@ class Notebooks( object ):
     @type previous_revision: unicode or NoneType
     @param previous_revision: previous known revision timestamp of the provided note, or None if
       the note is new
+    @type position_after: unicode or NoneType
+    @param position_after: id of note to position the saved note after (optional)
+    @type position_before: unicode or NoneType
+    @param position_before: id of note to position the saved note before (optional)
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: json dict
@@ -699,7 +706,7 @@ class Notebooks( object ):
       'new_revision': User_revision of saved note, or None if nothing was saved
       'previous_revision': User_revision immediately before new_revision, or None if the note is new
       'storage_bytes': current storage usage by user
-      'rank': integer rank of the saved note, or None
+      'rank': float rank of the saved note, or None
     }
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
@@ -717,22 +724,35 @@ class Notebooks( object ):
     if notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
       startup = True
 
+    def calculate_rank( position_after, position_before ):
+      after_note = position_after and self.__database.load( Note, position_after ) or None
+      before_note = position_before and self.__database.load( Note, position_before ) or None
+
+      if after_note and before_note:
+        return ( float( after_note.rank ) + float( before_note.rank ) ) / 2.0
+      elif after_note:
+        return float( after_note.rank ) + 1.0
+      elif before_note:
+        return max( float( before_note.rank ) - 1.0, 0.0 )
+      return 0.0
+
     # check whether the provided note contents have been changed since the previous revision
     def update_note( current_notebook, old_note, startup, user ):
       # the note hasn't been changed, so bail without updating it
-      if contents.replace( u"\n", u"" ) == old_note.contents.replace( u"\n", "" ) and startup == old_note.startup:
+      if not position_after and not position_before and startup == old_note.startup and \
+         contents.replace( u"\n", u"" ) == old_note.contents.replace( u"\n", "" ):
         new_revision = None
       # the note has changed, so update it
       else:
         note.contents = contents
         note.startup = startup
-        if startup:
-          if note.rank is None:
-            note.rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
-        else:
-          note.rank = None
-        note.user_id = user.object_id
 
+        if position_after or position_before:
+          note.rank = calculate_rank( position_after, position_before )
+        elif note.rank is None:
+          note.rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
+
+        note.user_id = user.object_id
         new_revision = User_revision( note.revision, note.user_id, user.username )
 
         self.__files.purge_unused( note )
@@ -760,10 +780,10 @@ class Notebooks( object ):
       new_revision = update_note( notebook, old_note, startup, user )
     # otherwise, create a new note
     else:
-      if startup:
-        rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
+      if position_after or position_before:
+        note.rank = calculate_rank( position_after, position_before )
       else:
-        rank = None
+        rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
   
       previous_revision = None
       note = Note.create( note_id, contents, notebook_id = notebook.object_id, startup = startup, rank = rank, user_id = user_id )
