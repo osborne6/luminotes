@@ -754,6 +754,9 @@ Editor.prototype.start_drag = function ( event ) {
 }
 
 Editor.prototype.drag = function( event ) {
+  if ( this.drag_target_timer )
+    clearTimeout( this.drag_target_timer );
+
   var mouse_position = event.mouse().page;
 
   // move the editor based on the original click's offset
@@ -762,6 +765,31 @@ Editor.prototype.drag = function( event ) {
     "x": mouse_position.x - this.drag_click_offset.x - viewport_position.x,
     "y": mouse_position.y - this.drag_click_offset.y - viewport_position.y
   } );
+
+  var self = this;
+
+  function hover_drag_targets() {
+    // if the editor is over any drop targets, expand and color them accordingly
+    var drop_targets = getElementsByTagAndClassName( "div", "note_drop_target" );
+    var div_position = getElementPosition( self.div );
+    var div_size = getElementDimensions( self.div );
+
+    for ( var i in drop_targets ) {
+      var drop_target = drop_targets[ i ];
+      var target_position = getElementPosition( drop_target );
+      var target_size = getElementDimensions( drop_target );
+
+      // if the div is wholly above or below the drop target, then it's not overlapping it
+      if ( ( div_position.y < target_position.y && div_position.y + div_size.h < target_position.y ) ||
+           ( div_position.y > target_position.y + target_size.h && div_position.y + div_size.h > target_position.y + target_size.h ) )
+        removeElementClass( drop_target, "note_drop_target_hover" );
+      else
+        addElementClass( drop_target, "note_drop_target_hover" );
+    }
+  }
+
+  // testing drag targets for hovering can be slow, so only do it periodically (a split second after the mouse stops moving)
+  this.drag_target_timer = setTimeout( function () { hover_drag_targets(); }, 10 );
 
   this.drag_scroll( event.mouse().client );
 }
@@ -802,6 +830,8 @@ Editor.prototype.drop = function( event ) {
   disconnect( this.drop_signal );
   if ( this.drag_scroll_timer )
     clearTimeout( this.drag_scroll_timer );
+  if ( this.drag_target_timer )
+    clearTimeout( this.drag_target_timer );
 
   removeElementClass( this.div, "note_div_dragging" );
   removeElementClass( this.holder, "note_holder_dragging" );
