@@ -859,6 +859,7 @@ Editor.prototype.drop = function( event ) {
     var drag_source_area = getElement( "note_drag_source_area" );
     setElementPosition( this.holder, getElementPosition( drag_source_area ) );
     removeElement( drag_source_area );
+    this.highlight();
   }
 }
 
