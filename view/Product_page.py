@@ -1,6 +1,7 @@
 from Page import Page
 from Header import Header
 from Tags import Link, Meta, Div, A, Span, Ul, Li, Br
+from config.Version import VERSION
 
 
 class Product_page( Page ):
@@ -8,8 +9,8 @@ class Product_page( Page ):
     Page.__init__(
       self,
       ( note_title != "home" ) and note_title or None, # use the default title for the "home" page
-      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
-      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/product.css" ),
+      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css?%s" % VERSION ),
+      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/product.css?%s" % VERSION ),
       Meta( name = u"description", content = u"Luminotes is a WYSIWYG personal wiki notebook for organizing your notes and ideas." ),
       Meta( name = u"keywords", content = u"note taking, personal wiki, wysiwyg wiki, easy wiki, simple wiki, wiki notebook" ),
 

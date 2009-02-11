@@ -1,4 +1,5 @@
 from Tags import Html, Head, Link, Script, Meta, Title, Body, Div, A, H1
+from config.Version import VERSION
 
 
 class Page( Html ):
@@ -14,12 +15,13 @@ class Page( Html ):
     Html.__init__(
       self,
       Head(
-        Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/style.css" ),
+        Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/style.css?%s" % VERSION ),
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
         [ child for child in children if isinstance( child, head_types ) ],
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),
-        """<!--[if IE 6]><link href="/static/css/ie6.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
-        """<!--[if IE 7]><link href="/static/css/ie7.css" type="text/css" rel="stylesheet"></link><![endif]-->""",
+        """<!--[if IE 6]><link href="/static/css/ie6.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
+        """<!--[if IE 7]><link href="/static/css/ie7.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
+        """<!--[if IE 8]><link href="/static/css/ie7.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
       ),
       Body(
         Div(

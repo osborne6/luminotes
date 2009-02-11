@@ -1,4 +1,5 @@
 import cgi
+from config.Version import VERSION
 
 
 def stream_progress( uploading_file, filename, fraction_reported ):
@@ -15,12 +16,12 @@ def stream_progress( uploading_file, filename, fraction_reported ):
     u"""
     <html>
     <head>
-      <link href="/static/css/upload.css" type="text/css" rel="stylesheet" />
-      <script type="text/javascript" src="/static/js/MochiKit.js"></script>
+      <link href="/static/css/upload.css?%s" type="text/css" rel="stylesheet" />
+      <script type="text/javascript" src="/static/js/MochiKit.js?%s"></script>
       <meta content="text/html; charset=UTF-8" http_equiv="content-type" />
     </head>
     <body>
-    """
+    """ % ( VERSION, VERSION )
 
   FILENAME_TRUNCATION_WIDTH = 40
   base_filename = filename.split( u"/" )[ -1 ].split( u"\\" )[ -1 ]
@@ -98,8 +99,8 @@ def stream_quota_error():
     u"""
     <html>
     <head>
-      <link href="/static/css/upload.css" type="text/css" rel="stylesheet" />
-      <script type="text/javascript" src="/static/js/MochiKit.js"></script>
+      <link href="/static/css/upload.css?%s" type="text/css" rel="stylesheet" />
+      <script type="text/javascript" src="/static/js/MochiKit.js?%s"></script>
       <meta content="text/html; charset=UTF-8" http_equiv="content-type" />
     </head>
     <body>
@@ -108,4 +109,4 @@ def stream_quota_error():
     </script>
     </body>
     </html>
-    """ % quota_error_script
+    """ % ( VERSION, VERSION, quota_error_script )

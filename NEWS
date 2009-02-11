@@ -1,3 +1,8 @@
+1.6.3: February 11, 2009
+ * Introduced cache-busting code to make pages update more reliably after a
+   new release.
+ * Added initial (untested) support for Internet Explorer 8 beta.
+
 1.6.2: February 11, 2009
  * Added drag-and-drop note reordering.
  * Fixed a visual bug in which a second title within a note had insufficient

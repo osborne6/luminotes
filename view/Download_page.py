@@ -19,7 +19,7 @@ class Download_page( Product_page ):
       logout_url,
       u"download", # note title
 
-      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ),
+      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js?%s" % VERSION ),
 
       Div(
         Div(

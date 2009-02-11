@@ -1,5 +1,6 @@
 from Product_page import Product_page
 from Tags import Div, H1, Img, A, P, Table, Th, Tr, Td, Li, Span, I, Br, Ul, Li, Script, H4, B, Script
+from config.Version import VERSION
 
 
 class Upgrade_page( Product_page ):
@@ -18,7 +19,7 @@ class Upgrade_page( Product_page ):
       logout_url,
       u"pricing", # note title
 
-      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ),
+      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js?%s" % VERSION ),
 
       Div(
         Div(

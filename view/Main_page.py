@@ -206,13 +206,13 @@ class Main_page( Page ):
     Page.__init__(
       self,
       title,
-      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css" ),
+      Link( rel = u"stylesheet", type = u"text/css", href = u"/static/css/header.css?%s" % VERSION ),
       updates_path and \
         Link( rel = u"alternate", type = u"application/rss+xml", title = notebook.name, href = updates_path ) or None,
-      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js" ) or None,
-      Script( type = u"text/javascript", src = u"/static/js/Invoker.js" ) or None,
-      Script( type = u"text/javascript", src = u"/static/js/Editor.js" ) or None,
-      Script( type = u"text/javascript", src = u"/static/js/Wiki.js" ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/MochiKit.js?%s" % VERSION ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/Invoker.js?%s" % VERSION ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/Editor.js?%s" % VERSION ) or None,
+      Script( type = u"text/javascript", src = u"/static/js/Wiki.js?%s" % VERSION ) or None,
       Input( type = u"hidden", name = u"user", id = u"user", value = json( user ) ),
       Input( type = u"hidden", name = u"rate_plan", id = u"rate_plan", value = json( rate_plan ) ),
       Input( type = u"hidden", name = u"yearly", id = u"yearly", value = json( signup_yearly ) ),

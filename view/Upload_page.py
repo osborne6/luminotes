@@ -1,4 +1,5 @@
 from Tags import Html, Head, Link, Meta, Body, P, Form, Span, Input
+from config.Version import VERSION
 
 
 class Upload_page( Html ):
@@ -6,7 +7,7 @@ class Upload_page( Html ):
     Html.__init__(
       self,
       Head(
-        Link( href = u"/static/css/upload.css", type = u"text/css", rel = u"stylesheet" ),
+        Link( href = u"/static/css/upload.css?%s" % VERSION, type = u"text/css", rel = u"stylesheet" ),
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
       ),
       Body(
