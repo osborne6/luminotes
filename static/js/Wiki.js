@@ -1046,6 +1046,8 @@ Wiki.prototype.editor_focused = function ( editor, synchronous, remove_empty ) {
 
 Wiki.prototype.editor_moved = function ( editor, position_after, position_before ) {
   this.save_editor( editor, false, null, null, null, position_after, position_before );  
+  if ( this.note_tree )
+    this.note_tree.move_link( editor, position_after, position_before );
 
   // reset the revision for each open editor. this is because the server is updating the revisions
   // on the server while reordering the ntoes. and we don't want to have a stale idea of what the
@@ -4649,7 +4651,7 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
     if ( expander && link.parentNode.parentNode == expander.parentNode.parentNode ) {
       swapElementClass( expander, "tree_expander_expanded", "tree_expander_empty" );
       disconnectAll( expander );
-      return;
+      return
     }
 
     return;
@@ -4662,6 +4664,18 @@ Note_tree.prototype.display_child_links = function ( result, link, children_area
   var note_id = parse_query( link )[ "note_id" ];
   disconnectAll( expander );
   connect_expander( expander, note_id );
+}
+
+Note_tree.prototype.move_link = function ( editor, position_after, position_before ) {
+  var item = getElement( "note_tree_item_" + editor.id );
+
+  if ( position_after ) {
+    var after_item = getElement( "note_tree_item_" + position_after.id );
+    insertSiblingNodesAfter( after_item, item );
+  } else if ( position_before ) {
+    var before_item = getElement( "note_tree_item_" + position_before.id );
+    insertSiblingNodesBefore( before_item, item );
+  }
 }
 
 Note_tree.prototype.start_link_add = function () {
@@ -4785,6 +4799,7 @@ Note_tree.prototype.save_and_display_startup_note = function ( note ) {
     self.add_root_link( note.object_id, note.title, note.contents, true );
   } );
 }
+
 
 function Recent_notes( wiki, notebook_id, invoker ) {
   this.wiki = wiki;
