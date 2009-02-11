@@ -597,6 +597,7 @@ h1 {
 .note_grabber {
   -moz-border-radius-topright: 5px;
   -moz-border-radius-bottomright: 5px;
+  -webkit-border-radius: 5px;
   -moz-user-select: none;
   color: #fafafa;
   background-color: #fafafa;
