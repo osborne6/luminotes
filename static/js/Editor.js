@@ -247,6 +247,7 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
   if ( this.grabber ) {
     disconnectAll( this.grabber );
     connect( this.grabber, "onmousedown", function ( event ) { self.start_drag( event ); } );
+    connect( this.grabber, "onclick", function ( event ) { event.stop(); } );
   }
 }
 
@@ -690,6 +691,8 @@ Editor.prototype.reposition = function ( repeat ) {
 }
 
 Editor.prototype.start_drag = function ( event ) {
+  event.stop();
+
   var note_height = 100;
   mouse_position = event.mouse().page;
 
@@ -755,11 +758,13 @@ Editor.prototype.start_drag = function ( event ) {
   signal( this, "grabber_pressed", event );
 
   var self = this;
-  this.drag_signal = connect( window, "onmousemove", function ( event ) { self.drag( event ); } );
-  this.drop_signal = connect( window, "onmouseup", function ( event ) { self.drop( event ); } );
+  this.drag_signal = connect( window.document.body, "onmousemove", function ( event ) { self.drag( event ); } );
+  this.drop_signal = connect( window.document.body, "onmouseup", function ( event ) { self.drop( event ); } );
 }
 
 Editor.prototype.drag = function( event ) {
+  event.stop();
+
   if ( this.drag_target_timer )
     clearTimeout( this.drag_target_timer );
 
