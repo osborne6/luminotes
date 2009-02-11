@@ -575,6 +575,7 @@ h1 {
   position: relative;
   top: -0.5em;
   border-top: 2px dashed #000000;
+  height: 0;
 }
 
 .note_drop_target_hover {
