@@ -784,6 +784,10 @@ Editor.prototype.drag = function( event ) {
       var drop_target = drop_targets[ i ];
       var target_position = getElementPosition( drop_target );
       var target_size = getElementDimensions( drop_target );
+      if ( WEBKIT ) {
+        target_position.x -= viewport_position.x;
+        target_position.y -= viewport_position.y;
+      }
 
       // if the div is wholly above or below the drop target, then it's not overlapping it
       if ( ( div_position.y < target_position.y && div_position.y + div_size.h < target_position.y ) ||

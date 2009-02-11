@@ -3,6 +3,8 @@ html, body {
   background-color: #fafafa;
   text-align: center;
   font-family: sans-serif;
+  -moz-user-select: none;
+  -webkit-user-select: none;
 }
 
 a {
@@ -599,6 +601,7 @@ h1 {
   -moz-border-radius-bottomright: 5px;
   -webkit-border-radius: 5px;
   -moz-user-select: none;
+  -webkit-user-select: none;
   color: #fafafa;
   background-color: #fafafa;
   min-width: 20px;
@@ -910,6 +913,7 @@ h1 {
 
 .pulldown_label {
   -moz-user-select: none;
+  -webkit-user-select: none;
   color: #000000;
   text-decoration: none;
 }
