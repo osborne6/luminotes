@@ -1,4 +1,5 @@
 1.6.2: January ?, 2009
+ * Added drag-and-drop note reordering.
  * Fixed a visual bug in which titles in a note after the first one had
    insufficient vertical spacing above them.
 
