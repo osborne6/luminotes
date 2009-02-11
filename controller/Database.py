@@ -391,6 +391,13 @@ class Database( object ):
 
     cache.delete( obj.cache_key )
 
+  def uncache_many( self, Object_type, obj_ids ):
+    cache = self.__get_cache_connection()
+    if not cache: return
+
+    for obj_id in obj_ids:
+      cache.delete( Persistent.make_cache_key( Object_type, obj_id ) )
+
   @staticmethod
   def generate_id():
     int_id = random.getrandbits( Database.ID_BITS )

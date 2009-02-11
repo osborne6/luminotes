@@ -2,6 +2,8 @@ import re
 from copy import copy
 from Note import Note
 from Persistent import Persistent, quote, quote_fuzzy
+from datetime import datetime
+from pytz import utc
 
 
 class Notebook( Persistent ):
@@ -356,6 +358,41 @@ class Notebook( Persistent ):
         tag_notebook.tag_id = tag.id
       order by tag.name;
       """ % ( quote( self.object_id ), quote( user_id ) )
+
+  def sql_load_note_ids_starting_from_rank( self, start_note_rank ):
+    """
+    Return a SQL string to load a list of all the note ids with rank greater than or equal to the
+    given rank.
+    """
+    return \
+      """
+      select
+        id
+      from
+        note_current
+      where
+        notebook_id = %s and
+        rank is not null and
+        rank >= %s;
+      """ % ( quote( self.object_id ), start_note_rank )
+
+  def sql_increment_rank( self, start_note_rank ):
+    """
+    Return a SQL string to increment the rank for every note in this notebook (in rank order)
+    starting from the given note rank. Notes before the given note rank are not updated.
+    """
+    return \
+      """
+      update
+        note_current
+      set
+        rank = rank + 1,
+        revision = %s
+      where
+        notebook_id = %s and
+        rank is not null and
+        rank >= %s;
+      """ % ( quote( datetime.now( tz = utc ) ), quote( self.object_id ), start_note_rank )
 
   def to_dict( self ):
     d = Persistent.to_dict( self )

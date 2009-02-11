@@ -726,12 +726,26 @@ class Notebooks( object ):
       position_before = None
       position_after = None
 
-    def calculate_rank( position_after, position_before ):
+    def update_rank( position_after, position_before ):
       after_note = position_after and self.__database.load( Note, position_after ) or None
       before_note = position_before and self.__database.load( Note, position_before ) or None
 
       if after_note and before_note:
-        return ( float( after_note.rank ) + float( before_note.rank ) ) / 2.0
+        new_rank = float( after_note.rank ) + 1.0
+
+        # if necessary, increment the rank of all subsequent notes to make "room" for this note
+        if new_rank >= before_note.rank:
+          # clear the cache of before_note and all notes with subsequent rank
+          self.__database.uncache_many(
+            Note,
+            self.__database.select_many(
+              unicode,
+              notebook.sql_load_note_ids_starting_from_rank( before_note.rank )
+            )
+          )
+          self.__database.execute( notebook.sql_increment_rank( before_note.rank ), commit = False )
+
+        return new_rank
       elif after_note:
         return float( after_note.rank ) + 1.0
       elif before_note:
@@ -750,7 +764,7 @@ class Notebooks( object ):
         note.startup = startup
 
         if position_after or position_before:
-          note.rank = calculate_rank( position_after, position_before )
+          note.rank = update_rank( position_after, position_before )
         elif note.rank is None:
           note.rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
 
@@ -783,7 +797,7 @@ class Notebooks( object ):
     # otherwise, create a new note
     else:
       if position_after or position_before:
-        rank = calculate_rank( position_after, position_before )
+        rank = update_rank( position_after, position_before )
       else:
         rank = self.__database.select_one( float, notebook.sql_highest_note_rank() ) + 1
   

@@ -1046,6 +1046,16 @@ Wiki.prototype.editor_focused = function ( editor, synchronous, remove_empty ) {
 
 Wiki.prototype.editor_moved = function ( editor, position_after, position_before ) {
   this.save_editor( editor, false, null, null, null, position_after, position_before );  
+
+  // reset the revision for each open editor. this is because the server is updating the revisions
+  // on the server while reordering the ntoes. and we don't want to have a stale idea of what the
+  // current revision is for a given editor
+  var divs = getElementsByTagAndClassName( "div", "static_note_div" );
+  for ( var i in divs ) {
+    var editor = divs[ i ].editor;
+    editor.revision = null;
+    editor.user_revisions = new Array();
+  }
 }
 
 Wiki.prototype.make_byline = function ( username, creation, note_id ) {
@@ -1760,7 +1770,8 @@ Wiki.prototype.update_editor_revisions = function ( result, editor ) {
 
   // if the server's idea of the previous revision doesn't match the client's, then someone has
   // gone behind our back and saved the editor's note from another window
-  if ( result.previous_revision && result.previous_revision.revision != client_previous_revision ) {
+  if ( result.previous_revision && client_previous_revision &&
+       result.previous_revision.revision != client_previous_revision ) {
     var compare_button = createDOM( "input", {
       "type": "button",
       "class": "message_button",

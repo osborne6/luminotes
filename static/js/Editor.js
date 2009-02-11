@@ -332,8 +332,12 @@ Editor.prototype.add_selection_bookmark = function () {
     // if the current range is not within this editor's static note div, then bail
     if ( range.startContainer == document || range.endContainer == document )
       return null;
-    if ( !isChildNode( range.startContainer.parentNode, this.div ) || !isChildNode( range.endContainer.parentNode, this.div ) )
+    try {
+      if ( !isChildNode( range.startContainer.parentNode, this.div ) || !isChildNode( range.endContainer.parentNode, this.div ) )
+        return null;
+    } catch ( e ) {
       return null;
+    }
 
     // mark the nodes that are start and end containers for the current range. we have to mark the
     // parent node instead of the start/end container itself, because text nodes can't have classes
