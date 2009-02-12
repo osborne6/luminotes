@@ -1,4 +1,4 @@
-1.6.4: February ??, 2009
+1.6.4: February 12, 2009
  * Now ignoring certain unneeded HTML tags that end up in your notes when you
    copy and paste text from an MS Word document.
  * Fixed a bug in which clicking on the title field within a link pulldown did
