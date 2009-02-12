@@ -5,6 +5,7 @@
    not position the text cursor there.
  * Fixed a bug in which clicking on an unfocused note didn't position the text
    cursor in the correct location.
+ * Fixed bugs related to the display and hiding of previous note revisions.
 
 1.6.3: February 11, 2009
  * Introduced cache-busting code to make pages update more reliably after a

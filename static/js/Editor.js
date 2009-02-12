@@ -148,11 +148,12 @@ Editor.prototype.create_div = function ( position_after ) {
 
 Editor.prototype.create_note_controls = function () {
   var iframe_id = "note_" + this.id;
-  if ( this.read_write ) {
-    this.grabber = createDOM( "td", { "id": "note_grabber_" + this.id, "class": "note_grabber" }, "....." );
-    if ( !this.read_write || this.own_notes_only )
-      addElementClass( this.grabber, "invisible" );
 
+  this.grabber = createDOM( "td", { "id": "note_grabber_" + this.id, "class": "note_grabber" }, "....." );
+  if ( !this.read_write || this.own_notes_only )
+    addElementClass( this.grabber, "invisible" );
+
+  if ( this.read_write ) {
     this.delete_button = createDOM( "input", {
       "type": "button",
       "class": "note_button",
@@ -1318,7 +1319,8 @@ Editor.prototype.blur = function () {
   this.scrape_title();
 
   removeElementClass( this.iframe || this.div, "focused_note_frame" );
-  removeElementClass( this.grabber, "note_grabber_focused" );
+  if ( this.grabber )
+    removeElementClass( this.grabber, "note_grabber_focused" );
 }
 
 Editor.prototype.release_iframe = function () {
@@ -1335,10 +1337,10 @@ Editor.prototype.release_iframe = function () {
   this.document = null;
 
   var static_contents = getFirstElementByTagAndClassName( "span", "static_note_contents", this.div );
-  static_contents.innerHTML = contents;
+  if ( static_contents )
+    static_contents.innerHTML = contents;
 
-  if ( this.div )
-    removeElementClass( this.div, "invisible" );
+  removeElementClass( this.div, "invisible" );
   addElementClass( this.iframe, "invisible" );
   setElementDimensions( this.iframe, { "h": 0 } );
   this.iframe = null;
