@@ -1,5 +1,8 @@
 1.6.5: February 12, 2009
- * 
+ * Fixed a bug in which hiding a focused note could cause the subsequent note
+   to display incorrectly Internet Explorer.
+ * Re-fixed a bug in which hiding a focused note could (temporarily) leave an
+   empty gap at the bottom of the page. 
 
 1.6.4: February 12, 2009
  * Now ignoring certain unneeded HTML tags that end up in your notes when you

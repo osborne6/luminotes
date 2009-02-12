@@ -1016,9 +1016,11 @@ Wiki.prototype.update_link_with_suggestion = function ( editor, link, note ) {
   this.display_link_pulldown( editor, link );
 }
 
-Wiki.prototype.editor_focused = function ( editor, synchronous, remove_empty ) {
+Wiki.prototype.editor_focused = function ( editor, synchronous, remove_empty, save_blurred ) {
   if ( remove_empty == undefined )
     remove_empty = true;
+  if ( save_blurred == undefined )
+    save_blurred = true;
 
   if ( this.focused_editor && this.focused_editor != editor ) {
     this.focused_editor.blur();
@@ -1034,7 +1036,7 @@ Wiki.prototype.editor_focused = function ( editor, synchronous, remove_empty ) {
       this.focused_editor.shutdown();
       this.decrement_total_notes_count();
       this.display_empty_message();
-    } else {
+    } else if ( save_blurred ) {
       // when switching editors, save the one being left
       this.save_editor( null, null, null, synchronous );
     }
@@ -1528,6 +1530,9 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
   this.clear_messages();
   this.clear_pulldowns();
 
+  if ( this.focused_editor )
+    this.editor_focused( null, false, true, false );
+
   if ( !editor ) {
     editor = this.focused_editor;
     this.focused_editor = null;
@@ -1563,6 +1568,9 @@ Wiki.prototype.hide_editor = function ( event, editor ) {
 Wiki.prototype.delete_editor = function ( event, editor ) {
   this.clear_messages();
   this.clear_pulldowns();
+
+  if ( this.focused_editor )
+    this.editor_focused( null, false, true, false );
 
   if ( !editor ) {
     editor = this.focused_editor;
