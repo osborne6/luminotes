@@ -3049,9 +3049,8 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
 
   event.stop();
 
-  // if there's already a cached revision list, or the editor doesn't have a revision yet, then
-  // display the changes pulldown and bail
-  if ( ( editor.user_revisions && editor.user_revisions.length > 0 ) || !editor.revision ) {
+  // if there's already a cached revision list, then display the changes pulldown and bail
+  if ( ( editor.user_revisions && editor.user_revisions.length > 0 ) ) {
     new Changes_pulldown( this, this.notebook.object_id, this.invoker, editor );
     return;
   }

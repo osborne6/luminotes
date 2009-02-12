@@ -6,6 +6,8 @@
  * Fixed a bug in which clicking on an unfocused note didn't position the text
    cursor in the correct location.
  * Fixed bugs related to the display and hiding of previous note revisions.
+ * Fixed a bug in which moving a note and then clicking the "changes" tab on
+   any other note failed to show that note's previous revisions.
 
 1.6.3: February 11, 2009
  * Introduced cache-busting code to make pages update more reliably after a
