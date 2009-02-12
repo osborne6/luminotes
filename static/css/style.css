@@ -3,8 +3,6 @@ html, body {
   background-color: #fafafa;
   text-align: center;
   font-family: sans-serif;
-  -moz-user-select: none;
-  -webkit-user-select: none;
 }
 
 a {
