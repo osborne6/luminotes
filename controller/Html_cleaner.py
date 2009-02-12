@@ -134,6 +134,8 @@ class Html_cleaner(HTMLParser):
       'title',
       'head',
       'body',
+      'o',
+      'm',
     ]
 
     # A list of tags that require no closing tag.
