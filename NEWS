@@ -3,6 +3,8 @@
    the next note to display incorrectly
  * Fixed a bug in Internet Explorer in which opening a note by following a link
    didn't display the opened note correctly.
+ * Fixed a bug in which a drag-and-dropped note occasionally didn't resize back
+   to its original size.
  * Re-fixed a bug in which hiding a focused note could (temporarily) leave an
    empty gap at the bottom of the page. 
 
