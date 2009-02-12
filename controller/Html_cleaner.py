@@ -215,6 +215,7 @@ class Html_cleaner(HTMLParser):
       self.open_tags.insert(0, tag)
       
   def handle_endtag(self, tag, attrs):
+    tag = tag.split( ":" )[ 0 ]
     bracketed = "</%s>" % tag
     if tag not in self.permitted_tags:
       if tag not in self.stripped_tags:
