@@ -122,15 +122,17 @@ Editor.prototype.create_div = function ( position_after ) {
   this.connect_note_controls();
 
   this.holder = createDOM( "table", { "id": "note_holder_" + this.id, "class": "note_holder" },
-    createDOM( "tr", {},
-      createDOM( "td", {}, this.note_controls )
-    ),
-    createDOM( "tr", {},
-      createDOM( "td", { "width": "100%" }, this.div ),
-      this.grabber
-    ),
-    createDOM( "tr", { "id": "note_shadow_" + this.id, "class": "note_shadow undisplayed" },
-      createDOM( "div", { "class": "note_shadow_corner" } )
+    createDOM( "tbody", {},
+      createDOM( "tr", {},
+        createDOM( "td", {}, this.note_controls )
+      ),
+      createDOM( "tr", {},
+        createDOM( "td", { "width": "100%" }, this.div ),
+        this.grabber
+      ),
+      createDOM( "tr", { "id": "note_shadow_" + this.id, "class": "note_shadow undisplayed" },
+        createDOM( "div", { "class": "note_shadow_corner" } )
+      )
     )
   );
 
