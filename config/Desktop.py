@@ -9,11 +9,21 @@ username_postfix = os.environ.get( "USER" )
 username_postfix = username_postfix and "_%s" % username_postfix or ""
 
 
-# find an available TCP socket to listen on
-sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-sock.bind( ( "", 0 ) )
-socket_port = sock.getsockname()[ 1 ]
-sock.close()
+def find_available_port( port_number = 0 ):
+  sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+  sock.bind( ( "", port_number ) )
+  socket_port = sock.getsockname()[ 1 ]
+  sock.close()
+  return socket_port
+
+
+# find an available TCP socket to listen on. try the default port first, and if that's not
+# available, then just grab any available port that the OS gives us
+DEFAULT_PORT = 6520
+try:
+  socket_port = find_available_port( DEFAULT_PORT )
+except socket.error:
+  socket_port = find_available_port()
 
 
 

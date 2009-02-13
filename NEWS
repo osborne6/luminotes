@@ -1,4 +1,7 @@
 1.6.6: ?
+ * Luminotes Desktop now attempts to always run on a particular port number,
+   which means that as long as it's running you can reach it from a constant
+   URL.
  * Luminotes now recognizes "mailto:" links as external links, so you can
    include links to email addresses within your notes.
 
