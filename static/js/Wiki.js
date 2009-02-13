@@ -626,7 +626,7 @@ Wiki.prototype.load_editor = function ( note_title, note_id, revision, previous_
 
 Wiki.prototype.resolve_link = function ( note_title, link, force, callback ) {
   // if the title looks like a URL, then make it a link to an external site
-  if ( /^\w+:\/\//.test( note_title ) )
+  if ( /^\w+:\/\//.test( note_title ) || /^mailto:/.test( note_title ) )
     var title_looks_like_url = true;
   else
     var title_looks_like_url = false;
@@ -751,7 +751,7 @@ Wiki.prototype.parse_loaded_editor = function ( result, note_title, requested_re
     var username = result.note.username;
   } else {
     // if the title looks like a URL, then make it a link to an external site
-    if ( /^\w+:\/\//.test( note_title ) ) {
+    if ( /^\w+:\/\//.test( note_title ) || /^mailto:/.test( note_title ) ) {
       link.target = "_new";
       link.href = note_title;
       window.open( link.href );
