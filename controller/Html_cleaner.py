@@ -157,7 +157,7 @@ class Html_cleaner(HTMLParser):
 
     # The only schemes allowed in URLs (for href and src attributes).
     # Adding "javascript" or "vbscript" to this list would not be smart.
-    self.allowed_schemes = ['http','https','ftp', 'irc', '']
+    self.allowed_schemes = ['http','https','ftp', 'irc','mailto','']
 
     # Boolean indicating whether links need to have a target attribute.
     self.require_link_target = require_link_target
