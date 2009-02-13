@@ -4,7 +4,7 @@ from Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
 
 
 class Html_file( Html ):
-  NOTE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*\/notebooks\/[^>]+[?&]note_id=([a-z0-9]*)"[^>]*>', re.IGNORECASE )
+  NOTE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*(?:\/notebooks\/)?[^>]+[?&]note_id=([a-z0-9]*)"[^>]*>', re.IGNORECASE )
   IMAGE_PATTERN = re.compile( u'<img [^>]* ?/?>', re.IGNORECASE )
 
   def __init__( self, notebook_name, notes ):
