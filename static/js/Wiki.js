@@ -1080,6 +1080,16 @@ Wiki.prototype.make_byline = function ( username, creation, note_id ) {
          ' | <a href="' + window.location.pathname + '?note_id=' + note_id + '" target="_top">permalink</a>';
 }
 
+Wiki.prototype.remove_byline = function ( editor ) {
+  if ( editor.document && editor.read_write ) {
+    var byline = getFirstElementByTagAndClassName( "div", "byline", editor.document );
+    if ( byline ) {
+      removeElement( byline );
+      editor.resize();
+    }
+  }
+}
+
 Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
   var pulldowns = getElementsByTagAndClassName( "div", "pulldown" );
 
@@ -1124,13 +1134,7 @@ Wiki.prototype.key_pressed = function ( event ) {
 }
 
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
-  if ( editor.document && editor.read_write ) {
-    var byline = getFirstElementByTagAndClassName( "div", "byline", editor.document );
-    if ( byline ) {
-      removeElement( byline );
-      editor.resize();
-    }
-  }
+  this.remove_byline( editor );
 
   var code = event.key().code;
 
@@ -1718,6 +1722,7 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
   if ( editor && editor.read_write && !editor.closed &&
        ( ( !editor.empty() && editor.dirty() ) || position_after || position_before ) ) {
     editor.scrape_title();
+    this.remove_byline( editor );
 
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook.object_id,

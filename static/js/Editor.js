@@ -456,7 +456,7 @@ Editor.prototype.position_cursor = function ( div_range ) {
   }
 
   // otherwise, just move the text cursor to the end of the text
-  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+  if ( this.iframe && this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
     var last_node = this.document.body.lastChild;
 
