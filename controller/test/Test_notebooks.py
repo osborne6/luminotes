@@ -165,6 +165,22 @@ class Test_notebooks( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_default_without_login_using_auto_login( self ):
+    cherrypy.config.configs[ u"global" ][ u"luminotes.auto_login_username" ] = u"someone"
+
+    try:
+      path = "/notebooks/%s" % self.notebook.object_id
+      result = self.http_get( path )
+      
+      headers = result.get( "headers" )
+      assert headers
+      assert headers.get( "Location" ) == u"http:///"
+
+      user = self.database.load( User, self.user.object_id )
+      assert user.storage_bytes == 0
+    finally:
+      del( cherrypy.config.configs[ u"global" ][ u"luminotes.auto_login_username" ] )
+
   def test_default_forum( self ):
     self.login()
 

@@ -143,8 +143,10 @@ def grab_user_id( function ):
       return function( *args, **kwargs )
     except Access_error:
       # if there was an Access_error, and the user isn't logged in, and this is an HTTP GET request,
-      # redirect to the login page
+      # redirect to the login page. that is, unless there is an auto-login username
       if cherrypy.session.get( "user_id" ) is None and cherrypy.request.method == "GET":
+        if cherrypy.config.configs[ u"global" ].get( u"luminotes.auto_login_username" ):
+          raise cherrypy.HTTPRedirect( u"%s/" % cherrypy.request.base )
         original_path = cherrypy.request.path + \
           ( cherrypy.request.query_string and u"?%s" % cherrypy.request.query_string or "" )
         raise cherrypy.HTTPRedirect( u"%s/login?after_login=%s" % ( cherrypy.request.base, urllib.quote( original_path ) ) )

@@ -1,11 +1,14 @@
 1.6.6: ?
- * Luminotes Desktop now has a "close" link at the top of the page to
-   completely shut down the process.
- * Luminotes Desktop now attempts to always run on a particular port number,
-   which means that as long as it's running you can reach it from a constant
-   URL.
  * Luminotes now recognizes "mailto:" links as external links, so you can
    include links to email addresses within your notes.
+ * Several Luminotes Desktop improvements:
+   * There is now a "close" link at the top of the page to completely shut down
+     the process when you're done using Luminotes.
+   * Luminotes Desktop now attempts to always run on a particular port number,
+     which means that as long as it's running you can reach it from a constant
+     URL.
+   * You can now copy the Luminotes Desktop URL and paste it into another
+     web browser without getting an error message.
 
 1.6.5: February 12, 2009
  * Now ignoring even more unneeded HTML tags from an MS Word copy-and-paste.
