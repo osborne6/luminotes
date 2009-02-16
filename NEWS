@@ -1,4 +1,6 @@
 1.6.6: ?
+ * Luminotes Desktop now has a "close" link at the top of the page to
+   completely shut down the process.
  * Luminotes Desktop now attempts to always run on a particular port number,
    which means that as long as it's running you can reach it from a constant
    URL.

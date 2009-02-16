@@ -23,6 +23,7 @@ from view.Notebook_rss import Notebook_rss
 from view.Json import Json
 from view.Error_page import Error_page
 from view.Not_found_page import Not_found_page
+from view.Close_page import Close_page
 
 
 class Root( object ):
@@ -389,6 +390,16 @@ class Root( object ):
 
   @expose( view = Json )
   def shutdown( self ):
+    # this is typically only allowed in the desktop configuration
+    if self.__settings[ u"global" ].get( u"luminotes.allow_shutdown_command" ) is not True:
+      return dict()
+
+    cherrypy.server.stop()
+
+    return dict()
+
+  @expose( view = Close_page )
+  def close( self ):
     # this is typically only allowed in the desktop configuration
     if self.__settings[ u"global" ].get( u"luminotes.allow_shutdown_command" ) is not True:
       return dict()
