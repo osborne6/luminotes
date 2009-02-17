@@ -42,9 +42,12 @@ copy the installed \Program Files\Luminotes folder to your USB drive.)
 Once Luminotes Desktop is installed, instead of running Luminotes normally,
 open your USB drive as a folder in Windows. Then, run usb_luminotes.bat from
 the USB drive. Your Luminotes data, including all of your notes and notebooks,
-will be stored on the USB drive instead of on the computer itself. Then,
-anytime you want to start Luminotes on the USB drive, run usb_luminotes.bat
-from it.
+will be stored on the USB drive instead of on the computer itself.
+
+When you are done using Luminotes and you want to remove the USB drive, first
+click the "close" link at the top of the page to completely shut down
+Luminotes. Then, anytime you want to start Luminotes on the USB drive, run
+usb_luminotes.bat from it.
 
 
 Linux / Mac OS X / BSD
