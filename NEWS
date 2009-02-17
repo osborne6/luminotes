@@ -1,16 +1,17 @@
-1.6.6: ?
+1.6.6: February 16, 2009
  * Luminotes now recognizes "mailto:" links as external links, so you can
    include links to email addresses within your notes.
  * Several Luminotes Desktop improvements:
-   * There is now a "close" link at the top of the page to completely shut down
-     the process when you're done using Luminotes.
+   * There is now a "close" link at the top of the page to completely shut
+     down the process when you're done using Luminotes.
    * Luminotes Desktop now attempts to always run on a particular port number,
      which means that as long as it's running you can reach it from a constant
-     URL.
-   * You can now copy the Luminotes Desktop URL and paste it into another
-     web browser without getting an error message.
+     web address.
+   * You can now copy the Luminotes Desktop web address and paste it into
+     another web browser without getting an error message.
  * Now, if you copy a link from another web page and paste it into a note,
-   Luminotes properly recognizes it as an external link.
+   Luminotes properly recognizes it as an external link (rather than a link to
+   a note).
  * Fixed a bug in which clicking "compare versions" during a conflict didn't
    actually display the changes between the two versions.
 
