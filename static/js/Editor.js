@@ -1584,10 +1584,13 @@ function normalize_title( title ) {
 }
 
 function editor_by_id( note_id, revision ) {
-  if ( revision )
+  if ( revision ) {
     var iframe = getElement( "note_" + note_id + " " + revision );
-  else
+    if ( !iframe && getElement( "note_" + note_id ) )
+      return null;
+  } else {
     var iframe = getElement( "note_" + note_id );
+  }
 
   if ( iframe )
     return iframe.editor;

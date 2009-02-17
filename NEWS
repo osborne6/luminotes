@@ -9,6 +9,8 @@
      URL.
    * You can now copy the Luminotes Desktop URL and paste it into another
      web browser without getting an error message.
+ * Fixed a bug in which clicking "compare versions" during a conflict didn't
+   actually display the changes between the two versions.
 
 1.6.5: February 12, 2009
  * Now ignoring even more unneeded HTML tags from an MS Word copy-and-paste.
