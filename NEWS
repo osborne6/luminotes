@@ -9,6 +9,8 @@
      URL.
    * You can now copy the Luminotes Desktop URL and paste it into another
      web browser without getting an error message.
+ * Now, if you copy a link from another web page and paste it into a note,
+   Luminotes properly recognizes it as an external link.
  * Fixed a bug in which clicking "compare versions" during a conflict didn't
    actually display the changes between the two versions.
 

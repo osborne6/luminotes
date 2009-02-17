@@ -1034,18 +1034,8 @@ Editor.prototype.mouse_released = function ( event ) {
     }
     if ( !link.href ) return false;
 
-    // links with targets are considered to be external links pointing outside of this wiki
-    if ( link.target ) {
-      // if this is a read-only editor and the link target is "_top", go to the link's URL directly
-      if ( !self.edit_enabled && link.target == "_top" ) {
-        window.location = link.href;
-        return true;
-      }
-      
-      // launch the external link ourselves, assuming that its target is "_new"
-      window.open( link.href );
-      return true;
-    }
+    var query = parse_query( link );
+    var id = query.note_id;
 
     // special case for links to uploaded files
     if ( !link.target && /\/files\//.test( link.href ) ) {
@@ -1055,10 +1045,23 @@ Editor.prototype.mouse_released = function ( event ) {
       return true;
     }
 
+    // links with targets are considered to be external links pointing outside of this wiki
+    if ( link.target || id == undefined ) {
+      // if this is a read-only editor and the link target is "_top", go to the link's URL directly
+      if ( !self.edit_enabled && ( link.target == "_top" || !link.target ) ) {
+        window.location = link.href;
+        return true;
+      }
+      
+      // launch the external link ourselves, assuming that its target is "_new"
+      window.open( link.href );
+      if ( !link.target )
+        link.target = "_top";
+      return true;
+    }
+
     // load the note corresponding to the clicked link
-    var query = parse_query( link );
     var title = link_title( link, query );
-    var id = query.note_id;
     signal( self, "load_editor", title, id, null, null, link, self.holder );
     return true;
   }
