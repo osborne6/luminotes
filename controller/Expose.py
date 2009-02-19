@@ -70,18 +70,31 @@ def expose( view = None, rss = None ):
       if isinstance( result, types.GeneratorType ):
         return result
 
-      redirect = result.get( u"redirect", None )
+      redirect = result.get( u"redirect" )
+      encoding = result.get( u"manual_encode" )
+      if encoding:
+        del( result[ u"manual_encode" ] )
+
+      def render( view, result, encoding = None ):
+        output = unicode( view( **result ) )
+        if not encoding:
+          return output
+        return output.encode( encoding )
 
       # try using the supplied view to render the result
       try:
         if view_override is None:
           if rss and use_rss:
             cherrypy.response.headers[ u"Content-Type" ] = u"application/xml"
-            return unicode( rss( **result ) ).encode( "utf8" )
+            return render( rss, result, encoding or "utf8" )
           elif view:
-            return unicode( view( **result ) )
+            return render( view, result, encoding )
+          elif result.get( "view" ):
+            result_view = result.get( "view" )
+            del( result[ "view" ] )
+            return render( result_view, result, encoding )
         else:
-          return unicode( view_override( **result ) )
+          return render( view_override, result, encoding )
       except:
         if redirect is None:
           if original_error:

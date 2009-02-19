@@ -143,7 +143,7 @@ settings = {
     "stream_response": True,
     "encoding_filter.on": False,
   },
-  "/notebooks/export_csv": {
+  "/notebooks/export": {
     "stream_response": True,
     "encoding_filter.on": False,
   },

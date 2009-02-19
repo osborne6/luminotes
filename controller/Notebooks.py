@@ -1,8 +1,6 @@
 import re
 import cgi
-import csv
 import cherrypy
-from cStringIO import StringIO
 from datetime import datetime
 from Expose import expose
 from Validate import validate, Valid_string, Validation_error, Valid_bool, Valid_int
@@ -21,7 +19,6 @@ from model.File import File
 from model.Tag import Tag
 from view.Main_page import Main_page
 from view.Json import Json
-from view.Html_file import Html_file
 from view.Note_tree_area import Note_tree_area
 from view.Notebook_rss import Notebook_rss
 from view.Updates_rss import Updates_rss
@@ -1191,61 +1188,33 @@ class Notebooks( object ):
       notes = notes,
     )
 
-  @expose( view = Html_file )
-  @weakly_expire
-  @end_transaction
-  @grab_user_id
-  @validate(
-    notebook_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def export_html( self, notebook_id, user_id ):
-    """
-    Download the entire contents of the given notebook as a stand-alone HTML page (no JavaScript).
-
-    @type notebook_id: unicode
-    @param notebook_id: id of notebook to download
-    @type user_id: unicode
-    @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype: unicode
-    @return: rendered HTML page with appropriate headers to trigger a download
-    @raise Access_error: the current user doesn't have access to the given notebook
-    @raise Validation_error: one of the arguments is invalid
-    """
-    notebook = self.__users.load_notebook( user_id, notebook_id )
-
-    if not notebook:
-      raise Access_error()
-
-    startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
-    other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
-
-    return dict(
-      notebook_name = notebook.name,
-      notes = startup_notes + other_notes,
-    )
-
   @expose()
   @weakly_expire
   @end_transaction
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
+    format = Valid_string( min = 1, max = 100 ),
     user_id = Valid_id( none_okay = True ),
   )
-  def export_csv( self, notebook_id, user_id ):
+  def export( self, notebook_id, format, user_id ):
     """
-    Download the entire contents of the given notebook as a CSV file.
+    Download the entire contents of the given notebook as a stand-alone file.
 
     @type notebook_id: unicode
     @param notebook_id: id of notebook to download
+    @type format: unicode
+    @param format: string indicating the export plugin to use, currently one of: "html", "csv"
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
-    @rtype: unicode
-    @return: CSV file with appropriate headers to trigger a download
+    @rtype: unicode or generator (for streaming files)
+    @return: exported file with appropriate headers to trigger a download
     @raise Access_error: the current user doesn't have access to the given notebook
     @raise Validation_error: one of the arguments is invalid
     """
+    if format not in ( "html", "csv" ):
+      raise Access_error()
+
     notebook = self.__users.load_notebook( user_id, notebook_id )
 
     if not notebook:
@@ -1253,37 +1222,19 @@ class Notebooks( object ):
 
     startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
     other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
-    notes = startup_notes + other_notes 
+    notes = startup_notes + other_notes
 
-    buffer = StringIO()
-    writer = csv.writer( buffer )
+    import imp
+    from plugins.Invoke import invoke
 
-    cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=wiki.csv"
-    cherrypy.response.headerMap[ u"Content-Type" ] = u"text/csv;charset=utf-8"
-
-    def stream():
-      writer.writerow( ( u"contents", u"title", u"note_id", u"startup", u"username", u"revision_date" ) )
-      yield buffer.getvalue()
-      buffer.truncate( 0 )
-
-      for note in notes:
-        user = None
-        if note.user_id:
-          user = self.__database.load( User, note.user_id )
-
-        writer.writerow( (
-          note.contents and note.contents.strip().encode( "utf8" ) or None,
-          note.title and note.title.strip().encode( "utf8" ) or None,
-          note.object_id,
-          note.startup and 1 or 0,
-          note.user_id and user and user.username and user.username.encode( "utf8" ) or u"",
-          note.revision,
-        ) )
-
-        yield buffer.getvalue()
-        buffer.truncate( 0 )
-
-    return stream()
+    return invoke(
+      plugin_type = u"export",
+      plugin_name = format,
+      database = self.__database,
+      notebook = notebook,
+      notes = startup_notes + other_notes,
+      response_headers = cherrypy.response.headerMap,
+    )
 
   @expose( view = Json )
   @end_transaction

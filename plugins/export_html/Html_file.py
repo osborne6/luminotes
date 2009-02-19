@@ -1,13 +1,13 @@
 import re
 import cherrypy
-from Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
+from view.Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
 
 
 class Html_file( Html ):
   NOTE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*(?:\/notebooks\/)?[^>]+[?&]note_id=([a-z0-9]*)"[^>]*>', re.IGNORECASE )
   IMAGE_PATTERN = re.compile( u'<img [^>]* ?/?>', re.IGNORECASE )
 
-  def __init__( self, notebook_name, notes ):
+  def __init__( self, notebook, notes ):
     relinked_notes = {} # map from note id to relinked note contents
 
     # relink all note links so they point to named anchors within the page. also, for now, remove all
@@ -17,18 +17,18 @@ class Html_file( Html ):
       contents = self.IMAGE_PATTERN.sub( '', contents )
       relinked_notes[ note.object_id ] = contents
 
-    cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=wiki.html"
+    cherrypy.response.headerMap[ u"Content-Disposition" ] = u"attachment; filename=%s.html" % notebook.friendly_id
 
     Html.__init__(
       self,
       Head(
         Style( file( u"static/css/download.css" ).read(), type = u"text/css" ),
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
-        Title( notebook_name ),
+        Title( notebook.name ),
       ),
       Body(
         Div(
-          H1( notebook_name ),
+          H1( notebook.name ),
           [ Span(
             A( name = u"note_%s" % note.object_id ),
             Div(

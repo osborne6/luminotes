@@ -4478,10 +4478,12 @@ class Test_notebooks( Test_controller ):
     self.database.save( note3 )
 
     result = self.http_get(
-      "/notebooks/export_html/%s" % self.notebook.object_id,
+      "/notebooks/export?notebook_id=%s&format=html" % self.notebook.object_id,
       session_id = self.session_id,
     )
-    assert result.get( "notebook_name" ) == self.notebook.name
+
+    assert result.get( "notebook" ).object_id == self.notebook.object_id
+    assert result.get( "view" )
 
     notes = result.get( "notes" )
     assert len( notes ) == self.database.select_one( int, self.notebook.sql_count_notes() )
@@ -4517,7 +4519,7 @@ class Test_notebooks( Test_controller ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
-    path = "/notebooks/export_html/%s" % self.notebook.object_id
+    path = "/notebooks/export?notebook_id=%s&format=html" % self.notebook.object_id
     result = self.http_get(
       path,
       session_id = self.session_id,
@@ -4537,37 +4539,26 @@ class Test_notebooks( Test_controller ):
 
     assert result.get( "error" )
 
-  def test_export_csv( self, note_contents = None ):
+  def test_export_csv( self ):
     self.login()
 
-    if not note_contents:
-      note_contents = u"<h3>blah</h3>foo"
+    note_contents = u"<h3>blah</h3>foo"
 
     note3 = Note.create( "55", note_contents, notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
     result = self.http_get(
-      "/notebooks/export_csv/%s" % self.notebook.object_id,
+      "/notebooks/export?notebook_id=%s&format=csv" % self.notebook.object_id,
       session_id = self.session_id,
     )
 
     headers = result[ u"headers" ]
     assert headers
     assert headers[ u"Content-Type" ] == u"text/csv;charset=utf-8"
-    assert headers[ u"Content-Disposition" ] == 'attachment; filename=wiki.csv'
+    assert headers[ u"Content-Disposition" ] == 'attachment; filename=%s.csv' % self.notebook.friendly_id
 
-    gen = result[ u"body" ]
-    assert isinstance( gen, types.GeneratorType )
-    pieces = []
-
-    try:
-      for piece in gen:
-        pieces.append( piece )
-    except AttributeError, exc:
-      if u"session_storage" not in str( exc ):
-        raise exc
-
-    csv_data = "".join( pieces )
+    assert result[ u"body" ]
+    csv_data = result[ u"body" ][ 0 ]
     reader = csv.reader( StringIO( csv_data ) )
 
     row = reader.next()
@@ -4612,29 +4603,11 @@ class Test_notebooks( Test_controller ):
 
     assert note_count == expected_note_count
 
-  def test_export_csv_with_unicode( self ):
-    self.test_export_csv( note_contents = u"<h3>blah</h3>ümlaut.png" )
-
-  def test_export_csv_without_note_title( self ):
-    self.test_export_csv( note_contents = u"there's no title" )
-
-  def test_export_csv_with_trailing_newline_in_title( self ):
-    self.test_export_csv( note_contents = u"<h3>blah\n</h3>foo" )
-
-  def test_export_csv_with_trailing_newline_in_contents( self ):
-    self.test_export_csv( note_contents = u"<h3>blah</h3>foo\n" )
-
-  def test_export_csv_with_blank_username( self ):
-    self.user._User__username = None
-    self.database.save( self.user )
-
-    self.test_export_csv( note_contents = u"<h3>blah</h3>foo" )
-
   def test_export_csv_without_login( self ):
     note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
     self.database.save( note3 )
 
-    path = "/notebooks/export_csv/%s" % self.notebook.object_id
+    path = "/notebooks/export?notebook_id=%s&format=csv" % self.notebook.object_id
     result = self.http_get(
       path,
       session_id = self.session_id,
@@ -4648,7 +4621,7 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     result = self.http_get(
-      "/notebooks/export_csv/%s" % self.unknown_notebook_id,
+      "/notebooks/export?notebook_id=%s&format=csv" % self.unknown_notebook_id,
       session_id = self.session_id,
     )
 

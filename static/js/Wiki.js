@@ -3695,14 +3695,14 @@ function Export_pulldown( wiki, notebook_id, invoker, anchor ) {
 
   this.invoker = invoker;
   this.html_link = createDOM( "a", {
-      "href": "/notebooks/export_html/" + notebook_id,
+      "href": "/notebooks/export?notebook_id=" + notebook_id + "&format=html",
       "class": "pulldown_label",
       "title": "Download this notebook as a stand-alone HTML web page."
     },
     "HTML web page"
   );
   this.csv_link = createDOM( "a", {
-      "href": "/notebooks/export_csv/" + notebook_id,
+      "href": "/notebooks/export?notebook_id=" + notebook_id + "&format=csv",
       "class": "pulldown_label",
       "title": "Download this notebook as a CSV spreadsheet file."
     },
