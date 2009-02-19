@@ -1224,7 +1224,6 @@ class Notebooks( object ):
     other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
     notes = startup_notes + other_notes
 
-    import imp
     from plugins.Invoke import invoke
 
     return invoke(
