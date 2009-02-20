@@ -4471,6 +4471,28 @@ class Test_notebooks( Test_controller ):
     assert len( notes ) == 1
     assert notes[ 0 ].object_id == note3.object_id
 
+  def test_export_with_invalid_format( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/export?notebook_id=%s&format=foo^^bar" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    assert u"error" in result[ "body" ][ 0 ]
+    assert u"format is invalid" in result[ "body" ][ 0 ]
+
+  def test_export_with_unknown_format( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/export?notebook_id=%s&format=foobar" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    assert u"error" in result[ "body" ][ 0 ]
+    assert u"format is unknown" in result[ "body" ][ 0 ]
+
   def test_export_html( self ):
     self.login()
 
