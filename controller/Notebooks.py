@@ -44,6 +44,7 @@ class Notebooks( object ):
   LINK_PATTERN = re.compile( u'<a\s+((?:[^>]+\s)?href="([^"]+)"(?:\s+target="([^"]*)")?[^>]*)>(<img [^>]+>)?([^<]*)</a>', re.IGNORECASE )
   FILE_PATTERN = re.compile( u'/files/' )
   NEW_FILE_PATTERN = re.compile( u'/files/new' )
+  EXPORT_FORMAT_PATTERN = re.compile( u"^[a-zA-Z0-9_]+$" )
 
   """
   Controller for dealing with notebooks and their notes, corresponding to the "/notebooks" URL.
@@ -1210,10 +1211,10 @@ class Notebooks( object ):
     @rtype: unicode or generator (for streaming files)
     @return: exported file with appropriate headers to trigger a download
     @raise Access_error: the current user doesn't have access to the given notebook
-    @raise Validation_error: one of the arguments is invalid
+    @raise Validation_error: one of the arguments is invalid or the format is unknown
     """
-    if format not in ( "html", "csv" ):
-      raise Access_error()
+    if not self.EXPORT_FORMAT_PATTERN.search( format ):
+      raise Validation_error( u"format", format, Valid_string, message = u"is invalid" )
 
     notebook = self.__users.load_notebook( user_id, notebook_id )
 
@@ -1226,14 +1227,19 @@ class Notebooks( object ):
 
     from plugins.Invoke import invoke
 
-    return invoke(
-      plugin_type = u"export",
-      plugin_name = format,
-      database = self.__database,
-      notebook = notebook,
-      notes = startup_notes + other_notes,
-      response_headers = cherrypy.response.headerMap,
-    )
+    try:
+      return invoke(
+        plugin_type = u"export",
+        plugin_name = format,
+        database = self.__database,
+        notebook = notebook,
+        notes = startup_notes + other_notes,
+        response_headers = cherrypy.response.headerMap,
+      )
+    except ImportError:
+      import traceback
+      traceback.print_exc()
+      raise Validation_error( u"format", format, Valid_string, message = u"is unknown" )
 
   @expose( view = Json )
   @end_transaction
