@@ -1237,8 +1237,6 @@ class Notebooks( object ):
         response_headers = cherrypy.response.headerMap,
       )
     except ImportError:
-      import traceback
-      traceback.print_exc()
       raise Validation_error( u"format", format, Valid_string, message = u"is unknown" )
 
   @expose( view = Json )
