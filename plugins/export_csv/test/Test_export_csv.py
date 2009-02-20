@@ -41,7 +41,7 @@ class Test_export_csv( object ):
     self.note2 = Note.create( note_id, u"<h3>other title</h3>whee", notebook_id = self.notebook.object_id, user_id = self.user.object_id )
     self.database.save( self.note2, commit = False )
 
-  def test_export_csv( self, note_contents = None ):
+  def test_export_csv( self, note_contents = None, expected_contents = None ):
     if not note_contents:
       note_contents = u"<h3>blah</h3>foo"
 
@@ -87,7 +87,10 @@ class Test_export_csv( object ):
       expected_note = expected_notes[ note_count ]
 
       assert expected_note
-      assert contents.decode( "utf8" ) == expected_note.contents.strip()
+      if expected_contents and note_id == note3.object_id:
+        assert contents.decode( "utf8" ) == expected_contents.replace( "\n", " " ).strip()
+      else:
+        assert contents.decode( "utf8" ) == expected_note.contents.replace( "\n", " " ).strip()
 
       if expected_note.title:
         assert title.decode( "utf8" ) == expected_note.title.strip()
@@ -114,6 +117,18 @@ class Test_export_csv( object ):
 
   def test_export_csv_with_trailing_newline_in_contents( self ):
     self.test_export_csv( note_contents = u"<h3>blah</h3>foo\n" )
+
+  def test_export_csv_with_file_attachment_in_contents( self ):
+    self.test_export_csv(
+      note_contents = u"<h3>blah</h3>foo<a href=\"/files/download?file_id=blah&quote_filename=False\">file</a>",
+      expected_contents = "<h3>blah</h3>foo<a>file</a>",
+    )
+
+  def test_export_csv_with_image_in_contents( self ):
+    self.test_export_csv(
+      note_contents = u"<h3>blah</h3>foo<a href=\"/files/download?file_id=blah&quote_filename=False\"><img src=\"whee.png\" /></a>",
+      expected_contents = "<h3>blah</h3>foo<a></a>",
+    )
 
   def test_export_csv_with_blank_username( self ):
     self.user._User__username = None

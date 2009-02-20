@@ -5,6 +5,7 @@ from view.Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
 
 class Html_file( Html ):
   NOTE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*(?:\/notebooks\/)?[^>]+[?&]note_id=([a-z0-9]*)"[^>]*>', re.IGNORECASE )
+  FILE_LINK_PATTERN = re.compile( u'<a\s+href="[^"]*\/files\/download\?file_id=[^"]+"[^>]*>', re.IGNORECASE )
   IMAGE_PATTERN = re.compile( u'<img [^>]* ?/?>', re.IGNORECASE )
 
   def __init__( self, notebook, notes ):
@@ -14,6 +15,7 @@ class Html_file( Html ):
     # images since they're not presently included with the download
     for note in notes:
       contents = self.NOTE_LINK_PATTERN.sub( r'<a href="#note_\1">', note.contents )
+      contents = self.FILE_LINK_PATTERN.sub( '<a>', contents )
       contents = self.IMAGE_PATTERN.sub( '', contents )
       relinked_notes[ note.object_id ] = contents
 
