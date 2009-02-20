@@ -32,7 +32,6 @@ class Html_cleaner(HTMLParser):
       'b',
       'br',
       'em',
-      'h3',
       'i',
       'li',
       'ol',
