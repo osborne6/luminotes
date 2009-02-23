@@ -361,7 +361,9 @@ class Root( object ):
       result[ "first_notebook" ] = None
 
     result[ "download_products" ] = self.__settings[ u"global" ].get( u"luminotes.download_products" )
-    result[ "upgrade" ] = upgrade
+
+    referer = cherrypy.request.headerMap.get( u"Referer" )
+    result[ "upgrade" ] = upgrade or ( referer and u"localhost:" in referer )
 
     return result
 

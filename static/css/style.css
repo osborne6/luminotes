@@ -1233,3 +1233,10 @@ h1 {
   font-size: 72%;
   font-weight: normal;
 }
+
+.trial_upgrade_link {
+  font-weight: bold;
+  background-color: #ffcc66;
+  padding: 0.5em;
+  font-size: 110%;
+}

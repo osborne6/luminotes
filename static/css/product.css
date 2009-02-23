@@ -498,6 +498,11 @@
   padding-bottom: 0.5em;
 }
 
+.trial_button_area {
+  padding-top: 1em;
+  padding-bottom: 0.5em;
+}
+
 .download_button_area {
   padding-top: 1em;
   padding-bottom: 0.5em;
@@ -542,4 +547,10 @@
   margin-left: 1em;
   margin-bottom: 0.5em;
   border: 1px solid #999999;
+}
+
+.tiny_text {
+  font-size: 60%;
+  line-height: 140%;
+  font-weight: normal;
 }

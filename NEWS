@@ -1,4 +1,4 @@
-1.6.7: ?
+1.6.7: February 23, 2009
  * When you export your notebook as an HTML or CSV file, the saved filename is
    now based on the name of your notebook, for instance "my-to-do-list.html"
    or "ideas-for-my-novel.csv".
@@ -6,6 +6,7 @@
  * Converted the existing HTML and CSV export features to work as separate
    export plugins. This means that a new export format can be implemented as
    a new plugin.
+ * There is now a downloadable free trial for Luminotes Desktop!
 
 1.6.6: February 16, 2009
  * Luminotes now recognizes "mailto:" links as external links, so you can

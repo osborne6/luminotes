@@ -8,7 +8,7 @@ class Download_page( Product_page ):
     MEGABYTE = 1024 * 1024
 
     # for now, just assume there's a single download package
-    download_button = download_products[ 0 ].get( "button" )
+    download_button = download_products[ 0 ].get( "button" ).strip()
     news_url = u"http://luminotes.com/hg/luminotes/file/%s/NEWS" % VERSION
 
     Product_page.__init__(
@@ -66,14 +66,16 @@ class Download_page( Product_page ):
                       class_ = u"version_text",
                     ),
                     class_ = u"plan_name_area download_plan_width",
-                  )
+                    colspan = "2",
+                  ),
                 ),
-                Tr( Td(), class_ = u"spacer_row" ),
+                Tr( Td( colspan = "2" ), class_ = u"spacer_row" ),
                 Tr(
                   Td(
                     Span( u"Solo", class_ = u"highlight" ), u"note taking",
                     title = u"Luminotes Desktop is designed for individuals.",
                     class_ = u"feature_value",
+                    colspan = "2",
                   ),
                 ),
                 Tr(
@@ -81,6 +83,7 @@ class Download_page( Product_page ):
                     u"Runs on your", Span( u"own computer", class_ = u"highlight" ),
                     title = u"All of your notes are stored privately on your own computer or on a USB drive.",
                     class_ = u"feature_value",
+                    colspan = "2",
                   ),
                 ),
                 Tr(
@@ -88,6 +91,7 @@ class Download_page( Product_page ):
                     Span( u"Unlimited", class_ = u"highlight" ), u"storage",
                     title = u"Add as many notes, documents, and files as you want.",
                     class_ = u"feature_value",
+                    colspan = "2",
                   ),
                 ),
                 Tr(
@@ -95,30 +99,57 @@ class Download_page( Product_page ):
                     u"Works", Span( "offline", class_ = u"highlight" ),
                     title = u"Take notes in meetings, in class, or while on the go. Runs in a web browser, but doesn't need an internet connection.",
                     class_ = u"feature_value",
+                    colspan = "2",
                   ),
                 ),
-                Tr( Td(), class_ = u"spacer_row" ),
+                Tr( Td( colspan = "2" ), class_ = u"spacer_row" ),
                 Tr(
                   Td(
                     u"Windows XP/Vista,", A( u"Linux source", href = u"/source_code" ),
                     class_ = u"small_text",
+                    colspan = "2",
                   ),
                 ),
                 Tr(
                   Td(
                     u"Firefox 2+, Internet Explorer 7+, Chrome 1+, Safari 3+",
                     class_ = u"small_text",
+                    colspan = "2",
                   ),
                 ),
+                Tr( Td( colspan = "2" ), class_ = u"spacer_row" ),
                 Tr(
-                  Td(
+                  ( not upgrade ) and Td(
+                    Div(
+                      A(
+                        Img(
+                          src = u"/static/images/trial_button.png",
+                          width = u"107", height = u"26",
+                          alt = u"download trial",
+                        ),
+                        href = "/static/luminotes.exe",
+                      ),
+                      Div(
+                        u"Completely free",
+                        class_ = u"tiny_text",
+                      ),
+                      class_ = u"trial_button_area",
+                    ),
+                    colspan = download_button and "1" or "2",
+                  ) or None,
+                  download_button and Td(
                     Div(
                       download_button,
+                      Div(
+                        u"Fast and secure",
+                        class_ = u"tiny_text",
+                      ),
                       class_ = u"download_button_area",
                     ),
-                  ),
+                    colspan = upgrade and "2" or "1",
+                  ) or None,
                 ),
-                Tr( Td(), class_ = u"spacer_row" ),
+                Tr( Td( colspan = "2" ), class_ = u"spacer_row" ),
                 border = u"1",
                 id = u"upgrade_table",
               ),
@@ -165,12 +196,15 @@ class Download_page( Product_page ):
             H4( u"Can I try before I buy?", class_ = u"upgrade_question" ),
             P(
               """
-              Sure! Just check out the full-featured
+              Sure! Just
+              """,
+              A( u"download the full-featured free trial", href = "/static/luminotes.exe" ),
+              """
+              or check out the
               """,
               A( u"online demo", href = "/users/demo" ),
               """
-              to see Luminotes for yourself. The only difference is that Luminotes Desktop runs in
-              a browser on your own computer instead of on the web.
+              to see Luminotes for yourself.
               """,
               class_ = u"upgrade_text",
             ),
@@ -221,15 +255,31 @@ class Download_page( Product_page ):
                 Th(
                   Span( u"Luminotes Desktop", class_ = u"plan_name" ),
                   class_ = u"plan_name_area",
+                  colspan = "2",
                 )
               ),
               Tr(
-                Td(
+                ( not upgrade ) and Td(
+                  Div(
+                    A(
+                      Img(
+                        src = u"/static/images/trial_button.png",
+                        width = u"107", height = u"26",
+                        alt = u"download trial",
+                      ),
+                      href = "/static/luminotes.exe",
+                    ),
+                    class_ = u"trial_button_area",
+                  ),
+                  colspan = download_button and "1" or "2",
+                ) or None,
+                download_button and Td(
                   Div(
                     download_button,
                     class_ = u"download_button_area",
                   ),
-                ),
+                  colspan = upgrade and "2" or "1",
+                ) or None,
               ),
               id = u"upgrade_table_small",
             ),

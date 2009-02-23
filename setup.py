@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import os.path
 import sys
 from glob import glob
 from distutils.core import setup, Distribution
@@ -148,6 +149,11 @@ class InnoScript:
     print >> ofi, r"end;"
 
   def compile(self):
+    import os
+    if os.environ.get( "CYGWIN" ):
+      print "Running in Cygwin, so skipping compile"
+      return
+
     try:
       import ctypes
     except ImportError:
@@ -276,7 +282,7 @@ setup(
   options = dict(
     py2exe = dict(
       packages = "cherrypy.filters",
-      includes = "email.header,simplejson",
+      includes = "email.header,simplejson,plugins.*",
       compressed = 1,
       optimize = 2,
     )

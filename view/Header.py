@@ -1,5 +1,5 @@
-from Tags import Div, A, Img, Span
-from config.Version import VERSION
+from Tags import Div, A, Img, Span, B
+from config.Version import VERSION, TRIAL
 
 class Header( Div ):
   def __init__( self, user, first_notebook, login_url, logout_url, note_title, rate_plan = None ):
@@ -9,6 +9,15 @@ class Header( Div ):
       alt = u"Luminotes",
     )
 
+    trial_expired = False
+    if TRIAL:
+      from pytz import utc
+      from datetime import datetime, timedelta
+      
+      trial_age = datetime.now( tz = utc ) - first_notebook.revision
+      if trial_age > timedelta( days = 30 ):
+        trial_expired = True
+
     if rate_plan and rate_plan.get( u"name" ) == u"desktop":
       Div.__init__(
         self,
@@ -16,8 +25,8 @@ class Header( Div ):
           ( note_title == u"home" ) and title_image or
             A( title_image, href = u"http://luminotes.com/", target = "_new" ),
           Div(
-            u"version", VERSION, u" | ",
-            A( u"upgrade", href = u"http://luminotes.com/download?upgrade=True", target = "_new" ), u" | ",
+            ( TRIAL and u"trial" or u"" ), u"version", VERSION, u" | ",
+            A( u"upgrade", href = u"http://luminotes.com/download", target = "_new", class_ = trial_expired and "trial_upgrade_link" or u"" ), u" | ",
             A( u"community", href = u"http://luminotes.com/community", target = "_new" ), u" | ",
             A( u"blog", href = u"http://luminotes.com/blog/", target = "_new" ), u" | ",
             A( u"close", href = u"/close" ),
