@@ -64,6 +64,11 @@
   background-image: url(/static/images/note_icon.png);
 }
 
+form {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
 .hook_area {
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
