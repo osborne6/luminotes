@@ -1236,7 +1236,7 @@ class Notebooks( object ):
         notes = startup_notes + other_notes,
         response_headers = cherrypy.response.headerMap,
       )
-    except ImportError:
+    except ( ImportError, AttributeError ):
       raise Validation_error( u"format", format, Valid_string, message = u"is unknown" )
 
   @expose( view = Json )
