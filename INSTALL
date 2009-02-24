@@ -20,8 +20,8 @@ First, install the prerequisites:
  * Python Imaging Library 1.1
  * Python Universal Encoding Detector 1.0
 
-In Debian GNU/Linux, you can issue the following command to install these
-packages:
+In Debian GNU/Linux or Ubuntu, you can issue the following command to install
+these packages:
 
   apt-get install python python-cherrypy python-pysqlite2 \
           python-simplejson python-tz python-imaging python-chardet
@@ -84,8 +84,8 @@ First, install the prerequisites:
  * Python Imaging Library 1.1
  * Python Universal Encoding Detector 1.0
 
-In Debian GNU/Linux, you can issue the following command to install these
-packages:
+In Debian GNU/Linux or Ubuntu, you can issue the following command to install
+these packages:
 
   apt-get install python python-cherrypy postgresql-8.1 \
           postgresql-contrib-8.1 python-psycopg2 python-simplejson \
@@ -256,13 +256,14 @@ First, install the prerequisites:
  * memcached 1.4
  * cmemcache 0.95
 
-In Debian GNU/Linux, you can issue the following command to install these
-packages:
+In Debian GNU/Linux or Ubuntu, you can issue the following command to install
+these packages:
 
   apt-get install python-dev libmemcache-dev memcached
 
-The cmemcache package is not currently included with Debian Etch, so you'll
-have to build and install it manually. Download and untar the package from:
+The cmemcache package is not currently included with Debian or Ubuntu, so
+you'll have to build and install it manually. Download and untar the package
+from:
 
   http://gijsbert.org/cmemcache/
 
@@ -281,12 +282,11 @@ Python unit tests
 If you're interested in running unit tests, install:
 
  * nose 0.9.0
- * pysqlite 2.3 to 2.4
 
-In Debian GNU/Linux, you can issue the following command to install these
-packages:
+In Debian GNU/Linux or Ubuntu, you can issue the following command to install
+this packages:
 
-  apt-get install python-nose python-pysqlite2
+  apt-get install python-nose
 
 Then you can run unit tests by running:
 
