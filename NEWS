@@ -1,4 +1,7 @@
 1.6.8: ?
+ * Changed the order of exported HTML and CSV notebooks so that after all the
+   "startup" notes are included, the remaining notes are included in
+   alphabetical order (instead of reverse chronological order).
  * Fixed a compatibility problem with newer versions of SQLite. (Luminotes
    was using a reserved keyword as an identifier.) This only affected those
    people who installed Luminotes Server themselves.

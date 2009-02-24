@@ -4512,7 +4512,7 @@ class Test_notebooks( Test_controller ):
     startup_note_allowed = True
     previous_revision = None
 
-    # assert that startup notes come first, then normal notes in descending revision order
+    # assert that startup notes come first, then normal notes in alphabetical order
     for note in notes:
       if note.startup:
         assert startup_note_allowed
@@ -4592,7 +4592,7 @@ class Test_notebooks( Test_controller ):
     startup_note_allowed = True
     previous_revision = None
 
-    # assert that startup notes come first, then normal notes in descending revision order
+    # assert that startup notes come first, then normal notes in alphabetical order
     for row in reader:
       note_count += 1
 
