@@ -98,7 +98,8 @@ class Schema_upgrader:
       database.rollback()
       schema_version = default_version or ( 1, 5, 4 )
 
-      database.execute( "create table schema_version ( major numeric, minor numeric, release numeric );", commit = False );
+      # "release" is a reserved keyword in newer versions of sqlite, so put it in quotes
+      database.execute( "create table schema_version ( major numeric, minor numeric, \"release\" numeric );", commit = False );
       database.execute( "insert into schema_version values ( %s, %s, %s );" % schema_version, commit = False );
 
     return schema_version
@@ -123,7 +124,7 @@ class Schema_upgrader:
     # http://oss.itsystementwicklung.de/download/pysqlite/doc/sqlite3.html#sqlite3-controlling-transactions
 
     self.__database.execute_script( self.__read_file( filename ), commit = False )
-    self.__database.execute( "update schema_version set major = %s, minor = %s, release = %s;" % version, commit = False );
+    self.__database.execute( "update schema_version set major = %s, minor = %s, \"release\" = %s;" % version, commit = False );
     self.__database.commit()
 
   @staticmethod

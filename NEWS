@@ -1,5 +1,7 @@
 1.6.8: ?
- * 
+ * Fixed a compatibility problem with newer versions of SQLite. (Luminotes
+   was using a reserved keyword as an identifier.) This only affected those
+   people who installed Luminotes Server themselves.
 
 1.6.7: February 23, 2009
  * When you export your notebook as an HTML or CSV file, the saved filename is

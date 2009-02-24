@@ -60,12 +60,12 @@ class Test_schema_upgrader( object ):
     assert result == [ ( 5, 7, 11 ) ];
 
   def test_upgrade_schema_with_schema_version_table( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, release numeric );" );
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" );
     self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
     self.test_upgrade_schema();
 
   def test_upgrade_schema_with_schema_version_table_and_specific_starting_version( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, release numeric );" );
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" );
     self.database.execute( u"insert into schema_version values ( 5, 6, 6 );" )
 
     self.fake_files[ u"model/delta/5.6.1.sqlite" ] = u"this is not valid sql and should not be executed anyway;";
@@ -120,7 +120,7 @@ class Test_schema_upgrader( object ):
     assert result == [ ( 1, 5, 6 ) ];
 
   def test_apply_schema_delta( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, release numeric );" );
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" );
     self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
 
     self.fake_files = {
