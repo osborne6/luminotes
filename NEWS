@@ -2,6 +2,9 @@
  * Changed the order of exported HTML and CSV notebooks so that after all the
    "startup" notes are included, the remaining notes are included in
    alphabetical order (instead of reverse chronological order).
+ * Instead of converting unsupported HTML tags to plain text when a note is
+   saved, Luminotes now simply strips out all unsupported tags. This further
+   improves copy and pasting text from programs like MS Word.
  * Fixed a compatibility problem with newer versions of SQLite. (Luminotes
    was using a reserved keyword as an identifier.) This only affected those
    people who installed Luminotes Server themselves.

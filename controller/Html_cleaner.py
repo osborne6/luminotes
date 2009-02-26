@@ -112,31 +112,6 @@ class Html_cleaner(HTMLParser):
       'colgroup',
     ]
 
-    # A list of tags that are forcibly removed from the input. Tags that
-    # are not in permitted_tags and not in stripped_tags are simply
-    # escaped.
-    self.stripped_tags = [
-      'span',
-      'blink',
-      'marquee',
-      'bgsound',
-      'meta',
-      'object',
-      'iframe',
-      'script',
-      'noscript',
-      'applet',
-      'embed',
-      'style',
-      'link',
-      'html',
-      'title',
-      'head',
-      'body',
-      'o',
-      'm',
-    ]
-
     # A list of tags that require no closing tag.
     self.requires_no_close = [ 'img', 'br' ]
 
@@ -168,58 +143,53 @@ class Html_cleaner(HTMLParser):
   def handle_charref(self, ref):
     if len(ref) < 7 and ref.isdigit():
       self.result.append( '&#%s;' % ref )
-    else:
-      self.result.append( xssescape('&#%s' % ref) )
 
   def handle_entityref(self, ref):
     if ref in entitydefs:
       self.result.append( '&%s;' % ref )
-    else:
-      self.result.append( xssescape('&%s' % ref) )
 
   def handle_comment(self, comment):
     pass # strip comments
 
   def handle_starttag(self, tag, method, attrs):
     if tag not in self.permitted_tags:
-      if tag not in self.stripped_tags:
-        self.result.append( xssescape("<%s>" %  tag) )
-    else:
-      bt = "<" + tag
-      if tag in self.allowed_attributes:
-        attrs = dict(attrs)
-        self.allowed_attributes_here = \
-          [x for x in self.allowed_attributes[tag] if x in attrs \
-           and len(attrs[x]) > 0]
-        for attribute in self.allowed_attributes_here:
-          if attribute in ['href', 'src', 'background']:
-            if self.url_is_acceptable(attrs[attribute]):
-              bt += ' %s="%s"' % (attribute, attrs[attribute])
-          else:
-            bt += ' %s=%s' % \
-               (xssescape(attribute), quoteattr(attrs[attribute]))
-        if tag == "a" and \
-           ( not attrs.get( 'href' ) or not self.NOTE_LINK_URL_PATTERN.search( attrs.get( 'href' ) ) ):
-          if self.require_link_target and not attrs.get( 'target' ):
-            bt += ' target="_new"'
-          rel = attrs.get( 'rel' )
-          if not rel or rel != "nofollow":
-            bt += ' rel="nofollow"'
-      if bt == "<a" or bt == "<img":
-        return
-      if tag in self.requires_no_close:
-        bt += " /"
-      bt += ">"           
-      self.result.append( bt )
-      self.open_tags.insert(0, tag)
+      return
+
+    bt = "<" + tag
+    if tag in self.allowed_attributes:
+      attrs = dict(attrs)
+      self.allowed_attributes_here = \
+        [x for x in self.allowed_attributes[tag] if x in attrs \
+         and len(attrs[x]) > 0]
+      for attribute in self.allowed_attributes_here:
+        if attribute in ['href', 'src', 'background']:
+          if self.url_is_acceptable(attrs[attribute]):
+            bt += ' %s="%s"' % (attribute, attrs[attribute])
+        else:
+          bt += ' %s=%s' % \
+             (xssescape(attribute), quoteattr(attrs[attribute]))
+      if tag == "a" and \
+         ( not attrs.get( 'href' ) or not self.NOTE_LINK_URL_PATTERN.search( attrs.get( 'href' ) ) ):
+        if self.require_link_target and not attrs.get( 'target' ):
+          bt += ' target="_new"'
+        rel = attrs.get( 'rel' )
+        if not rel or rel != "nofollow":
+          bt += ' rel="nofollow"'
+    if bt == "<a" or bt == "<img":
+      return
+    if tag in self.requires_no_close:
+      bt += " /"
+    bt += ">"           
+    self.result.append( bt )
+    self.open_tags.insert(0, tag)
       
   def handle_endtag(self, tag, attrs):
     tag = tag.split( ":" )[ 0 ]
     bracketed = "</%s>" % tag
     if tag not in self.permitted_tags:
-      if tag not in self.stripped_tags:
-        self.result.append( xssescape(bracketed) )
-    elif tag in self.open_tags:
+      return
+
+    if tag in self.open_tags:
       self.result.append( bracketed )
       self.open_tags.remove(tag)
       
@@ -248,15 +218,3 @@ class Html_cleaner(HTMLParser):
       if endtag not in self.requires_no_close:
         self.result.append( "</%s>" % endtag )
     return "".join( self.result )
-
-  def xtags(self):
-    """Returns a printable string informing the user which tags are allowed"""
-    self.permitted_tags.sort()
-    tg = ""
-    for x in self.permitted_tags:
-      tg += "<" + x
-      if x in self.allowed_attributes:
-        for y in self.allowed_attributes[x]:
-          tg += ' %s=""' % y
-      tg += "> "
-    return xssescape(tg.strip())
