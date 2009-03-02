@@ -28,7 +28,7 @@ settings = {
     "luminotes.rate_plans": [
       {
         "name": "free",
-        "designed_for": "students",
+        "designed_for": "",
         "storage_quota_bytes": 30 * MEGABYTE,
         "included_users": 1,
         "notebook_sharing": True,

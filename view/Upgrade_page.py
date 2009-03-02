@@ -295,7 +295,7 @@ class Upgrade_page( Product_page ):
           ),
         ) or Div( Div( u"No fee", class_ = u"price_text" ) ),
         Div(
-          u"For", plan[ u"designed_for" ],
+          plan[ u"designed_for"] and u"For" or "&nbsp;", plan[ u"designed_for" ],
           class_ = u"small_text",
         ),
         ( index == self.FOCUSED_PLAN ) and Div( u"Best value", class_ = u"focused_text highlight" ) or None,
@@ -332,7 +332,7 @@ class Upgrade_page( Product_page ):
           ) or None,
           class_ = u"subscribe_button_area",
         ),
-        ( user.rate_plan == 0 ) and Div( "30-day free trial", class_ = u"small_text" ) or None,
+        ( user.rate_plan == 0 ) and Div( ( index > 0 ) and "30-day free trial" or "&nbsp;", class_ = u"small_text" ) or None,
         class_ = ( index == self.FOCUSED_PLAN and u"focused_feature_value" or u"" ),
        ) for ( index, plan ) in enumerate( rate_plans ) ],
     )
