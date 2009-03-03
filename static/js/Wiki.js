@@ -845,7 +845,7 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
     connect( editor, "delete_clicked", function ( event ) { self.delete_editor( event, editor ) } );
     connect( editor, "undelete_clicked", function ( event ) { self.undelete_editor_via_trash( event, editor ) } );
     connect( editor, "changes_clicked", function ( event ) { self.toggle_editor_changes( event, editor ) } );
-    connect( editor, "options_clicked", function ( event ) { self.toggle_editor_options( event, editor ) } );
+    connect( editor, "tools_clicked", function ( event ) { self.toggle_editor_tools( event, editor ) } );
     connect( editor, "focused", this, "editor_focused" );
     connect( editor, "mouse_hovered", function ( target ) { self.editor_mouse_hovered( editor, target ) } );
     connect( editor, "grabber_pressed", function ( event ) { self.editor_focused( null, false, false ); } );
@@ -3076,9 +3076,9 @@ Wiki.prototype.toggle_editor_changes = function ( event, editor ) {
   );
 }
 
-Wiki.prototype.toggle_editor_options = function ( event, editor ) {
+Wiki.prototype.toggle_editor_tools = function ( event, editor ) {
   // if the pulldown is already open, then just close it
-  var pulldown_id = "options_" + editor.id;
+  var pulldown_id = "tools_" + editor.id;
   var existing_div = getElement( pulldown_id );
   if ( existing_div ) {
     existing_div.pulldown.shutdown();
@@ -3086,7 +3086,7 @@ Wiki.prototype.toggle_editor_options = function ( event, editor ) {
     return;
   }
 
-  new Options_pulldown( this, this.notebook.object_id, this.invoker, editor );
+  new Tools_pulldown( this, this.notebook.object_id, this.invoker, editor );
   event.stop();
 }
 
@@ -3208,8 +3208,8 @@ Pulldown.prototype.shutdown = function () {
 }
 
 
-function Options_pulldown( wiki, notebook_id, invoker, editor ) {
-  Pulldown.call( this, wiki, notebook_id, "options_" + editor.id, editor.options_button );
+function Tools_pulldown( wiki, notebook_id, invoker, editor ) {
+  Pulldown.call( this, wiki, notebook_id, "tools_" + editor.id, editor.tools_button );
 
   this.invoker = invoker;
   this.editor = editor;
@@ -3238,10 +3238,10 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
   Pulldown.prototype.finish_init.call( this );
 }
 
-Options_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
-Options_pulldown.prototype.constructor = Options_pulldown;
+Tools_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Tools_pulldown.prototype.constructor = Tools_pulldown;
 
-Options_pulldown.prototype.startup_clicked = function ( event ) {
+Tools_pulldown.prototype.startup_clicked = function ( event ) {
   this.editor.startup = this.startup_checkbox.checked;
   this.editor.mark_dirty();
 
@@ -3249,7 +3249,7 @@ Options_pulldown.prototype.startup_clicked = function ( event ) {
   this.wiki.save_editor( this.editor );
 }
 
-Options_pulldown.prototype.shutdown = function () {
+Tools_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
 
   disconnectAll( this.startup_checkbox );

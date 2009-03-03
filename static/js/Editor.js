@@ -181,12 +181,12 @@ Editor.prototype.create_note_controls = function () {
         "title": "previous revisions"
       } );
 
-      this.options_button = createDOM( "input", {
+      this.tools_button = createDOM( "input", {
         "type": "button",
         "class": "note_button",
-        "id": "options_" + iframe_id,
-        "value": "options",
-        "title": "note options"
+        "id": "tools_" + iframe_id,
+        "value": "tools",
+        "title": "note tools"
       } );
     }
   }
@@ -207,8 +207,8 @@ Editor.prototype.create_note_controls = function () {
     this.delete_button ? " " : null,
     this.changes_button ? this.changes_button : null,
     this.changes_button ? " " : null,
-    this.options_button ? this.options_button : null,
-    this.options_button ? " " : null,
+    this.tools_button ? this.tools_button : null,
+    this.tools_button ? " " : null,
     this.undelete_button ? this.undelete_button : null,
     this.undelete_button ? " " : null,
     this.hide_button ? this.hide_button : null
@@ -221,7 +221,7 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
     this.delete_button = getElement( "delete_" + iframe_id );
     this.undelete_button = getElement( "undelete_" + iframe_id );
     this.changes_button = getElement( "changes_" + iframe_id );
-    this.options_button = getElement( "options_" + iframe_id );
+    this.tools_button = getElement( "tools_" + iframe_id );
     this.hide_button = getElement( "hide_" + iframe_id );
   }
 
@@ -238,9 +238,9 @@ Editor.prototype.connect_note_controls = function ( store_control_buttons ) {
     disconnectAll( this.changes_button );
     connect( this.changes_button, "onclick", function ( event ) { signal( self, "changes_clicked", event ); } );
   }
-  if ( this.options_button ) {
-    disconnectAll( this.options_button );
-    connect( this.options_button, "onclick", function ( event ) { signal( self, "options_clicked", event ); } );
+  if ( this.tools_button ) {
+    disconnectAll( this.tools_button );
+    connect( this.tools_button, "onclick", function ( event ) { signal( self, "tools_clicked", event ); } );
   }
   if ( this.hide_button ) {
     disconnectAll( this.hide_button );
@@ -1435,7 +1435,7 @@ Editor.prototype.shutdown = function( event ) {
     disconnectAll( this );
     disconnectAll( this.delete_button );
     disconnectAll( this.changes_button );
-    disconnectAll( this.options_button );
+    disconnectAll( this.tools_button );
     disconnectAll( this.hide_button );
     disconnectAll( this.grabber );
     disconnectAll( iframe );

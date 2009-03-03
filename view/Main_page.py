@@ -72,9 +72,9 @@ class Main_page( Page ):
         ( read_write == Notebook.READ_WRITE ) and not note.deleted_from_id and Input(
           type = "button",
           class_ = "note_button",
-          id = "options_note_%s" % note.object_id,
-          value = "options",
-          title = "note options",
+          id = "tools_note_%s" % note.object_id,
+          value = "tools",
+          title = "note tools",
         ) or None,
         ( read_write != Notebook.READ_ONLY or not note.startup ) and not note.deleted_from_id and \
           ( read_write != Notebook.READ_WRITE_FOR_OWN_NOTES ) and Input(
