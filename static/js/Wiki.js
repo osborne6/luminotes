@@ -424,6 +424,13 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     } );
   }
 
+  var print_notebook_link = getElement( "print_notebook_link" );
+  if ( print_notebook_link ) {
+    connect( print_notebook_link, "onclick", function ( event ) {
+      self.editor_focused( null, true );
+    } );
+  }
+
   var settings_link = getElement( "settings_link" );
   if ( settings_link ) {
     connect( settings_link, "onclick", function ( event ) {
