@@ -30,10 +30,13 @@ h1 {
 }
 
 h3 {
-  margin-top: 0em;
   padding-bottom: 0.25em;
   border-bottom: 1px solid #dddddd;
   margin-bottom: 0.75em;
+}
+
+h3:first-child {
+  margin-top: 0em;
 }
 
 .button {
