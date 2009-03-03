@@ -3217,9 +3217,19 @@ function Options_pulldown( wiki, notebook_id, invoker, editor ) {
   this.startup_label = createDOM( "label", { "for": "startup_checkbox", "class": "pulldown_label", "title": "Display this note whenever the notebook is loaded." },
     "show on startup"
   );
+  this.print_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox invisible" } );
+  this.print_link = createDOM( "a",
+    {
+      "href": "/notebooks/export?notebook_id=" + notebook_id + "&note_id=" + editor.id + "&format=print",
+      "target": "_new",
+      "class": "pulldown_link",
+      "title": "Print this note by itself."
+    },
+    "print this note"
+  );
 
-  appendChildNodes( this.div, this.startup_checkbox );
-  appendChildNodes( this.div, this.startup_label );
+  appendChildNodes( this.div, createDOM( "div", {}, this.startup_checkbox, this.startup_label ) );
+  appendChildNodes( this.div, createDOM( "div", {}, this.print_checkbox, this.print_link ) );
   this.startup_checkbox.checked = editor.startup;
 
   var self = this;

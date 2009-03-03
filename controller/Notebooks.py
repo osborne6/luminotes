@@ -1196,16 +1196,19 @@ class Notebooks( object ):
   @validate(
     notebook_id = Valid_id(),
     format = Valid_string( min = 1, max = 100 ),
+    note_id = Valid_id( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
-  def export( self, notebook_id, format, user_id ):
+  def export( self, notebook_id, format, note_id = None, user_id = None ):
     """
     Download the entire contents of the given notebook as a stand-alone file.
 
     @type notebook_id: unicode
-    @param notebook_id: id of notebook to download
+    @param notebook_id: id of notebook to export
     @type format: unicode
     @param format: string indicating the export plugin to use, currently one of: "html", "csv"
+    @type notebook_id: unicode
+    @param note_id: id of single note within the notebook to export (optional)
     @type user_id: unicode
     @param user_id: id of current logged-in user (if any), determined by @grab_user_id
     @rtype: unicode or generator (for streaming files)
@@ -1221,9 +1224,16 @@ class Notebooks( object ):
     if not notebook:
       raise Access_error()
 
-    startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
-    other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
-    notes = startup_notes + other_notes
+    if note_id:
+      note = self.__database.load( Note, note_id )
+      if not note:
+        raise Access_error()
+      notes = [ note ]
+      notebook = None
+    else:
+      startup_notes = self.__database.select_many( Note, notebook.sql_load_startup_notes() )
+      other_notes = self.__database.select_many( Note, notebook.sql_load_non_startup_notes() )
+      notes = startup_notes + other_notes
 
     from plugins.Invoke import invoke
 
@@ -1233,7 +1243,7 @@ class Notebooks( object ):
         plugin_name = format,
         database = self.__database,
         notebook = notebook,
-        notes = startup_notes + other_notes,
+        notes = notes,
         response_headers = cherrypy.response.headerMap,
       )
     except ( ImportError, AttributeError ):

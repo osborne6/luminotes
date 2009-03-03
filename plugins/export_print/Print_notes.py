@@ -19,11 +19,11 @@ class Print_notes( Html ):
         Style( file( u"static/css/download.css" ).read(), type = u"text/css" ),
         Style( file( u"static/css/print.css" ).read(), type = u"text/css" ),
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
-        Title( notebook.name ),
+        Title( notebook and notebook.name or notes[ 0 ].title ),
       ),
       Body(
         Div(
-          H1( notebook.name ),
+          notebook and H1( notebook.name ) or None,
           [ Span(
             A( name = u"note_%s" % note.object_id ),
             Div(

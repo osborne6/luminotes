@@ -73,3 +73,37 @@ class Test_export_html( object ):
       assert note.rank == expected_note.rank
       assert note.user_id == expected_note.user_id
       assert note.creation == expected_note.creation
+
+  def test_export_print_without_notebook( self ):
+    note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+    response_headers = {}
+    expected_notes = ( self.note1, self.note2, note3 )
+
+    result = invoke(
+      "export",
+      "print",
+      self.database,
+      None,
+      expected_notes,
+      response_headers,
+    )
+
+    # response headers should be unchanged
+    assert response_headers == {}
+
+    notes = result.get( "notes" )
+    assert len( notes ) == len( expected_notes )
+
+    # assert that the notes are in the expected order
+    for ( note, expected_note ) in zip( notes, expected_notes ):
+      assert note.object_id == expected_note.object_id
+      assert note.revision == expected_note.revision
+      assert note.title == expected_note.title
+      assert note.contents == expected_note.contents
+      assert note.notebook_id == expected_note.notebook_id
+      assert note.startup == expected_note.startup
+      assert note.deleted_from_id == expected_note.deleted_from_id
+      assert note.rank == expected_note.rank
+      assert note.user_id == expected_note.user_id
+      assert note.creation == expected_note.creation

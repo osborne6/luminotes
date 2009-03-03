@@ -4801,6 +4801,45 @@ class Test_notebooks( Test_controller ):
 
     assert u"access" in result[ "body" ][ 0 ]
 
+  def test_export_print_with_note_id( self ):
+    self.login()
+
+    note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+
+    result = self.http_get(
+      "/notebooks/export?notebook_id=%s&format=print&note_id=%s" % ( self.notebook.object_id, note3.object_id ),
+      session_id = self.session_id,
+    )
+
+    assert result.get( "notebook" ) == None
+    assert result.get( "view" )
+
+    notes = result.get( "notes" )
+    assert len( notes ) == 1
+    note = notes[ 0 ]
+
+    assert note.object_id == note3.object_id
+    assert note.revision == note3.revision
+    assert note.title == note3.title
+    assert note.contents == note3.contents
+    assert note.notebook_id == note3.notebook_id
+    assert note.startup == note3.startup
+    assert note.deleted_from_id == note3.deleted_from_id
+    assert note.rank == note3.rank
+    assert note.user_id == note3.user_id
+    assert note.creation == note3.creation
+ 
+  def test_export_print_with_unknown_note_id( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/export?notebook_id=%s&format=print&note_id=%s" % ( self.notebook.object_id, self.unknown_note_id ),
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "body" ][ 0 ]
+
   def test_create( self ):
     self.login()
 
