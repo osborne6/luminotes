@@ -254,6 +254,7 @@ data_files = [
     "static/images/*tour*",
     "static/images/*index_card*",
     "static/images/*thumb*",
+    "static/images/dan.png",
   ] ) ),
   ( "static/images/toolbar", files( "static/images/toolbar/*.*", excludes = [ "static/images/toolbar/*.xcf" ] ) ),
   ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*", excludes = [ "static/images/toolbar/small/*.xcf" ]  ) ),
