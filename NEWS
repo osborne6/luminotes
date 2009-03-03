@@ -1,6 +1,6 @@
 1.6.8: ?
- * You can now print your entire notebook. Just click the link on the left
-   side of the page.
+ * You can now print your entire notebook. Just click the "print" link on the
+   left side of the page.
  * Changed the order of exported HTML and CSV notebooks so that after all the
    "startup" notes are included, the remaining notes are included in
    alphabetical order (instead of reverse chronological order).
