@@ -4639,11 +4639,11 @@ class Test_notebooks( Test_controller ):
     self.login()
 
     result = self.http_get(
-      "/notebooks/export_html/%s" % self.unknown_notebook_id,
+      "/notebooks/export?notebook_id=%s&format=html" % self.unknown_notebook_id,
       session_id = self.session_id,
     )
 
-    assert result.get( "error" )
+    assert u"access" in result[ "body" ][ 0 ]
 
   def test_export_csv( self ):
     self.login()
@@ -4732,6 +4732,74 @@ class Test_notebooks( Test_controller ):
     )
 
     assert u"access" in result[ u"body" ][ 0 ]
+
+  def test_export_print( self ):
+    self.login()
+
+    note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+
+    result = self.http_get(
+      "/notebooks/export?notebook_id=%s&format=print" % self.notebook.object_id,
+      session_id = self.session_id,
+    )
+
+    assert result.get( "notebook" ).object_id == self.notebook.object_id
+    assert result.get( "view" )
+
+    notes = result.get( "notes" )
+    assert len( notes ) == self.database.select_one( int, self.notebook.sql_count_notes() )
+    startup_note_allowed = True
+    previous_revision = None
+
+    # assert that startup notes come first, then normal notes in alphabetical order
+    for note in notes:
+      if note.startup:
+        assert startup_note_allowed
+      else:
+        startup_note_allowed = False
+
+        if previous_revision:
+          assert note.revision < previous_revision
+
+        previous_revision = note.revision
+
+      db_note = self.database.load( Note, note.object_id )
+      assert db_note
+      assert note.object_id == db_note.object_id
+      assert note.revision == db_note.revision
+      assert note.title == db_note.title
+      assert note.contents == db_note.contents
+      assert note.notebook_id == db_note.notebook_id
+      assert note.startup == db_note.startup
+      assert note.deleted_from_id == db_note.deleted_from_id
+      assert note.rank == db_note.rank
+      assert note.user_id == db_note.user_id
+      assert note.creation == db_note.creation
+ 
+  def test_export_print_without_login( self ):
+    note3 = Note.create( "55", u"<h3>blah</h3>foo", notebook_id = self.notebook.object_id )
+    self.database.save( note3 )
+
+    path = "/notebooks/export?notebook_id=%s&format=print" % self.notebook.object_id
+    result = self.http_get(
+      path,
+      session_id = self.session_id,
+    )
+
+    headers = result.get( "headers" )
+    assert headers
+    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+      
+  def test_export_print_with_unknown_notebook( self ):
+    self.login()
+
+    result = self.http_get(
+      "/notebooks/export?notebook_id=%s&format=print" % self.unknown_notebook_id,
+      session_id = self.session_id,
+    )
+
+    assert u"access" in result[ "body" ][ 0 ]
 
   def test_create( self ):
     self.login()
