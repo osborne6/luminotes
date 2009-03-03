@@ -3217,23 +3217,28 @@ function Tools_pulldown( wiki, notebook_id, invoker, editor ) {
   this.startup_label = createDOM( "label", { "for": "startup_checkbox", "class": "pulldown_label", "title": "Display this note whenever the notebook is loaded." },
     "show on startup"
   );
-  this.print_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox invisible" } );
-  this.print_link = createDOM( "a",
-    {
-      "href": "/notebooks/export?notebook_id=" + notebook_id + "&note_id=" + editor.id + "&format=print",
-      "target": "_new",
-      "class": "pulldown_link",
-      "title": "Print this note by itself."
-    },
-    "print this note"
-  );
-
   appendChildNodes( this.div, createDOM( "div", {}, this.startup_checkbox, this.startup_label ) );
-  appendChildNodes( this.div, createDOM( "div", {}, this.print_checkbox, this.print_link ) );
+
+  if ( !editor.empty() ) {
+    this.print_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox invisible" } );
+    this.print_link = createDOM( "a",
+      {
+        "href": "/notebooks/export?notebook_id=" + notebook_id + "&note_id=" + editor.id + "&format=print",
+        "target": "_new",
+        "class": "pulldown_link",
+        "title": "Print this note by itself."
+      },
+      "print this note"
+    );
+    appendChildNodes( this.div, createDOM( "div", {}, this.print_checkbox, this.print_link ) );
+  }
+
   this.startup_checkbox.checked = editor.startup;
 
   var self = this;
   connect( this.startup_checkbox, "onclick", function ( event ) { self.startup_clicked( event ); } );
+  if ( this.print_link )
+    connect( this.print_link, "onclick", function ( event ) { self.print_clicked( event ); } );
 
   Pulldown.prototype.finish_init.call( this );
 }
@@ -3249,10 +3254,16 @@ Tools_pulldown.prototype.startup_clicked = function ( event ) {
   this.wiki.save_editor( this.editor );
 }
 
+Tools_pulldown.prototype.print_clicked = function ( event ) {
+  this.wiki.editor_focused( null, true );
+}
+
 Tools_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
 
   disconnectAll( this.startup_checkbox );
+  if ( this.print_link )
+    disconnectAll( this.print_link );
 }
 
 
