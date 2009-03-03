@@ -1,5 +1,5 @@
 import re
-from view.Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, Hr, A
+from view.Tags import Html, Head, Title, Style, Meta, Body, H1, Div, Span, A
 
 
 class Print_notes( Html ):
@@ -18,11 +18,18 @@ class Print_notes( Html ):
       Head(
         Style( file( u"static/css/download.css" ).read(), type = u"text/css" ),
         Style( file( u"static/css/print.css" ).read(), type = u"text/css" ),
+        Style( u".not_printed { display: none; }", type = u"text/css", media = u"print" ),
         Meta( content = u"text/html; charset=UTF-8", http_equiv = u"content-type" ),
         Title( notebook and notebook.name or notes[ 0 ].title ),
       ),
       Body(
         Div(
+          A(
+            u"print",
+            href = "#",
+            onclick = u"window.print(); return false;",
+            class_ = "print_link not_printed",
+          ),
           notebook and H1( notebook.name ) or None,
           [ Span(
             A( name = u"note_%s" % note.object_id ),

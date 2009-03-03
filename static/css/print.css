@@ -13,3 +13,7 @@ body {
   border: none;
   margin-bottom: 2em;
 }
+
+.print_link {
+  float: right;
+}
