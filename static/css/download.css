@@ -21,6 +21,7 @@ body {
   border: 2px solid #999999;
   margin-bottom: 0.75em;
   background-color: #ffffff;
+  clear: both;
 }
 
 h1 {
@@ -58,4 +59,24 @@ ul li {
 
 ol li {
   margin-top: 0.5em;
+}
+
+img {
+  border-width: 0;
+}
+
+.left_justified {
+  float: left;
+  margin: 0.5em 1.5em 0.5em 0;
+}
+
+.center_justified {
+  display: block;
+  margin: 0.5em auto 0.5em auto;
+  text-align: center;
+}
+
+.right_justified {
+  float: right;
+  margin: 0.5em 0 0.5em 1.5em;
 }

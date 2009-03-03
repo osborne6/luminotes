@@ -85,6 +85,17 @@ class Link_area( Div ):
             class_ = u"link_area_item",
           ) or None,
 
+          ( notebook.read_write != Notebook.READ_WRITE ) and Div(
+            A(
+              u"print",
+              href = u"/notebooks/export?notebook_id=%s&format=print" % notebook.object_id,
+              id = u"print_notebook_link",
+              target = u"_new",
+              title = u"Print this %s." % notebook_word,
+             ),
+             class_ = u"link_area_item",
+          ) or None,
+
           ( notebook.read_write == Notebook.READ_WRITE ) and Span(
             Div(
               ( notebook.name != u"trash" ) and A(
@@ -139,6 +150,17 @@ class Link_area( Div ):
                 title = u"Share this %s with others." % notebook_word,
               ),
               class_ = u"link_area_item",
+            ) or None,
+
+            Div(
+              A(
+                u"print",
+                href = u"/notebooks/export?notebook_id=%s&format=print" % notebook.object_id,
+                id = u"print_notebook_link",
+                target = u"_new",
+                title = u"Print this %s." % notebook_word,
+               ),
+               class_ = u"link_area_item",
             ) or None,
 
             ( notebook.name == u"trash" ) and Rounded_div(

@@ -1,0 +1,15 @@
+body {
+  background-color: #ffffff;
+  padding: 0;
+}
+
+#center_area {
+  width: 100%;
+  max-width: none;
+}
+
+.note_frame {
+  padding: 0;
+  border: none;
+  margin-bottom: 2em;
+}

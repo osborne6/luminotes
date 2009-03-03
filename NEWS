@@ -1,4 +1,5 @@
 1.6.8: ?
+ * Added a link to print your entire notebook.
  * Changed the order of exported HTML and CSV notebooks so that after all the
    "startup" notes are included, the remaining notes are included in
    alphabetical order (instead of reverse chronological order).

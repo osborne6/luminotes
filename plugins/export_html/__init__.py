@@ -9,6 +9,7 @@ def export( database, notebook, notes, response_headers ):
   return dict(
     notebook = notebook,
     notes = notes,
+    response_headers = response_headers,
     view = Html_file,
     manual_encode = u"utf8",
   )
