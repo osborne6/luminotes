@@ -77,6 +77,10 @@ class Schema_upgrader:
 
       versions.append( ( version, filename ) )
 
+    if len( versions ) == 0:
+      print "no new database schemas available"
+      return
+
     # sort the schema delta files by version
     versions.sort( lambda a, b: cmp( a[ 0 ], b[ 0 ] ) )
 
@@ -91,6 +95,7 @@ class Schema_upgrader:
   def schema_version( database, default_version = None ):
     try:
       schema_version = database.select_one( tuple, "select * from schema_version;" );
+      schema_version = tuple( map( int, schema_version ) )
     # if there's no schema version table, then use the default version given. if there's no default
     # version, then assume the from_version is 1.5.4, which was the last version not to include a
     # schema_version table

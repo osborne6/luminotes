@@ -42,29 +42,38 @@ class Test_schema_upgrader( object ):
 
     return contents
 
-  def test_upgrade_schema( self ):
+  def test_upgrade_schema( self, to_version = None ):
+    if not to_version:
+      to_version = u"5.7.11"
+
     self.fake_files = {
       u"model/delta/5.6.7.sqlite": u"create table new_table ( foo text ); insert into new_table values ( 'hi' );",
       u"model/delta/5.6.8.sqlite": u"insert into new_table values ( 'bye' );",
       u"model/delta/5.6.10.sqlite": u"alter table new_table add column bar text;",
       u"model/delta/5.7.11.sqlite": u"insert into new_table values ( 'whee', 'stuff' );",
-      u"model/delta/5.7.18.sqlite": u"insert into new_table values ( 'should not be present', 'nope' );",
+      u"model/delta/5.7.18.sqlite": u"insert into new_table values ( 'more', 'things' );",
     }
 
-    self.upgrader.upgrade_schema( u"5.7.11" )
+    self.upgrader.upgrade_schema( to_version )
 
     result = self.database.select_many( tuple, u"select * from new_table;" )
-    assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ) ]
+    if to_version == u"5.7.11":
+      assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ) ]
+    else:
+      assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ), ( "more", "things" ) ]
 
     result = self.database.select_many( tuple, u"select * from schema_version;" )
-    assert result == [ ( 5, 7, 11 ) ]
+    if to_version == u"5.7.11":
+      assert result == [ ( 5, 7, 11 ) ]
+    else:
+      assert result == [ ( 5, 7, 18 ) ]
 
   def test_upgrade_schema_with_schema_version_table( self ):
     self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
     self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
     self.test_upgrade_schema()
 
-  def test_upgrade_schema_with_schema_version_table_and_specific_starting_version( self ):
+  def test_upgrade_schema_with_schema_version_table_and_starting_version( self ):
     self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
     self.database.execute( u"insert into schema_version values ( 5, 6, 6 );" )
 
@@ -72,6 +81,16 @@ class Test_schema_upgrader( object ):
     self.fake_files[ u"model/delta/5.6.6.sqlite" ] = u"also invalid;"
 
     self.test_upgrade_schema()
+
+  def test_upgrade_schema_with_schema_version_table_and_target_version_without_schema( self ):
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
+    self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
+    self.test_upgrade_schema( to_version = u"5.7.20" )
+
+  def test_upgrade_schema_with_schema_version_table_and_starting_version_and_target_version_without_schema( self ):
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
+    self.database.execute( u"insert into schema_version values ( 5, 6, 6 );" )
+    self.test_upgrade_schema( to_version = u"5.7.20" )
 
   def test_upgrade_schema_with_future_ending_version( self ):
     self.fake_files = {
