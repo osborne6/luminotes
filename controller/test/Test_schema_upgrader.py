@@ -51,27 +51,27 @@ class Test_schema_upgrader( object ):
       u"model/delta/5.7.18.sqlite": u"insert into new_table values ( 'should not be present', 'nope' );",
     }
 
-    self.upgrader.upgrade_schema( u"5.7.11" );
+    self.upgrader.upgrade_schema( u"5.7.11" )
 
-    result = self.database.select_many( tuple, u"select * from new_table;" );
-    assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ) ];
+    result = self.database.select_many( tuple, u"select * from new_table;" )
+    assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ) ]
 
-    result = self.database.select_many( tuple, u"select * from schema_version;" );
-    assert result == [ ( 5, 7, 11 ) ];
+    result = self.database.select_many( tuple, u"select * from schema_version;" )
+    assert result == [ ( 5, 7, 11 ) ]
 
   def test_upgrade_schema_with_schema_version_table( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" );
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
     self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
-    self.test_upgrade_schema();
+    self.test_upgrade_schema()
 
   def test_upgrade_schema_with_schema_version_table_and_specific_starting_version( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" );
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
     self.database.execute( u"insert into schema_version values ( 5, 6, 6 );" )
 
-    self.fake_files[ u"model/delta/5.6.1.sqlite" ] = u"this is not valid sql and should not be executed anyway;";
-    self.fake_files[ u"model/delta/5.6.6.sqlite" ] = u"also invalid;";
+    self.fake_files[ u"model/delta/5.6.1.sqlite" ] = u"this is not valid sql and should not be executed anyway;"
+    self.fake_files[ u"model/delta/5.6.6.sqlite" ] = u"also invalid;"
 
-    self.test_upgrade_schema();
+    self.test_upgrade_schema()
 
   def test_upgrade_schema_with_future_ending_version( self ):
     self.fake_files = {
@@ -82,25 +82,25 @@ class Test_schema_upgrader( object ):
       u"model/delta/5.7.18.sqlite": u"insert into new_table values ( 'more', 'and more' );",
     }
 
-    self.upgrader.upgrade_schema( u"5.8.55" );
+    self.upgrader.upgrade_schema( u"5.8.55" )
 
-    result = self.database.select_many( tuple, u"select * from new_table;" );
-    assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ), ( "more", "and more" ) ];
+    result = self.database.select_many( tuple, u"select * from new_table;" )
+    assert result == [ ( u"hi", None ), ( u"bye", None ), ( "whee", "stuff" ), ( "more", "and more" ) ]
 
-    result = self.database.select_many( tuple, u"select * from schema_version;" );
-    assert result == [ ( 5, 7, 18 ) ];
+    result = self.database.select_many( tuple, u"select * from schema_version;" )
+    assert result == [ ( 5, 7, 18 ) ]
 
   def test_upgrade_schema_twice( self ):
-    self.test_upgrade_schema();
+    self.test_upgrade_schema()
 
     # the second upgrade should have no effect, because at this point it's already upgraded
-    self.test_upgrade_schema();
+    self.test_upgrade_schema()
 
   def test_upgrade_schema_with_filename_with_invalid_version( self ):
     # the filename, not composed of all-integer parts, should be skipped
-    self.fake_files[ u"model/delta/5.6.9b.sqlite" ] = u"this is not valid sql and should not be executed anyway;";
+    self.fake_files[ u"model/delta/5.6.9b.sqlite" ] = u"this is not valid sql and should not be executed anyway;"
 
-    self.test_upgrade_schema();
+    self.test_upgrade_schema()
 
   def test_upgrade_schema_default_to_start_version_of_1_5_4( self ):
     # test that if no schema_version table exists, then the starting version is assumed to be 1.5.4
@@ -111,16 +111,16 @@ class Test_schema_upgrader( object ):
       u"model/delta/1.5.6.sqlite": u"insert into new_table values ( 'bye' );",
     }
 
-    self.upgrader.upgrade_schema( u"1.5.6" );
+    self.upgrader.upgrade_schema( u"1.5.6" )
 
-    result = self.database.select_many( tuple, u"select * from new_table;" );
-    assert result == [ ( u"hi", ), ( u"bye", ), ];
+    result = self.database.select_many( tuple, u"select * from new_table;" )
+    assert result == [ ( u"hi", ), ( u"bye", ), ]
 
-    result = self.database.select_many( tuple, u"select * from schema_version;" );
-    assert result == [ ( 1, 5, 6 ) ];
+    result = self.database.select_many( tuple, u"select * from schema_version;" )
+    assert result == [ ( 1, 5, 6 ) ]
 
   def test_apply_schema_delta( self ):
-    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" );
+    self.database.execute( u"create table schema_version ( major numeric, minor numeric, \"release\" numeric );" )
     self.database.execute( u"insert into schema_version values ( 0, 0, 0 );" )
 
     self.fake_files = {
@@ -132,10 +132,10 @@ class Test_schema_upgrader( object ):
     self.upgrader.apply_schema_delta( ( 5, 6, 7 ), u"model/delta/5.6.7.sqlite" )
 
     result = self.database.select_many( unicode, u"select * from new_table;" );
-    assert result == [ u"hi" ];
+    assert result == [ u"hi" ]
 
     result = self.database.select_many( tuple, u"select * from schema_version;" );
-    assert result == [ ( 5, 6, 7 ) ];
+    assert result == [ ( 5, 6, 7 ) ]
 
   @raises( IOError )
   def test_apply_schema_delta_with_unknown_file( self ):
