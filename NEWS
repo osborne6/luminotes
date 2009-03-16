@@ -1,5 +1,6 @@
 1.6.9: ?
- *
+ * Fixed a bug in which the filename of an exported HTML file was just
+   "export" instead of being based on the notebook name.
 
 1.6.8: March 3, 2009
  * You can now print your entire notebook. Just click the "print" link on the

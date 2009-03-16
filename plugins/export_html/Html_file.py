@@ -18,7 +18,7 @@ class Html_file( Html ):
       contents = self.IMAGE_PATTERN.sub( '', contents )
       relinked_notes[ note.object_id ] = contents
 
-    response_headers[ u"Content-Disposition" ] = u"attachment; filename=%s.html" % notebook and notebook.friendly_id
+    response_headers[ u"Content-Disposition" ] = u"attachment; filename=%s.html" % ( notebook and notebook.friendly_id )
 
     Html.__init__(
       self,
