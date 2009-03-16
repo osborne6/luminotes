@@ -1014,6 +1014,59 @@ Editor.prototype.cleanup_html = function ( key_code ) {
   }
 }
 
+Editor.prototype.unformat_selection = function () {
+  if ( !this.iframe || !this.document )
+    return false;
+
+  // if the selection is collapsed, then there is nothing to unformat
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    var range = selection.getRangeAt( 0 );
+    if ( range.collapsed )
+      return false;
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    var collapsed_range = range.duplicate();
+    collapsed_range.collapse();
+    if ( range.isEqual( collapsed_range ) )
+      return false;
+  }
+
+  // first, remove all standard formatting (<b>, <i>, etc.)
+  this.exec_command( "removeformat" );
+
+  // then, remove all other "formatting" that removeformat doesn't touch (<h1>, <h2>, etc.)
+  var nodes =
+    getElementsByTagAndClassName( "h1", null, this.document ).concat(
+    getElementsByTagAndClassName( "h2", null, this.document ) ).concat(
+    getElementsByTagAndClassName( "h3", null, this.document ) ).concat(
+    getElementsByTagAndClassName( "h4", null, this.document ) ).concat(
+    getElementsByTagAndClassName( "h5", null, this.document ) ).concat(
+    getElementsByTagAndClassName( "h6", null, this.document ) );
+
+  for ( var i in nodes ) {
+    var node = nodes[ i ];
+    if ( !node ) continue;
+
+    // before proceeding, make sure the node is within the selected text
+    if ( selection && selection.containsNode ) { // browsers such as Firefox
+      if ( !selection.containsNode( node, true ) )
+        continue;
+    } else if ( this.document.selection ) {
+      var node_range = this.document.selection.createRange();
+      node_range.moveToElementText( node );
+      if ( !range.inRange( node_range ) )
+        continue;
+    }
+
+    var replacement = withDocument( this.document, function () { return createDOM( "span" ); } );
+    swapDOM( node, replacement );
+    appendChildNodes( replacement, node.childNodes );
+  }
+
+  return true;
+}
+
 Editor.prototype.mouse_released = function ( event ) {
   this.link_started = null;
   var self = this;

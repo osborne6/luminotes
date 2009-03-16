@@ -3226,6 +3226,17 @@ function Tools_pulldown( wiki, notebook_id, invoker, editor ) {
   );
   appendChildNodes( this.div, createDOM( "div", {}, this.startup_checkbox, this.startup_label ) );
 
+  this.unformat_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox invisible" } );
+  this.unformat_link = createDOM( "a",
+    {
+      "href": "#",
+      "class": "pulldown_link",
+      "title": "Remove formatting from the currently selected text."
+    },
+    "remove formatting"
+  );
+  appendChildNodes( this.div, createDOM( "div", {}, this.unformat_checkbox, this.unformat_link ) );
+
   if ( !editor.empty() ) {
     this.print_checkbox = createDOM( "input", { "type": "checkbox", "class": "pulldown_checkbox invisible" } );
     this.print_link = createDOM( "a",
@@ -3244,6 +3255,7 @@ function Tools_pulldown( wiki, notebook_id, invoker, editor ) {
 
   var self = this;
   connect( this.startup_checkbox, "onclick", function ( event ) { self.startup_clicked( event ); } );
+  connect( this.unformat_link, "onclick", function ( event ) { self.unformat_clicked( event ); } );
   if ( this.print_link )
     connect( this.print_link, "onclick", function ( event ) { self.print_clicked( event ); } );
 
@@ -3259,6 +3271,15 @@ Tools_pulldown.prototype.startup_clicked = function ( event ) {
 
   // save this note along with its toggled startup state
   this.wiki.save_editor( this.editor );
+}
+
+Tools_pulldown.prototype.unformat_clicked = function ( event ) {
+  event.stop();
+
+  if ( !this.editor.unformat_selection() )
+    this.wiki.display_message( "To remove the formatting from some text in this note, first highlight the text that you'd like to be unformatted." );
+
+  this.shutdown();
 }
 
 Tools_pulldown.prototype.print_clicked = function ( event ) {

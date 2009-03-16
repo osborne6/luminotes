@@ -1,4 +1,6 @@
 1.6.9: ?
+ * Added a remove formatting feature to the tools menu. This allows you to
+   strip out all formatting from the currently selected text.
  * Fixed a bug in which the filename of an exported HTML file was just
    "export" instead of being based on the notebook name.
 
