@@ -277,6 +277,10 @@ form {
   line-height: 200%;
 }
 
+.forum_threads a:visited {
+  color: purple;
+}
+
 .forum_title {
   font-weight: bold;
   font-size: 105%;

@@ -169,9 +169,10 @@ class Forum( object ):
     start = Valid_int( min = 0 ),
     count = Valid_int( min = 1, max = 50 ),
     note_id = Valid_id( none_okay = True ),
+    posts = Valid_int(),
     user_id = Valid_id( none_okay = True ),
   )
-  def default( self, thread_id, start = 0, count = 10, note_id = None, user_id = None ):
+  def default( self, thread_id, start = 0, count = 10, note_id = None, posts = None, user_id = None ):
     """
     Provide the information necessary to display a forum thread.
 
@@ -183,6 +184,10 @@ class Forum( object ):
     @param count: number of recent notes to display (defaults to 10 notes)
     @type note_id: unicode or NoneType
     @param note_id: id of single note to load (optional)
+    @type posts: integer or NoneType
+    @param posts: ignored. used for link-visitedness purposes on the client side
+    @type user_id: unicode or NoneType
+    @param user_id: id of the current user
     @rtype: unicode
     @return: rendered HTML page
     @raise Validation_error: one of the arguments is invalid

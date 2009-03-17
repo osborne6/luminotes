@@ -268,6 +268,28 @@ class Test_forums( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes == 0
 
+  def test_general_thread_default_with_posts( self ):
+    result = self.http_get( "/forums/general/%s?posts=20" % self.general_thread.object_id )
+
+    assert result.get( u"user" ).object_id == self.anonymous.object_id
+    assert len( result.get( u"notebooks" ) ) == 4
+    assert result.get( u"notebooks" )[ 0 ].object_id == self.anon_notebook.object_id
+    assert result.get( u"login_url" )
+    assert result.get( u"logout_url" )
+    assert result.get( u"rate_plan" )
+    assert result.get( u"notebook" ).object_id == self.general_thread.object_id
+    assert len( result.get( u"startup_notes" ) ) == 0
+    assert result.get( u"notes" ) == []
+    assert result.get( u"parent_id" ) == None
+    assert result.get( u"note_read_write" ) in ( None, True )
+    assert result.get( u"total_notes_count" ) == 0
+
+    invites = result[ "invites" ]
+    assert len( invites ) == 0
+
+    user = self.database.load( User, self.user.object_id )
+    assert user.storage_bytes == 0
+
   def test_general_thread_default_with_unknown_note_id( self ):
     result = self.http_get( "/forums/general/%s?note_id=unknownid" % self.general_thread.object_id )
 
