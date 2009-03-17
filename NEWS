@@ -1,7 +1,7 @@
 1.6.9: March 16, 2009
  * Added a remove formatting feature to the tools menu. This allows you to
    strip out all formatting from the currently selected text.
- * Luminotes Discussion forums now change the discussion thread link color
+ * Luminotes discussion forums now change the discussion thread link color
    based on whether there are any new posts since you last visited the
    thread. This makes it much easier to keep up with a particular discussion.
  * Fixed a bug in which the filename of an exported HTML file was just
