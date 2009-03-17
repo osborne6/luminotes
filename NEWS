@@ -1,3 +1,8 @@
+1.6.10:
+ * For those of you who have installed Luminotes Server: Fixed a bug in
+   tools/luminotes_debian_initscript that prevented the "stop" command from
+   working properly.
+
 1.6.9: March 16, 2009
  * Added a remove formatting feature to the tools menu. This allows you to
    strip out all formatting from the currently selected text.
