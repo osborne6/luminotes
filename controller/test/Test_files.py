@@ -137,8 +137,13 @@ class Test_files( Test_controller ):
 
     os.remove( u"products/test.exe" )
 
-  def test_download( self, filename = None, quote_filename = None, file_data = None, preview = None ):
+  def test_download( self, filename = None, quote_filename = None, file_data = None, preview = None, expected_file_data = None ):
     self.login()
+
+    if expected_file_data is None:
+      expected_file_data = file_data
+      if file_data is None:
+        expected_file_data = self.file_data
 
     self.http_upload(
       "/files/upload?file_id=%s" % self.file_id,
@@ -191,8 +196,17 @@ class Test_files( Test_controller ):
       if u"session_storage" not in str( exc ):
         raise exc
 
-    file_data = "".join( pieces )
-    assert file_data == ( file_data or self.file_data )
+    received_file_data = "".join( pieces )
+    assert received_file_data == expected_file_data
+
+    return result
+
+  def test_download_with_nginx( self ):
+    cherrypy.root.files._Files__web_server = u"nginx"
+    result = self.test_download( self.filename, expected_file_data = "" )
+
+    headers = result[ u"headers" ]
+    assert headers[ u"X-Accel-Redirect" ] == u"/download/%s" % self.file_id
 
   def test_download_with_unicode_filename( self ):
     self.test_download( self.unicode_filename )
@@ -371,6 +385,44 @@ class Test_files( Test_controller ):
 
     file_data = "".join( pieces )
     assert file_data == self.file_data
+
+  def test_download_product_with_nginx( self ):
+    cherrypy.root.files._Files__web_server = u"nginx"
+    access_id = u"wheeaccessid"
+    item_number = u"5000"
+    transaction_id = u"txn"
+
+    self.login()
+
+    download_access = Download_access.create( access_id, item_number, transaction_id )
+    self.database.save( download_access )
+
+    result = self.http_get(
+      "/files/download_product?access_id=%s" % access_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == u"application/octet-stream"
+
+    filename = u"test.exe".encode( "utf8" )
+    assert headers[ u"Content-Disposition" ] == 'attachment; filename="%s"' % filename
+    assert headers[ u"X-Accel-Redirect" ] == u"/download_product/test.exe"
+
+    gen = result[ u"body" ]
+    assert isinstance( gen, types.GeneratorType )
+    pieces = []
+
+    try:
+      for piece in gen:
+        pieces.append( piece )
+    except AttributeError, exc:
+      if u"session_storage" not in str( exc ):
+        raise exc
+
+    file_data = "".join( pieces )
+    assert file_data == u""
 
   def test_download_product_without_login( self ):
     access_id = u"wheeaccessid"
@@ -923,6 +975,35 @@ class Test_files( Test_controller ):
     assert u"Content-Disposition" not in headers
 
     assert "".join( result[ u"body" ] ) == self.IMAGE_DATA
+
+  def test_image_with_nginx( self ):
+    cherrypy.root.files._Files__web_server = u"nginx"
+    self.login()
+
+    self.http_upload(
+      "/files/upload?file_id=%s" % self.file_id,
+      dict(
+        notebook_id = self.notebook.object_id,
+        note_id = self.note.object_id,
+      ),
+      filename = self.filename,
+      file_data = self.IMAGE_DATA,
+      content_type = self.content_type,
+      session_id = self.session_id,
+    )
+
+    result = self.http_get(
+      "/files/image?file_id=%s" % self.file_id,
+      session_id = self.session_id,
+    )
+
+    headers = result[ u"headers" ]
+    assert headers
+    assert headers[ u"Content-Type" ] == self.content_type
+    assert u"Content-Disposition" not in headers
+    assert headers[ u"X-Accel-Redirect" ] == u"/download/%s" % self.file_id
+
+    assert "".join( result[ u"body" ] ) == u""
 
   def test_image_with_non_image( self ):
     self.login()

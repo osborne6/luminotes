@@ -23,6 +23,7 @@ settings = {
     "luminotes.https_proxy_ip": "127.0.0.2",
     "luminotes.db_host": "localhost", # hostname for PostgreSQL or None (no quotes) for SQLite
     "luminotes.db_ssl_mode": "allow", # "disallow", "allow", "prefer", or "require"
+    "luminotes.web_server": "", # "", "apache", or "nginx" to use specific server support (optional)
     "luminotes.support_email": "",
     "luminotes.payment_email": "",
     "luminotes.rate_plans": [
@@ -136,7 +137,6 @@ settings = {
     "encoding_filter.on": False,
   },
   "/files/thumbnail": {
-    "stream_response": True,
     "encoding_filter.on": False,
   },
   "/files/image": {

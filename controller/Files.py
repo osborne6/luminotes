@@ -244,7 +244,7 @@ class Files( object ):
   """
   Controller for dealing with uploaded files, corresponding to the "/files" URL.
   """
-  def __init__( self, database, users, download_products ):
+  def __init__( self, database, users, download_products, web_server ):
     """
     Create a new Files object.
 
@@ -254,12 +254,15 @@ class Files( object ):
     @param users: controller for all users
     @type download_products: [ { "name": unicode, ... } ]
     @param download_products: list of configured downloadable products
+    @type web_server: unicode
+    @param web_server: front-end web server (determines specific support for various features)
     @rtype: Files
     @return: newly constructed Files
     """
     self.__database = database
     self.__users = users
     self.__download_products = download_products
+    self.__web_server = web_server
 
   @expose()
   @weakly_expire
@@ -312,9 +315,14 @@ class Files( object ):
     cherrypy.response.headerMap[ u"Content-Disposition" ] = 'attachment; filename="%s"' % filename
     cherrypy.response.headerMap[ u"Content-Length" ] = db_file.size_bytes
 
+    if self.__web_server == u"nginx":
+      cherrypy.response.headerMap[ u"X-Accel-Redirect" ] = "/download/%s" % file_id
+      return ""
+
     def stream():
       CHUNK_SIZE = 8192
       local_file = Upload_file.open_file( file_id )
+      local_file.seek(0)
 
       while True:
         data = local_file.read( CHUNK_SIZE )
@@ -364,9 +372,14 @@ class Files( object ):
     cherrypy.response.headerMap[ u"Content-Disposition" ] = 'attachment; filename="%s"' % public_filename
     cherrypy.response.headerMap[ u"Content-Length" ] = os.path.getsize( local_filename )
 
+    if self.__web_server == u"nginx":
+      cherrypy.response.headerMap[ u"X-Accel-Redirect" ] = "/download_product/%s" % product[ u"filename" ]
+      return ""
+
     def stream():
       CHUNK_SIZE = 8192
       local_file = file( local_filename, "rb" )
+      local_file.seek(0)
 
       while True:
         data = local_file.read( CHUNK_SIZE )
@@ -463,15 +476,7 @@ class Files( object ):
       image.save( image_buffer, "PNG" )
       image_buffer.seek( 0 )
 
-    def stream( image_buffer ):
-      CHUNK_SIZE = 8192
-
-      while True:
-        data = image_buffer.read( CHUNK_SIZE )
-        if len( data ) == 0: break
-        yield data        
-
-    return stream( image_buffer )
+    return image_buffer.getvalue()
 
   @expose()
   @weakly_expire
@@ -501,9 +506,14 @@ class Files( object ):
 
     cherrypy.response.headerMap[ u"Content-Type" ] = db_file.content_type
 
+    if self.__web_server == u"nginx":
+      cherrypy.response.headerMap[ u"X-Accel-Redirect" ] = "/download/%s" % file_id
+      return ""
+
     def stream():
       CHUNK_SIZE = 8192
       local_file = Upload_file.open_file( file_id )
+      local_file.seek(0)
 
       while True:
         data = local_file.read( CHUNK_SIZE )

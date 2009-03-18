@@ -66,8 +66,8 @@ def expose( view = None, rss = None ):
           cherrypy.root.report_traceback()
           result = dict( error = u"An error occurred when processing your request. Please try again or contact support." )
 
-      # if the result is a generator, it's streaming data, so just let CherryPy handle it
-      if isinstance( result, types.GeneratorType ):
+      # if the result is a generator or a string, it's streaming data or just data, so just let CherryPy handle it
+      if isinstance( result, ( types.GeneratorType, basestring ) ):
         return result
 
       redirect = result.get( u"redirect" )
@@ -83,18 +83,17 @@ def expose( view = None, rss = None ):
 
       # try using the supplied view to render the result
       try:
-        if view_override is None:
-          if rss and use_rss:
-            cherrypy.response.headers[ u"Content-Type" ] = u"application/xml"
-            return render( rss, result, encoding or "utf8" )
-          elif view:
-            return render( view, result, encoding )
-          elif result.get( "view" ):
-            result_view = result.get( "view" )
-            del( result[ "view" ] )
-            return render( result_view, result, encoding )
-        else:
+        if view_override is not None:
           return render( view_override, result, encoding )
+        elif rss and use_rss:
+          cherrypy.response.headers[ u"Content-Type" ] = u"application/xml"
+          return render( rss, result, encoding or "utf8" )
+        elif view:
+          return render( view, result, encoding )
+        elif result.get( "view" ):
+          result_view = result.get( "view" )
+          del( result[ "view" ] )
+          return render( result_view, result, encoding )
       except:
         if redirect is None:
           if original_error:

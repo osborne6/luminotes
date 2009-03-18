@@ -57,6 +57,7 @@ class Root( object ):
       database,
       self.__users,
       settings[ u"global" ].get( u"luminotes.download_products", [] ),
+      settings[ u"global" ].get( u"luminotes.web_server", "" ),
     )
     self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
     self.__forums = Forums( database, self.__notebooks, self.__users )
