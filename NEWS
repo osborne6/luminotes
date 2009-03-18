@@ -1,7 +1,9 @@
 1.6.10:
  * For those of you who have installed Luminotes Server: Fixed a bug in
-   tools/luminotes_debian_initscript that prevented the "stop" command from
-   working properly.
+   examples/luminotes_debian_initscript that prevented the "stop" command
+   from working properly.
+ * Also for Luminotes Server users: Added support for using the nginx web
+   server with Luminotes, specifically for fast uploads and downloads.
 
 1.6.9: March 16, 2009
  * Added a remove formatting feature to the tools menu. This allows you to

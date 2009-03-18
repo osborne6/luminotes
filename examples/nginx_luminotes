@@ -1,0 +1,46 @@
+gzip_comp_level 4;
+gzip_min_length 1100;
+gzip_types text/plain text/html text/css application/x-javascript;
+
+upstream luminotes {
+  server 127.0.0.1:8081;
+}
+
+server {
+  listen 80;
+  server_name yourhostname.com;
+
+  access_log /var/log/nginx/luminotes.access.log;
+
+  location / {
+    proxy_pass http://luminotes;
+    client_max_body_size 505m;
+  }
+
+  location /download/ {
+    internal;
+    alias /path/to/luminotes_user/.luminotes/files/;
+  }
+
+  location /download_product/ {
+    internal;
+    alias /path/to/luminotes/products/;
+  }
+
+  location /favicon.ico {
+    root /path/to/luminotes/static/images;
+  }
+
+  location /robots.txt {
+    root /path/to/luminotes/static/html;
+  }
+
+  location /static/ {
+    root /path/to/luminotes;
+  }
+
+  error_page 500 502 503 504 /reload.html;
+  location = /reload.html {
+    root /path/to/luminotes/static/html;
+  }
+}

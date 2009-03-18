@@ -151,8 +151,8 @@ Connect to the following URL in a web browser running on the same machine:
   http://localhost:8081/
 
 
-production mode
----------------
+production mode setup
+---------------------
 
 Production mode is intended for a live production web site, so you can skip
 this section entirely if you don't care about running such a site. Production
@@ -160,57 +160,57 @@ mode doesn't support auto-reload, and logging goes to file (luminotes.log)
 instead of the console, but performance should be better than in development
 mode.
 
-First you'll need to configure your web server to forward requests for
-non-static pages to CherryPy. These instructions are for Apache, but in
-theory, Luminotes should work with just about any web server.
+First you'll need to configure your web server to forward requests for pages
+to Luminotes. Example configuration files are included for both Apache and
+nginx, but in theory, Luminotes should work with just about any web server.
 
-In your Apache configuration file, enable mod_rewrite and mod_proxy, then add
-the following rewrite rules to the settings for your VirtualHost:
+For Apache, enable mod_rewrite and mod_proxy, and then configure a VirtualHost
+as per the example configuration file in examples/apache_luminotes.
 
-  RewriteEngine on
-  RewriteRule ^/favicon.ico /path/to/luminotes/static/images/favicon.ico [L]
-  RewriteRule ^/robots.txt /path/to/luminotes/static/html/robots.txt [L]
-  RewriteRule ^/static/(.*) /path/to/luminotes/static/$1 [L]
-  RewriteRule ^(.*) http://127.0.0.1:8081$1 [P]
+For nginx, if you want a working upload progress bar, build and install a
+version of nginx with the NginxHttpUploadProgressModule enabled. See:
+http://wiki.nginx.org//NginxHttpUploadProgressModule for more information.
+Then, configure nginx as per the example configuration file in
+examples/nginx_luminotes.
 
-You should change the paths in the rules above to point to wherever Luminotes
-happens to be installed. These rules cause Apache to serve static files
-itself, while passing through requests for dynamic pages to the CherryPy web
-server running locally.
+For either web server, you should change the paths in your configuration file
+to point to wherever Luminotes happens to be installed. The example
+configuration causes your web server to serve static files itself, while
+passing through requests for dynamic pages to the Luminotes web server running
+locally.
 
-Optionally, you can also enable Apache's mod_expires module and include the
-following configuration along with the above rules:
 
-  ExpiresActive On
-  ExpiresDefault "A600"
+SSL support
+-----------
 
-This will tell clients not to request static pages more frequently than every
-ten minutes (unless the user forces a reload).
-
-If you want to use SSL, procure and install an SSL cert for use with Apache.
-Add the above mod_rewrite rules to the settings for your SSL-enabled
-VirtualHost, but change the IP in the last rule from 127.0.0.1 to 127.0.0.2.
-This hack allows the Luminotes server to distinguish between SSL and non-SSL
-requests by looking at the proxy IP. Without this, Luminotes would have no way
-of knowing whether a particular request was encrypted when received by Apache.
-(There are ways to do this in a less hacky manner with Apache 2, but not
-Apache 1.)
+If you want to use SSL, procure and install an SSL cert for use with your web
+server. Duplicate the standard non-SSL web server configuration for a separate
+SSL-enabled VirtualHost or server section, but change the IP address from
+127.0.0.1 to 127.0.0.2 for SSL. This hack allows the Luminotes server to
+distinguish between SSL and non-SSL requests by looking at the proxy IP.
+Without this, Luminotes would have no way of knowing whether a particular
+request was encrypted when received by your web server. (There are ways to do
+this in a less hacky manner, which might be supported in the future.)
 
 To configure the Luminotes server for SSL support, edit config/Common.py and
 change the values of luminotes.http_url and luminotes.https_url based on the
 domain you're using. For instance:
 
-  "luminotes.http_url": "http://luminotes.com",
-  "luminotes.https_url": "https://luminotes.com",
+  "luminotes.http_url": "http://yourhostname.com",
+  "luminotes.https_url": "https://yourhostname.com",
+
+
+starting production mode
+------------------------
 
 Then to actually start the production mode server, run:
 
   python luminotes.py
 
 You should be able to connect to the site at whatever domain you've configured
-Apache to serve.
+Apache or nginx to serve.
 
-Optionally, you can copy tools/luminotes_debian_initscript to
+Optionally, you can copy examples/luminotes_debian_initscript to
 /etc/init.d/luminotes and use the following command to start the Luminotes
 server instead:
 
