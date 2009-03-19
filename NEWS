@@ -1,9 +1,12 @@
 1.6.10:
- * For those of you who have installed Luminotes Server: Fixed a bug in
-   examples/luminotes_debian_initscript that prevented the "stop" command
-   from working properly.
- * Also for Luminotes Server users: Added support for using the nginx web
-   server with Luminotes, specifically for fast uploads and downloads.
+ * Faster uploads and downloads for online users.
+ * Luminotes Server improvements:
+   * Fixed a bug in examples/luminotes_debian_initscript that prevented the
+     "stop" command from working properly.
+   * Added support for using the nginx web server with Luminotes. See the
+     INSTALL file for more information.
+ * Fixed a problem in which copying and pasting text containing newlines
+   caused the pasted newlines to appear as spaces.
 
 1.6.9: March 16, 2009
  * Added a remove formatting feature to the tools menu. This allows you to
