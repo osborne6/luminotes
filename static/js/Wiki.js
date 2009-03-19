@@ -3609,79 +3609,159 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe, ephemeral );
   wiki.down_image_button( "attachFile" );
 
-  var vaguely_random = new Date().getTime();
   this.invoker = invoker;
   this.editor = editor;
   this.iframe = createDOM( "iframe", {
-    "src": "/files/upload_page?notebook_id=" + notebook_id + "&note_id=" + editor.id,
-    "frameBorder": "0",
-    "scrolling": "no",
-    // if a new iframe has an id/name that WebKit has already seen, then it will just use its
-    // previous src value and ignore our new src value here. workaround: don't use the same id!
-    "id": "upload_frame_" + vaguely_random,
-    "name": "upload_frame_" + vaguely_random,
-    "class": "upload_frame"
+    "src": "about:blank",
+    "id": "upload_frame",
+    "name": "upload_frame",
+    "class": "upload_frame undisplayed"
   } );
   this.iframe.pulldown = this;
+
   this.file_id = null;
   this.uploading = false;
+  this.poller = null;
+  this.POLL_INTERVAL = 500;
 
   var self = this;
-  connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
 
   appendChildNodes( this.div, this.iframe );
 
-  this.progress_iframe = createDOM( "iframe", {
-    "frameBorder": "0",
-    "scrolling": "no",
-    "id": "progress_frame_" + vaguely_random,
-    "name": "progress_frame_" + vaguely_random,
-    "class": "upload_frame"
-  } );
-  addElementClass( this.progress_iframe, "undisplayed" );
+  this.upload_area = createDOM( "span" );
+  this.upload_button = createDOM( "input", { "id": "upload_button", "type": "submit", "class": "button", "value": "upload" } );
+  appendChildNodes( this.upload_area, createDOM( "form",
+    {
+      "target": "upload_frame",
+      "action": "/files/upload?file_id=new",
+      "method": "post",
+      "enctype": "multipart/form-data",
+      "id": "upload_form"
+    },
+    createDOM( "span", { "class": "field_label" }, "attach file: " ), // TODO: or "import file"
+    createDOM( "input", { "name": "notebook_id", "id": "notebook_id", "type": "hidden", "value": notebook_id } ),
+    createDOM( "input", { "name": "note_id", "id": "note_id", "type": "hidden", "value": editor ? editor.id : "" } ),
+    createDOM( "input", { "name": "upload", "id": "upload", "type": "file", "class": "text_field", "size": "30" } ),
+    this.upload_button
+  ) );
+  this.upload_button.disabled = true;
 
-  appendChildNodes( this.div, this.progress_iframe );
+  appendChildNodes( this.upload_area, createDOM( "p", {}, "Please select a file to upload." ) ); // TODO: or import CSV
+  appendChildNodes( this.upload_area, createDOM( "span", { "id": "tick_preload" } ) );
+  appendChildNodes( this.upload_area, createDOM( "input", { "name": "file_id", "id": "file_id", "type": "hidden", "value": "new" } ) );
+  appendChildNodes( this.div, this.upload_area );
+
+  connect( this.upload_button, "onclick", function ( event ) {
+    self.upload_started();
+  } );
+
+  // grab the next available file id
+  this.invoker.invoke( "/files/upload_id", "POST",
+    { "notebook_id": notebook_id, "note_id": editor ? editor.id : "" },
+    function( result ) { self.update_file_id( result ); }
+  );
+
   Pulldown.prototype.finish_init.call( this );
 }
 
 Upload_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Upload_pulldown.prototype.constructor = Upload_pulldown;
 
-Upload_pulldown.prototype.init_frame = function () {
-  var self = this;
-  var doc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+Upload_pulldown.prototype.update_file_id = function ( result ) {
+  this.file_id = result.file_id;
 
-  withDocument( doc, function () {
-    connect( "upload_button", "onclick", function ( event ) {
-      withDocument( doc, function () {
-        self.upload_started( getElement( "file_id" ).value );
-      } );
-    } );
+  var upload_form = getElement( "upload_form" )
+  if ( upload_form )
+    upload_form.action = "/files/upload?file_id=" + this.file_id;
 
-    connect( doc.body, "onmouseover", function ( event ) {
-      self.ephemeral = false;
-    } );
-  } );
+  var file_id_node = getElement( "file_id" );
+  if ( file_id_node )
+    file_id_node.value = this.file_id;
+
+  this.upload_button.disabled = false;
 }
 
 Upload_pulldown.prototype.upload_started = function ( file_id ) {
-  this.file_id = file_id;
   this.uploading = true;
   var filename = base_upload_filename();
-
-  // make the upload iframe invisible but still present so that the upload continues
-  setElementDimensions( this.iframe, { "h": "0" } );
 
   // if the current title is blank, replace the title with the upload's filename
   var title = link_title( this.link );
   if ( title == "" )
     this.link.innerHTML = filename;
+  
+  this.cancel_button = createDOM( "input", { "type": "submit", "id": "cancel_button", "class": "button", "value": "cancel" } );
 
-  removeElementClass( this.progress_iframe, "undisplayed" );
-  var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
+  var progress_area = createDOM( "table", {},
+    createDOM( "tr", {},
+      createDOM( "td", { "class": "field_label", "colspan": "2" }, "uploading " + filename + ": " )
+    ),
+    createDOM( "tr", { "id": "progress_row" },
+      createDOM( "td", {},
+        createDOM( "div", { "id": "progress_border" },
+          createDOM( "img", { "src": "/static/images/tick.png", "id": "progress_bar" } )
+        )
+      ),
+      createDOM( "td", { "class": "progress_right" },
+        createDOM( "span", { "id": "progress_percent" }, "0%" ),
+        this.cancel_button
+      )
+    )
+  );
 
-  this.progress_iframe.src = progress_url;
+  disconnectAll( this.upload_button );
+  addElementClass( this.upload_area, "undisplayed" );
+  appendChildNodes( this.div, progress_area );
+  this.upload_button = null;
+
+  var self = this;
+  connect( this.cancel_button, "onclick", function ( event ) {
+    self.cancel_due_to_click();
+  } );
+
+  // start polling for the upload progress
+  this.poller = setTimeout( function () { self.update_progress(); }, this.POLL_INTERVAL );
 }
+
+Upload_pulldown.prototype.update_progress = function () {
+  var self = this;
+  var BAR_WIDTH_EM = 20.0;
+
+  // TODO: send X- HTTP header nginx expects with file_id
+  this.invoker.invoke( "/files/progress", "GET",
+    { "file_id": this.file_id },
+    function( result ) {
+      var fraction_done = 0.0;
+      if ( !self.uploading )
+        return;
+
+      if ( result.state == "error" ) {
+        if ( result.status == 413 )
+          self.cancel_due_to_quota();
+        else
+          self.cancel_due_to_error( "An error occurred when uploading the file." );
+        return;
+      }
+
+      if ( result.state == "uploading" && result.size > 0 )
+        fraction_done = Math.min( result.received / result.size, 1.0 );
+      else if ( result.state == "done" )
+        fraction_done = 1.0;
+
+      if ( fraction_done > 0.0 ) {
+        var percent = fraction_done * 100.0;
+        setElementDimensions( "progress_bar", { "w": fraction_done * BAR_WIDTH_EM }, "em" );
+        replaceChildNodes( "progress_percent", parseInt( percent ) + "%" );
+      }
+
+      // the brief delay gives a brief moment for the progress bar to appear at 100%
+      if ( result.state == "done" )
+        setTimeout( function () { self.upload_complete(); }, 1 );
+      else
+        this.poller = setTimeout( function () { self.update_progress(); }, self.POLL_INTERVAL );
+    }
+  );
+};
 
 Upload_pulldown.prototype.upload_complete = function () {
   if ( /MSIE/.test( navigator.userAgent ) )
@@ -3702,6 +3782,7 @@ Upload_pulldown.prototype.update_position = function ( always_left_align ) {
 }
 
 Upload_pulldown.prototype.cancel_due_to_click = function () {
+  // when the uploading iframe closes, that should effectively cancel the upload
   this.uploading = false;
   this.wiki.display_message( "The file upload has been cancelled." )
   this.shutdown();
@@ -3713,7 +3794,7 @@ Upload_pulldown.prototype.cancel_due_to_quota = function () {
 
   this.wiki.display_error(
     "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
-    [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
+    [ createDOM( "a", { "href": "/pricing" }, "upgrade" ), " your account." ]
   );
 }
 
@@ -3727,11 +3808,18 @@ Upload_pulldown.prototype.shutdown = function () {
   if ( this.uploading )
     return;
 
+  if ( this.poller )
+    clearTimeout( this.poller );
+
+  if ( this.upload_button )
+    disconnectAll( this.upload_button );
+
+  if ( this.cancel_button )
+    disconnectAll( this.cancel_button );
+
   // in Internet Explorer, the upload won't actually cancel without an explicit Stop command
-  if ( !this.iframe.contentDocument && this.iframe.contentWindow ) {
+  if ( !this.iframe.contentDocument && this.iframe.contentWindow )
     this.iframe.contentWindow.document.execCommand( 'Stop' );
-    this.progress_iframe.contentWindow.document.execCommand( 'Stop' );
-  }
 
   Pulldown.prototype.shutdown.call( this );
   if ( this.link )

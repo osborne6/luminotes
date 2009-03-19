@@ -281,6 +281,12 @@ h1 {
   background-image: url(/static/images/grabber_hover.png);
 }
 
+#tick_preload {
+  height: 0;
+  overflow: hidden;
+  background-image: url(/static/images/tick.png);
+}
+
 #note_tree_area {
   position: fixed;
   width: 20em;
@@ -886,7 +892,7 @@ h1 {
   max-height: 20em;
   min-width: 10em;
   overflow: auto;
-  padding: 0.5em;
+  padding: 0.75em;
   border: 1px solid #000000;
   background-color: #ffff99;
 }
@@ -1159,6 +1165,8 @@ h1 {
 }
 
 .button {
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
   border-style: outset;
   border-width: 0px;
   background-color: #d0e0f0;
@@ -1181,13 +1189,6 @@ h1 {
   font-size: 90%;
   font-weight: bold;
   color: #ff6600;
-}
-
-.upload_frame {
-  padding: 0;
-  margin: 0;
-  width: 50em;
-  height: 5em;
 }
 
 .file_thumbnail {
@@ -1242,4 +1243,25 @@ h1 {
   background-color: #ffcc66;
   padding: 0.5em;
   font-size: 110%;
+}
+
+#progress_row {
+  margin-top: 0.75em;
+}
+
+#progress_border {
+  border: 1px solid #000000;
+  background-color: #ffffff;
+  width: 20em;
+  height: 1em;
+}
+
+#progress_bar {
+  width: 0;
+  height: 1em;
+}
+
+#progress_percent {
+  margin-left: 0.75em;
+  margin-right: 0.75em;
 }

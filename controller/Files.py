@@ -5,11 +5,12 @@ import cgi
 import time
 import urllib
 import os.path
+import httplib
 import tempfile
 import cherrypy
 from PIL import Image
 from cStringIO import StringIO
-from threading import Lock, Event
+from threading import Lock
 from chardet.universaldetector import UniversalDetector
 from Expose import expose
 from Validate import validate, Valid_int, Valid_bool, Validation_error
@@ -20,10 +21,9 @@ from model.File import File
 from model.User import User
 from model.Notebook import Notebook
 from model.Download_access import Download_access
-from view.Upload_page import Upload_page
 from view.Blank_page import Blank_page
 from view.Json import Json
-from view.Progress_bar import stream_progress, stream_quota_error, quota_error_script, general_error_script
+from view.Progress_bar import quota_error_script, general_error_script
 from view.File_preview_page import File_preview_page
 
 
@@ -87,14 +87,11 @@ class Upload_file( object ):
     self.__content_length = content_length
     self.__file_received_bytes = 0
     self.__total_received_bytes = cherrypy.request.rfile.bytes_read
-    self.__total_received_bytes_updated = Event()
-    self.__complete = Event()
   
   def write( self, data ):
     self.__file.write( data )
     self.__file_received_bytes += len( data )
     self.__total_received_bytes = cherrypy.request.rfile.bytes_read
-    self.__total_received_bytes_updated.set()
 
   def tell( self ):
     return self.__file.tell()
@@ -108,24 +105,12 @@ class Upload_file( object ):
 
     return self.__file.read( size )
 
-  def wait_for_total_received_bytes( self ):
-    self.__total_received_bytes_updated.wait( timeout = cherrypy.server.socket_timeout )
-    self.__total_received_bytes_updated.clear()
-    return self.__total_received_bytes
-
   def close( self ):
     self.__file.close()
-    self.complete()
-
-  def complete( self ):
-    self.__complete.set()
 
   def delete( self ):
     self.__file.close()
     self.delete_file( self.__file_id )
-
-  def wait_for_complete( self ):
-    self.__complete.wait( timeout = cherrypy.server.socket_timeout )
 
   @staticmethod
   def make_server_filename( file_id ):
@@ -522,7 +507,7 @@ class Files( object ):
 
     return stream()
 
-  @expose( view = Upload_page )
+  @expose( view = Json )
   @strongly_expire
   @end_transaction
   @grab_user_id
@@ -531,10 +516,9 @@ class Files( object ):
     note_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def upload_page( self, notebook_id, note_id, user_id ):
+  def upload_id( self, notebook_id, note_id, user_id ):
     """
-    Provide the information necessary to display the file upload page, including the generation of a
-    unique file id.
+    Generate and return a unique file id for use in an upload.
 
     @type notebook_id: unicode
     @param notebook_id: id of the notebook that the upload will be to
@@ -543,7 +527,7 @@ class Files( object ):
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: unicode
-    @return: rendered HTML page
+    @return: { 'file_id': file_id }
     @raise Access_error: the current user doesn't have access to the given notebook
     """
     notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True, note_id = note_id )
@@ -554,47 +538,7 @@ class Files( object ):
     file_id = self.__database.next_id( File )
 
     return dict(
-      notebook_id = notebook_id,
-      note_id = note_id,
       file_id = file_id,
-      label_text = u"attach file",
-      instructions_text = u"Please select a file to upload.",
-    )
-
-  @expose( view = Upload_page )
-  @strongly_expire
-  @end_transaction
-  @grab_user_id
-  @validate(
-    notebook_id = Valid_id(),
-    user_id = Valid_id( none_okay = True ),
-  )
-  def import_page( self, notebook_id, user_id ):
-    """
-    Provide the information necessary to display the file import page, including the generation of a
-    unique file id.
-
-    @type notebook_id: unicode
-    @param notebook_id: id of the notebook that the upload will be to
-    @type note_id: unicode
-    @param user_id: id of current logged-in user (if any)
-    @rtype: unicode
-    @return: rendered HTML page
-    @raise Access_error: the current user doesn't have access to the given notebook
-    """
-    notebook = self.__users.load_notebook( user_id, notebook_id, read_write = True )
-
-    if not notebook or notebook.read_write == Notebook.READ_WRITE_FOR_OWN_NOTES:
-      raise Access_error()
-
-    file_id = self.__database.next_id( File )
-
-    return dict(
-      notebook_id = notebook_id,
-      note_id = None,
-      file_id = file_id,
-      label_text = u"import file",
-      instructions_text = u"Please select a CSV file of notes to import into a new notebook.",
     )
 
   @expose( view = Blank_page )
@@ -652,7 +596,11 @@ class Files( object ):
     # if we didn't receive all of the expected data, abort
     if uploaded_file.total_received_bytes < uploaded_file.content_length:
       uploaded_file.delete()
-      return dict() # hopefully, the call to progress() will report this to the user
+      return dict( script = general_error_script % u"The uploaded file was not fully received. Please try again or contact support." )
+
+    if uploaded_file.file_received_bytes == 0:
+      uploaded_file.delete()
+      return dict( script = general_error_script % u"The uploaded file was not received. Please make sure that the file exists." )
 
     # if the uploaded file's size would put the user over quota, bail and inform the user
     rate_plan = self.__users.rate_plan( user.rate_plan )
@@ -671,67 +619,79 @@ class Files( object ):
 
     return dict()
 
-  @expose()
+  @expose( view = Json )
   @strongly_expire
   @end_transaction
   @grab_user_id
   @validate(
     file_id = Valid_id(),
-    filename = unicode,
     user_id = Valid_id( none_okay = True ),
   )
-  def progress( self, file_id, filename, user_id = None ):
+  def progress( self, file_id, user_id = None ):
     """
-    Stream information on a file that is in the process of being uploaded. This method does not
-    perform any access checks, but the only information streamed is a progress bar and upload
-    percentage.
+    Return information on a file that is in the process of being uploaded. This method does not
+    perform any access checks, but the only information revealed is the file's upload progress.
+
+    This method is intended to be polled while the file is uploading, and its returned data is
+    intended to mimic the API described here:
+    http://wiki.nginx.org//NginxHttpUploadProgressModule
 
     @type file_id: unicode
     @param file_id: id of a currently uploading file
-    @type filename: unicode
-    @param filename: name of the file to report on
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
-    @rtype: unicode
-    @return: streaming HTML progress bar
+    @rtype: dict
+    @return: one of the following:
+      { 'state': 'starting' }                          // file_id is unknown
+      { 'state': 'done' }                              // upload is complete
+      { 'state': 'error', 'status': http_error_code }  // upload generated an HTTP error
+      { 'state': 'uploading',                          // upload is in progress
+        'received': bytes_received, 'size': total_bytes }
     """
     global current_uploads
 
-    # poll until the file is uploading (as determined by current_uploads) or completely uploaded (in
-    # the database with a filename)
-    while True:
-      uploading_file = current_uploads.get( file_id )
-      db_file = None
+    uploading_file = current_uploads.get( file_id )
+    db_file = None
 
-      if uploading_file:
-        fraction_reported = 0.0
-        break
-
-      db_file = self.__database.load( File, file_id )
-      if not db_file:
-        raise Upload_error( u"The file id is unknown" )
-      if db_file.filename is None:
-        time.sleep( 0.1 )
-        continue
-      fraction_reported = 1.0
-      break
-
-    # if the uploaded file's size would put the user over quota, bail and inform the user
     if uploading_file:
+      # if the uploaded file's size would put the user over quota, bail and inform the user
       SOFT_QUOTA_FACTOR = 1.05 # fudge factor since content_length isn't really the file's actual size
 
       user = self.__database.load( User, user_id )
       if not user:
-        raise Access_error()
+        return dict(
+          state = "error",
+          stauts = httplib.FORBIDDEN,
+        )
 
       rate_plan = self.__users.rate_plan( user.rate_plan )
 
       storage_quota_bytes = rate_plan.get( u"storage_quota_bytes" )
       if storage_quota_bytes and \
          user.storage_bytes + uploading_file.content_length > storage_quota_bytes * SOFT_QUOTA_FACTOR:
-        return stream_quota_error()
+        return dict(
+          state = "error",
+          stauts = httplib.REQUEST_ENTITY_TOO_LARGE,
+        )
 
-    return stream_progress( uploading_file, filename, fraction_reported )
+      return dict(
+        state = u"uploading",
+        received = uploading_file.total_received_bytes,
+        size = uploading_file.content_length,
+      );
+
+    db_file = self.__database.load( File, file_id )
+    if not db_file:
+      return dict(
+        state = "error",
+        stauts = httplib.NOT_FOUND,
+      )
+
+    if db_file.filename is None:
+      return dict( state = u"starting" );
+
+    # the file is completely uploaded (in the database with a filename)
+    return dict( state = u"done" );
 
   @expose( view = Json )
   @strongly_expire
