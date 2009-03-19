@@ -651,6 +651,9 @@ h1 {
   margin: 0em;
   font-size: 90%;
   line-height: 140%;
+  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .static_note_contents form {
