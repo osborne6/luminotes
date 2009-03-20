@@ -999,7 +999,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
         new Link_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
       else {
         if ( /\/files\/new$/.test( link.href ) )
-          new Upload_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
+          new Upload_pulldown( this, this.notebook.object_id, this.invoker, editor, link, null, ephemeral );
         else
           new File_link_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
       }
@@ -1507,7 +1507,7 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_messages();
     this.clear_pulldowns();
 
-    new Upload_pulldown( this, this.notebook.object_id, this.invoker, this.focused_editor, link );
+    new Upload_pulldown( this, this.notebook.object_id, this.invoker, this.focused_editor, link, null );
   }
 
   event.stop();
@@ -2891,7 +2891,7 @@ Wiki.prototype.import_clicked = function () {
     return;
   }
 
-  new Import_pulldown( this, this.notebook.object_id, this.invoker, getElement( "import_link" ) );
+  new Upload_pulldown( this, this.notebook.object_id, this.invoker, null, null, getElement( "import_link" ) );
 }
 
 Wiki.prototype.start_notebook_rename = function () {
@@ -3602,11 +3602,19 @@ function base_upload_filename() {
 }
 
 
-function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) {
-  this.link = link || editor.find_link_at_cursor();
-  this.link.pulldown = this;
+function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephemeral ) {
+  this.link = link || ( editor ? editor.find_link_at_cursor() : null );
+  if ( this.link )
+    this.link.pulldown = this;
 
-  Pulldown.call( this, wiki, notebook_id, "upload_" + editor.id, this.link, editor.iframe, ephemeral );
+  Pulldown.call(
+    this, wiki, notebook_id,
+    "upload_" + ( editor ? editor.id : "import" ),
+    this.link || anchor,
+    editor ? editor.iframe : null,
+    ephemeral
+  );
+
   wiki.down_image_button( "attachFile" );
 
   this.invoker = invoker;
@@ -3622,7 +3630,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, ephemeral ) 
   this.file_id = null;
   this.uploading = false;
   this.poller = null;
-  this.POLL_INTERVAL = 500;
+  this.poll_interval = 100; // in milliseconds, expontentially backing off. see update_progress()
 
   var self = this;
 
@@ -3686,9 +3694,11 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
   var filename = base_upload_filename();
 
   // if the current title is blank, replace the title with the upload's filename
-  var title = link_title( this.link );
-  if ( title == "" )
-    this.link.innerHTML = filename;
+  if ( this.link ) {
+    var title = link_title( this.link );
+    if ( title == "" )
+      this.link.innerHTML = filename;
+  }
   
   this.cancel_button = createDOM( "input", { "type": "submit", "id": "cancel_button", "class": "button", "value": "cancel" } );
 
@@ -3720,7 +3730,7 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
   } );
 
   // start polling for the upload progress
-  this.poller = setTimeout( function () { self.update_progress(); }, this.POLL_INTERVAL );
+  this.poller = setTimeout( function () { self.update_progress(); }, this.poll_interval );
 }
 
 Upload_pulldown.prototype.update_progress = function () {
@@ -3757,8 +3767,18 @@ Upload_pulldown.prototype.update_progress = function () {
       // the brief delay gives a brief moment for the progress bar to appear at 100%
       if ( result.state == "done" )
         setTimeout( function () { self.upload_complete(); }, 1 );
-      else
-        this.poller = setTimeout( function () { self.update_progress(); }, self.POLL_INTERVAL );
+      else {
+        // capped exponential back-off
+        var CAP = 2000;
+        if ( self.poll_interval < CAP ) {
+          self.poll_interval *= 1.1;
+          if ( self.poll_interval > CAP )
+            self.poll_interval = CAP;
+        }
+        console.log( self.poll_interval );
+          
+        this.poller = setTimeout( function () { self.update_progress(); }, self.poll_interval );
+      }
     }
   );
 };
@@ -3771,9 +3791,20 @@ Upload_pulldown.prototype.upload_complete = function () {
 
   // now that the upload is done, the file link should point to the uploaded file
   this.uploading = false;
-  this.link.href = "/files/download?file_id=" + this.file_id + "&quote_filename=" + quote_filename;
+  if ( this.link ) {
+    this.link.href = "/files/download?file_id=" + this.file_id + "&quote_filename=" + quote_filename;
+    new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
+  // if there's no link, then assume a CSV file was imported, so display it
+  } else {
+    var wiki = this.wiki;
+    this.invoker.invoke(
+      "/files/csv_head", "GET", {
+        "file_id": this.file_id
+      },
+      function ( result ) { wiki.display_import_notebook( result ); }
+    );
+  }
 
-  new File_link_pulldown( this.wiki, this.notebook_id, this.invoker, this.editor, this.link );
   this.shutdown();
 }
 
@@ -3857,130 +3888,6 @@ Export_pulldown.prototype.constructor = Export_pulldown;
 
 Export_pulldown.prototype.shutdown = function () {
   Pulldown.prototype.shutdown.call( this );
-}
-
-
-function Import_pulldown( wiki, notebook_id, invoker, anchor ) {
-  anchor.pulldown = this;
-
-  Pulldown.call( this, wiki, notebook_id, "import_pulldown", anchor, null, false );
-
-  var vaguely_random = new Date().getTime();
-  this.invoker = invoker;
-  this.iframe = createDOM( "iframe", {
-    "src": "/files/import_page?notebook_id=" + notebook_id,
-    "frameBorder": "0",
-    "scrolling": "no",
-    // if a new iframe has an id/name that WebKit has already seen, then it will just use its
-    // previous src value and ignore our new src value here. workaround: don't use the same id!
-    "id": "upload_frame_" + vaguely_random,
-    "name": "upload_frame_" + vaguely_random,
-    "class": "upload_frame"
-  } );
-  this.iframe.pulldown = this;
-  this.file_id = null;
-  this.uploading = false;
-
-  var self = this;
-  connect( this.iframe, "onload", function ( event ) { self.init_frame(); } );
-
-  appendChildNodes( this.div, this.iframe );
-
-  this.progress_iframe = createDOM( "iframe", {
-    "frameBorder": "0",
-    "scrolling": "no",
-    "id": "progress_frame_" + vaguely_random,
-    "name": "progress_frame_" + vaguely_random,
-    "class": "upload_frame"
-  } );
-  addElementClass( this.progress_iframe, "undisplayed" );
-
-  appendChildNodes( this.div, this.progress_iframe );
-  Pulldown.prototype.finish_init.call( this );
-}
-
-Import_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
-Import_pulldown.prototype.constructor = Import_pulldown;
-
-Import_pulldown.prototype.init_frame = function () {
-  var self = this;
-  var doc = this.iframe.contentDocument || this.iframe.contentWindow.document;
-
-  withDocument( doc, function () {
-    connect( "upload_button", "onclick", function ( event ) {
-      withDocument( doc, function () {
-        self.upload_started( getElement( "file_id" ).value );
-      } );
-    } );
-  } );
-}
-
-Import_pulldown.prototype.upload_started = function ( file_id ) {
-  this.file_id = file_id;
-  this.uploading = true;
-  var filename = base_upload_filename();
-
-  // make the upload iframe invisible but still present so that the upload continues
-  setElementDimensions( this.iframe, { "h": "0" } );
-
-  removeElementClass( this.progress_iframe, "undisplayed" );
-  var progress_url = "/files/progress?file_id=" + file_id + "&filename=" + escape( filename );
-
-  this.progress_iframe.src = progress_url;
-}
-
-Import_pulldown.prototype.upload_complete = function () {
-  this.uploading = false;
-  var wiki = this.wiki;
-
-  this.invoker.invoke(
-    "/files/csv_head", "GET", {
-      "file_id": this.file_id
-    },
-    function ( result ) { wiki.display_import_notebook( result ); }
-  );
-  this.shutdown();
-}
-
-Import_pulldown.prototype.update_position = function ( always_left_align ) {
-  Pulldown.prototype.update_position.call( this, always_left_align );
-}
-
-Import_pulldown.prototype.cancel_due_to_click = function () {
-  this.uploading = false;
-  this.wiki.display_message( "The file import has been cancelled." )
-  this.shutdown();
-}
-
-Import_pulldown.prototype.cancel_due_to_quota = function () {
-  this.uploading = false;
-  this.shutdown();
-
-  this.wiki.display_error(
-    "That file is too large for your available storage space. Before uploading, please delete some notes or files, empty the trash, or",
-    [ createDOM( "a", { "href": "/upgrade" }, "upgrade" ), " your account." ]
-  );
-}
-
-Import_pulldown.prototype.cancel_due_to_error = function ( message ) {
-  this.uploading = false;
-  this.wiki.display_error( message )
-  this.shutdown();
-}
-
-Import_pulldown.prototype.shutdown = function () {
-  if ( this.uploading )
-    return;
-
-  // in Internet Explorer, the upload won't actually cancel without an explicit Stop command
-  if ( !this.iframe.contentDocument && this.iframe.contentWindow ) {
-    this.iframe.contentWindow.document.execCommand( 'Stop' );
-    this.progress_iframe.contentWindow.document.execCommand( 'Stop' );
-  }
-
-  Pulldown.prototype.shutdown.call( this );
-  if ( this.anchor )
-    this.anchor.pulldown = null;
 }
 
 

@@ -513,7 +513,7 @@ class Files( object ):
   @grab_user_id
   @validate(
     notebook_id = Valid_id(),
-    note_id = Valid_id(),
+    note_id = Valid_id( none_okay = True ),
     user_id = Valid_id( none_okay = True ),
   )
   def upload_id( self, notebook_id, note_id, user_id ):
