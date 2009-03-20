@@ -1,5 +1,5 @@
 1.6.10:
- * Faster uploads and downloads for online users.
+ * Faster uploads and downloads for users of luminotes.com.
  * Luminotes Server improvements:
    * Fixed a bug in examples/luminotes_debian_initscript that prevented the
      "stop" command from working properly.

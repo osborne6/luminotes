@@ -173,6 +173,12 @@ http://github.com/masterzen/nginx-upload-progress-module/ for more
 information. Then, configure nginx as per the example configuration file in
 examples/nginx_luminotes.
 
+Also for nginx, you should edit config/Common.py and set the
+luminotes.web_server value to "nginx" so that Luminotes makes use of nginx's
+X-Accel-Redirect header. For instance:
+
+  "luminotes.web_server": "nginx",
+
 For either web server, you should change the paths in your configuration file
 to point to wherever Luminotes happens to be installed. The example
 configuration causes your web server to serve static files itself, while
