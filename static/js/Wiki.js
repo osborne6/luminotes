@@ -3756,7 +3756,7 @@ Upload_pulldown.prototype.update_progress = function () {
         self.starting_count = 0;
 
       // if ten consecutive "starting" states in a row, bail
-      if ( self.starting_count >= 10 ) {
+      if ( self.starting_count >= 15 ) {
         self.cancel_due_to_error( "A timeout error occurred when uploading the file." );
         return
       }
