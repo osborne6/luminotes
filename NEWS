@@ -1,4 +1,4 @@
-1.6.10:
+1.6.10: March 20, 2009
  * Faster uploads and downloads for users of luminotes.com.
  * Luminotes Server improvements:
    * Fixed a bug in examples/luminotes_debian_initscript that prevented the
