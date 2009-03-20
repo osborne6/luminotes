@@ -3655,7 +3655,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
   ) );
   this.upload_button.disabled = true;
 
-  appendChildNodes( this.upload_area, createDOM( "p", {},
+  appendChildNodes( this.upload_area, createDOM( "div", { "class": "upload_instructions" },
                     this.link ? "Please select a file to upload." : "Please select a CSV file of notes to import into a new notebook." ) );
   appendChildNodes( this.upload_area, createDOM( "span", { "id": "tick_preload" } ) );
   appendChildNodes( this.upload_area, createDOM( "input", { "name": "file_id", "id": "file_id", "type": "hidden", "value": "new" } ) );

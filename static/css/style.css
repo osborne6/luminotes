@@ -1245,6 +1245,10 @@ h1 {
   font-size: 110%;
 }
 
+.upload_instructions {
+  margin-top: 0.75em;
+}
+
 #progress_row {
   margin-top: 0.75em;
 }
