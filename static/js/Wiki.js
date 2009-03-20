@@ -2883,7 +2883,7 @@ Wiki.prototype.export_clicked = function () {
 }
 
 Wiki.prototype.import_clicked = function () {
-  var pulldown_id = "import_pulldown";
+  var pulldown_id = "upload_import";
   var existing_div = getElement( pulldown_id );
   if ( existing_div ) {
     existing_div.pulldown.shutdown();
