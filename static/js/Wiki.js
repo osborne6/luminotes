@@ -3646,7 +3646,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
       "enctype": "multipart/form-data",
       "id": "upload_form"
     },
-    createDOM( "span", { "class": "field_label" }, "attach file: " ), // TODO: or "import file"
+    createDOM( "span", { "class": "field_label" }, this.link ? "attach file: " : "import file: " ),
     createDOM( "input", { "name": "notebook_id", "id": "notebook_id", "type": "hidden", "value": notebook_id } ),
     createDOM( "input", { "name": "note_id", "id": "note_id", "type": "hidden", "value": editor ? editor.id : "" } ),
     createDOM( "input", { "name": "upload", "id": "upload", "type": "file", "class": "text_field", "size": "30" } ),
@@ -3654,7 +3654,8 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
   ) );
   this.upload_button.disabled = true;
 
-  appendChildNodes( this.upload_area, createDOM( "p", {}, "Please select a file to upload." ) ); // TODO: or import CSV
+  appendChildNodes( this.upload_area, createDOM( "p", {},
+                    this.link ? "Please select a file to upload." : "Please select a CSV file of notes to import into a new notebook." ) );
   appendChildNodes( this.upload_area, createDOM( "span", { "id": "tick_preload" } ) );
   appendChildNodes( this.upload_area, createDOM( "input", { "name": "file_id", "id": "file_id", "type": "hidden", "value": "new" } ) );
   appendChildNodes( this.div, this.upload_area );
