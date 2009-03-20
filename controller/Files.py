@@ -658,16 +658,16 @@ class Files( object ):
     uploading_file = current_uploads.get( file_id )
     db_file = None
 
+    user = self.__database.load( User, user_id )
+    if not user:
+      return dict(
+        state = "error",
+        status = httplib.FORBIDDEN,
+      )
+
     if uploading_file:
       # if the uploaded file's size would put the user over quota, bail and inform the user
       SOFT_QUOTA_FACTOR = 1.05 # fudge factor since content_length isn't really the file's actual size
-
-      user = self.__database.load( User, user_id )
-      if not user:
-        return dict(
-          state = "error",
-          stauts = httplib.FORBIDDEN,
-        )
 
       rate_plan = self.__users.rate_plan( user.rate_plan )
 
@@ -676,7 +676,7 @@ class Files( object ):
          user.storage_bytes + uploading_file.content_length > storage_quota_bytes * SOFT_QUOTA_FACTOR:
         return dict(
           state = "error",
-          stauts = httplib.REQUEST_ENTITY_TOO_LARGE,
+          status = httplib.REQUEST_ENTITY_TOO_LARGE,
         )
 
       return dict(
@@ -689,7 +689,7 @@ class Files( object ):
     if not db_file:
       return dict(
         state = "error",
-        stauts = httplib.NOT_FOUND,
+        status = httplib.NOT_FOUND,
       )
 
     if db_file.filename is None:

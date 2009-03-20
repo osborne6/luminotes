@@ -4,6 +4,7 @@ import os
 import time
 import types
 import urllib
+import httplib
 import cherrypy
 from nose.tools import raises
 from threading import Thread
@@ -84,7 +85,7 @@ class Test_files( Test_controller ):
       return fake_file is not None
 
     def close( self ):
-      self.complete()
+      pass
 
     Upload_file.open_file = open_file
     Upload_file.open_image = open_image
@@ -146,7 +147,7 @@ class Test_files( Test_controller ):
         expected_file_data = self.file_data
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -223,7 +224,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -245,7 +246,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -267,7 +268,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -298,7 +299,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -320,7 +321,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -504,7 +505,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -528,7 +529,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -552,7 +553,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -576,7 +577,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -600,7 +601,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -622,7 +623,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -663,7 +664,7 @@ class Test_files( Test_controller ):
     image.save( image_data, "PNG" )
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -700,7 +701,7 @@ class Test_files( Test_controller ):
     image.save( image_data, "PNG" )
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -737,7 +738,7 @@ class Test_files( Test_controller ):
     image.save( image_data, "PNG" )
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -774,7 +775,7 @@ class Test_files( Test_controller ):
     image.save( image_data, "PNG" )
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -812,7 +813,7 @@ class Test_files( Test_controller ):
     image.save( image_data, "PNG" )
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -843,7 +844,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -875,7 +876,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -897,7 +898,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -919,7 +920,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -953,7 +954,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -981,7 +982,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1009,7 +1010,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1036,7 +1037,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1058,7 +1059,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1088,29 +1089,25 @@ class Test_files( Test_controller ):
 
     assert u"access" in result[ u"body" ][ 0 ]
 
-  def test_upload_page( self ):
+  def test_upload_id( self ):
     self.login()
 
     result = self.http_get(
-      "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
+      "/files/upload_id?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
       session_id = self.session_id,
     )
 
-    assert result.get( u"notebook_id" ) == self.notebook.object_id
-    assert result.get( u"note_id" ) == self.note.object_id
     assert result.get( u"file_id" )
-    assert u"attach" in result.get( u"label_text" )
-    assert u"upload" in result.get( u"instructions_text" )
 
-  def test_upload_page_without_login( self ):
-    path = "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id )
+  def test_upload_id_without_login( self ):
+    path = "/files/upload_id?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id )
     result = self.http_get( path )
 
     headers = result.get( "headers" )
     assert headers
     assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
 
-  def test_upload_page_own_notes( self ):
+  def test_upload_id_own_notes( self ):
     self.login()
 
     self.database.execute( self.user.sql_update_access( 
@@ -1118,43 +1115,7 @@ class Test_files( Test_controller ):
     ) )
 
     result = self.http_get(
-      "/files/upload_page?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
-      session_id = self.session_id,
-    )
-
-    assert u"access" in result[ u"error" ]
-
-  def test_import_page( self ):
-    self.login()
-
-    result = self.http_get(
-      "/files/import_page?notebook_id=%s" % self.notebook.object_id,
-      session_id = self.session_id,
-    )
-
-    assert result.get( u"notebook_id" ) == self.notebook.object_id
-    assert result.get( u"note_id" ) == None
-    assert result.get( u"file_id" )
-    assert u"import" in result.get( u"label_text" )
-    assert u"import" in result.get( u"instructions_text" )
-
-  def test_import_page_without_login( self ):
-    path = "/files/import_page?notebook_id=%s" % self.notebook.object_id
-    result = self.http_get( path )
-
-    headers = result.get( "headers" )
-    assert headers
-    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
-
-  def test_import_page_own_notes( self ):
-    self.login()
-
-    self.database.execute( self.user.sql_update_access( 
-      self.notebook.object_id, read_write = Notebook.READ_WRITE_FOR_OWN_NOTES, owner = False,
-    ) )
-
-    result = self.http_get(
-      "/files/import_page?notebook_id=%s" % self.notebook.object_id,
+      "/files/upload_id?notebook_id=%s&note_id=%s" % ( self.notebook.object_id, self.note.object_id ),
       session_id = self.session_id,
     )
 
@@ -1165,7 +1126,7 @@ class Test_files( Test_controller ):
     orig_storage_bytes = self.user.storage_bytes
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1206,7 +1167,7 @@ class Test_files( Test_controller ):
     ) )
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1224,7 +1185,7 @@ class Test_files( Test_controller ):
 
   def test_upload_without_login( self ):
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1244,7 +1205,7 @@ class Test_files( Test_controller ):
     self.login2()
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1286,7 +1247,7 @@ class Test_files( Test_controller ):
     self.login()
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1307,7 +1268,7 @@ class Test_files( Test_controller ):
     self.login()
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1329,7 +1290,7 @@ class Test_files( Test_controller ):
     self.login()
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1341,8 +1302,7 @@ class Test_files( Test_controller ):
       session_id = self.session_id
     )
 
-    assert u"body" not in result
-    assert u"script" not in result
+    assert "cancel_due_to_error" in result.get( u"script" )
 
     db_file = self.database.load( File, self.file_id )
     assert db_file is None
@@ -1354,7 +1314,7 @@ class Test_files( Test_controller ):
     self.login()
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1379,7 +1339,7 @@ class Test_files( Test_controller ):
     orig_storage_bytes = self.user.storage_bytes
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1409,22 +1369,6 @@ class Test_files( Test_controller ):
     user = self.database.load( User, self.user.object_id )
     assert user.storage_bytes > orig_storage_bytes
 
-  def assert_streaming_error( self, result, error_string ):
-    gen = result[ u"body" ]
-    assert isinstance( gen, types.GeneratorType )
-
-    found_error = False
-
-    try:
-      for piece in gen:
-        if error_string in piece:
-          found_error = True
-    except AttributeError, exc:
-      if u"session_storage" not in str( exc ):
-        raise exc
-
-    assert found_error
-
   def test_progress( self ):
     self.database.execute( self.user2.sql_save_notebook( self.notebook.object_id, read_write = True, owner = False ) )
     self.database.execute( self.user2.sql_save_notebook( self.notebook.trash_id, read_write = True, owner = False ) )
@@ -1435,7 +1379,7 @@ class Test_files( Test_controller ):
     # start a file uploading in a separate thread
     def upload():
       self.http_upload(
-        "/files/upload?file_id=%s" % self.file_id,
+        "/files/upload?X-Progress-ID=%s" % self.file_id,
         dict(
           notebook_id = self.notebook.object_id,
           note_id = self.note.object_id,
@@ -1447,39 +1391,40 @@ class Test_files( Test_controller ):
       )
 
     self.upload_thread = Thread( target = upload )
-    self.upload_thread.start()
 
-    # report on that file's upload progress
     result = self.http_get(
-      "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
+      "/files/progress?X-Progress-ID=%s" % self.file_id,
       session_id = self.session_id,
     )
 
-    gen = result[ u"body" ]
-    assert isinstance( gen, types.GeneratorType )
+    assert result.get( u"state" ) == u"starting"
 
-    tick_count = 0
-    tick_done = False
-    complete = False
+    self.upload_thread.start()
 
-    try:
-      for piece in gen:
-        if u"tick(" in piece:
-          tick_count += 1
-        if u"tick(1.0)" in piece:
-          tick_done = True
-        if u"complete" in piece:
-          complete = True
-    # during this unit test, full session info isn't available, so swallow an expected
-    # exception about session_storage
-    except AttributeError, exc:
-      if u"session_storage" not in str( exc ):
-        raise exc
+    received = 0
+    size = 0
+    previous_received = 0
 
-    # assert that the progress bar is moving, and then completes
-    assert tick_count >= 2
-    assert tick_done
-    assert complete
+    # report on that file's upload progress
+    while True:
+      result = self.http_get(
+        "/files/progress?X-Progress-ID=%s" % self.file_id,
+        session_id = self.session_id,
+      )
+
+      state = result.get( u"state" )
+      assert state != "error"
+      if state == "starting": continue
+      if state == "done": break
+
+      if state == "uploading":
+        received = result.get( u"received" )
+        size = result.get( u"size" )
+        assert received
+        assert size
+        assert received < size
+        assert received >= previous_received
+        previous_received = received
 
   def test_progress_without_login( self ):
     self.database.execute( self.user2.sql_save_notebook( self.notebook.object_id, read_write = True, owner = False ) )
@@ -1491,7 +1436,7 @@ class Test_files( Test_controller ):
     # start a file uploading in a separate thread
     def upload():
       self.http_upload(
-        "/files/upload?file_id=%s" % self.file_id,
+        "/files/upload?X-Progress-ID=%s" % self.file_id,
         dict(
           notebook_id = self.notebook.object_id,
           note_id = self.note.object_id,
@@ -1506,12 +1451,15 @@ class Test_files( Test_controller ):
     self.upload_thread.start()
 
     # report on that file's upload progress
-    path = "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename )
-    result = self.http_get( path )
+    while True:
+      path = "/files/progress?X-Progress-ID=%s" % self.file_id
+      result = self.http_get( path )
 
-    headers = result.get( "headers" )
-    assert headers
-    assert headers.get( "Location" ) == u"http:///login?after_login=%s" % urllib.quote( path )
+      if result.get( u"state" ) != u"starting":
+        break
+
+    assert result.get( u"state" ) == u"error"
+    assert result.get( u"status" ) == httplib.FORBIDDEN
 
   def test_progress_for_completed_upload( self ):
     self.login()
@@ -1519,7 +1467,7 @@ class Test_files( Test_controller ):
 
     # upload a file completely
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1532,66 +1480,22 @@ class Test_files( Test_controller ):
 
     # report on that completed file's upload progress
     result = self.http_get(
-      "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
+      "/files/progress?X-Progress-ID=%s" % self.file_id,
       session_id = self.session_id,
     )
 
-    gen = result[ u"body" ]
-    assert isinstance( gen, types.GeneratorType )
-
-    complete = False
-
-    try:
-      for piece in gen:
-        if u"complete" in piece:
-          complete = True
-    # during this unit test, full session info isn't available, so swallow an expected
-    # exception about session_storage
-    except AttributeError, exc:
-      if u"session_storage" not in str( exc ):
-        raise exc
-
-    # assert that the progress bar is moving, and then completes
-    assert complete
+    assert result.get( u"state" ) == u"done"
 
   def test_progress_with_unknown_file_id( self ):
     self.login()
 
     result = self.http_get(
-      "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
+      "/files/progress?X-Progress-ID=%s" % self.file_id,
       session_id = self.session_id,
     )
 
-    assert u"error" in result[ u"body" ][ 0 ]
-    assert u"unknown" in result[ u"body" ][ 0 ]
-
-  def test_progress_over_quota( self ):
-    self.login()
-    self.database.save( File( object_id = self.file_id ) )
-
-    # start a large file uploading in a separate thread
-    def upload():
-      self.http_upload(
-        "/files/upload?file_id=%s" % self.file_id,
-        dict(
-          notebook_id = self.notebook.object_id,
-          note_id = self.note.object_id,
-        ),
-        filename = self.filename,
-        file_data = self.file_data * 1000,
-        content_type = self.content_type,
-        session_id = self.session_id,
-      )
-
-    self.upload_thread = Thread( target = upload )
-    self.upload_thread.start()
-
-    result = self.http_get(
-      "/files/progress?file_id=%s&filename=%s" % ( self.file_id, self.filename ),
-      session_id = self.session_id,
-    )
-
-    self.assert_streaming_error( result, u"quota" )
+    assert result.get( u"state" ) == u"error"
+    assert result.get( u"status" ) == httplib.NOT_FOUND
 
   def test_progress_no_quota( self ):
     self.settings[ u"global" ][ u"luminotes.rate_plans" ][ 1 ][ u"storage_quota_bytes" ] = None
@@ -1602,7 +1506,7 @@ class Test_files( Test_controller ):
     orig_storage_bytes = self.user.storage_bytes
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1633,7 +1537,7 @@ class Test_files( Test_controller ):
     ) )
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1655,7 +1559,7 @@ class Test_files( Test_controller ):
     self.login() # this login is for the upload, not the call to stats
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1677,7 +1581,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1711,7 +1615,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1744,7 +1648,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1773,7 +1677,7 @@ class Test_files( Test_controller ):
     self.login() # this login is for the upload, not the call to delete
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1797,7 +1701,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1837,7 +1741,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1869,7 +1773,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1899,7 +1803,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1931,7 +1835,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -1961,7 +1865,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2016,7 +1920,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2041,7 +1945,7 @@ class Test_files( Test_controller ):
     csv_data = ""
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2062,7 +1966,7 @@ class Test_files( Test_controller ):
     csv_data = '"See, Vera? Dress yourself up, you get taken out somewhere fun. -- Jayne'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2083,7 +1987,7 @@ class Test_files( Test_controller ):
     csv_data = self.file_data + "\x00"
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2109,7 +2013,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2134,7 +2038,7 @@ class Test_files( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff"\n"8","whee","hmm\nfoo",4.4\n3,4,5'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2162,7 +2066,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2198,7 +2102,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2227,7 +2131,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2256,7 +2160,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2286,7 +2190,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2321,7 +2225,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2349,7 +2253,7 @@ class Test_files( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2373,7 +2277,7 @@ class Test_files( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5\n6,7,8\n"yay",9,10'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2413,7 +2317,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2448,7 +2352,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2484,7 +2388,7 @@ class Test_files( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2511,7 +2415,7 @@ class Test_files( Test_controller ):
     self.login()
 
     result = self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2536,7 +2440,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2562,7 +2466,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2588,7 +2492,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2615,7 +2519,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2642,7 +2546,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2669,7 +2573,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2696,7 +2600,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2722,7 +2626,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2748,7 +2652,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2764,7 +2668,7 @@ class Test_files( Test_controller ):
 
     other_file_id = u"23"
     self.http_upload(
-      "/files/upload?file_id=%s" % other_file_id,
+      "/files/upload?X-Progress-ID=%s" % other_file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2793,7 +2697,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2809,7 +2713,7 @@ class Test_files( Test_controller ):
 
     other_file_id = u"23"
     self.http_upload(
-      "/files/upload?file_id=%s" % other_file_id,
+      "/files/upload?X-Progress-ID=%s" % other_file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2838,7 +2742,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2854,7 +2758,7 @@ class Test_files( Test_controller ):
 
     other_file_id = u"23"
     self.http_upload(
-      "/files/upload?file_id=%s" % other_file_id,
+      "/files/upload?X-Progress-ID=%s" % other_file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2883,7 +2787,7 @@ class Test_files( Test_controller ):
     self.login()
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -2899,7 +2803,7 @@ class Test_files( Test_controller ):
 
     other_file_id = u"23"
     self.http_upload(
-      "/files/upload?file_id=%s" % other_file_id,
+      "/files/upload?X-Progress-ID=%s" % other_file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
