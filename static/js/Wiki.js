@@ -3661,6 +3661,9 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
   appendChildNodes( this.upload_area, createDOM( "input", { "name": "file_id", "id": "file_id", "type": "hidden", "value": "new" } ) );
   appendChildNodes( this.div, this.upload_area );
 
+  // for the benefit of Internet Explorer
+  getElement( "upload_form" ).encoding = "multipart/form-data";
+
   connect( this.upload_button, "onclick", function ( event ) {
     self.upload_started();
   } );
@@ -3692,6 +3695,7 @@ Upload_pulldown.prototype.update_file_id = function ( result ) {
 }
 
 Upload_pulldown.prototype.upload_started = function ( file_id ) {
+  this.ephemeral = false;
   this.uploading = true;
   var filename = base_upload_filename();
 
