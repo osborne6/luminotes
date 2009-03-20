@@ -2,6 +2,8 @@ gzip_comp_level 4;
 gzip_min_length 1100;
 gzip_types text/plain text/html text/css application/x-javascript;
 
+upload_progress luminotes 1m;
+
 upstream luminotes {
   server 127.0.0.1:8081;
 }
@@ -15,6 +17,11 @@ server {
   location / {
     proxy_pass http://luminotes;
     client_max_body_size 505m;
+    track_uploads luminotes 30s;
+  }
+
+  location ^~ /files/progress {
+    report_uploads luminotes;
   }
 
   location /download/ {

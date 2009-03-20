@@ -3641,10 +3641,10 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
   appendChildNodes( this.upload_area, createDOM( "form",
     {
       "target": "upload_frame",
-      "action": "/files/upload?file_id=new",
+      "action": "/files/upload?X-Progress-ID=new&file_id=new",
       "method": "post",
       "enctype": "multipart/form-data",
-      "id": "upload_form"
+      "id": "upload_form",
     },
     createDOM( "span", { "class": "field_label" }, this.link ? "attach file: " : "import file: " ),
     createDOM( "input", { "name": "notebook_id", "id": "notebook_id", "type": "hidden", "value": notebook_id } ),
@@ -3681,7 +3681,7 @@ Upload_pulldown.prototype.update_file_id = function ( result ) {
 
   var upload_form = getElement( "upload_form" )
   if ( upload_form )
-    upload_form.action = "/files/upload?file_id=" + this.file_id;
+    upload_form.action = "/files/upload?X-Progress-ID=" + this.file_id;
 
   var file_id_node = getElement( "file_id" );
   if ( file_id_node )
@@ -3738,9 +3738,8 @@ Upload_pulldown.prototype.update_progress = function () {
   var self = this;
   var BAR_WIDTH_EM = 20.0;
 
-  // TODO: send X- HTTP header nginx expects with file_id
   this.invoker.invoke( "/files/progress", "GET",
-    { "file_id": this.file_id },
+    { "X-Progress-ID": this.file_id },
     function( result ) {
       var fraction_done = 0.0;
       if ( !self.uploading )

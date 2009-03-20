@@ -169,8 +169,8 @@ as per the example configuration file in examples/apache_luminotes.
 
 For nginx, if you want a working upload progress bar, build and install a
 version of nginx with the NginxHttpUploadProgressModule enabled. See:
-http://wiki.nginx.org//NginxHttpUploadProgressModule for more information.
-Then, configure nginx as per the example configuration file in
+http://github.com/masterzen/nginx-upload-progress-module/ for more
+information. Then, configure nginx as per the example configuration file in
 examples/nginx_luminotes.
 
 For either web server, you should change the paths in your configuration file

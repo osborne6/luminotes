@@ -133,7 +133,10 @@ class Upload_file( object ):
 
   @staticmethod
   def delete_file( file_id ):
-    return os.remove( Upload_file.make_server_filename( file_id ) )
+    try:
+      return os.remove( Upload_file.make_server_filename( file_id ) )
+    except OSError:
+      pass
 
   filename = property( lambda self: self.__filename )
 
@@ -174,7 +177,7 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
     # pluck the file id out of the query string. it would be preferable to grab it out of parsed
     # form variables instead, but at this point in the processing, all the form variables might not
     # be parsed
-    file_id = cgi.parse_qs( cherrypy.request.query_string ).get( u"file_id", [ None ] )[ 0 ]
+    file_id = cgi.parse_qs( cherrypy.request.query_string ).get( u"X-Progress-ID", [ None ] )[ 0 ]
     try:
       file_id = Valid_id()( file_id )
     except ValueError:
@@ -549,13 +552,13 @@ class Files( object ):
     upload = (),
     notebook_id = Valid_id(),
     note_id = Valid_id( none_okay = True ),
-    file_id = Valid_id(),
+    x_progress_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def upload( self, upload, notebook_id, note_id, file_id, user_id ):
+  def upload( self, upload, notebook_id, note_id, x_progress_id, user_id ):
     """
-    Upload a file from the client for attachment to a particular note. The file_id must be provided
-    as part of the query string, even if the other values are submitted as form data.
+    Upload a file from the client for attachment to a particular note. The x_progress_id must be
+    provided as part of the query string, even if the other values are submitted as form data.
 
     @type upload: cgi.FieldStorage
     @param upload: file handle to uploaded file
@@ -563,8 +566,8 @@ class Files( object ):
     @param notebook_id: id of the notebook that the upload is to
     @type note_id: unicode or NoneType
     @param note_id: id of the note that the upload is to (if any)
-    @type file_id: unicode
-    @param file_id: id of the file being uploaded
+    @type x_progess_id: unicode
+    @param x_progess_id: id of the file being uploaded
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: unicode
@@ -573,6 +576,7 @@ class Files( object ):
     @raise Upload_error: the Content-Length header value is invalid
     """
     global current_uploads, current_uploads_lock
+    file_id = x_progress_id
 
     current_uploads_lock.acquire()
     try:
@@ -624,10 +628,10 @@ class Files( object ):
   @end_transaction
   @grab_user_id
   @validate(
-    file_id = Valid_id(),
+    x_progress_id = Valid_id(),
     user_id = Valid_id( none_okay = True ),
   )
-  def progress( self, file_id, user_id = None ):
+  def progress( self, x_progress_id, user_id = None ):
     """
     Return information on a file that is in the process of being uploaded. This method does not
     perform any access checks, but the only information revealed is the file's upload progress.
@@ -636,8 +640,8 @@ class Files( object ):
     intended to mimic the API described here:
     http://wiki.nginx.org//NginxHttpUploadProgressModule
 
-    @type file_id: unicode
-    @param file_id: id of a currently uploading file
+    @type x_progress_id: unicode
+    @param x_progress_id: id of a currently uploading file
     @type user_id: unicode or NoneType
     @param user_id: id of current logged-in user (if any)
     @rtype: dict
@@ -649,6 +653,7 @@ class Files( object ):
         'received': bytes_received, 'size': total_bytes }
     """
     global current_uploads
+    file_id = x_progress_id
 
     uploading_file = current_uploads.get( file_id )
     db_file = None

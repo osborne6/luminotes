@@ -221,6 +221,13 @@ def validate( **expected ):
       args = list( args )
       args_index = 1 # skip the self argument
 
+      # make sure all kwarg names are lowercase and don't have dashes
+      for ( kwarg_name, value ) in kwargs.items():
+        new_kwarg_name = kwarg_name.replace( "-", "_" ).lower()
+        if new_kwarg_name != kwarg_name:
+          del( kwargs[ kwarg_name ] )
+          kwargs[ new_kwarg_name ] = value
+
       # determine the expected argument names from the decorated function itself
       code = function.func_code
       expected_names = code.co_varnames[ : code.co_argcount ]
