@@ -217,9 +217,9 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
     make_file() whenever there is a filename instead of only for large enough files.
     """
     if self.__file is not None and self.filename:
-        self.file = self.make_file( '' )
-        self.file.write( self.__file.getvalue() )
-        self.__file = None
+      self.file = self.make_file( "" )
+      self.file.write( self.__file.getvalue() )
+      self.__file = None
 
     self.file.write( line )
 
