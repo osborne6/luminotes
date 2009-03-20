@@ -78,7 +78,7 @@ class Test_notebooks( Test_controller ):
       return fake_file is not None
 
     def close( self ):
-      self.complete()
+      pass
 
     Upload_file.open_file = open_file
     Upload_file.open_image = open_image
@@ -5928,7 +5928,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6035,7 +6035,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6067,7 +6067,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6099,7 +6099,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6139,7 +6139,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6166,7 +6166,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6198,7 +6198,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6230,7 +6230,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6262,7 +6262,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6294,7 +6294,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6326,7 +6326,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6358,7 +6358,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6392,7 +6392,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6426,7 +6426,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6458,7 +6458,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6489,7 +6489,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6521,7 +6521,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6553,7 +6553,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6585,7 +6585,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6617,7 +6617,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6649,7 +6649,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6681,7 +6681,7 @@ class Test_notebooks( Test_controller ):
     ]
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6710,7 +6710,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6749,7 +6749,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6788,7 +6788,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6827,7 +6827,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3","note_id",\n5,"blah and stuff","3.<b>3 &nbsp;</b>",idone\n"8","whee","hmm\n<a href=""%s"">foo</a>",idtwo\n3,4,5,idthree' % note_url
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6862,7 +6862,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3",\n5,"blah and stuff","3.<b>3 &nbsp;</b>"\n"8","whee","hmm\n<a href=""%s"">foo</a>"\n3,4,5' % note_url
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6895,7 +6895,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
@@ -6923,7 +6923,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",3.3\n"8","whee","hmm\nfoo"\n3,4,5'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook2.object_id,
         note_id = self.note.object_id,
@@ -6952,7 +6952,7 @@ class Test_notebooks( Test_controller ):
     csv_data = '"label 1","label 2","label 3"\n5,"blah and stuff",,,,,,3.3\n"8","whee","hmm\nfoo"\n3,4,5'
 
     self.http_upload(
-      "/files/upload?file_id=%s" % self.file_id,
+      "/files/upload?X-Progress-ID=%s" % self.file_id,
       dict(
         notebook_id = self.notebook.object_id,
         note_id = self.note.object_id,
