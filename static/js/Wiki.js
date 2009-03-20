@@ -3631,6 +3631,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
   this.uploading = false;
   this.poller = null;
   this.poll_interval = 250; // in milliseconds, expontentially backing off. see update_progress()
+  this.starting_count = 0;
 
   var self = this;
 
@@ -3745,6 +3746,17 @@ Upload_pulldown.prototype.update_progress = function () {
       if ( !self.uploading )
         return;
 
+      if ( result.state == "starting" )
+        self.starting_count += 1;
+      else
+        self.starting_count = 0;
+
+      // if ten consecutive "starting" states in a row, bail
+      if ( self.starting_count >= 10 ) {
+        self.cancel_due_to_error( "A timeout error occurred when uploading the file." );
+        return
+      }
+
       if ( result.state == "error" ) {
         if ( result.status == 413 )
           self.cancel_due_to_quota();
@@ -3753,10 +3765,13 @@ Upload_pulldown.prototype.update_progress = function () {
         return;
       }
 
-      if ( result.state == "uploading" && result.size > 0 )
+      if ( result.state == "uploading" && result.size > 0 ) {
         fraction_done = Math.min( result.received / result.size, 1.0 );
-      else if ( result.state == "done" )
+        if ( fraction_done > 0.99 )
+          fraction_done = 0.99;
+      } else if ( result.state == "done" ) {
         fraction_done = 1.0;
+      }
 
       if ( fraction_done > 0.0 ) {
         var percent = fraction_done * 100.0;
