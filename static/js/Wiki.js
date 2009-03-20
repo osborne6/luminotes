@@ -3710,18 +3710,20 @@ Upload_pulldown.prototype.upload_started = function ( file_id ) {
   this.cancel_button = createDOM( "input", { "type": "submit", "id": "cancel_button", "class": "button", "value": "cancel" } );
 
   var progress_area = createDOM( "table", {},
-    createDOM( "tr", {},
-      createDOM( "td", { "class": "field_label", "colspan": "2" }, "uploading " + filename + ": " )
-    ),
-    createDOM( "tr", { "id": "progress_row" },
-      createDOM( "td", {},
-        createDOM( "div", { "id": "progress_border" },
-          createDOM( "img", { "src": "/static/images/tick.png", "id": "progress_bar" } )
-        )
+    createDOM( "tbody", {}, 
+      createDOM( "tr", {},
+        createDOM( "td", { "class": "field_label", "colspan": "2" }, "uploading " + filename + ": " )
       ),
-      createDOM( "td", { "class": "progress_right" },
-        createDOM( "span", { "id": "progress_percent" }, "0%" ),
-        this.cancel_button
+      createDOM( "tr", { "id": "progress_row" },
+        createDOM( "td", {},
+          createDOM( "div", { "id": "progress_border" },
+            createDOM( "img", { "src": "/static/images/tick.png", "id": "progress_bar" } )
+          )
+        ),
+        createDOM( "td", { "class": "progress_right" },
+          createDOM( "span", { "id": "progress_percent" }, "0%" ),
+          this.cancel_button
+        )
       )
     )
   );
