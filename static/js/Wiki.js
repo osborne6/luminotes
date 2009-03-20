@@ -3630,7 +3630,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
   this.file_id = null;
   this.uploading = false;
   this.poller = null;
-  this.poll_interval = 100; // in milliseconds, expontentially backing off. see update_progress()
+  this.poll_interval = 250; // in milliseconds, expontentially backing off. see update_progress()
 
   var self = this;
 
