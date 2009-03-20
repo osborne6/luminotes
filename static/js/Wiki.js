@@ -3645,7 +3645,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
       "action": "/files/upload?X-Progress-ID=new&file_id=new",
       "method": "post",
       "enctype": "multipart/form-data",
-      "id": "upload_form",
+      "id": "upload_form"
     },
     createDOM( "span", { "class": "field_label" }, this.link ? "attach file: " : "import file: " ),
     createDOM( "input", { "name": "notebook_id", "id": "notebook_id", "type": "hidden", "value": notebook_id } ),
