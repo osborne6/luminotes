@@ -3776,7 +3776,6 @@ Upload_pulldown.prototype.update_progress = function () {
           if ( self.poll_interval > CAP )
             self.poll_interval = CAP;
         }
-        console.log( self.poll_interval );
           
         this.poller = setTimeout( function () { self.update_progress(); }, self.poll_interval );
       }
