@@ -999,7 +999,7 @@ Wiki.prototype.display_link_pulldown = function ( editor, link, ephemeral ) {
         new Link_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
       else {
         if ( /\/files\/new$/.test( link.href ) )
-          new Upload_pulldown( this, this.notebook.object_id, this.invoker, editor, link, null, ephemeral );
+          new Upload_pulldown( this, this.notebook.object_id, this.invoker, editor, link, null );
         else
           new File_link_pulldown( this, this.notebook.object_id, this.invoker, editor, link, ephemeral );
       }
@@ -3210,6 +3210,8 @@ Pulldown.prototype.update_position = function ( always_left_align ) {
 }
 
 Pulldown.prototype.shutdown = function () {
+  disconnectAll( this.div );
+
   if ( this.div && this.div.parentNode )
     removeElement( this.div );
 }
@@ -3602,7 +3604,7 @@ function base_upload_filename() {
 }
 
 
-function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephemeral ) {
+function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor ) {
   this.link = link || ( editor ? editor.find_link_at_cursor() : null );
   if ( this.link )
     this.link.pulldown = this;
@@ -3612,7 +3614,7 @@ function Upload_pulldown( wiki, notebook_id, invoker, editor, link, anchor, ephe
     "upload_" + ( editor ? editor.id : "import" ),
     this.link || anchor,
     editor ? editor.iframe : null,
-    ephemeral
+    false
   );
 
   wiki.down_image_button( "attachFile" );
@@ -3695,7 +3697,6 @@ Upload_pulldown.prototype.update_file_id = function ( result ) {
 }
 
 Upload_pulldown.prototype.upload_started = function ( file_id ) {
-  this.ephemeral = false;
   this.uploading = true;
   var filename = base_upload_filename();
 
