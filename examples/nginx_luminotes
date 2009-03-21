@@ -16,6 +16,7 @@ server {
 
   location / {
     proxy_pass http://luminotes;
+    proxy_redirect off;
     client_max_body_size 505m;
     track_uploads luminotes 30s;
   }
