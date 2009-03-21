@@ -1341,7 +1341,7 @@ Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
 
 Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
-  if ( !button || !button.filename_preifx )
+  if ( !button || !button.filename_prefix )
     return;
 
   var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );

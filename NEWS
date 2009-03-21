@@ -1,5 +1,6 @@
 1.6.11: 
- *
+ * Fixed a bug in which toolbar buttons didn't depress based on the current
+   location of the text cursor.
 
 1.6.10: March 20, 2009
  * Faster uploads and downloads for users of luminotes.com.
