@@ -258,6 +258,8 @@ data_files = [
   ] ) ),
   ( "static/images/toolbar", files( "static/images/toolbar/*.*", excludes = [ "static/images/toolbar/*.xcf" ] ) ),
   ( "static/images/toolbar/small", files( "static/images/toolbar/small/*.*", excludes = [ "static/images/toolbar/small/*.xcf" ]  ) ),
+  ( "static/images/toolbar/themes/*", files( "static/images/toolbar/themes/*/*.*", excludes = [ "static/images/toolbar//themes/*/*.xcf" ] ) ),
+  ( "static/images/toolbar/themes/*/small", files( "static/images/toolbar/themes/*/small/*.*", excludes = [ "static/images/toolbar/themes/*/small/*.xcf" ]  ) ),
   ( "static/js", files( "static/js/*.*" ) ),
   ( "static/js", files( "static/js/*_LICENSE" ) ),
   ( "model/delta", files( "model/delta/*.sqlite" ) ),

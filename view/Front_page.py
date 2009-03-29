@@ -361,16 +361,7 @@ class Front_page( Product_page ):
       ),
 
       P(
-        Span( id = u"new_note_button_preload" ),
-        Span( id = u"link_button_preload" ),
-        Span( id = u"bold_button_preload" ),
-        Span( id = u"italic_button_preload" ),
-        Span( id = u"underline_button_preload" ),
-        Span( id = u"strikethrough_button_preload" ),
-        Span( id = u"font_button_preload" ),
-        Span( id = u"title_button_preload" ),
-        Span( id = u"bullet_list_button_preload" ),
-        Span( id = u"numbered_list_button_preload" ),
-        Span( id = u"note_icon_preload" ),
+        Span( id = u"buttons_preload" ),
+        Span( id = u"themes_default_buttons_preload" ),
       ),
     )

@@ -58,203 +58,79 @@ h1 {
 }
 
 #toolbar .image_button {
+  background: transparent url(/static/images/toolbar/buttons.png);
+  height: 40px;
+  width: 40px;
+  padding: 0px;
+  border-style: none;
   outline: none;
+  position: relative;
 }
 
-#toolbar div {
-  margin-bottom: 0.1em;
+#toolbar .button_background {
+  background: transparent url(/static/images/toolbar/themes/default/buttons.png);
+  background-position: 40px 0;
+  height: 40px;
+  width: 40px;
+  padding: 0px;
+  border-style: none;
+  margin-bottom: 0.25em;
 }
 
-#new_note_button_hover_preload {
+#toolbar #newNote {
+  background-position: 200px 0;
+}
+
+#toolbar #createLink {
+  background-position: 240px 0;
+}
+
+#toolbar #attachFile {
+  background-position: 0 0;
+}
+
+#toolbar #bold {
+  background-position: 440px 0;
+}
+
+#toolbar #italic {
+  background-position: 280px 0;
+}
+
+#toolbar #underline {
+  background-position: 40px 0;
+}
+
+#toolbar #strikethrough {
+  background-position: 120px 0;
+}
+
+#toolbar #font {
+  background-position: 360px 0;
+}
+
+#toolbar #title {
+  background-position: 80px 0;
+}
+
+#toolbar #insertUnorderedList {
+  background-position: 400px 0;
+}
+
+#toolbar #insertOrderedList {
+  background-position: 160px 0;
+}
+
+#buttons_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/new_note_button_hover.png);
+  background-image: url(/static/images/toolbar/buttons.png);
 }
 
-#link_button_hover_preload {
+#theme_default_buttons_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/link_button_hover.png);
-}
-
-#attach_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/attach_button_hover.png);
-}
-
-#bold_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/bold_button_hover.png);
-}
-
-#italic_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/italic_button_hover.png);
-}
-
-#underline_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/underline_button_hover.png);
-}
-
-#strikethrough_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/strikethrough_button_hover.png);
-}
-
-#font_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/font_button_hover.png);
-}
-
-#bullet_list_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/bullet_list_button_hover.png);
-}
-
-#numbered_list_button_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/numbered_list_button_hover.png);
-}
-
-#new_note_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/new_note_button_down_hover.png);
-}
-
-#link_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/link_button_down_hover.png);
-}
-
-#attach_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/attach_button_down_hover.png);
-}
-
-#bold_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/bold_button_down_hover.png);
-}
-
-#italic_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/italic_button_down_hover.png);
-}
-
-#underline_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/underline_button_down_hover.png);
-}
-
-#strikethrough_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/strikethrough_button_down_hover.png);
-}
-
-#font_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/font_button_down_hover.png);
-}
-
-#bullet_list_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/bullet_list_button_down_hover.png);
-}
-
-#numbered_list_button_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/numbered_list_button_down_hover.png);
-}
-
-#new_note_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/new_note_button_down.png);
-}
-
-#link_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/link_button_down.png);
-}
-
-#attach_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/attach_button_down.png);
-}
-
-#bold_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/bold_button_down.png);
-}
-
-#italic_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/italic_button_down.png);
-}
-
-#underline_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/underline_button_down.png);
-}
-
-#strikethrough_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/strikethrough_button_down.png);
-}
-
-#font_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/font_button_down.png);
-}
-
-#bullet_list_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/bullet_list_button_down.png);
-}
-
-#numbered_list_button_down_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/toolbar/numbered_list_button_down.png);
-}
-
-#current_notebook_up_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/up_arrow_hover.png);
-}
-
-#current_notebook_down_hover_preload {
-  height: 0;
-  overflow: hidden;
-  background-image: url(/static/images/down_arrow_hover.png);
+  background-image: url(/static/images/toolbar/themes/default/buttons.png);
 }
 
 #tree_arrow_hover_preload {

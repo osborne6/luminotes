@@ -24,6 +24,7 @@ function Wiki( invoker ) {
   this.groups = evalJSON( getElement( "groups" ).value );
   this.font_size = null;
   this.small_toolbar = false;
+  this.theme = "default";
   this.large_toolbar_bottom = 0;
   this.autosaver = null;
 
@@ -348,18 +349,18 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
     connect( "insertOrderedList", "onclick", function ( event ) { self.toggle_button( event, "insertOrderedList" ); } );
 
-    this.make_image_button( "newNote", "new_note" );
-    this.make_image_button( "createLink", "link" );
+    this.make_image_button( "newNote" );
+    this.make_image_button( "createLink" );
     if ( this.notebook.read_write == NOTEBOOK_READ_WRITE )
-      this.make_image_button( "attachFile", "attach" );
+      this.make_image_button( "attachFile" );
     this.make_image_button( "bold" );
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
     this.make_image_button( "strikethrough" );
     this.make_image_button( "font" );
     this.make_image_button( "title" );
-    this.make_image_button( "insertUnorderedList", "bullet_list" );
-    this.make_image_button( "insertOrderedList", "numbered_list" );
+    this.make_image_button( "insertUnorderedList" );
+    this.make_image_button( "insertOrderedList" );
 
     // grab the next available object id
     this.invoker.invoke( "/next_id", "POST", null,
@@ -454,7 +455,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       event.stop();
     } );
 
-    this.make_image_button( "new_notebook", "new_note", true );
+    this.make_image_button( "new_notebook", true );
   }
 
   var new_note_tree_link_button = getElement( "new_note_tree_link" );
@@ -466,7 +467,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
       event.stop();
     } );
 
-    this.make_image_button( "new_note_tree_link", "new_note", true );
+    this.make_image_button( "new_note_tree_link", true );
   }
 }
 
@@ -1262,20 +1263,13 @@ Wiki.prototype.focus_next_editor = function () {
   next_editor.highlight();
 }
 
-Wiki.prototype.get_toolbar_image_dir = function ( always_small ) {
-  var toolbar_image_dir = IMAGE_DIR + "toolbar/";
-  if ( always_small || this.small_toolbar )
-    toolbar_image_dir += "small/";
-
-  return toolbar_image_dir;
-}
-
 Wiki.prototype.resize_toolbar_button = function ( button ) {
   var SMALL_BUTTON_SIZE = 20;
   var LARGE_BUTTON_SIZE = 40;
 
   var button_size = getElementDimensions( button );
   
+  return false; // TODO!!!
   if ( this.small_toolbar || button.always_small ) {
     if ( button_size.w == SMALL_BUTTON_SIZE ) return false;
     setElementDimensions( button, { "w": SMALL_BUTTON_SIZE, "h": SMALL_BUTTON_SIZE } );
@@ -1287,109 +1281,146 @@ Wiki.prototype.resize_toolbar_button = function ( button ) {
   return true;
 }
 
-Wiki.prototype.make_image_button = function ( name, filename_prefix, always_small ) {
+Wiki.prototype.make_image_button = function ( name, always_small ) {
   var button = getElement( name );
-  var toolbar_image_dir = this.get_toolbar_image_dir( always_small );
-
-  if ( !filename_prefix )
-    filename_prefix = name;
 
   button.name = name;
-  button.filename_prefix = filename_prefix;
   button.always_small = always_small;
 
   this.resize_toolbar_button( button );
   this.connect_image_button( button );
 }
 
-Wiki.prototype.connect_image_button = function ( button, filename_prefix ) {
+var BUTTON_UP = "40px 0px";
+var BUTTON_HOVER_UP = "80px 0px";
+var BUTTON_DOWN = "120px 0px";
+var BUTTON_HOVER_DOWN = "160px 0px";
+var BUTTON_DOWN_OFFSET = 2;
+
+Wiki.prototype.connect_image_button = function ( button ) {
   var self = this;
 
   connect( button, "onmouseover", function ( event ) {
-    var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
-    if ( /_down/.test( button.src ) )
-      button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
-    else
-      button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
+    var bg_pos = getStyle( button.parentNode, "background-position" );
+    if ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
+      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    } else {
+      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+      setElementPosition( button, { "x": 0, "y": 0 } );
+    }
   } );
 
   connect( button, "onmouseout", function ( event ) {
-    var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
-    if ( /_down/.test( button.src ) )
-      button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
-    else
-      button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
+    var bg_pos = getStyle( button.parentNode, "background-position" );
+    if ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
+      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    } else {
+      setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+      setElementPosition( button, { "x": 0, "y": 0 } );
+    }
   } );
 
-  if ( button.name == "newNote" || button.name == "new_notebook" || button.name == "new_note_tree_link" ) {
-    connect( button, "onmousedown", function ( event ) {
-      var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
-      if ( /_hover/.test( button.src ) )
-        button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
-      else
-        button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
-    } );
+
+  function stateless_button( button ) {
+    return ( button.name == "newNote" || button.name == "new_notebook" || button.name == "new_note_tree_link" );
+  }
+
+  connect( button, "onmousedown", function ( event ) {
+    event.stop(); // prevents button outline from being shown
+
+    // bail if there is no focused editor on which to act
+    if ( !self.focused_editor && !stateless_button( button ) )
+      return;
+
+    var bg_pos = getStyle( button.parentNode, "background-position" );
+    if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
+      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    } else {
+      setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
+      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    }
+  } );
+
+  if ( stateless_button( button ) ) {
     connect( button, "onmouseup", function ( event ) {
-      var toolbar_image_dir = self.get_toolbar_image_dir( button.always_small );
-      if ( /_hover/.test( button.src ) )
-        button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
-      else
-        button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
+      var bg_pos = getStyle( button.parentNode, "background-position" );
+      if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
+        setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+        setElementPosition( button, { "x": 0, "y": 0 } );
+      } else {
+        setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+        setElementPosition( button, { "x": 0, "y": 0 } );
+      }
     } );
   }
 }
 
 Wiki.prototype.down_image_button = function ( name ) {
   var button = getElement( name );
-  if ( !button || !button.filename_prefix )
+  if ( !button )
     return;
 
-  var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
+  var bg_pos = getStyle( button.parentNode, "background-position" );
 
-  if ( !this.resize_toolbar_button( button ) && /_down/.test( button.src ) )
+  if ( !this.resize_toolbar_button( button ) && ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) )
     return;
 
-  if ( /_hover/.test( button.src ) )
-    button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
-  else
-    button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
+  if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
+    setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
+    setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+  } else {
+    setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
+    setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+  }
 }
 
 Wiki.prototype.up_image_button = function ( name ) {
   var button = getElement( name );
-  if ( !button || !button.filename_prefix )
+  if ( !button )
     return;
 
-  var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
+  var bg_pos = getStyle( button.parentNode, "background-position" );
 
-  if ( !this.resize_toolbar_button( button ) && !/_down/.test( button.src ) )
+  if ( !this.resize_toolbar_button( button ) && ( bg_pos == BUTTON_UP || bg_pos == BUTTON_HOVER_UP ) )
     return;
 
-  if ( /_hover/.test( button.src ) )
-    button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
-  else
-    button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
+  if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
+    setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+    setElementPosition( button, { "x": 0, "y": 0 } );
+  } else {
+    setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+    setElementPosition( button, { "x": 0, "y": 0 } );
+  }
 }
 
 Wiki.prototype.toggle_image_button = function ( name ) {
   var button = getElement( name );
-  if ( !button || !button.filename_prefix )
+  if ( !button )
     return;
 
-  var toolbar_image_dir = this.get_toolbar_image_dir( button.always_small );
+  var bg_pos = getStyle( button.parentNode, "background-position" );
 
-  if ( /_down/.test( button.src ) ) {
-    if ( /_hover/.test( button.src ) )
-      button.src = toolbar_image_dir + button.filename_prefix + "_button_hover.png";
-    else
-      button.src = toolbar_image_dir + button.filename_prefix + "_button.png";
+  if ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) {
+    if ( bg_pos == BUTTON_HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+      setElementPosition( button, { "x": 0, "y": 0 } );
+    } else {
+      setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+      setElementPosition( button, { "x": 0, "y": 0 } );
+    }
     this.resize_toolbar_button( button );
     return false;
   } else {
-    if ( /_hover/.test( button.src ) )
-      button.src = toolbar_image_dir + button.filename_prefix + "_button_down_hover.png";
-    else
-      button.src = toolbar_image_dir + button.filename_prefix + "_button_down.png";
+    if ( bg_pos == BUTTON_HOVER_UP ) {
+      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
+      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    } else {
+      setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
+      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    }
     this.resize_toolbar_button( button );
     return true;
   }

@@ -10,6 +10,9 @@ buttons are at 14 pt. The link button is at 8 pt. The list buttons are at 6
 pt with a -3 pixel line spacing. Down (pressed) buttons have their text offset
 by one pixel down and one pixel right.
 
+The combined toolbar buttons image is created with the "montage" ImageMagick
+command. Use tools/tile_images.sh to do this.
+
 To make the white glowing effect (which isn't present on any buttons
 currently), start with black text on a transparent background in the Gimp.
 Duplicate the layer, and move that duplicate underneath the original layer.
