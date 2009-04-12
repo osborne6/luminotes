@@ -64,6 +64,15 @@ where
       note_current.revision < now() - interval '1 day'
   );
 
+delete from
+  note_current
+where (
+  notebook_id is null or notebook_id not in
+    ( select notebook_id from notebook_current )
+)
+and
+  note_current.revision < now() - interval '1 day';
+
 -- Delete unused file next ids and files whose notebooks or notes no longer exist.
 delete from
   file
