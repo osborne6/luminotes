@@ -68,7 +68,7 @@ h1 {
 }
 
 #toolbar .button_background {
-  background: transparent url(/static/images/toolbar/themes/default/buttons.png);
+  background: transparent url(/static/themes/default/images/toolbar/buttons.png);
   background-position: 40px 0;
   height: 40px;
   width: 40px;
@@ -130,7 +130,7 @@ h1 {
 #theme_default_buttons_preload {
   height: 0;
   overflow: hidden;
-  background-image: url(/static/images/toolbar/themes/default/buttons.png);
+  background-image: url(/static/themes/default/images/toolbar/buttons.png);
 }
 
 #tree_arrow_hover_preload {
