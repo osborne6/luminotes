@@ -1268,14 +1268,24 @@ Wiki.prototype.resize_toolbar_button = function ( button ) {
   var LARGE_BUTTON_SIZE = 40;
 
   var button_size = getElementDimensions( button );
+  var offsets = this.button_offsets();
   
-  return false; // TODO!!!
   if ( this.small_toolbar || button.always_small ) {
     if ( button_size.w == SMALL_BUTTON_SIZE ) return false;
+    setElementDimensions( button.parentNode, { "w": SMALL_BUTTON_SIZE, "h": SMALL_BUTTON_SIZE } );
     setElementDimensions( button, { "w": SMALL_BUTTON_SIZE, "h": SMALL_BUTTON_SIZE } );
+    addElementClass( button.parentNode, "button_background_small" );
+    addElementClass( button, "image_button_small" );
+    addElementClass( button, button.name + "_small" );
+    removeElementClass( button, button.name + "_large" );
   } else {
     if ( button_size.w == LARGE_BUTTON_SIZE ) return false;
+    setElementDimensions( button.parentNode, { "w": LARGE_BUTTON_SIZE, "h": LARGE_BUTTON_SIZE } );
     setElementDimensions( button, { "w": LARGE_BUTTON_SIZE, "h": LARGE_BUTTON_SIZE } );
+    removeElementClass( button.parentNode, "button_background_small" );
+    removeElementClass( button, "image_button_small" );
+    addElementClass( button, button.name + "_large" );
+    removeElementClass( button, button.name + "_small" );
   }
 
   return true;
@@ -1291,33 +1301,51 @@ Wiki.prototype.make_image_button = function ( name, always_small ) {
   this.connect_image_button( button );
 }
 
-var BUTTON_UP = "40px 0px";
-var BUTTON_HOVER_UP = "80px 0px";
-var BUTTON_DOWN = "120px 0px";
-var BUTTON_HOVER_DOWN = "160px 0px";
-var BUTTON_DOWN_OFFSET = 2;
+var LARGE_BUTTON_OFFSETS = {
+  "UP": "40px 0px",
+  "HOVER_UP": "80px 0px",
+  "DOWN": "120px 0px",
+  "HOVER_DOWN": "160px 0px",
+  "DOWN_FG_OFFSET": 2
+};
+
+var SMALL_BUTTON_OFFSETS = {
+  "UP": "20px 0px",
+  "HOVER_UP": "40px 0px",
+  "DOWN": "60px 0px",
+  "HOVER_DOWN": "80px 0px",
+  "DOWN_FG_OFFSET": 1
+};
+
+Wiki.prototype.button_offsets = function () {
+  return this.small_toolbar ? SMALL_BUTTON_OFFSETS : LARGE_BUTTON_OFFSETS;
+}
 
 Wiki.prototype.connect_image_button = function ( button ) {
   var self = this;
 
   connect( button, "onmouseover", function ( event ) {
+    var offsets = self.button_offsets();
     var bg_pos = getStyle( button.parentNode, "background-position" );
-    if ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) {
-      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
-      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+
+    if ( bg_pos == offsets.DOWN || bg_pos == offsets.HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": offsets.HOVER_DOWN } );
+      setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
     } else {
-      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+      setStyle( button.parentNode, { "background-position": offsets.HOVER_UP } );
       setElementPosition( button, { "x": 0, "y": 0 } );
     }
   } );
 
   connect( button, "onmouseout", function ( event ) {
+    var offsets = self.button_offsets();
     var bg_pos = getStyle( button.parentNode, "background-position" );
-    if ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) {
-      setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
-      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+
+    if ( bg_pos == offsets.DOWN || bg_pos == offsets.HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": offsets.DOWN } );
+      setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
     } else {
-      setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+      setStyle( button.parentNode, { "background-position": offsets.UP } );
       setElementPosition( button, { "x": 0, "y": 0 } );
     }
   } );
@@ -1334,24 +1362,28 @@ Wiki.prototype.connect_image_button = function ( button ) {
     if ( !self.focused_editor && !stateless_button( button ) )
       return;
 
+    var offsets = self.button_offsets();
     var bg_pos = getStyle( button.parentNode, "background-position" );
-    if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
-      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
-      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+
+    if ( bg_pos == offsets.HOVER_UP || bg_pos == offsets.HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": offsets.HOVER_DOWN } );
+      setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
     } else {
-      setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
-      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+      setStyle( button.parentNode, { "background-position": offsets.DOWN } );
+      setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
     }
   } );
 
   if ( stateless_button( button ) ) {
     connect( button, "onmouseup", function ( event ) {
+      var offsets = self.button_offsets();
       var bg_pos = getStyle( button.parentNode, "background-position" );
-      if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
-        setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+
+      if ( bg_pos == offsets.HOVER_UP || bg_pos == offsets.HOVER_DOWN ) {
+        setStyle( button.parentNode, { "background-position": offsets.HOVER_UP } );
         setElementPosition( button, { "x": 0, "y": 0 } );
       } else {
-        setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+        setStyle( button.parentNode, { "background-position": offsets.UP } );
         setElementPosition( button, { "x": 0, "y": 0 } );
       }
     } );
@@ -1363,17 +1395,20 @@ Wiki.prototype.down_image_button = function ( name ) {
   if ( !button )
     return;
 
+  var offsets = this.button_offsets();
   var bg_pos = getStyle( button.parentNode, "background-position" );
+  var resized = this.resize_toolbar_button( button );
 
-  if ( !this.resize_toolbar_button( button ) && ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) )
+  if ( !resized && ( bg_pos == offsets.DOWN || bg_pos == offsets.HOVER_DOWN ) )
     return;
+  offsets = this.button_offsets();
 
-  if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
-    setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
-    setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+  if ( !resized && ( bg_pos == offsets.HOVER_UP || bg_pos == offsets.HOVER_DOWN ) ) {
+    setStyle( button.parentNode, { "background-position": offsets.HOVER_DOWN } );
+    setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
   } else {
-    setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
-    setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    setStyle( button.parentNode, { "background-position": offsets.DOWN } );
+    setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
   }
 }
 
@@ -1382,16 +1417,19 @@ Wiki.prototype.up_image_button = function ( name ) {
   if ( !button )
     return;
 
+  var offsets = this.button_offsets();
   var bg_pos = getStyle( button.parentNode, "background-position" );
+  var resized = this.resize_toolbar_button( button );
 
-  if ( !this.resize_toolbar_button( button ) && ( bg_pos == BUTTON_UP || bg_pos == BUTTON_HOVER_UP ) )
+  if ( !resized && ( bg_pos == offsets.UP || bg_pos == offsets.HOVER_UP ) )
     return;
+  offsets = this.button_offsets();
 
-  if ( bg_pos == BUTTON_HOVER_UP || bg_pos == BUTTON_HOVER_DOWN ) {
-    setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+  if ( !resized && ( bg_pos == offsets.HOVER_UP || bg_pos == offsets.HOVER_DOWN ) ) {
+    setStyle( button.parentNode, { "background-position": offsets.HOVER_UP } );
     setElementPosition( button, { "x": 0, "y": 0 } );
   } else {
-    setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+    setStyle( button.parentNode, { "background-position": offsets.UP } );
     setElementPosition( button, { "x": 0, "y": 0 } );
   }
 }
@@ -1401,25 +1439,26 @@ Wiki.prototype.toggle_image_button = function ( name ) {
   if ( !button )
     return;
 
+  var offsets = this.button_offsets();
   var bg_pos = getStyle( button.parentNode, "background-position" );
 
-  if ( bg_pos == BUTTON_DOWN || bg_pos == BUTTON_HOVER_DOWN ) {
-    if ( bg_pos == BUTTON_HOVER_DOWN ) {
-      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_UP } );
+  if ( bg_pos == offsets.DOWN || bg_pos == offsets.HOVER_DOWN ) {
+    if ( bg_pos == offsets.HOVER_DOWN ) {
+      setStyle( button.parentNode, { "background-position": offsets.HOVER_UP } );
       setElementPosition( button, { "x": 0, "y": 0 } );
     } else {
-      setStyle( button.parentNode, { "background-position": BUTTON_UP } );
+      setStyle( button.parentNode, { "background-position": offsets.UP } );
       setElementPosition( button, { "x": 0, "y": 0 } );
     }
     this.resize_toolbar_button( button );
     return false;
   } else {
-    if ( bg_pos == BUTTON_HOVER_UP ) {
-      setStyle( button.parentNode, { "background-position": BUTTON_HOVER_DOWN } );
-      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+    if ( bg_pos == offsets.HOVER_UP ) {
+      setStyle( button.parentNode, { "background-position": offsets.HOVER_DOWN } );
+      setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
     } else {
-      setStyle( button.parentNode, { "background-position": BUTTON_DOWN } );
-      setElementPosition( button, { "x": BUTTON_DOWN_OFFSET, "y": BUTTON_DOWN_OFFSET } );
+      setStyle( button.parentNode, { "background-position": offsets.DOWN } );
+      setElementPosition( button, { "x": offsets.DOWN_FG_OFFSET, "y": offsets.DOWN_FG_OFFSET } );
     }
     this.resize_toolbar_button( button );
     return true;

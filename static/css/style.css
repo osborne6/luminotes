@@ -67,6 +67,10 @@ h1 {
   position: relative;
 }
 
+#toolbar .image_button_small {
+  background: transparent url(/static/images/toolbar/small/buttons.png);
+}
+
 #toolbar .button_background {
   background: transparent url(/static/themes/default/images/toolbar/buttons.png);
   background-position: 40px 0;
@@ -77,48 +81,96 @@ h1 {
   margin-bottom: 0.25em;
 }
 
-#toolbar #newNote {
+#toolbar .button_background_small {
+  background: transparent url(/static/themes/default/images/toolbar/small/buttons.png);
+}
+
+#toolbar .newNote_large {
   background-position: 200px 0;
 }
 
-#toolbar #createLink {
+#toolbar .newNote_small {
+  background-position: 100px -1px;
+}
+
+#toolbar .createLink_large {
   background-position: 240px 0;
 }
 
-#toolbar #attachFile {
+#toolbar .createLink_small {
+  background-position: 120px -1px;
+}
+
+#toolbar .attachFile_large {
   background-position: 0 0;
 }
 
-#toolbar #bold {
+#toolbar .attachFile_small {
+  background-position: 0 -1px;
+}
+
+#toolbar .bold_large {
   background-position: 440px 0;
 }
 
-#toolbar #italic {
+#toolbar .bold_small {
+  background-position: 220px -1px;
+}
+
+#toolbar .italic_large {
   background-position: 280px 0;
 }
 
-#toolbar #underline {
+#toolbar .italic_small {
+  background-position: 140px -1px;
+}
+
+#toolbar .underline_large {
   background-position: 40px 0;
 }
 
-#toolbar #strikethrough {
+#toolbar .underline_small {
+  background-position: 20px -1px;
+}
+
+#toolbar .strikethrough_large {
   background-position: 120px 0;
 }
 
-#toolbar #font {
+#toolbar .strikethrough_small {
+  background-position: 60px -1px;
+}
+
+#toolbar .font_large {
   background-position: 360px 0;
 }
 
-#toolbar #title {
+#toolbar .font_small {
+  background-position: 180px -1px;
+}
+
+#toolbar .title_large {
   background-position: 80px 0;
 }
 
-#toolbar #insertUnorderedList {
+#toolbar .title_small {
+  background-position: 40px -1px;
+}
+
+#toolbar .insertUnorderedList_large {
   background-position: 400px 0;
 }
 
-#toolbar #insertOrderedList {
+#toolbar .insertUnorderedList_small {
+  background-position: 200px -1px;
+}
+
+#toolbar .insertOrderedList_large {
   background-position: 160px 0;
+}
+
+#toolbar .insertOrderedList_small {
+  background-position: 80px -1px;
 }
 
 #buttons_preload {
