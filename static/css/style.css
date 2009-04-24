@@ -65,6 +65,7 @@ h1 {
   border-style: none;
   outline: none;
   position: relative;
+  vertical-align: middle;
 }
 
 #toolbar .image_button_small {
@@ -86,11 +87,11 @@ h1 {
 }
 
 #toolbar .newNote_large {
-  background-position: 200px 0px;
+  background-position: 200px 0;
 }
 
 #toolbar .newNote_small {
-  background-position: 100px -1px;
+  background-position: 100px -2px;
 }
 
 #toolbar .createLink_large {
@@ -98,7 +99,7 @@ h1 {
 }
 
 #toolbar .createLink_small {
-  background-position: 120px -1px;
+  background-position: 120px -2px;
 }
 
 #toolbar .attachFile_large {
@@ -106,7 +107,7 @@ h1 {
 }
 
 #toolbar .attachFile_small {
-  background-position: 0 -1px;
+  background-position: 0 -2px;
 }
 
 #toolbar .bold_large {
@@ -114,7 +115,7 @@ h1 {
 }
 
 #toolbar .bold_small {
-  background-position: 220px -1px;
+  background-position: 220px -2px;
 }
 
 #toolbar .italic_large {
@@ -122,7 +123,7 @@ h1 {
 }
 
 #toolbar .italic_small {
-  background-position: 140px -1px;
+  background-position: 140px -2px;
 }
 
 #toolbar .underline_large {
@@ -130,7 +131,7 @@ h1 {
 }
 
 #toolbar .underline_small {
-  background-position: 20px -1px;
+  background-position: 20px -2px;
 }
 
 #toolbar .strikethrough_large {
@@ -138,7 +139,7 @@ h1 {
 }
 
 #toolbar .strikethrough_small {
-  background-position: 60px -1px;
+  background-position: 60px -2px;
 }
 
 #toolbar .font_large {
@@ -146,7 +147,7 @@ h1 {
 }
 
 #toolbar .font_small {
-  background-position: 180px -1px;
+  background-position: 180px -2px;
 }
 
 #toolbar .title_large {
@@ -154,7 +155,7 @@ h1 {
 }
 
 #toolbar .title_small {
-  background-position: 40px -1px;
+  background-position: 40px -2px;
 }
 
 #toolbar .insertUnorderedList_large {
@@ -162,7 +163,7 @@ h1 {
 }
 
 #toolbar .insertUnorderedList_small {
-  background-position: 200px -1px;
+  background-position: 200px -2px;
 }
 
 #toolbar .insertOrderedList_large {
@@ -170,7 +171,7 @@ h1 {
 }
 
 #toolbar .insertOrderedList_small {
-  background-position: 80px -1px;
+  background-position: 80px -2px;
 }
 
 #buttons_preload {
