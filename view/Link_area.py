@@ -1,4 +1,4 @@
-from Tags import Div, P, Span, H4, A, Strong, Img, Br
+from Tags import Div, P, Span, H4, A, Strong, Img, Br, Input
 from Rounded_div import Rounded_div
 from model.Notebook import Notebook
 
@@ -209,12 +209,12 @@ class Link_area( Div ):
           id = u"notebooks_area"
         ) or None,
         ( not forum_tag ) and Div(
-          Img(
-            src = u"/static/images/toolbar/small/new_note_button.png",
-            width = u"20", height = u"20",
-            id = "new_notebook",
-            class_ = u"middle_image",
-            title = u"Create a new wiki notebook."
+          Input(
+            type = u"button",
+            class_ = u"note_button",
+            id = u"new_notebook_button",
+            value = u"add notebook",
+            title = u"Create a new wiki notebook.",
           ),
           class_ = u"link_area_item",
         ) or None,

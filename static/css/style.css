@@ -464,6 +464,16 @@ h1 {
   -webkit-border-radius: 3px;
 }
 
+#new_notebook_button {
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+}
+
+#new_note_tree_link_button {
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+}
+
 .note_frame {
   -moz-border-radius: 5px;
   position: absolute;

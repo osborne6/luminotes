@@ -448,17 +448,15 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     } );
   }
 
-  var new_notebook_button = getElement( "new_notebook" );
+  var new_notebook_button = getElement( "new_notebook_button" );
   if ( new_notebook_button ) {
     connect( new_notebook_button, "onclick", function ( event ) {
       self.invoker.invoke( "/notebooks/create", "POST" );
       event.stop();
     } );
-
-    this.make_image_button( "new_notebook", true );
   }
 
-  var new_note_tree_link_button = getElement( "new_note_tree_link" );
+  var new_note_tree_link_button = getElement( "new_note_tree_link_button" );
   if ( new_note_tree_link_button ) {
     connect( new_note_tree_link_button, "onclick", function ( event ) {
       self.clear_pulldowns();
@@ -466,8 +464,6 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
         self.note_tree.start_link_add();
       event.stop();
     } );
-
-    this.make_image_button( "new_note_tree_link", true );
   }
 }
 
@@ -1352,7 +1348,7 @@ Wiki.prototype.connect_image_button = function ( button ) {
 
 
   function stateless_button( button ) {
-    return ( button.name == "newNote" || button.name == "new_notebook" || button.name == "new_note_tree_link" );
+    return ( button.name == "newNote" );
   }
 
   connect( button, "onmousedown", function ( event ) {
@@ -4827,6 +4823,8 @@ Note_tree.prototype.start_link_add = function () {
     return; 
   }
 
+  addElementClass( "new_note_tree_link_button", "undisplayed" );
+
   link_field = createDOM(
     "input", {
       "type": "text",
@@ -4881,6 +4879,8 @@ Note_tree.prototype.start_link_add = function () {
 }
 
 Note_tree.prototype.end_link_add = function ( note ) {
+  removeElementClass( "new_note_tree_link_button", "undisplayed" );
+
   // if no note is provided, load it based on the title
   if ( !note ) {
     var note_name = getElement( "new_note_tree_link_field" ).value;
