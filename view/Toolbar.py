@@ -66,7 +66,7 @@ class Toolbar( Div ):
           Div( Input(
             type = u"button",
             id = u"insertOrderedList", title = u"numbered list [ctrl-1]",
-            class_ = "image_button insertUnorderedList_large",
+            class_ = "image_button insertOrderedList_large",
           ), class_ = u"button_background" ),
         ),
         class_ = u"button_wrapper",
