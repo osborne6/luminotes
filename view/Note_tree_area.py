@@ -62,7 +62,7 @@ class Note_tree_area( Div ):
                 type = u"button",
                 class_ = u"note_button",
                 id = u"new_note_tree_link_button",
-                value = u"add quick link",
+                value = u"+ quick link",
                 title = u"Add one of your notes to this note tree.",
               ),
               Span( id = u"new_note_tree_link_area" ),

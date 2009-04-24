@@ -213,7 +213,7 @@ class Link_area( Div ):
             type = u"button",
             class_ = u"note_button",
             id = u"new_notebook_button",
-            value = u"add notebook",
+            value = u"+ notebook",
             title = u"Create a new wiki notebook.",
           ),
           class_ = u"link_area_item",
