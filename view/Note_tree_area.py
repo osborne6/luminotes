@@ -51,13 +51,6 @@ class Note_tree_area( Div ):
           Tr(
             Td(),
             ( notebook.name != u"trash" and notebook.read_write == Notebook.READ_WRITE ) and Td(
-              Img(
-                src = u"/static/images/toolbar/small/new_note_button.png",
-                width = u"20", height = u"20",
-                id = u"new_note_tree_link",
-                class_ = u"middle_image",
-                title = u"Add one of your notes to this note tree."
-              ),
               Input(
                 type = u"button",
                 class_ = u"note_button",
