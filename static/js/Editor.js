@@ -927,6 +927,17 @@ Editor.prototype.key_released = function ( event ) {
 }
 
 Editor.prototype.cleanup_html = function ( key_code ) {
+  if ( this.iframe.contentWindow.getSelection ) {
+    var selection =  this.iframe.contentWindow.getSelection();
+    if ( selection.rangeCount > 0 )
+      var range = selection.getRangeAt( 0 );
+    else
+      var range = this.document.createRange();
+    var fragment = range.cloneContents();
+    if ( fragment.childNodes.length == 0 )
+      this.exec_command( "removeformat" );
+  }
+
   if ( WEBKIT ) {
     // if enter is pressed while in a title, end title mode, since WebKit doesn't do that for us
     var ENTER = 13; BACKSPACE = 8;

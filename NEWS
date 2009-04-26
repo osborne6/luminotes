@@ -3,6 +3,10 @@
    themes in a subsequent release.
  * Changed some of the "+" buttons to be more descriptive: "+ notebook" and
    "+ quick link".
+ * Fixed a Firefox bug in which removing some bold text and then typing new
+   text would make the new text bold. Now, if you completely remove some bold
+   text (rather than just a portion of it), any new text that you type will be
+   unformatted.
  * Fixed a bug in which toolbar buttons didn't depress based on the current
    location of the text cursor.
 
