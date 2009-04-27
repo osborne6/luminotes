@@ -830,17 +830,17 @@ Wiki.prototype.create_editor = function ( id, note_text, deleted_from_id, revisi
       '</form>' + note_text;
   }
 
-  if ( creation && note_text != "<h3></h3>" ) {
-    var note_id = id.split( ' ' )[ 0 ];
-    note_text = note_text + this.make_byline( username, creation, note_id );
-  }
-
   var startup = this.startup_notes[ id ];
   var editor = new Editor( id, this.notebook.object_id, note_text, deleted_from_id, revision, read_write, startup, highlight, focus, position_after, dirty, own_notes_only );
   if ( focus )
     this.editor_focused( editor );
   else if ( !read_write )
     this.editor_focused( null );
+
+  if ( creation && note_text != "<h3></h3>" ) {
+    var note_id = id.split( ' ' )[ 0 ];
+    appendChildNodes( editor.holder, this.make_byline( username, creation, note_id ) );
+  }
 
   if ( this.notebook.read_write ) {
     connect( editor, "state_changed", this, "editor_state_changed" );
@@ -1080,18 +1080,15 @@ Wiki.prototype.make_byline = function ( username, creation, note_id ) {
   else
     var timestamp = '';
 
-  return '<div class="byline small_text">Posted' + by + timestamp +
-         ' | <a href="' + window.location.pathname + '?note_id=' + note_id + '" target="_top">permalink</a>';
-}
-
-Wiki.prototype.remove_byline = function ( editor ) {
-  if ( editor.document && editor.read_write ) {
-    var byline = getFirstElementByTagAndClassName( "div", "byline", editor.document );
-    if ( byline ) {
-      removeElement( byline );
-      editor.resize();
-    }
-  }
+  return createDOM(
+    "span",
+    { "class": "byline small_text" },
+    'Posted' + by + timestamp + ' | ',
+    createDOM( "a", {
+      "href": window.location.pathname + '?note_id=' + note_id,
+      "target": "_top"
+    }, "permalink" )
+  );
 }
 
 Wiki.prototype.editor_mouse_hovered = function ( editor, target ) {
@@ -1138,8 +1135,6 @@ Wiki.prototype.key_pressed = function ( event ) {
 }
 
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
-  this.remove_byline( editor );
-
   var code = event.key().code;
 
   if ( event.modifier().ctrl ) {
@@ -1795,7 +1790,6 @@ Wiki.prototype.save_editor = function ( editor, fire_and_forget, callback, synch
   if ( editor && editor.read_write && !editor.closed &&
        ( ( !editor.empty() && editor.dirty() ) || position_after || position_before ) ) {
     editor.scrape_title();
-    this.remove_byline( editor );
 
     this.invoker.invoke( "/notebooks/save_note", "POST", { 
       "notebook_id": this.notebook.object_id,

@@ -436,6 +436,7 @@ h1 {
 .note_controls {
   text-align: right;
   margin-right: 1.5em;
+  min-height: 0.5em;
 }
 
 .note_button {
@@ -1209,4 +1210,8 @@ h1 {
 #progress_percent {
   margin-left: 0.75em;
   margin-right: 0.75em;
+}
+
+.byline {
+  margin-left: 1em;
 }

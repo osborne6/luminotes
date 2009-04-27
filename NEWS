@@ -10,6 +10,9 @@
    unformatted.
  * Fixed a bug in which toolbar buttons didn't depress based on the current
    location of the text cursor.
+ * Fixed a bug in which discussion forum bylines ("Posted by...") were
+   sometimes duplicated several times on a given post. Now bylines are
+   displayed below each post rather than within it.
 
 1.6.10: March 20, 2009
  * Faster uploads and downloads for users of luminotes.com.
