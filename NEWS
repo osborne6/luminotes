@@ -2,7 +2,8 @@
  * Rewrote the way that the toolbar is implemented, laying the groundwork for
    themes in a subsequent release.
  * Changed some of the "+" buttons to be more descriptive: "+ notebook" and
-   "+ quick link".
+   "+ note link".
+ * Moved search field up above "notes" heading.
  * Fixed a Firefox bug in which removing some bold text and then typing new
    text would make the new text bold. Now, if you completely remove some bold
    text (rather than just a portion of it), any new text that you type will be

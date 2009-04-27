@@ -20,6 +20,10 @@ class Note_tree_area( Div ):
     Div.__init__(
       self,
       Div(
+        Div(
+          Search_form(),
+          class_ = u"link_area_item",
+        ),
         H4(
           forum_tag and u"posts" or u"notes",
           Span(
@@ -36,10 +40,6 @@ class Note_tree_area( Div ):
           ) or None,
           id = u"note_tree_area_title",
         ) or None,
-        Div(
-          Search_form(),
-          class_ = u"link_area_item",
-        ),
         ( not forum_tag ) and self.make_tree(
           [ self.make_item(
             title = note.title,
@@ -55,8 +55,8 @@ class Note_tree_area( Div ):
                 type = u"button",
                 class_ = u"note_button",
                 id = u"new_note_tree_link_button",
-                value = u"+ quick link",
-                title = u"Add one of your notes to this note tree.",
+                value = u"+ note link",
+                title = u"Add one of your notes to this list.",
               ),
               Span( id = u"new_note_tree_link_area" ),
             ) or None,
