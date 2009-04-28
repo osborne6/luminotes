@@ -1,4 +1,4 @@
-1.6.11: 
+1.6.11: April 28, 2009
  * Rewrote the way that the toolbar is implemented, laying the groundwork for
    themes in a subsequent release.
  * Changed some of the "+" buttons to be more descriptive: "+ notebook" and
