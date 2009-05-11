@@ -3,7 +3,7 @@ import cherrypy
 from datetime import datetime
 from Product_page import Product_page
 from Page_navigation import Page_navigation
-from Tags import Div, H1, A, P, Span, Link, Img
+from Tags import Div, H1, A, P, Span, Link, Img, B
 
 
 class Forum_page( Product_page ):
@@ -34,7 +34,7 @@ class Forum_page( Product_page ):
       Div(
         P(
           base_path.startswith( u"/forums/" ) and Span(
-            A( u"start a new discussion", href = os.path.join( base_path, u"create_thread" ) ),
+            B( A( u"start a new discussion", href = os.path.join( base_path, u"create_thread" ) ) ),
             u" | ",
             A( u"all forums", href = u"/forums/" ),
             u" | ",

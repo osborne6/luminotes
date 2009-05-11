@@ -1,3 +1,6 @@
+1.6.12: 
+ * Added a "start a new discussion" link to each discussion forum page.
+
 1.6.11: April 28, 2009
  * Rewrote the way that the toolbar is implemented, laying the groundwork for
    themes in a subsequent release.
