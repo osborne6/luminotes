@@ -235,7 +235,12 @@ class Download_page( Product_page ):
             H4( u"What is your refund policy?", class_ = u"upgrade_question" ),
             P(
               """
-              It's this simple: Luminotes Desktop comes with a 60-day money-back guarantee. No questions asked.
+              It's this simple: Luminotes Desktop comes with a 60-day money-back guarantee. No
+              questions asked. If you would like a refund, you need only
+              """,
+              A( u"contact support", href = "/contact_info" ),
+              """
+              and ask for one.
               """,
               class_ = u"upgrade_text",
             ),

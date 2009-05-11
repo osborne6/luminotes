@@ -188,22 +188,21 @@ class Upgrade_page( Product_page ):
               """
               Of course. There are no contracts or cancellation fees. There are no hidden fees. You
               can upgrade, downgrade, or cancel your account anytime. Simply login to your account
-              and return to this pricing page.
+              and return to this pricing page. Or, if you prefer, you can cancel your subscription
+              directly from PayPal.
               """,
               class_ = u"upgrade_text",
             ),
             P(
               """
-              And if you cancel during your trial period, then you are not charged anything at all.
+              If you cancel during your trial period, then you are not charged anything at all.
+              And if you cancel anytime after the trial period ends, then your subscription is
+              stopped immediately, and you are never charged again. Subscription fees that you have
+              already paid still apply. You are welcome to
               """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"What is your refund policy?", class_ = u"upgrade_question" ),
-            P(
+              A( u"contact support", href = "/contact_info" ),
               """
-              It's this simple: Luminotes comes with a 30-day money-back guarantee, starting from
-              the end of the 30-day free trial. No questions asked. So that gives you a full 60
-              days to see whether Luminotes meets your needs.
+              with any billing questions.
               """,
               class_ = u"upgrade_text",
             ),
