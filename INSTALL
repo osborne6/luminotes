@@ -185,6 +185,11 @@ configuration causes your web server to serve static files itself, while
 passing through requests for dynamic pages to the Luminotes web server running
 locally.
 
+Additionally, you should let Luminotes know about the public hostname of
+your web site. Simply edit config/Common.py and change the value of
+luminotes.http_url based on the domain you're using. For instance:
+
+  "luminotes.http_url": "http://yourhostname.com",
 
 SSL support
 -----------
@@ -198,11 +203,10 @@ Without this, Luminotes would have no way of knowing whether a particular
 request was encrypted when received by your web server. (There are ways to do
 this in a less hacky manner, which might be supported in the future.)
 
-To configure the Luminotes server for SSL support, edit config/Common.py and
-change the values of luminotes.http_url and luminotes.https_url based on the
-domain you're using. For instance:
+To configure the Luminotes server for SSL support, edit config/Common.py
+and change the value of luminotes.https_url based on the domain you're
+using. For instance:
 
-  "luminotes.http_url": "http://yourhostname.com",
   "luminotes.https_url": "https://yourhostname.com",
 
 
