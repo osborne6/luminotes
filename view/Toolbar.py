@@ -48,6 +48,11 @@ class Toolbar( Div ):
           ), class_ = u"button_background" ),
           Div( Input(
             type = u"button",
+            id = u"color", title = u"text color",
+            class_ = "image_button color_large",
+          ), class_ = u"button_background" ),
+          Div( Input(
+            type = u"button",
             id = u"font", title = u"font",
             class_ = "image_button font_large",
           ), class_ = u"button_background" ),

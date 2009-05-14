@@ -19,6 +19,8 @@ class Html_cleaner(HTMLParser):
   Cleans HTML of any tags not matching a whitelist.
   """
   NOTE_LINK_URL_PATTERN = re.compile( '[^"]*/notebooks/\w+\?[^"]*note_id=\w+', re.IGNORECASE )
+  COLOR_RGB_PATTERN = re.compile( "^rgb(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*)$" )
+  COLOR_HEX_PATTERN = re.compile( "^#\d{6}$" )
 
   def __init__( self, require_link_target = False ):
     HTMLParser.__init__( self, AbstractFormatter( NullWriter() ) )
@@ -110,6 +112,7 @@ class Html_cleaner(HTMLParser):
       'caption',
       'col',
       'colgroup',
+      'span',
     ]
 
     # A list of tags that require no closing tag.
@@ -124,7 +127,8 @@ class Html_cleaner(HTMLParser):
       'p': [ 'align' ],
       'img': [ 'src', 'alt', 'border', 'title', "class" ],
       'table': [ 'cellpadding', 'cellspacing', 'border', 'width', 'height' ],
-      'font': [ 'color', 'size', 'face' ],
+      'font': [ 'size', 'face', 'color' ],
+      'span': [ 'style' ],
       'td': [ 'rowspan', 'colspan', 'width', 'height' ],
       'th': [ 'rowspan', 'colspan', 'width', 'height' ],
     }
@@ -168,6 +172,12 @@ class Html_cleaner(HTMLParser):
         else:
           bt += ' %s=%s' % \
              (xssescape(attribute), quoteattr(attrs[attribute]))
+        if attribute == 'style':
+          if self.style_is_acceptable( attrs[ attribute ] ):
+            bt += ' %s="%s"' % (attribute, attrs[attribute])
+          else:
+            bt += ' %s=%s' % \
+               (xssescape(attribute), quoteattr(attrs[attribute]))
       if tag == "a" and \
          ( not attrs.get( 'href' ) or not self.NOTE_LINK_URL_PATTERN.search( attrs.get( 'href' ) ) ):
         if self.require_link_target and not attrs.get( 'target' ):
@@ -208,6 +218,29 @@ class Html_cleaner(HTMLParser):
     urlparse.clear_cache()
 
     return parsed[0] in self.allowed_schemes
+
+  def style_is_acceptable(self, style):
+    pieces = style.split( ";" )
+
+    for piece in pieces:
+      piece = piece.strip()
+      if piece == "":
+        continue
+
+      param_and_value = piece.split( ":" )
+      if len( param_and_value ) != 2:
+        return False
+
+      ( param, value ) = param_and_value
+      value = value.strip()
+
+      if param.strip().lower() not in ( "color", "background-color" ):
+        return False
+      if not self.COLOR_RGB_PATTERN.search( value ) and \
+         not self.COLOR_HEX_PATTERN.search( value ):
+        return False
+
+    return True
 
   def strip(self, rawstring):
     """Returns the argument stripped of potentially harmful HTML or JavaScript code"""

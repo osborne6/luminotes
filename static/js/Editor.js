@@ -485,6 +485,17 @@ Editor.prototype.position_cursor_after = function ( node ) {
   }
 }
 
+Editor.prototype.collapse_cursor = function () {
+  if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    selection.collapseToEnd();
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    range.collapse( false );
+    range.select();
+  }
+}
+
 Editor.prototype.connect_handlers = function () {
   if ( this.document && this.document.body ) {
     // since the browser may subtly tweak the html when it's inserted, save off the browser's version
@@ -551,7 +562,7 @@ Editor.prototype.connect_handlers = function () {
   }
 
   // browsers such as Firefox, but not Opera
-  if ( !OPERA && this.iframe && this.iframe.contentDocument && this.edit_enabled ) {
+  if ( GECKO && this.iframe && this.iframe.contentDocument && this.edit_enabled ) {
     this.exec_command( "styleWithCSS", false );
     this.exec_command( "insertbronreturn", true );
   }
@@ -918,7 +929,9 @@ Editor.prototype.key_released = function ( event ) {
   // if ctrl keys are released, bail
   var code = event.key().code;
   var CTRL = 17;
-  if ( event.modifier().ctrl || code == CTRL )
+  var NONE = 0;
+
+  if ( event.modifier().ctrl || code == CTRL || code == NONE )
     return;
 
   this.cleanup_html( code );
@@ -1432,7 +1445,7 @@ Editor.prototype.contents = function () {
 
 // return true if the given state_name is currently enabled, optionally using a given list of node
 // names
-Editor.prototype.state_enabled = function ( state_name, node_names ) {
+Editor.prototype.state_enabled = function ( state_name, node_names, attribute_name ) {
   if ( !this.edit_enabled )
     return false;
 
@@ -1474,8 +1487,23 @@ Editor.prototype.current_node_names = function () {
   while ( node ) {
     var name = node.nodeName.toLowerCase();
 
-    if ( name == "strong" ) name = "b";
-    if ( name == "em" ) name = "i";
+    if ( name == "body" )
+      break;
+    else if ( name == "strong" ) name = "b";
+    else if ( name == "em" ) name = "i";
+    else if ( name == "font" && node.getAttribute( "face" ) )
+      name = "fontface";
+    else if ( name == "font" && node.getAttribute( "size" ) )
+      name = "fontsize";
+    else if ( name == "font" && node.getAttribute( "color" ) )
+      name = "color";
+    else if ( node.hasAttribute && node.hasAttribute( "style" ) ) {
+      var color = getStyle( node, "color" );
+      var background_color = getStyle( node, "background-color" );
+      if ( ( color && color != "transparent" ) ||
+           ( background_color && background_color != "transparent" ) )
+        name = "color";
+    }
 
     if ( name != "a" || node.href )
       node_names.push( name );
@@ -1484,6 +1512,74 @@ Editor.prototype.current_node_names = function () {
   }
 
   return node_names;
+}
+
+// return the current effective foreground and background colors as hex code strings
+Editor.prototype.current_colors = function () {
+  var foreground = null;
+  var background = null;
+
+  if ( !this.edit_enabled || !this.iframe || !this.document )
+    return [ null, null ];
+
+  var node;
+  if ( window.getSelection ) { // browsers such as Firefox
+    var selection = this.iframe.contentWindow.getSelection();
+    if ( selection.rangeCount > 0 )
+      var range = selection.getRangeAt( 0 );
+    else
+      var range = this.document.createRange();
+    node = range.endContainer;
+  } else if ( this.document.selection ) { // browsers such as IE
+    var range = this.document.selection.createRange();
+    node = range.parentElement();
+  }
+
+  while ( node ) {
+    var name = node.nodeName.toLowerCase();
+    if ( name == "body" )
+      break;
+
+    if ( node.hasAttribute && node.hasAttribute( "style" ) ) {
+      if ( foreground == null ) {
+        foreground = getStyle( node, "color" )
+        if ( foreground == "transparent" )
+          foreground = null;
+      }
+      if ( background == null ) {
+        background = getStyle( node, "background-color" )
+        if ( background == "transparent" )
+          background = null;
+      }
+    } else if ( name == "font" && node.getAttribute( "color" ) ) {
+      foreground = node.getAttribute( "color" );
+    }
+
+    if ( foreground && background )
+      break;
+
+    node = node.parentNode;
+  }
+
+  return [
+    foreground ? Color.fromString( foreground ).toHexString() : null,
+    background ? Color.fromString( background ).toHexString() : null
+  ];
+}
+
+Editor.prototype.set_foreground_color = function( color_code ) {
+  if ( GECKO ) this.exec_command( "styleWithCSS", true );
+  this.exec_command( "forecolor", Color.fromString( color_code ).toHexString() );
+  if ( GECKO ) this.exec_command( "styleWithCSS", false );
+}
+
+Editor.prototype.set_background_color = function( color_code ) {
+  if ( GECKO ) this.exec_command( "styleWithCSS", true );
+  if ( MSIE )
+    this.exec_command( "backcolor", Color.fromString( color_code ).toHexString() );
+  else
+    this.exec_command( "hilitecolor", Color.fromString( color_code ).toHexString() );
+  if ( GECKO ) this.exec_command( "styleWithCSS", false );
 }
 
 Editor.prototype.shutdown = function( event ) {

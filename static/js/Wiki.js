@@ -344,6 +344,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     connect( "italic", "onclick", function ( event ) { self.toggle_button( event, "italic" ); } );
     connect( "underline", "onclick", function ( event ) { self.toggle_button( event, "underline" ); } );
     connect( "strikethrough", "onclick", function ( event ) { self.toggle_button( event, "strikethrough" ); } );
+    connect( "color", "onclick", this, "toggle_color_button" );
     connect( "font", "onclick", this, "toggle_font_button" );
     connect( "title", "onclick", function ( event ) { self.toggle_button( event, "title" ); } );
     connect( "insertUnorderedList", "onclick", function ( event ) { self.toggle_button( event, "insertUnorderedList" ); } );
@@ -357,6 +358,7 @@ Wiki.prototype.populate = function ( startup_notes, current_notes, note_read_wri
     this.make_image_button( "italic" );
     this.make_image_button( "underline" );
     this.make_image_button( "strikethrough" );
+    this.make_image_button( "color" );
     this.make_image_button( "font" );
     this.make_image_button( "title" );
     this.make_image_button( "insertUnorderedList" );
@@ -1498,7 +1500,8 @@ Wiki.prototype.update_toolbar = function() {
   this.update_button( "italic", "i", node_names );
   this.update_button( "underline", "u", node_names );
   this.update_button( "strikethrough", "strike", node_names );
-  this.update_button( "font", "font", node_names );
+  this.update_button( "color", "color", node_names );
+  this.update_button( "font", "fontface", node_names );
   this.update_button( "title", "h3", node_names );
   this.update_button( "insertUnorderedList", "ul", node_names );
   this.update_button( "insertOrderedList", "ol", node_names );
@@ -1569,6 +1572,30 @@ Wiki.prototype.toggle_attach_button = function ( event ) {
     this.clear_pulldowns();
 
     new Upload_pulldown( this, this.notebook.object_id, this.invoker, this.focused_editor, link, null );
+  }
+
+  event.stop();
+}
+
+Wiki.prototype.toggle_color_button = function ( event ) {
+  if ( this.focused_editor && this.focused_editor.read_write ) {
+    this.focused_editor.focus();
+
+    // if a pulldown is already open, then just close it
+    var existing_div = getElement( "color_pulldown" );
+
+    if ( existing_div ) {
+      this.up_image_button( "color" );
+      existing_div.pulldown.shutdown();
+      existing_div.pulldown = null;
+      return;
+    }
+
+    this.down_image_button( "color" );
+    this.clear_messages();
+    this.clear_pulldowns();
+
+    new Color_pulldown( this, this.notebook.object_id, this.invoker, event.target(), this.focused_editor );
   }
 
   event.stop();
@@ -4460,6 +4487,265 @@ Suggest_pulldown.prototype.shutdown = function () {
   this.anchor.pulldown = null;
   disconnectAll( this );
   disconnect( this.key_handler );
+}
+
+
+NAMED_COLORS = [
+  [ "#000000", "black" ],
+  [ "#333333", "steel gray" ],
+  [ "#696969", "dim gray" ],
+  [ "#808080", "gray" ],
+  [ "#a9a9a9", "dark gray" ],
+  [ "#d3d3d3", "light gray" ],
+  [ "#f5f5f5", "white smoke" ],
+  [ "#ffffff", "white" ],
+
+  [ "#800000", "maroon" ],
+  [ "#8b0000", "dark red" ],
+  [ "#b22222", "fire brick" ],
+  [ "#dc143c", "crimson" ],
+  [ "#ff0000", "red" ],
+  [ "#ff4500", "orange red" ],
+  [ "#ff6347", "tomato" ],
+  [ "#ffa07a", "light salmon" ],
+
+  [ "#8b4513", "saddle brown" ],
+  [ "#a52a2a", "brown" ],
+  [ "#a0522d", "sienna" ],
+  [ "#d2691e", "chocolate" ],
+  [ "#ff8c00", "dark orange" ],
+  [ "#ffa500", "orange" ],
+  [ "#ffd700", "gold" ],
+  [ "#ffff00", "yellow" ],
+
+  [ "#556b2f", "dark olive green" ],
+  [ "#006400", "dark green" ],
+  [ "#008000", "green" ],
+  [ "#2e8b57", "sea green" ],
+  [ "#32cd32", "lime green" ],
+  [ "#00ff00", "lime" ],
+  [ "#7cfc00", "lawn green" ],
+  [ "#98fb98", "pale green" ],
+
+  [ "#008b8b", "dark cyan" ],
+  [ "#20b2aa", "light sea green" ],
+  [ "#00ced1", "dark turquoise" ],
+  [ "#66cdaa", "medium aquamarine" ],
+  [ "#40e0d0", "turquoise" ],
+  [ "#00ffff", "cyan" ],
+  [ "#7fffd4", "aquamarine" ],
+  [ "#afeeee", "pale turquoise" ],
+
+  [ "#191970", "midnight blue" ],
+  [ "#000080", "navy" ],
+  [ "#0000ff", "blue" ],
+  [ "#4169e1", "royal blue" ],
+  [ "#4682b4", "steel blue" ],
+  [ "#6495ed", "cornflower blue" ],
+  [ "#87ceeb", "sky blue" ],
+  [ "#add8e6", "light blue" ],
+
+  [ "#4b0082", "indigo" ],
+  [ "#800080", "purple" ],
+  [ "#9400d3", "dark violet" ],
+  [ "#8a2be2", "blue violet" ],
+  [ "#ba55d3", "medium orchid" ],
+  [ "#da70d6", "orchid" ],
+  [ "#ee82ee", "violet" ],
+  [ "#dda0dd", "plum" ],
+
+  [ "#c71585", "medium violet red" ],
+  [ "#ff1493", "deep pink" ],
+  [ "#db7093", "pale violet red" ],
+  [ "#ff69b4", "hot pink" ],
+  [ "#ffb6c1", "light pink" ],
+  [ "#ffc0cb", "pink" ],
+  [ "#ffdab9", "peach puff" ],
+  [ "#ffe4e1", "misty rose" ],
+]
+
+
+function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
+  anchor.pulldown = this;
+  this.anchor = anchor;
+  this.editor = editor;
+  this.initial_selected_mark = null;
+  this.selected_color_box = null;
+
+  Pulldown.call( this, wiki, notebook_id, "color_pulldown", anchor );
+
+  this.invoker = invoker;
+
+  var DEFAULT_FOREGROUND_CODE = "#000000";
+  var DEFAULT_BACKGROUND_CODE = "#ffffff";
+  var current_colors = editor.current_colors();
+
+  this.foreground_code = current_colors[ 0 ];
+  if ( this.foreground_code == DEFAULT_FOREGROUND_CODE )
+    this.foreground_code = null;
+
+  this.background_code = current_colors[ 1 ];
+  if ( this.background_code == DEFAULT_BACKGROUND_CODE )
+    this.background_code = null;
+
+  var foreground_attributes = { "type": "radio", "id": "foreground_color_radio", "name": "color_type", "value": "foreground" };
+  var background_attributes = { "type": "radio", "id": "background_color_radio", "name": "color_type", "value": "background" };
+
+  if ( this.foreground_code || !this.background_code ) {
+    foreground_attributes[ "checked" ] = true;
+  } else {
+    background_attributes[ "checked" ] = true;
+  }
+
+  this.foreground_radio = createDOM( "input", foreground_attributes );
+
+  // using a button here instead of a <label> to make IE happy: when a <label> is used, clicking
+  // on the label steals focus from the editor iframe and prevents the color from being changed
+  this.foreground_label = createDOM( "input",
+    { "type": "button", "class": "radio_label small_button", "value": "text", "title": "Set the current text color." }
+  );
+
+  this.background_radio = createDOM( "input", background_attributes );
+  this.background_label = createDOM( "input",
+    { "type": "button", "class": "radio_label small_button", "value": "background", "title": "Set the current background color." }
+  );
+
+  var radio_area = createDOM( "div", {},
+    this.foreground_radio, this.foreground_label,
+    " ",
+    this.background_radio, this.background_label
+  );
+
+  var tbody = createDOM( "tbody", {} );
+  this.table = createDOM( "table" , { "id": "color_table" }, tbody );
+  var color_index = 0;
+
+  for ( var i = 0; i < 8; ++i ) {
+    var row_node = createDOM( "tr", {} );
+
+    for ( var j = 0; j < 8; ++j ) {
+      if ( color_index >= NAMED_COLORS.length )
+        break;
+
+      var color_pair = NAMED_COLORS[ color_index ];
+      var color_code = color_pair[ 0 ];
+      var color_name = color_pair[ 1 ];
+
+      var color_box = createDOM( "td", {},
+        createDOM( "input", {
+          "type": "button", "class": "color_box",
+          "id": "color_" + color_code.substring( 1 ),
+          "style": "background-color: " + color_code + ";", "title": color_name
+        } )
+      );
+      appendChildNodes( row_node, color_box );
+
+      ++color_index;
+    }
+
+    appendChildNodes( tbody, row_node );
+  }
+
+  var div = createDOM( "div", {}, radio_area, this.table );
+  appendChildNodes( this.div, div );
+
+  if ( this.foreground_code || !this.background_code ) {
+    this.foreground_code = this.foreground_code || DEFAULT_FOREGROUND_CODE;
+    this.background_code = this.background_code || DEFAULT_BACKGROUND_CODE;
+    this.select_color( this.foreground_code, true );
+  } else {
+    this.foreground_code = this.foreground_code || DEFAULT_FOREGROUND_CODE;
+    this.background_code = this.background_code || DEFAULT_BACKGROUND_CODE;
+    this.select_color( this.background_code, true );
+  }
+
+
+  var self = this;
+  connect( this.table, "onmousedown", function ( event ) { self.color_mouse_pressed( event ); } );
+  connect( this.table, "onmouseup", function ( event ) { self.color_mouse_released( event ); } );
+  connect( this.foreground_radio, "onclick", function ( event ) { self.foreground_radio_clicked( event ); } );
+  connect( this.foreground_label, "onclick", function ( event ) { self.foreground_radio_clicked( event ); } );
+  connect( this.background_radio, "onclick", function ( event ) { self.background_radio_clicked( event ); } );
+  connect( this.background_label, "onclick", function ( event ) { self.background_radio_clicked( event ); } );
+
+  Pulldown.prototype.finish_init.call( this );
+}
+
+Color_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
+Color_pulldown.prototype.constructor = Color_pulldown;
+
+Color_pulldown.prototype.color_mouse_pressed = function ( event ) {
+  var color_box = event.target();
+  if ( !hasElementClass( color_box, "color_box" ) )
+    return;
+
+  this.select_color_box( color_box );
+
+  event.stop();
+  this.editor.focus();
+  this.editor.collapse_cursor();
+}
+
+Color_pulldown.prototype.color_mouse_released = function ( event ) {
+  var self = this;
+  setTimeout( function () {
+    self.shutdown();
+  }, 100 );
+
+  event.stop();
+}
+
+Color_pulldown.prototype.select_color = function ( color_code, skip_set ) {
+  var color_box = getElement( "color_" + color_code.substring( 1 ) );
+
+  if ( color_box )
+    this.select_color_box( color_box, color_code, skip_set );
+}
+
+Color_pulldown.prototype.select_color_box = function ( color_box, color_code, skip_set ) {
+  if ( this.selected_color_box ) {
+    this.selected_color_box.value = "";
+    removeElementClass( this.selected_color_box, "color_box_light_selected" );
+    removeElementClass( this.selected_color_box, "color_box_dark_selected" );
+  }
+
+  if ( color_code == undefined || color_code == null )
+    color_code = getStyle( color_box, "background-color" );
+
+  var LIGHT_DARK_THRESHOLD = 0.45;
+
+  if ( Color.fromString( color_code ).asHSL().l >= LIGHT_DARK_THRESHOLD )
+    addElementClass( color_box, "color_box_light_selected" );
+  else
+    addElementClass( color_box, "color_box_dark_selected" );
+
+  color_box.value = "x";
+  this.selected_color_box = color_box;
+
+  if ( skip_set == false || skip_set == undefined || skip_set == null ) {
+    if ( this.background_radio.checked )
+      this.editor.set_background_color( color_code );
+    else
+      this.editor.set_foreground_color( color_code );
+  }
+}
+
+Color_pulldown.prototype.foreground_radio_clicked = function ( event ) {
+  this.foreground_radio.checked = true;
+  this.select_color( this.foreground_code, true );
+}
+
+Color_pulldown.prototype.background_radio_clicked = function ( event ) {
+  this.background_radio.checked = true;
+  this.select_color( this.background_code, true );
+}
+
+Color_pulldown.prototype.shutdown = function () {
+  Pulldown.prototype.shutdown.call( this );
+
+  this.anchor.pulldown = null;
+  disconnectAll( this.table );
+  disconnectAll( this );
 }
 
 

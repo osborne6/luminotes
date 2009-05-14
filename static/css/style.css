@@ -111,11 +111,11 @@ h1 {
 }
 
 #toolbar .bold_large {
-  background-position: 440px 0;
+  background-position: 480px 0;
 }
 
 #toolbar .bold_small {
-  background-position: 220px -2px;
+  background-position: 240px -2px;
 }
 
 #toolbar .italic_large {
@@ -142,6 +142,14 @@ h1 {
   background-position: 60px -2px;
 }
 
+#toolbar .color_large {
+  background-position: 400px 0;
+}
+
+#toolbar .color_small {
+  background-position: 200px -2px;
+}
+
 #toolbar .font_large {
   background-position: 360px 0;
 }
@@ -159,11 +167,11 @@ h1 {
 }
 
 #toolbar .insertUnorderedList_large {
-  background-position: 400px 0;
+  background-position: 440px 0;
 }
 
 #toolbar .insertUnorderedList_small {
-  background-position: 200px -2px;
+  background-position: 220px -2px;
 }
 
 #toolbar .insertOrderedList_large {
@@ -848,6 +856,42 @@ h1 {
   text-decoration: none;
 }
 
+#color_table {
+  border-collapse: collapse;
+  border: 1px solid #000000;
+  margin-top: 1em;
+}
+
+#color_table td {
+  border: 1px solid #000000;
+  width: 1.5em;
+  height: 1.5em;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+#color_table .color_box {
+  font-size: 110%;
+  outline: none;
+  font-weight: bold;
+  border: none;
+  width: 1.5em;
+  height: 1.5em;
+  padding: 0;
+  margin: 0;
+}
+
+.color_box_dark_selected {
+  color: #ffffff;
+}
+
+.color_box_light_selected {
+  color: #000000;
+}
+
 .selected_mark {
   vertical-align: top;
 }
@@ -1154,11 +1198,21 @@ h1 {
 
 .radio_label {
   color: #000000;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  padding: 0;
+  -moz-user-select: none;
+  -webkit-user-select: none;
 }
 
 .radio_label:hover {
   color: #ff6600;
   cursor: pointer;
+}
+
+.small_button {
+  font-size: 100%;
 }
 
 .hook_action_area {
