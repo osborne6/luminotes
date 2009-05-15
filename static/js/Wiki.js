@@ -3213,6 +3213,9 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
       self.ephemeral = true;
     } );
   }
+
+  // prevent clicks on the pulldown's background from closing the pulldown
+  connect( this.div, "onclick", function ( event ) { event.stop(); } );
 }
 
 Pulldown.prototype.finish_init = function () {
