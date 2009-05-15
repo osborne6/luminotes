@@ -1202,6 +1202,7 @@ h1 {
   outline: none;
   background-color: transparent;
   padding: 0;
+  overflow: visible;
   -moz-user-select: none;
   -webkit-user-select: none;
 }
@@ -1209,6 +1210,10 @@ h1 {
 .radio_label:hover {
   color: #ff6600;
   cursor: pointer;
+}
+
+.radio_spacer {
+  padding-left: 0.5em;
 }
 
 .small_button {

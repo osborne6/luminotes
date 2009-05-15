@@ -1462,6 +1462,9 @@ Editor.prototype.state_enabled = function ( state_name, node_names, attribute_na
   return false;
 }
 
+DEFAULT_FOREGROUND_CODE = "#000000";
+DEFAULT_BACKGROUND_CODE = "#ffffff";
+
 // return a list of names for all the nodes containing the cursor
 Editor.prototype.current_node_names = function () {
   var node_names = new Array();
@@ -1497,11 +1500,11 @@ Editor.prototype.current_node_names = function () {
       name = "fontsize";
     else if ( name == "font" && node.getAttribute( "color" ) )
       name = "color";
-    else if ( node.hasAttribute && node.hasAttribute( "style" ) ) {
+    else if ( name == "span" || name == "font" ) {
       var color = getStyle( node, "color" );
-      var background_color = getStyle( node, "background-color" );
-      if ( ( color && color != "transparent" ) ||
-           ( background_color && background_color != "transparent" ) )
+      var bg_color = getStyle( node, "background-color" );
+      if ( ( color && color != "transparent" && color != DEFAULT_FOREGROUND_CODE ) ||
+           ( bg_color && bg_color != "transparent" && bg_color != DEFAULT_BACKGROUND_CODE ) )
         name = "color";
     }
 
@@ -1540,19 +1543,19 @@ Editor.prototype.current_colors = function () {
     if ( name == "body" )
       break;
 
-    if ( node.hasAttribute && node.hasAttribute( "style" ) ) {
+    if ( name == "font" && node.getAttribute( "color" ) ) {
+      foreground = node.getAttribute( "color" );
+    } else if ( name == "span" || name == "font" ) {
       if ( foreground == null ) {
         foreground = getStyle( node, "color" )
-        if ( foreground == "transparent" )
+        if ( foreground == "transparent" || foreground == DEFAULT_FOREGROUND_CODE )
           foreground = null;
       }
       if ( background == null ) {
         background = getStyle( node, "background-color" )
-        if ( background == "transparent" )
+        if ( background == "transparent" || background == DEFAULT_BACKGROUND_CODE )
           background = null;
       }
-    } else if ( name == "font" && node.getAttribute( "color" ) ) {
-      foreground = node.getAttribute( "color" );
     }
 
     if ( foreground && background )
@@ -1571,6 +1574,9 @@ Editor.prototype.set_foreground_color = function( color_code ) {
   if ( GECKO ) this.exec_command( "styleWithCSS", true );
   this.exec_command( "forecolor", Color.fromString( color_code ).toHexString() );
   if ( GECKO ) this.exec_command( "styleWithCSS", false );
+
+  if ( MSIE )
+    this.cleanup_color_html();
 }
 
 Editor.prototype.set_background_color = function( color_code ) {
@@ -1580,6 +1586,27 @@ Editor.prototype.set_background_color = function( color_code ) {
   else
     this.exec_command( "hilitecolor", Color.fromString( color_code ).toHexString() );
   if ( GECKO ) this.exec_command( "styleWithCSS", false );
+
+  if ( MSIE )
+    this.cleanup_color_html();
+}
+
+Editor.prototype.cleanup_color_html = function () {
+  // for some reason, IE likes to add <font size=+0> tags when changing colors, which for some
+  // reason appears to slightly increase the rendered font size
+  var fonts = getElementsByTagAndClassName( "font", null, this.document );
+
+  for ( var i in fonts ) {
+    var node = fonts[ i ];
+
+    var size = node.getAttribute( "size" );
+    if ( size == "+0" ) {
+      node.removeAttribute( "size" );
+
+      // unless there is at least one attribute, IE will add the "size=+0" right back on
+      addElementClass( node, "nosize" );
+    }
+  }
 }
 
 Editor.prototype.shutdown = function( event ) {

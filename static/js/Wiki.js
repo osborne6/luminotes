@@ -4576,8 +4576,6 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
 
   this.invoker = invoker;
 
-  var DEFAULT_FOREGROUND_CODE = "#000000";
-  var DEFAULT_BACKGROUND_CODE = "#ffffff";
   var current_colors = editor.current_colors();
 
   this.foreground_code = current_colors[ 0 ];
@@ -4612,7 +4610,7 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
 
   var radio_area = createDOM( "div", {},
     this.foreground_radio, this.foreground_label,
-    " ",
+    createDOM( "span", { "class": "radio_spacer" } ),
     this.background_radio, this.background_label
   );
 
@@ -4664,9 +4662,9 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   connect( this.table, "onmousedown", function ( event ) { self.color_mouse_pressed( event ); } );
   connect( this.table, "onmouseup", function ( event ) { self.color_mouse_released( event ); } );
   connect( this.foreground_radio, "onclick", function ( event ) { self.foreground_radio_clicked( event ); } );
-  connect( this.foreground_label, "onclick", function ( event ) { self.foreground_radio_clicked( event ); } );
+  connect( this.foreground_label, "onclick", function ( event ) { self.foreground_radio_clicked( event ); event.stop(); } );
   connect( this.background_radio, "onclick", function ( event ) { self.background_radio_clicked( event ); } );
-  connect( this.background_label, "onclick", function ( event ) { self.background_radio_clicked( event ); } );
+  connect( this.background_label, "onclick", function ( event ) { self.background_radio_clicked( event ); event.stop(); } );
 
   Pulldown.prototype.finish_init.call( this );
 }
