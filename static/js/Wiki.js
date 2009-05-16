@@ -4709,7 +4709,7 @@ Color_pulldown.prototype.select_color = function ( color_code, skip_set ) {
 
 Color_pulldown.prototype.select_color_box = function ( color_box, color_code, skip_set ) {
   if ( this.selected_color_box ) {
-    this.selected_color_box.value = "";
+    this.selected_color_box.value = " ";
     removeElementClass( this.selected_color_box, "color_box_light_selected" );
     removeElementClass( this.selected_color_box, "color_box_dark_selected" );
   }
