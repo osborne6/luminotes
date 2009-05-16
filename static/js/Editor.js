@@ -981,6 +981,8 @@ Editor.prototype.cleanup_html = function ( key_code ) {
       node.removeAttribute( "class" );
       if ( style == undefined && node.tagName != "font" && node.tagName != "FONT" )
         continue;
+      if ( getStyle( node, "color" ) || getStyle( node, "background-color" ) )
+        continue;
 
       var replacement = withDocument( this.document, function () {
         // font-size is set when ending title mode
