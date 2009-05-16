@@ -3201,11 +3201,11 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
 
   appendChildNodes( document.body, this.div );
 
+  var self = this;
   if ( this.ephemeral ) {
     // when the mouse cursor is moved into the pulldown, it becomes non-ephemeral (in other words,
     // it will no longer disappear in a few seconds). but as soon as the mouse leaves, it becomes
     // ephemeral again
-    var self = this;
     connect( this.div, "onmouseover", function ( event ) {
       self.ephemeral = false;
     } );
@@ -3215,7 +3215,10 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
   }
 
   // prevent clicks on the pulldown's background from closing the pulldown
-  connect( this.div, "onclick", function ( event ) { event.stop(); } );
+  connect( this.div, "onclick", function ( event ) {
+    if ( event.target().tagName.toLowerCase() != "input" )
+      event.stop();
+  } );
 }
 
 Pulldown.prototype.finish_init = function () {
