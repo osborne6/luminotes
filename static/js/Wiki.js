@@ -3216,7 +3216,8 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
 
   // prevent clicks on the pulldown's background from closing the pulldown
   connect( this.div, "onclick", function ( event ) {
-    if ( event.target().tagName.toLowerCase() != "input" )
+    var name = event.target().tagName.toLowerCase();
+    if ( name == "div" || name == "span" )
       event.stop();
   } );
 }
