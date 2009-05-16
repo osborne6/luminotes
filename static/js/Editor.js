@@ -488,7 +488,8 @@ Editor.prototype.position_cursor_after = function ( node ) {
 Editor.prototype.collapse_cursor = function () {
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     var selection = this.iframe.contentWindow.getSelection();
-    selection.collapseToEnd();
+    if ( !selection.isCollapsed )
+      selection.collapseToEnd();
   } else if ( this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
     range.collapse( false );
