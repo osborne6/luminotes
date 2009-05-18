@@ -4606,7 +4606,6 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   anchor.pulldown = this;
   this.anchor = anchor;
   this.editor = editor;
-  this.initial_selected_mark = null;
   this.selected_color_box = null;
 
   Pulldown.call( this, wiki, notebook_id, "color_pulldown", anchor, null, false, true );
@@ -4709,6 +4708,7 @@ Color_pulldown.prototype.update_colors = function () {
 }
 
 Color_pulldown.prototype.show = function () {
+  this.editor = this.wiki.focused_editor;
   this.detect_colors();
   this.update_colors();
 
