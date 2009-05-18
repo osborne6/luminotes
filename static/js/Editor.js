@@ -1467,6 +1467,7 @@ Editor.prototype.state_enabled = function ( state_name, node_names, attribute_na
 
 DEFAULT_FOREGROUND_CODE = "#000000";
 DEFAULT_BACKGROUND_CODE = "#ffffff";
+WEBKIT_DEFAULT_COLOR_CODE = "rgba(0, 0, 0, 0)";
 
 // return a list of names for all the nodes containing the cursor
 Editor.prototype.current_node_names = function () {
@@ -1551,12 +1552,15 @@ Editor.prototype.current_colors = function () {
     } else if ( name == "span" || name == "font" ) {
       if ( foreground == null ) {
         foreground = getStyle( node, "color" )
-        if ( foreground == "transparent" || foreground == DEFAULT_FOREGROUND_CODE )
+        if ( foreground == "transparent" || foreground == DEFAULT_FOREGROUND_CODE ||
+             foreground == WEBKIT_DEFAULT_COLOR_CODE )
           foreground = null;
       }
       if ( background == null ) {
         background = getStyle( node, "background-color" )
-        if ( background == "transparent" || background == DEFAULT_BACKGROUND_CODE )
+        console.log( ":" + background + ":" );
+        if ( background == "transparent" || background == DEFAULT_BACKGROUND_CODE ||
+             background == WEBKIT_DEFAULT_COLOR_CODE )
           background = null;
       }
     }
