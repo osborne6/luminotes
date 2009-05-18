@@ -1558,7 +1558,6 @@ Editor.prototype.current_colors = function () {
       }
       if ( background == null ) {
         background = getStyle( node, "background-color" )
-        console.log( ":" + background + ":" );
         if ( background == "transparent" || background == DEFAULT_BACKGROUND_CODE ||
              background == WEBKIT_DEFAULT_COLOR_CODE )
           background = null;
