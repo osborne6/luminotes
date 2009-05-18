@@ -753,11 +753,11 @@ h1 {
 
 .static_note_contents .radio_label {
   color: #000000;
+  cursor: pointer;
 }
 
 .static_note_contents .radio_label:hover {
   color: #ff6600;
-  cursor: pointer;
 }
 
 .static_note_contents .indented {
@@ -1211,11 +1211,11 @@ h1 {
   overflow: visible;
   -moz-user-select: none;
   -webkit-user-select: none;
+  cursor: pointer;
 }
 
 .radio_label:hover {
   color: #ff6600;
-  cursor: pointer;
 }
 
 .radio_spacer {
