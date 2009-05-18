@@ -857,13 +857,13 @@ h1 {
 }
 
 #color_table {
+  border: none;
   border-collapse: collapse;
-  border: 1px solid #000000;
   margin-top: 1em;
 }
 
 #color_table td {
-  border: 1px solid #000000;
+  border: 1px solid transparent;
   width: 1.5em;
   height: 1.5em;
   text-align: center;
@@ -882,6 +882,10 @@ h1 {
   height: 1.5em;
   padding: 0;
   margin: 0;
+}
+
+#color_table .color_box:hover {
+  border: 2px solid #eeeeee;
 }
 
 .color_box_dark_selected {

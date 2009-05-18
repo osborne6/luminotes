@@ -3306,10 +3306,18 @@ Pulldown.prototype.update_position = function ( always_left_align ) {
     new Move( this.div, { "x": position.x, "y": viewport_bottom - div_height, "mode": "absolute", "duration": 0.25 } );
 }
 
+Pulldown.prototype.show = function () {
+  // implemented in derived object
+}
+
+Pulldown.prototype.hide = function () {
+  // implemented in derived object
+}
+
 Pulldown.prototype.shutdown = function () {
   // if this pulldown is to be cached, then simply hide it rather than shutting it down completely
   if ( this.cache ) {
-    addElementClass( this.div, "invisible" );
+    this.hide();
     return false;
   }
 
@@ -4725,12 +4733,12 @@ Color_pulldown.prototype.color_mouse_pressed = function ( event ) {
 }
 
 Color_pulldown.prototype.color_mouse_released = function ( event ) {
+  event.stop();
+
   var self = this;
   setTimeout( function () {
     self.shutdown();
   }, 100 );
-
-  event.stop();
 }
 
 Color_pulldown.prototype.select_color = function ( color_code, skip_set ) {
@@ -4750,9 +4758,9 @@ Color_pulldown.prototype.select_color_box = function ( color_box, color_code, sk
   if ( color_code == undefined || color_code == null )
     color_code = getStyle( color_box, "background-color" );
 
-  var LIGHT_DARK_THRESHOLD = 0.5;
+  var LIGHT_DARK_THRESHOLD = 0.45;
 
-  if ( Color.fromString( color_code ).asHSL().l > LIGHT_DARK_THRESHOLD )
+  if ( Color.fromString( color_code ).asHSL().l >= LIGHT_DARK_THRESHOLD )
     addElementClass( color_box, "color_box_light_selected" );
   else
     addElementClass( color_box, "color_box_dark_selected" );
