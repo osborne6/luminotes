@@ -66,10 +66,12 @@ h1 {
   outline: none;
   position: relative;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 #toolbar .image_button_small {
   background: transparent url(/static/images/toolbar/small/buttons.png);
+  cursor: pointer;
 }
 
 #toolbar .button_background {
@@ -868,7 +870,6 @@ h1 {
   height: 1.5em;
   text-align: center;
   vertical-align: middle;
-  cursor: pointer;
   padding: 0;
   margin: 0;
 }
@@ -882,6 +883,7 @@ h1 {
   height: 1.5em;
   padding: 0;
   margin: 0;
+  cursor: pointer;
 }
 
 #color_table .color_box:hover {
