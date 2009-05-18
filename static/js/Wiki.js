@@ -1581,20 +1581,22 @@ Wiki.prototype.toggle_color_button = function ( event ) {
   if ( this.focused_editor && this.focused_editor.read_write ) {
     this.focused_editor.focus();
 
-    // if a pulldown is already open, then just close it
     var existing_div = getElement( "color_pulldown" );
-
     if ( existing_div ) {
-      this.up_image_button( "color" );
-      existing_div.pulldown.shutdown();
-      existing_div.pulldown = null;
+      if ( hasElementClass( existing_div, "invisible" ) ) {
+        this.down_image_button( "color" );
+        existing_div.pulldown.show();
+      } else {
+        this.up_image_button( "color" );
+        existing_div.pulldown.hide();
+      }
       return;
     }
 
-    this.down_image_button( "color" );
     this.clear_messages();
     this.clear_pulldowns();
 
+    this.down_image_button( "color" );
     new Color_pulldown( this, this.notebook.object_id, this.invoker, event.target(), this.focused_editor );
   }
 
@@ -2842,12 +2844,12 @@ Wiki.prototype.clear_pulldowns = function ( ephemeral_only ) {
 
     // only close the pulldown if it's been open at least a quarter second
     if ( new Date() - result.pulldown.init_time < 250 )
-      continue
+      continue;
     if ( ephemeral_only && !result.pulldown.ephemeral )
       continue;
 
-    result.pulldown.shutdown();
-    result.pulldown = null;
+    if ( result.pulldown.shutdown() )
+      result.pulldown = null;
   }
 }
 
@@ -3187,7 +3189,7 @@ Wiki.prototype.toggle_editor_tools = function ( event, editor ) {
 connect( window, "onload", function ( event ) { new Wiki( new Invoker() ); } );
 
 
-function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemeral ) {
+function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemeral, cache ) {
   this.wiki = wiki;
   this.notebook_id = notebook_id;
   this.div = createDOM( "div", { "id": pulldown_id, "class": "pulldown" } );
@@ -3196,6 +3198,7 @@ function Pulldown( wiki, notebook_id, pulldown_id, anchor, relative_to, ephemera
   this.anchor = anchor;
   this.relative_to = relative_to;
   this.ephemeral = ephemeral;
+  this.cache = cache || false;
 
   addElementClass( this.div, "invisible" );
 
@@ -3304,10 +3307,17 @@ Pulldown.prototype.update_position = function ( always_left_align ) {
 }
 
 Pulldown.prototype.shutdown = function () {
+  // if this pulldown is to be cached, then simply hide it rather than shutting it down completely
+  if ( this.cache ) {
+    addElementClass( this.div, "invisible" );
+    return false;
+  }
+
   disconnectAll( this.div );
 
   if ( this.div && this.div.parentNode )
     removeElement( this.div );
+  return true;
 }
 
 
@@ -3360,6 +3370,18 @@ function Tools_pulldown( wiki, notebook_id, invoker, editor ) {
 
 Tools_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Tools_pulldown.prototype.constructor = Tools_pulldown;
+
+Pulldown.prototype.hide = function () {
+  Pulldown.prototype.hide.call( this );
+}
+
+Pulldown.prototype.show = function () {
+  Pulldown.prototype.show.call( this );
+}
+
+Pulldown.prototype.toggle_hidden = function () {
+  Pulldown.prototype.toggle_hidden.call( this );
+}
 
 Tools_pulldown.prototype.startup_clicked = function ( event ) {
   this.editor.startup = this.startup_checkbox.checked;
@@ -4579,29 +4601,12 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   this.initial_selected_mark = null;
   this.selected_color_box = null;
 
-  Pulldown.call( this, wiki, notebook_id, "color_pulldown", anchor );
+  Pulldown.call( this, wiki, notebook_id, "color_pulldown", anchor, null, false, true );
 
   this.invoker = invoker;
-
-  var current_colors = editor.current_colors();
-
-  this.foreground_code = current_colors[ 0 ];
-  if ( this.foreground_code == DEFAULT_FOREGROUND_CODE )
-    this.foreground_code = null;
-
-  this.background_code = current_colors[ 1 ];
-  if ( this.background_code == DEFAULT_BACKGROUND_CODE )
-    this.background_code = null;
+  this.detect_colors();
 
   var foreground_attributes = { "type": "radio", "id": "foreground_color_radio", "name": "color_type", "value": "foreground" };
-  var background_attributes = { "type": "radio", "id": "background_color_radio", "name": "color_type", "value": "background" };
-
-  if ( this.foreground_code || !this.background_code ) {
-    foreground_attributes[ "checked" ] = true;
-  } else {
-    background_attributes[ "checked" ] = true;
-  }
-
   this.foreground_radio = createDOM( "input", foreground_attributes );
 
   // using a button here instead of a <label> to make IE happy: when a <label> is used, clicking
@@ -4610,6 +4615,7 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
     { "type": "button", "class": "radio_label small_button", "value": "text", "title": "Set the current text color." }
   );
 
+  var background_attributes = { "type": "radio", "id": "background_color_radio", "name": "color_type", "value": "background" };
   this.background_radio = createDOM( "input", background_attributes );
   this.background_label = createDOM( "input",
     { "type": "button", "class": "radio_label small_button", "value": "background", "title": "Set the current background color." }
@@ -4654,16 +4660,7 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   var div = createDOM( "div", {}, radio_area, this.table );
   appendChildNodes( this.div, div );
 
-  if ( this.foreground_code || !this.background_code ) {
-    this.foreground_code = this.foreground_code || DEFAULT_FOREGROUND_CODE;
-    this.background_code = this.background_code || DEFAULT_BACKGROUND_CODE;
-    this.select_color( this.foreground_code, true );
-  } else {
-    this.foreground_code = this.foreground_code || DEFAULT_FOREGROUND_CODE;
-    this.background_code = this.background_code || DEFAULT_BACKGROUND_CODE;
-    this.select_color( this.background_code, true );
-  }
-
+  this.update_colors();
 
   var self = this;
   connect( this.table, "onmousedown", function ( event ) { self.color_mouse_pressed( event ); } );
@@ -4678,6 +4675,42 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
 
 Color_pulldown.prototype = new function () { this.prototype = Pulldown.prototype; };
 Color_pulldown.prototype.constructor = Color_pulldown;
+
+Color_pulldown.prototype.detect_colors = function () {
+  var current_colors = this.editor.current_colors();
+
+  this.foreground_code = current_colors[ 0 ];
+  if ( this.foreground_code == DEFAULT_FOREGROUND_CODE )
+    this.foreground_code = null;
+
+  this.background_code = current_colors[ 1 ];
+  if ( this.background_code == DEFAULT_BACKGROUND_CODE )
+    this.background_code = null;
+}
+
+Color_pulldown.prototype.update_colors = function () {
+  if ( this.foreground_code || !this.background_code ) {
+    this.foreground_code = this.foreground_code || DEFAULT_FOREGROUND_CODE;
+    this.background_code = this.background_code || DEFAULT_BACKGROUND_CODE;
+    this.foreground_radio_clicked();
+  } else {
+    this.foreground_code = this.foreground_code || DEFAULT_FOREGROUND_CODE;
+    this.background_code = this.background_code || DEFAULT_BACKGROUND_CODE;
+    this.background_radio_clicked();
+  }
+}
+
+Color_pulldown.prototype.show = function () {
+  this.detect_colors();
+  this.update_colors();
+
+  Pulldown.prototype.update_position.call( this );
+  removeElementClass( this.div, "invisible" );
+}
+
+Color_pulldown.prototype.hide = function () {
+  addElementClass( this.div, "invisible" );
+}
 
 Color_pulldown.prototype.color_mouse_pressed = function ( event ) {
   var color_box = event.target();
@@ -4717,9 +4750,9 @@ Color_pulldown.prototype.select_color_box = function ( color_box, color_code, sk
   if ( color_code == undefined || color_code == null )
     color_code = getStyle( color_box, "background-color" );
 
-  var LIGHT_DARK_THRESHOLD = 0.45;
+  var LIGHT_DARK_THRESHOLD = 0.5;
 
-  if ( Color.fromString( color_code ).asHSL().l >= LIGHT_DARK_THRESHOLD )
+  if ( Color.fromString( color_code ).asHSL().l > LIGHT_DARK_THRESHOLD )
     addElementClass( color_box, "color_box_light_selected" );
   else
     addElementClass( color_box, "color_box_dark_selected" );
@@ -4746,7 +4779,8 @@ Color_pulldown.prototype.background_radio_clicked = function ( event ) {
 }
 
 Color_pulldown.prototype.shutdown = function () {
-  Pulldown.prototype.shutdown.call( this );
+  if ( !Pulldown.prototype.shutdown.call( this ) )
+    return; // shutdown vetoed
 
   this.anchor.pulldown = null;
   disconnectAll( this.table );

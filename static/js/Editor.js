@@ -1546,7 +1546,7 @@ Editor.prototype.current_colors = function () {
     if ( name == "body" )
       break;
 
-    if ( name == "font" && node.getAttribute( "color" ) ) {
+    if ( foreground == null && name == "font" && node.getAttribute( "color" ) ) {
       foreground = node.getAttribute( "color" );
     } else if ( name == "span" || name == "font" ) {
       if ( foreground == null ) {
@@ -1578,8 +1578,7 @@ Editor.prototype.set_foreground_color = function( color_code ) {
   this.exec_command( "forecolor", Color.fromString( color_code ).toHexString() );
   if ( GECKO ) this.exec_command( "styleWithCSS", false );
 
-  if ( MSIE )
-    this.cleanup_color_html();
+  this.cleanup_color_html();
 }
 
 Editor.prototype.set_background_color = function( color_code ) {
@@ -1590,15 +1589,25 @@ Editor.prototype.set_background_color = function( color_code ) {
     this.exec_command( "hilitecolor", Color.fromString( color_code ).toHexString() );
   if ( GECKO ) this.exec_command( "styleWithCSS", false );
 
-  if ( MSIE )
-    this.cleanup_color_html();
+  this.cleanup_color_html();
 }
 
 Editor.prototype.cleanup_color_html = function () {
-  // for some reason, IE likes to add <font size=+0> tags when changing colors, which for some
-  // reason appears to slightly increase the rendered font size
   var fonts = getElementsByTagAndClassName( "font", null, this.document );
 
+  // if we somehow end up with both a color attribute and a CSS style on a particular <font>
+  // element, then remove the color attribute
+  if ( !MSIE ) {
+    for ( var i in fonts ) {
+      var node = fonts[ i ];
+      if ( node.hasAttribute( "style" ) && node.hasAttribute( "color" ) )
+        node.removeAttribute( "color" );
+    }
+    return;
+  }
+
+  // for some reason, IE likes to add <font size=+0> tags when changing colors, which for some
+  // reason appears to slightly increase the rendered font size
   for ( var i in fonts ) {
     var node = fonts[ i ];
 
