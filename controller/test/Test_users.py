@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import re
 import cherrypy
 import smtplib
@@ -3273,6 +3275,25 @@ class Test_users( Test_controller ):
   def test_paypal_notify_payment( self ):
     data = dict( self.PAYMENT_DATA )
     data[ u"custom" ] = self.user.object_id
+    data[ u"last_name" ] = u"Uümlaut"
+    result = self.http_post( "/users/paypal_notify", data );
+
+    assert len( result ) == 1
+    assert result.get( u"session_id" )
+    assert Stub_urllib2.result == u"VERIFIED"
+    assert Stub_urllib2.headers.get( u"Content-type" ) == u"application/x-www-form-urlencoded"
+    assert Stub_urllib2.url.startswith( "https://" )
+    assert u"paypal.com" in Stub_urllib2.url
+    assert Stub_urllib2.encoded_params
+
+    # being notified of a mere payment should not change the user's rate plan
+    user = self.database.load( User, self.user.object_id )
+    assert user.rate_plan == 0
+
+  def test_paypal_notify_payment_unicode( self ):
+    data = dict( self.PAYMENT_DATA )
+    data[ u"custom" ] = self.user.object_id
+    data[ u"" ] = self.user.object_id
     result = self.http_post( "/users/paypal_notify", data );
 
     assert len( result ) == 1
@@ -4674,6 +4695,12 @@ class Test_users( Test_controller ):
 
   def test_paypal_notify_download_payment( self ):
     data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    result = self.http_post( "/users/paypal_notify", data );
+    self.__assert_download_payment_success( result )
+
+  def test_paypal_notify_download_payment_unicode( self ):
+    data = dict( self.DOWNLOAD_PAYMENT_DATA )
+    data[ u"last_name" ] = u"Uümlaut"
     result = self.http_post( "/users/paypal_notify", data );
     self.__assert_download_payment_success( result )
 

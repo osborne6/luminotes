@@ -1357,6 +1357,17 @@ class Users( object ):
 
   TRANSACTION_ID_PATTERN = re.compile( u"^[a-zA-Z0-9]+$" )
 
+  @staticmethod
+  def urlencode( params ):
+    # unicode-safe wrapper for urllib.urlencode()
+    if isinstance( params, dict ):
+      params = params.items()
+
+    return urllib.urlencode(
+      [ ( key, isinstance( value, unicode ) and value.encode( "utf-8" ) or value )
+        for ( key, value ) in params ]
+    )
+
   def __paypal_notify_download( self, params, product, item_number ):
     # verify that quantity * the expected fee == mc_gross
     fee = float( product[ u"fee" ] )
@@ -1382,7 +1393,7 @@ class Users( object ):
       raise Payment_error( u"invalid item_name", params )
 
     params[ u"cmd" ] = u"_notify-validate"
-    encoded_params = urllib.urlencode( params )
+    encoded_params = self.urlencode( params )
 
     # verify txn_type
     txn_type = params.get( u"txn_type" )
@@ -1481,7 +1492,7 @@ class Users( object ):
         raise Payment_error( u"invalid period3", params )
 
     params[ u"cmd" ] = u"_notify-validate"
-    encoded_params = urllib.urlencode( params )
+    encoded_params = self.urlencode( params )
     
     # ask paypal to verify the request
     request = urllib2.Request( self.PAYPAL_URL )

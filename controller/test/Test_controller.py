@@ -184,7 +184,11 @@ class Test_controller( object ):
     dict. Return the result dict as returned by the invoked method.
     """
     from urllib import urlencode
-    post_data = urlencode( form_args )
+    if isinstance( form_args, dict ):
+      form_args = form_args.items()
+    post_data = urlencode(
+      [ ( k, isinstance( v, unicode ) and v.encode( "utf-8" ) or v ) for ( k, v ) in form_args ]
+    )
 
     if headers is None:
       headers = []

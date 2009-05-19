@@ -3,6 +3,8 @@
  * Added a "start a new discussion" link to each discussion forum page.
  * Updated Luminotes Server INSTALL file with instructions for setting the
    http_url configuration setting.
+ * Fixed a bug in which special characters in a customer's name prevented
+   PayPal payments from going through properly.
 
 1.6.11: April 28, 2009
  * Rewrote the way that the toolbar is implemented, laying the groundwork for
