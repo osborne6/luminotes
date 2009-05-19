@@ -1,10 +1,14 @@
-1.6.12: 
+1.6.12: May 19, 2009
  * Added a toolbar color button for setting text and background colors.
  * Added a "start a new discussion" link to each discussion forum page.
  * Updated Luminotes Server INSTALL file with instructions for setting the
    http_url configuration setting.
+ * You can now middle click on a link within a note to open it in a new
+   browser window or tab.
  * Fixed a bug in Luminotes Desktop in which a backslash within a note was
    duplicated each time the note was saved.
+ * Fixed a bug in which right clicking on a note did not always open the web
+   browser's context menu.
  * Fixed a bug in which special characters in a customer's name prevented
    PayPal payments from going through properly.
 

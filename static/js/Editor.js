@@ -1100,7 +1100,7 @@ Editor.prototype.mouse_released = function ( event ) {
 
   function handle_click( event ) {
     // we only want to deal with left mouse button clicks
-    if ( event.mouse().button.middle || event.mouse().button.right )
+    if ( event.mouse().button.right )
       return false;
 
     // search through the tree of elements containing the clicked target. if a link isn't found, bail
@@ -1122,6 +1122,12 @@ Editor.prototype.mouse_released = function ( event ) {
       if ( !/\/files\/new$/.test( link.href ) ) {
         window.open( link.href );
       }
+      return true;
+    }
+
+    // middle click opens the link in a new window
+    if ( event.mouse().button.middle ) {
+      window.open( link.href );
       return true;
     }
 
@@ -1162,6 +1168,9 @@ Editor.prototype.mouse_released = function ( event ) {
 }
 
 Editor.prototype.mouse_clicked = function ( event ) {
+  if ( event.mouse().button.middle || event.mouse().button.right )
+    return;
+
   var target = event.target();
   if ( !target ) return;
 
