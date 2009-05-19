@@ -174,6 +174,15 @@ class Database( object ):
     except ImportError:
       return None
 
+  def unescape( self, sql_command ):
+    """
+    For backends that don't treat backslashes specially, un-double all backslashes in the given
+    sql_command.
+    """
+    if self.__backend == Persistent.SQLITE_BACKEND:
+      return sql_command.replace( "\\\\", "\\" )
+    return sql_command
+
   @synchronized
   def save( self, obj, commit = True ):
     """
@@ -187,11 +196,11 @@ class Database( object ):
     connection = self.get_connection()
     cursor = connection.cursor()
 
-    cursor.execute( obj.sql_exists() )
+    cursor.execute( self.unescape( obj.sql_exists() ) )
     if cursor.fetchone():
-      cursor.execute( obj.sql_update() )
+      cursor.execute( self.unescape( obj.sql_update() ) )
     else:
-      cursor.execute( obj.sql_create() )
+      cursor.execute( self.unescape( obj.sql_create() ) )
 
     if isinstance( obj, self.CLASSES_NOT_TO_CACHE ):
       cache = None
@@ -285,7 +294,7 @@ class Database( object ):
     connection = self.get_connection()
     cursor = connection.cursor()
 
-    cursor.execute( sql_command )
+    cursor.execute( self.unescape( sql_command ) )
 
     row = self.__row_to_unicode( cursor.fetchone() )
     if not row:
@@ -317,7 +326,7 @@ class Database( object ):
     connection = self.get_connection()
     cursor = connection.cursor()
 
-    cursor.execute( sql_command )
+    cursor.execute( self.unescape( sql_command ) )
 
     objects = []
     row = self.__row_to_unicode( cursor.fetchone() )
@@ -352,7 +361,7 @@ class Database( object ):
     connection = self.get_connection()
     cursor = connection.cursor()
 
-    cursor.execute( sql_command )
+    cursor.execute( self.unescape( sql_command ) )
 
     if commit:
       connection.commit()
@@ -373,7 +382,7 @@ class Database( object ):
     if self.__backend == Persistent.SQLITE_BACKEND:
       cursor.executescript( sql_commands )
     else:
-      cursor.execute( sql_commands )
+      cursor.execute( self.unescape( sql_commands ) )
 
     if commit:
       connection.commit()
@@ -430,15 +439,15 @@ class Database( object ):
     # generate a random id, but on the off-chance that it collides with something else already in
     # the database, try again
     next_id = Database.generate_id()
-    cursor.execute( Object_type.sql_id_exists( next_id ) )
+    cursor.execute( self.unescape( Object_type.sql_id_exists( next_id ) ) )
 
     while cursor.fetchone() is not None:
       next_id = Database.generate_id()
-      cursor.execute( Object_type.sql_id_exists( next_id ) )
+      cursor.execute( self.unescape( Object_type.sql_id_exists( next_id ) ) )
 
     # save a new object with the next_id to the database
     obj = Object_type( next_id )
-    cursor.execute( obj.sql_create() )
+    cursor.execute( self.unescape( obj.sql_create() ) )
 
     if commit:
       connection.commit()

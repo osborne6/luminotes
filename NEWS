@@ -3,6 +3,8 @@
  * Added a "start a new discussion" link to each discussion forum page.
  * Updated Luminotes Server INSTALL file with instructions for setting the
    http_url configuration setting.
+ * Fixed a bug in Luminotes Desktop in which a backslash within a note was
+   duplicated each time the note was saved.
  * Fixed a bug in which special characters in a customer's name prevented
    PayPal payments from going through properly.
 
