@@ -2305,7 +2305,7 @@ class Test_notebooks( Test_controller ):
     # save over an existing note supplying new contents and a new title. the contents
     # should be too long before they're cleaned/stripped, but short enough after
     previous_revision = self.note.revision
-    new_note_contents = u"<h3>new title</h3><span>ha" * 962
+    new_note_contents = u"<h3>new title</h3><span>ha</span>" * 962
     result = self.http_post( "/notebooks/save_note/", dict(
       notebook_id = self.notebook.object_id,
       note_id = self.note.object_id,
@@ -2346,7 +2346,7 @@ class Test_notebooks( Test_controller ):
 
     assert note.object_id == self.note.object_id
     assert note.title == "new title"
-    assert note.contents == new_note_contents.replace( u"<span>", "" )
+    assert note.contents == new_note_contents
     assert note.startup == startup
     assert note.user_id == self.user.object_id
     assert note.rank == 0.0 
