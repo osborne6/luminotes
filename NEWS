@@ -1,5 +1,8 @@
 1.6.13: 
- *
+ * Fixed a Chrome/Safari bug in which popups such as those for export and
+   color were not positioned correctly if the page was scrolled past the top.
+ * Fixed a bug in which certain popups on the left and right side of the page
+   scrolled along with the page instead of staying fixed in place.
 
 1.6.12: May 19, 2009
  * Added a toolbar color button for setting text and background colors.

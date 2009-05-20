@@ -876,6 +876,8 @@ Wiki.prototype.resize_editor = function () {
 }
 
 Wiki.prototype.resize_toolbar = function () {
+  this.clear_pulldowns();
+
   var last_toolbar_button = getElement( "insertOrderedList" );
   var current_toolbar_bottom = getElementPosition( last_toolbar_button ).y + getElementDimensions( last_toolbar_button ).h;
   var viewport_size = getViewportDimensions();
@@ -3244,25 +3246,25 @@ function calculate_position( node, anchor, relative_to, always_left_align ) {
     } catch ( e ) {}
   }
 
-  // position the pulldown under the anchor
-  var position = getElementPosition( anchor );
+  var parent_node = anchor.parentNode;
+  var fixed_parent = null;
 
-  // in WebKit, work around a bug in which children/grandchildren/etc of relatively positioned
-  // elements inside of fixed position elements have an incorrect position
-  if ( WEBKIT ) {
-    var parent_node = anchor.parentNode;
-    var found_fixed_parent = false;
-
-    while ( parent_node ) {
-      if ( getStyle( parent_node, "position" ) == "fixed" )
-        found_fixed_parent = true;
-      else if ( found_fixed_parent && getStyle( parent_node, "position" ) == "relative" ) {
-        position.x -= parent_node.offsetLeft;
-        position.y -= parent_node.offsetTop;
-        break;
-      }
-      parent_node = parent_node.parentNode;
+  // determine whether this node has an ancentor node that has a fixed position
+  while ( parent_node && parent_node.nodeName != "#document" ) {
+    if ( getStyle( parent_node, "position" ) == "fixed" ) {
+      fixed_parent = parent_node;
+      break;
     }
+
+    parent_node = parent_node.parentNode;
+  }
+
+  // position the pulldown under the anchor relative to the fixed ancestor (if any)
+  var position = getElementPosition( anchor, fixed_parent );
+  if ( fixed_parent ) {
+    position.x += fixed_parent.offsetLeft;
+    position.y += fixed_parent.offsetTop;
+    setStyle( node, { "position": "fixed" } )
   }
 
   if ( relative_to ) {
