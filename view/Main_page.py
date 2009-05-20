@@ -291,9 +291,14 @@ class Main_page( Page ):
                 class_ = u"blank_note_stub_hidden_border",
               ) or None,
               ( forum_tag and user.username and user.username != u"anonymous" ) and \
-                P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button. Or, ",
-                   A( u"start a new discussion", href = u"/forums/%s/create_thread" % forum_tag.value ), u".", separator = "",
-                   class_ = u"small_text" ) or None,
+                Span(
+                  ( forum_tag.value == "blog" ) and
+                    P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button.",
+                       class_ = u"small_text" ) or
+                    P( u"To write a comment, click that large \"+\" button to the left. To publish your comment, click the save button. Or, ",
+                       A( u"start a new discussion", href = u"/forums/%s/create_thread" % forum_tag.value ), u".", separator = "",
+                       class_ = u"small_text" ),
+                ) or None,
               ( forum_tag and ( not user.username or user.username == u"anonymous" ) ) and \
                 P( u"To write a comment, please login first. No account?", A( u"Sign up", href = u"/pricing" ), u"to get a free account.", class_ = "small_text" ) or None,
               Page_navigation(
