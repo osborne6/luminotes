@@ -1558,7 +1558,7 @@ Editor.prototype.current_colors = function () {
 
     if ( foreground == null && name == "font" && node.getAttribute( "color" ) ) {
       foreground = node.getAttribute( "color" );
-    } else if ( name == "span" || name == "font" ) {
+    } else if ( name == "span" || name == "font" || name == "h3" ) {
       if ( foreground == null ) {
         foreground = getStyle( node, "color" )
         if ( foreground == "transparent" || foreground == DEFAULT_FOREGROUND_CODE ||

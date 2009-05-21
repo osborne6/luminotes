@@ -1,8 +1,15 @@
 1.6.13: 
+ * Added a dynamic preview of your current color selections to the color
+   picker. This lets you see what the selected colors will look like as you
+   are selecting them.
+ * Made the color picker stay open after a color is selected. This makes it
+   easier to set both foreground and background colors.
  * Fixed a Chrome/Safari bug in which popups such as those for export and
    color were not positioned correctly if the page was scrolled past the top.
  * Fixed a bug in which certain popups on the left and right side of the page
    scrolled along with the page instead of staying fixed in place.
+ * Fixed a bug in which detecting or saving colors set on note titles did not
+   work.
 
 1.6.12: May 19, 2009
  * Added a toolbar color button for setting text and background colors.

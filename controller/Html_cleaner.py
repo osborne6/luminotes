@@ -129,6 +129,7 @@ class Html_cleaner(HTMLParser):
       'table': [ 'cellpadding', 'cellspacing', 'border', 'width', 'height' ],
       'font': [ 'size', 'face', 'color', 'style', 'class' ],
       'span': [ 'style' ],
+      'h3': [ 'style' ],
       'td': [ 'rowspan', 'colspan', 'width', 'height' ],
       'th': [ 'rowspan', 'colspan', 'width', 'height' ],
     }

@@ -4666,7 +4666,19 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
     appendChildNodes( tbody, row_node );
   }
 
-  var div = createDOM( "div", {}, radio_area, this.table );
+  this.done_button = createDOM(
+    "input", {
+      "type": "button",
+      "class": "button",
+      "value": "done",
+      "title": "done changing colors"
+    }
+  );
+
+  this.preview_area = createDOM( "span", { "class": "color_preview_text" }, "Preview" );
+  var bottom_area = createDOM( "div", {}, this.preview_area, this.done_button );
+
+  var div = createDOM( "div", {}, radio_area, this.table, bottom_area );
   appendChildNodes( this.div, div );
 
   this.update_colors();
@@ -4674,10 +4686,13 @@ function Color_pulldown( wiki, notebook_id, invoker, anchor, editor ) {
   var self = this;
   connect( this.table, "onmousedown", function ( event ) { self.color_mouse_pressed( event ); } );
   connect( this.table, "onmouseup", function ( event ) { self.color_mouse_released( event ); } );
+  connect( this.table, "onmouseover", function ( event ) { self.color_mouse_hovered( event ); } );
+  connect( this.table, "onmouseout", function ( event ) { self.color_mouse_left( event ); } );
   connect( this.foreground_radio, "onclick", function ( event ) { self.foreground_radio_clicked( event ); } );
   connect( this.foreground_label, "onclick", function ( event ) { self.foreground_radio_clicked( event ); event.stop(); } );
   connect( this.background_radio, "onclick", function ( event ) { self.background_radio_clicked( event ); } );
   connect( this.background_label, "onclick", function ( event ) { self.background_radio_clicked( event ); event.stop(); } );
+  connect( this.done_button, "onclick", function ( event ) { self.shutdown(); } );
 
   Pulldown.prototype.finish_init.call( this );
 }
@@ -4730,27 +4745,38 @@ Color_pulldown.prototype.color_mouse_pressed = function ( event ) {
   this.select_color_box( color_box );
 
   event.stop();
-  this.editor.focus();
-  this.editor.collapse_cursor();
 }
 
 Color_pulldown.prototype.color_mouse_released = function ( event ) {
   event.stop();
+}
 
-  var self = this;
-  setTimeout( function () {
-    self.shutdown();
-  }, 100 );
+Color_pulldown.prototype.color_mouse_hovered = function ( event ) {
+  var color_box = event.target();
+  if ( !hasElementClass( color_box, "color_box" ) )
+    return;
+
+  var color_code = getStyle( color_box, "background-color" );
+
+  if ( this.background_radio.checked )
+    setStyle( this.preview_area, { "background-color": color_code } );
+  else
+    setStyle( this.preview_area, { "color": color_code } );
+}
+
+Color_pulldown.prototype.color_mouse_left = function ( event ) {
+  setStyle( this.preview_area, { "color": this.foreground_code } );
+  setStyle( this.preview_area, { "background-color": this.background_code } );
 }
 
 Color_pulldown.prototype.select_color = function ( color_code, skip_set ) {
   var color_box = getElement( "color_" + color_code.substring( 1 ) );
 
   if ( color_box )
-    this.select_color_box( color_box, color_code, skip_set );
+    this.select_color_box( color_box, color_code );
 }
 
-Color_pulldown.prototype.select_color_box = function ( color_box, color_code, skip_set ) {
+Color_pulldown.prototype.select_color_box = function ( color_box, color_code ) {
   if ( this.selected_color_box ) {
     this.selected_color_box.value = " ";
     removeElementClass( this.selected_color_box, "color_box_light_selected" );
@@ -4770,12 +4796,13 @@ Color_pulldown.prototype.select_color_box = function ( color_box, color_code, sk
   color_box.value = "x";
   this.selected_color_box = color_box;
 
-  if ( skip_set == false || skip_set == undefined || skip_set == null ) {
-    if ( this.background_radio.checked )
-      this.editor.set_background_color( color_code );
-    else
-      this.editor.set_foreground_color( color_code );
-  }
+  if ( this.background_radio.checked )
+    this.background_code = color_code;
+  else
+    this.foreground_code = color_code;
+
+  setStyle( this.preview_area, { "color": this.foreground_code } );
+  setStyle( this.preview_area, { "background-color": this.background_code } );
 }
 
 Color_pulldown.prototype.foreground_radio_clicked = function ( event ) {
@@ -4789,11 +4816,22 @@ Color_pulldown.prototype.background_radio_clicked = function ( event ) {
 }
 
 Color_pulldown.prototype.shutdown = function () {
+  if ( !hasElementClass( this.div, "invisible" ) ) {
+    this.editor.focus();
+    if ( this.foreground_code )
+      this.editor.set_foreground_color( this.foreground_code );
+    if ( this.background_code )
+      this.editor.set_background_color( this.background_code );
+
+    this.editor.collapse_cursor();
+  }
+
   if ( !Pulldown.prototype.shutdown.call( this ) )
-    return; // shutdown vetoed
+    return; // "real" shutdown vetoed
 
   this.anchor.pulldown = null;
   disconnectAll( this.table );
+  disconnectAll( this.done_button );
   disconnectAll( this );
 }
 
