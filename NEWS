@@ -1,3 +1,7 @@
+1.6.14: June 14, 2009
+ * Fixed a bug in which some printed or exported notes appeared in
+   alphabetical order instead of your chosen ordering.
+
 1.6.13: May 20, 2009
  * Added a dynamic preview of your current color selections to the color
    picker. This lets you see what the selected colors will look like as you

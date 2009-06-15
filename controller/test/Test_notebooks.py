@@ -4632,19 +4632,20 @@ class Test_notebooks( Test_controller ):
     notes = result.get( "notes" )
     assert len( notes ) == self.database.select_one( int, self.notebook.sql_count_notes() )
     startup_note_allowed = True
-    previous_revision = None
+    previous_rank = True
 
-    # assert that startup notes come first, then normal notes in alphabetical order
+    # assert that startup notes come first, then normal notes. each group should be ordered by rank
     for note in notes:
       if note.startup:
         assert startup_note_allowed
       else:
+        previous_rank = None
         startup_note_allowed = False
 
-        if previous_revision:
-          assert note.revision < previous_revision
+        if previous_rank:
+          assert note.rank >= previous_rank
 
-        previous_revision = note.revision
+        previous_rank = note.rank
 
       db_note = self.database.load( Note, note.object_id )
       assert db_note
@@ -4712,9 +4713,9 @@ class Test_notebooks( Test_controller ):
     expected_note_count = self.database.select_one( int, self.notebook.sql_count_notes() )
     note_count = 0
     startup_note_allowed = True
-    previous_revision = None
+    previous_rank = None
 
-    # assert that startup notes come first, then normal notes in alphabetical order
+    # assert that startup notes come first, then normal notes. each group should be ordered by rank
     for row in reader:
       note_count += 1
 
@@ -4724,12 +4725,13 @@ class Test_notebooks( Test_controller ):
       if startup:
         assert startup_note_allowed
       else:
+        previous_rank = None
         startup_note_allowed = False
 
-        if previous_revision:
-          assert revision_date < previous_revision
+        if previous_rank:
+          assert note.rank >= previous_rank
 
-        previous_revision = revision_date
+        previous_rank = note.rank
 
       db_note = self.database.load( Note, note_id )
       assert db_note
@@ -4788,19 +4790,20 @@ class Test_notebooks( Test_controller ):
     notes = result.get( "notes" )
     assert len( notes ) == self.database.select_one( int, self.notebook.sql_count_notes() )
     startup_note_allowed = True
-    previous_revision = None
+    previous_rank = None
 
-    # assert that startup notes come first, then normal notes in alphabetical order
+    # assert that startup notes come first, then normal notes. each group should be ordered by rank
     for note in notes:
       if note.startup:
         assert startup_note_allowed
       else:
+        previous_rank = None
         startup_note_allowed = False
 
-        if previous_revision:
-          assert note.revision < previous_revision
+        if previous_rank:
+          assert note.rank >= previous_rank
 
-        previous_revision = note.revision
+        previous_rank = note.rank
 
       db_note = self.database.load( Note, note.object_id )
       assert db_note

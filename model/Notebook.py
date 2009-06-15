@@ -172,7 +172,7 @@ class Notebook( Persistent ):
     """
     Return a SQL string to load a list of the non-startup notes within this notebook.
     """
-    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and startup = 'f' order by lower( title );" % quote( self.object_id )
+    return "select id, revision, title, contents, notebook_id, startup, deleted_from_id, rank, user_id from note_current where notebook_id = %s and startup = 'f' order by rank;" % quote( self.object_id )
 
   def sql_load_startup_notes( self ):
     """
