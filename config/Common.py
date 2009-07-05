@@ -33,7 +33,7 @@ settings = {
         "storage_quota_bytes": 30 * MEGABYTE,
         "included_users": 1,
         "notebook_sharing": True,
-        "notebook_collaboration": False,
+        "notebook_collaboration": True,
         "user_admin": False,
         "fee": None,
         "yearly_fee": None,

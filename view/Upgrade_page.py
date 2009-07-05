@@ -8,7 +8,7 @@ class Upgrade_page( Product_page ):
 
   def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, rate_plans, unsubscribe_button ):
     MEGABYTE = 1024 * 1024
-    rate_plans = list( rate_plans )
+    rate_plans = list( rate_plans )[ 0:1 ] # only the free rate plan is shown
     user_plan = rate_plans[ user.rate_plan ]
 
     Product_page.__init__(
@@ -35,11 +35,6 @@ class Upgrade_page( Product_page ):
               width = u"138", height = u"51",
               alt = u"sign up",
             ),
-          ),
-          P(
-            ( user.rate_plan == 0 ) and u"30-day free trial on all plans." or None,
-            Span( u"Upgrade, downgrade, or cancel anytime.", class_ = u"lighter_text" ),
-            class_ = u"upgrade_subtitle",
           ),
           P(
             Table(
@@ -85,12 +80,6 @@ class Upgrade_page( Product_page ):
             ( user.rate_plan > 0 ) and unsubscribe_button or None,
           ) or None,
 
-          P(
-            u"Get two months free with a ", A( u"yearly subscription", href = "#yearly" ), u"!",
-            separator = "",
-            class_ = u"yearly_link",
-          ),
-
           Div(
             u"Don't want to take notes online? ",
             A( u"Download Luminotes Desktop", href = u"/download" ),
@@ -104,26 +93,6 @@ class Upgrade_page( Product_page ):
 
         Div(
           Div(
-            H4( u"Which plan is right for me?", class_ = u"upgrade_question" ),
-            P(
-              u"The", B( u"Standard" ), u"and", B( u"Basic" ),
-              u"""
-              plans are designed for individuals, allowing you to invite as
-              many people as you like to view or edit your wiki. They only need free Luminotes
-              accounts.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            P(
-              u"The", B( u"Premium" ), u"and", B( u"Plus" ),
-              u"""
-              plans are designed for teams and organizations, allowing you to create and manage your
-              own user accounts. In addition, you can invite as many people as you like to view or
-              edit your wiki, whether they're a user you created or they just have a free
-              Luminotes account.
-              """,
-              class_ = u"upgrade_text",
-            ),
             H4( u"Do you have a desktop version I can download?", class_ = u"upgrade_question" ),
             P(
               u"""
@@ -156,109 +125,14 @@ class Upgrade_page( Product_page ):
               """,
               class_ = u"upgrade_text",
             ),
-            H4( u"How does upgrading work?", class_ = u"upgrade_question" ),
+            H4( u"What happens to my wiki if I stop using Luminotes?", class_ = u"upgrade_question" ),
             P(
               """
-              When you upgrade your Luminotes account, you'll be presented with a simple PayPal
-              checkout page. If you already have a PayPal account, you can upgrade your Luminotes
-              account in a matter of seconds. If you don't yet have a PayPal account, no problem.
-              Just enter your payment information. It's fast and secure.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            P(
-              """
-              After you subscribe, your Luminotes account will be upgraded automatically so you can
-              start enjoying your new plan's benefits right away.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"How does the 30-day free trial work?", class_ = u"upgrade_question" ),
-            P(
-              """
-              When you subscribe to Luminotes, your first 30 days are completely free. And if you
-              cancel during that period, you aren't charged a thing. During those 30 days, you have
-              full access to all features of your selected subscription plan. That way, you can see
-              whether Luminotes works for you without any sort of commitment.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"Once I subscribe, can I cancel anytime?", class_ = u"upgrade_question" ),
-            P(
-              """
-              Of course. There are no contracts or cancellation fees. There are no hidden fees. You
-              can upgrade, downgrade, or cancel your account anytime. Simply login to your account
-              and return to this pricing page. Or, if you prefer, you can cancel your subscription
-              directly from PayPal.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            P(
-              """
-              If you cancel during your trial period, then you are not charged anything at all.
-              And if you cancel anytime after the trial period ends, then your subscription is
-              stopped immediately, and you are never charged again. Subscription fees that you have
-              already paid still apply. You are welcome to
-              """,
-              A( u"contact support", href = "/contact_info" ),
-              """
-              with any billing questions.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"What happens to my wiki if I cancel my subscription?", class_ = u"upgrade_question" ),
-            P(
-              """
-              There is no lock-in with Luminotes. So if you cancel your subscription, you're simply
-              returned to the free account level without losing access to your wiki. And of course
-              you can download your entire wiki whenever you like.
+              There is no lock-in with Luminotes. You can export your entire wiki to a stand-alone web page or a CSV spreadsheet &mdash; anytime you like.
               """,
               class_ = u"upgrade_text",
             ),
             class_= u"wide_center_area",
-          ),
-
-          P(
-            A( name = "yearly" ),
-            Div(
-              u"Get two months free with a yearly subscription!",
-              class_ = u"upgrade_subtitle",
-            ),
-            Table(
-              self.fee_row( rate_plans, user, yearly = True ),
-              self.spacer_row( rate_plans ),
-              Tr(
-                [ Td(
-                  ( plan[ u"included_users" ] == 1 ) and
-                    Span( Span( u"Single", class_ = u"highlight" ), u"user", title = u"This plan includes one user account, so it's ideal for individuals." ) or
-                    Span( u"Up to", Span( "%s" % plan[ u"included_users" ], class_ = u"highlight" ), u"users", title = "This plan includes multiple accounts, including an admin area where you can create and manage users for your organization." ),
-                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              Tr(
-                [ Td(
-                  plan[ u"storage_quota_bytes" ] and
-                    Span( "%s MB" % ( plan[ u"storage_quota_bytes" ] // MEGABYTE ), class_ = u"highlight" ) or
-                    Span( u"unlimited", class_ = u"highlight" ),
-                  u"storage",
-                  title = u"Storage space for your notes, documents, and files.",
-                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ),
-              plan[ u"notebook_sharing"] and Tr(
-                [ Td(
-                  plan[ u"notebook_collaboration" ] and
-                    Span( u"Invite", Span( u"editors", class_ = u"highlight"  ), title = u"Invite people to collaborate on your wiki. Share only the notebooks you want. Keep the others private." ) or
-                    Span( u"Invite", Span( u"viewers", class_ = u"highlight" ), title = u"Invite people to view your wiki. Share only the notebooks you want. Keep the others private." ),
-                  class_ = u"feature_value" + ( index == self.FOCUSED_PLAN and u" focused_feature_value" or u"" ),
-                ) for ( index, plan ) in enumerate( rate_plans ) ],
-              ) or None,
-              self.button_row( rate_plans, user, yearly = True ),
-              self.spacer_row( rate_plans, bottom = True ),
-              border = u"1",
-              id = u"upgrade_table_small",
-            ),
-            class_= u"upgrade_table_area",
           ),
 
           Div(

@@ -8,7 +8,6 @@ class Download_page( Product_page ):
     MEGABYTE = 1024 * 1024
 
     # for now, just assume there's a single download package
-    download_button = download_products[ 0 ].get( "button" ).strip()
     news_url = u"http://luminotes.com/hg/luminotes/file/%s/NEWS" % VERSION
 
     Product_page.__init__(
@@ -32,7 +31,6 @@ class Download_page( Product_page ):
           ),
           P(
             u"Install Luminotes on your computer.",
-            Span( u"60-day money-back guarantee.", class_ = u"lighter_text" ),
             class_ = u"upgrade_subtitle",
           ),
           Div(
@@ -40,13 +38,13 @@ class Download_page( Product_page ):
               P(
                 B( "Upgrading:" ),
                 u"""
-                If you have already purchased Luminotes Desktop and would like to download a newer
-                version, simply follow the link you received after your purchase.
+                If you already have Luminotes Desktop and would like to upgrade to a newer
+                version, simply download and install it. All of your notes will be preserved.
                 """,
                 A( "Check out what's new in version %s" % VERSION, href = news_url ),
               ),
               P(
-                u"Can't find your download link or need help? Please",
+                u"Need help? Please",
                 A( u"contact support", href = u"/contact_info" ),
                 u"for assistance.",
               ),
@@ -119,7 +117,7 @@ class Download_page( Product_page ):
                 ),
                 Tr( Td( colspan = "2" ), class_ = u"spacer_row" ),
                 Tr(
-                  ( not upgrade ) and Td(
+                  Td(
                     Div(
                       A(
                         Img(
@@ -129,24 +127,9 @@ class Download_page( Product_page ):
                         ),
                         href = "/static/luminotes.exe",
                       ),
-                      Div(
-                        u"Completely free",
-                        class_ = u"tiny_text",
-                      ),
                       class_ = u"trial_button_area",
                     ),
-                    colspan = download_button and "1" or "2",
-                  ) or None,
-                  download_button and Td(
-                    Div(
-                      download_button,
-                      Div(
-                        u"Fast and secure",
-                        class_ = u"tiny_text",
-                      ),
-                      class_ = u"download_button_area",
-                    ),
-                    colspan = upgrade and "2" or "1",
+                    colspan = "1",
                   ) or None,
                 ),
                 Tr( Td( colspan = "2" ), class_ = u"spacer_row" ),
@@ -174,9 +157,7 @@ class Download_page( Product_page ):
             P(
               u"""
               Absolutely. With Luminotes Desktop, your notes are stored locally on your own
-              computer, not on the web. But if you do want to access your wiki both locally
-              and online, a future release will include optional online synchronization.
-              There is also a complete
+              computer, not on the web. There is also a complete
               """,
               A( u"Luminotes privacy policy", href = "/privacy" ),
               u"""
@@ -185,62 +166,11 @@ class Download_page( Product_page ):
               """,
               class_ = u"upgrade_text",
             ),
-            H4( u"Are upgrades included?", class_ = u"upgrade_question" ),
-            P(
-              """
-              When you purchase Luminotes Desktop, you automatically get full access to all future
-              upgrades.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"Can I try before I buy?", class_ = u"upgrade_question" ),
-            P(
-              """
-              Sure! Just
-              """,
-              A( u"download the full-featured free trial", href = "/static/luminotes.exe" ),
-              """
-              or check out the
-              """,
-              A( u"online demo", href = "/users/demo" ),
-              """
-              to see Luminotes for yourself.
-              """,
-              class_ = u"upgrade_text",
-            ),
             H4( u"Can I run Luminotes Desktop from a USB flash drive?", class_ = u"upgrade_question" ),
             P(
               """
               Yes! You can keep your wiki in your pocket by running Luminotes Desktop directly from
               a USB flash drive. Full instructions are included with the download.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"What forms of payment do you accept?", class_ = u"upgrade_question" ),
-            P(
-              """
-              When you click the "Buy Now" button above, you'll be presented with a simple checkout
-              page. You can purchase Luminotes Desktop with either a credit card or PayPal. It's
-              fast and secure. You do not need a PayPal account to make the purchase.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            P(
-              """
-              After you fill out the payment information, you will be able to download Luminotes
-              Desktop and start taking notes right away.
-              """,
-              class_ = u"upgrade_text",
-            ),
-            H4( u"What is your refund policy?", class_ = u"upgrade_question" ),
-            P(
-              """
-              It's this simple: Luminotes Desktop comes with a 60-day money-back guarantee. No
-              questions asked. If you would like a refund, you need only
-              """,
-              A( u"contact support", href = "/contact_info" ),
-              """
-              and ask for one.
               """,
               class_ = u"upgrade_text",
             ),
@@ -276,14 +206,7 @@ class Download_page( Product_page ):
                     ),
                     class_ = u"trial_button_area",
                   ),
-                  colspan = download_button and "1" or "2",
-                ) or None,
-                download_button and Td(
-                  Div(
-                    download_button,
-                    class_ = u"download_button_area",
-                  ),
-                  colspan = upgrade and "2" or "1",
+                  colspan = "1",
                 ) or None,
               ),
               id = u"upgrade_table_small",
@@ -293,7 +216,7 @@ class Download_page( Product_page ):
 
           Div(
             P(
-              Span( u"Have a question before you buy?", class_ = u"hook_action_question" ), Br(),
+              Span( u"Have a question?", class_ = u"hook_action_question" ), Br(),
               A( u"Contact support", href = u"/contact_info", class_ = u"hook_action" ),
               class_ = u"hook_action_area",
               separator = u"",

@@ -1,3 +1,6 @@
+1.6.15: ?
+ * No longer charging for Luminotes Desktop or offering subscription signups.
+
 1.6.14: June 14, 2009
  * Fixed a bug in which some printed or exported notes appeared in
    alphabetical order instead of your chosen ordering.
