@@ -1523,10 +1523,11 @@ class Users( object ):
       self.update_groups( user )
       self.__database.commit()
     elif txn_type == u"subscr_cancel":
-      user.rate_plan = 0 # return the user to the free account level
-      self.__database.save( user, commit = False )
-      self.update_groups( user )
-      self.__database.commit()
+      pass # HACK: for now, ignore cancellations
+#      user.rate_plan = 0 # return the user to the free account level
+#      self.__database.save( user, commit = False )
+#      self.update_groups( user )
+#      self.__database.commit()
     elif txn_type in ( u"subscr_payment", u"subscr_failed", "subscr_eot" ):
       pass # for now, ignore payments and let paypal handle them
     else:
