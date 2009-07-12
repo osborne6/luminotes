@@ -1,4 +1,4 @@
-1.6.15: ?
+1.6.15: July 12, 2009
  * No longer charging for Luminotes Desktop or offering subscription signups.
  * Fixed a Firefox 3.5 bug in which after ending a link ctrl-L, typed text
    ended up as part of the link. Now, ctrl-L properly ends the link and any
