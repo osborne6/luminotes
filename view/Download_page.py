@@ -194,7 +194,7 @@ class Download_page( Product_page ):
                 )
               ),
               Tr(
-                ( not upgrade ) and Td(
+                Td(
                   Div(
                     A(
                       Img(
@@ -207,7 +207,7 @@ class Download_page( Product_page ):
                     class_ = u"trial_button_area",
                   ),
                   colspan = "1",
-                ) or None,
+                ),
               ),
               id = u"upgrade_table_small",
             ),
