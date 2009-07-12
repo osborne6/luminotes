@@ -9,7 +9,6 @@ class Upgrade_page( Product_page ):
   def __init__( self, user, notebooks, first_notebook, login_url, logout_url, rate_plan, groups, rate_plans, unsubscribe_button ):
     MEGABYTE = 1024 * 1024
     rate_plans = list( rate_plans )[ 0:1 ] # only the free rate plan is shown
-    user_plan = rate_plans[ user.rate_plan ]
 
     Product_page.__init__(
       self,
@@ -73,12 +72,6 @@ class Upgrade_page( Product_page ):
             ),
             class_ = u"upgrade_table_area",
           ),
-
-          user and user.username not in ( u"anonymous", None ) and P(
-            u"You're currently subscribed to Luminotes %s." % 
-            user_plan[ u"name" ].capitalize(),
-            ( user.rate_plan > 0 ) and unsubscribe_button or None,
-          ) or None,
 
           Div(
             u"Don't want to take notes online? ",
