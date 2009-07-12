@@ -1314,9 +1314,9 @@ Editor.prototype.end_link = function () {
   if ( this.iframe.contentWindow && this.iframe.contentWindow.getSelection ) { // browsers such as Firefox
     this.exec_command( "unlink" );
 
-    // necessary to actually end a link in WebKit. the side-effect is that the cursor jumps to the
+    // necessary to actually end a link. the side-effect is that the cursor jumps to the
     // end of the link if it's not already there
-    if ( link && WEBKIT ) {
+    if ( link ) {
       var selection = this.iframe.contentWindow.getSelection();
       var sentinel = this.document.createTextNode( Editor.title_placeholder_char );
       insertSiblingNodesAfter( link, sentinel );
