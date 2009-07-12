@@ -3,6 +3,8 @@
  * Fixed a Firefox 3.5 bug in which after ending a link ctrl-L, typed text
    ended up as part of the link. Now, ctrl-L properly ends the link and any
    typed text after the link does not become linked itself.
+ * Fixed a Firefox 3.5 bug in which bold mode (or italics mode) would
+   inexplicably end after typing a few characters.
 
 1.6.14: June 14, 2009
  * Fixed a bug in which some printed or exported notes appeared in

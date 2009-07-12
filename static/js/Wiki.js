@@ -1478,10 +1478,13 @@ Wiki.prototype.toggle_button = function ( event, button_id ) {
 }
 
 Wiki.prototype.update_button = function ( button_id, state_name, node_names ) {
-  if ( state_name && node_names && this.focused_editor.state_enabled( state_name, node_names ) )
+  if ( state_name && node_names && this.focused_editor.state_enabled( state_name, node_names ) ) {
     this.down_image_button( button_id );
-  else
-    this.up_image_button( button_id );
+    return 1;
+  }
+
+  this.up_image_button( button_id );
+  return 0;
 }
 
 Wiki.prototype.update_toolbar = function() {
@@ -1497,16 +1500,20 @@ Wiki.prototype.update_toolbar = function() {
     link = this.focused_editor.find_link_at_cursor();
   }
 
+  var enabled = 0;
   this.update_button( "newNote" );
-  this.update_button( "bold", "b", node_names );
-  this.update_button( "italic", "i", node_names );
-  this.update_button( "underline", "u", node_names );
-  this.update_button( "strikethrough", "strike", node_names );
-  this.update_button( "color", "color", node_names );
-  this.update_button( "font", "fontface", node_names );
-  this.update_button( "title", "h3", node_names );
-  this.update_button( "insertUnorderedList", "ul", node_names );
-  this.update_button( "insertOrderedList", "ol", node_names );
+  enabled += this.update_button( "bold", "b", node_names );
+  enabled += this.update_button( "italic", "i", node_names );
+  enabled += this.update_button( "underline", "u", node_names );
+  enabled += this.update_button( "strikethrough", "strike", node_names );
+  enabled += this.update_button( "color", "color", node_names );
+  enabled += this.update_button( "font", "fontface", node_names );
+  enabled += this.update_button( "title", "h3", node_names );
+  enabled += this.update_button( "insertUnorderedList", "ul", node_names );
+  enabled += this.update_button( "insertOrderedList", "ol", node_names );
+
+  if ( this.focused_editor && enabled == 0 )
+    this.focused_editor.cleanup_range();
 
   if ( link ) {
     // determine whether the link is a note link or a file link
