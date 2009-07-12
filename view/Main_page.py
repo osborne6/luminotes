@@ -99,6 +99,7 @@ class Main_page( Page ):
               Span(
                 note.contents,
                 class_ = u"static_note_contents",
+                separator = "",
               ),
               id = "static_note_%s" % note.object_id,
               class_ = u"static_note_div",
