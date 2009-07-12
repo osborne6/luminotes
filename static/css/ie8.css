@@ -1,0 +1,38 @@
+#note_tree_area_holder {
+  overflow: auto;
+  height: expression( eval( documentElement.offsetHeight - 100 ) );
+}
+
+#link_area_holder {
+  overflow: auto;
+  height: expression( eval( documentElement.offsetHeight - 100 ) );
+}
+
+#left_area {
+  width: auto;
+  margin-left: auto;
+}
+
+#link_area {
+  width: 20%;
+  margin-left: -20%;
+}
+
+#right_area {
+  width: auto;
+  margin-left: auto;
+}
+
+.note_frame {
+  margin-bottom: 1em;
+}
+
+.static_note_contents a[target ^= "_new"] {
+  background: none;
+  padding: 0;
+}
+
+.note_grabber {
+  position: relative;
+  left: 4px;
+}

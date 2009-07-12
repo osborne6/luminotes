@@ -5,6 +5,8 @@
    typed text after the link does not become linked itself.
  * Fixed a Firefox 3.5 bug in which bold mode (or italics mode) would
    inexplicably end after typing a few characters.
+ * Fixed an Internet Explorer 8 bug in which the toolbar was positioned
+   incorrectly.
 
 1.6.14: June 14, 2009
  * Fixed a bug in which some printed or exported notes appeared in

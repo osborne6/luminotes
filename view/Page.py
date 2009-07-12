@@ -21,7 +21,7 @@ class Page( Html ):
         Title( title and u"%s: %s" % ( app_name, title ) or app_name ),
         """<!--[if IE 6]><link href="/static/css/ie6.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
         """<!--[if IE 7]><link href="/static/css/ie7.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
-        """<!--[if IE 8]><link href="/static/css/ie7.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
+        """<!--[if IE 8]><link href="/static/css/ie8.css?%s" type="text/css" rel="stylesheet"></link><![endif]-->""" % VERSION,
       ),
       Body(
         Div(
