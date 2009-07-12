@@ -1031,17 +1031,10 @@ Editor.prototype.cleanup_html = function ( key_code ) {
 }
 
 Editor.prototype.cleanup_range = function () {
-  if ( !this.iframe.contentWindow.getSelection )
-    return;
-
-  var selection =  this.iframe.contentWindow.getSelection();
-  if ( selection.rangeCount > 0 )
-    var range = selection.getRangeAt( 0 );
-  else
-    var range = this.document.createRange();
-
-  if ( range.collapsed )
-    this.exec_command( "removeformat" );
+  if ( this.iframe.contentWindow.getSelection )
+    var selection =  this.iframe.contentWindow.getSelection();
+    if ( selection.isCollapsed )
+      this.exec_command( "removeformat" );
 }
 
 Editor.prototype.unformat_selection = function () {
