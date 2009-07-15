@@ -110,7 +110,7 @@ class Download_page( Product_page ):
                 ),
                 Tr(
                   Td(
-                    u"Firefox 2+, Internet Explorer 7, Chrome 1+, Safari 3+",
+                    u"Firefox 2+, Internet Explorer 7+, Chrome 1+, Safari 3+",
                     class_ = u"small_text",
                     colspan = "2",
                   ),
