@@ -427,7 +427,7 @@ Editor.prototype.position_cursor = function ( div_range ) {
       selection.addRange( range );
       return;
     }
-  } else if ( div_range && this.document.selection ) { // browsers such as IE
+  } else if ( div_range && this.document && this.document.selection ) { // browsers such as IE
     function text_length( text ) {
       var count = 0;
       for ( var i = 0; i < text.length; i++ ) {
@@ -470,7 +470,7 @@ Editor.prototype.position_cursor = function ( div_range ) {
     range.selectNodeContents( last_node );
     range.collapse( false );
     selection.addRange( range );
-  } else if ( this.document.selection ) { // browsers such as IE
+  } else if ( this.document && this.document.selection ) { // browsers such as IE
     var range = this.document.selection.createRange();
     range.move( "textedit" );
     range.select();
@@ -671,7 +671,7 @@ Editor.prototype.resize = function ( get_height_from_div ) {
     height -= FRAME_BORDER_HEIGHT * 2; // 2 pixels at the top and 2 at the bottom
   // if no height is given, get the height from this editor's document body
   } else {
-    if ( this.iframe && this.iframe.contentDocument && !WEBKIT ) { // Gecko and other sane browsers
+    if ( this.iframe && this.iframe.contentDocument && GECKO ) { // Gecko and other sane browsers
       height = elementDimensions( this.document.documentElement ).h;
     } else { // IE
       height = this.document.body.scrollHeight;
