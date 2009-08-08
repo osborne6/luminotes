@@ -1,2 +1,2 @@
-VERSION = u"1.6.17"
+VERSION = u"1.6.18"
 TRIAL = False

@@ -1111,7 +1111,7 @@ Wiki.prototype.key_pressed = function ( event ) {
     return;
 
   var code = event.key().code;
-  if ( event.modifier().ctrl ) {
+  if ( event.modifier().ctrl && !event.modifier().alt ) { 
     // ctrl-m: make a new note
     if ( code == 77 ) {
       this.create_blank_editor( event );
@@ -1141,7 +1141,7 @@ Wiki.prototype.key_pressed = function ( event ) {
 Wiki.prototype.editor_key_pressed = function ( editor, event ) {
   var code = event.key().code;
 
-  if ( event.modifier().ctrl ) {
+  if ( event.modifier().ctrl && !event.modifier().alt ) { 
     // ctrl-backtick: message with frame HTML contents (for debugging)
     if ( code == 192 || code == 96 ) {
       this.display_message( editor.contents() );
