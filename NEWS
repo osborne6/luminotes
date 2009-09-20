@@ -1,6 +1,8 @@
 1.6.18: 
  * Fixed a bug that prevented use of the AltGr key on Polish and other
    keyboards.
+ * Added a section in the INSTALL file for developers building their own
+   Luminotes Desktop installer.
 
 1.6.17: July 26, 2009
  * Fixed a bug that caused ever-growing notes in Internet Explorer 8.
