@@ -122,8 +122,8 @@ The recommended way to do this on Windows is as follows:
 
  10. Download and unpack the Luminotes source code.
 
-To actually build the Luminotes Desktop installer, cd to the Luminotes source
-directory and run:
+To actually build the Luminotes Desktop installer, open a command shell and cd
+to the Luminotes source directory. Then run:
 
   python.exe setup.py py2exe
   ISCC.exe dist\luminotes.iss
