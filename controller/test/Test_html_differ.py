@@ -1,3 +1,4 @@
+import time
 from controller.Html_differ import Html_differ
 
 
@@ -227,6 +228,18 @@ class Test_html_differ( object ):
     # there should be no change
     assert new_a == a
     assert new_b == b
+
+  def test_prepare_lists_with_style_and_timing( self ):
+    # An older version of the code took a really long time to parse certain
+    # lengthy style strings due to a backtracking regular expression, so check
+    # for that regression.
+    start_time = time.time()
+    a = [ 'foo ', 'bar ', 'baz ', 'quux' ]
+    b = [ 'foo ', 'bar ', 'baz ', '<span style="' + 'a: b' * 20 + '">' , 'quux' ]
+
+    result = self.differ.prepare_lists( a, b )
+
+    assert time.time() - start_time < 0.5
 
   def test_diff_lists_with_insert( self ):
     a = [ 'foo ', 'bar ', 'baz ', 'quux' ]

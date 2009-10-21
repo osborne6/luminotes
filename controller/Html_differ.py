@@ -82,9 +82,9 @@ class Html_differ( HTMLParser ):
     ( a, b ) = self.prepare_lists( a, b )
     return self.diff_lists( a, b )
 
-  SINGLE_TAG_PATTERN = re.compile( "<(\w+)(\s+[^>]*)*\s*/>" ) # e.g. '<br/>' or '<br />' or '<img src="foo" />'
-  START_TAG_PATTERN = re.compile( "<(\w+)(\s+[^>]*)*>" )      # e.g. '<i>' or '<a href="foo">'
-  END_TAG_PATTERN = re.compile( "</(\w+)>" )                  # e.g. '</i>' or '</a>'
+  SINGLE_TAG_PATTERN = re.compile( "<(\w+).*/>" ) # e.g. '<br/>' or '<br />' or '<img src="foo" />'
+  START_TAG_PATTERN = re.compile( "<(\w+).*>" )   # e.g. '<i>' or '<a href="foo">'
+  END_TAG_PATTERN = re.compile( "</(\w+)>" )      # e.g. '</i>' or '</a>'
 
   @staticmethod
   def track_open_tags( item, open_tags ):
