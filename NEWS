@@ -5,6 +5,9 @@
    Luminotes Desktop installer.
  * Added missing tools/usb_luminotes.sh for launching Luminotes Desktop from a
    USB drive on Linux.
+ * Now stripping certain invisible placeholder characters from print version
+   of Luminotes notebooks. These characters could show up when copy and pasted
+   into another application.
 
 1.6.17: July 26, 2009
  * Fixed a bug that caused ever-growing notes in Internet Explorer 8.
