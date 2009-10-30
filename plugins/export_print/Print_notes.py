@@ -11,6 +11,7 @@ class Print_notes( Html ):
     # relink all note links so they point to named anchors within the page
     for note in notes:
       contents = self.NOTE_LINK_PATTERN.sub( r'<a href="#note_\1">', note.contents )
+      contents = contents.replace( u"\u200B", u"" ) # Nuke any placeholder chars.
       relinked_notes[ note.object_id ] = contents
 
     Html.__init__(
