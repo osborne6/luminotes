@@ -50,7 +50,11 @@ def main( args ):
 
   cherrypy.config.update( settings )
 
-  launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
+  # Don't launch web browser if -w flag is set
+  if args and "-w" in args:
+    launch_browser = False
+  else:
+    launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
 
   socket.setdefaulttimeout( INITIAL_SOCKET_TIMEOUT_SECONDS )
   port_filename = cherrypy.config.configMap[ u"global" ].get( u"luminotes.port_file" )
