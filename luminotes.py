@@ -6,6 +6,7 @@ import stat
 import socket
 import os.path
 import urllib2 as urllib
+import optparse
 import cherrypy
 import webbrowser
 from controller.Database import Database
@@ -32,16 +33,15 @@ def change_to_main_dir():
     os.chdir( path )
 
 
-def main( args ):
+def main( options ):
   change_to_main_dir()
 
   cherrypy.config.update( Common.settings )
 
-  if args and "-d" in args:
+  if options.development:
     from config import Development
     settings = Development.settings
-  # sys.frozen is from py2exe
-  elif args and "-l" in args or hasattr( sys, "frozen" ):
+  elif options.desktop:
     from config import Desktop
     settings = Desktop.settings
   else:
@@ -51,7 +51,7 @@ def main( args ):
   cherrypy.config.update( settings )
 
   # Don't launch web browser if -w flag is set
-  if args and "-w" in args:
+  if options.no_webbrowser:
     launch_browser = False
   else:
     launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
@@ -64,7 +64,7 @@ def main( args ):
   server_present = True
 
   # if requested, attempt to shutdown an existing server and exit
-  if args and "-k" in args:
+  if options.kill:
     try:
       urllib.urlopen( "%sshutdown" % server_url )
     except urllib.URLError:
@@ -146,4 +146,56 @@ def callback( log_access_file, log_file, server_url, port_filename, socket_port,
 
 
 if __name__ == "__main__":
-  main( sys.argv[ 1: ] )
+
+  # sys.frozen is from py2exe
+  desktop_default = hasattr( sys, "frozen" )
+
+  parser = optparse.OptionParser(
+    usage = "usage: %prog [OPTIONS]\n" +
+            "   OR: %prog --help",
+    version = VERSION,
+  )
+
+  parser.add_option(
+    "-l", "--desktop", 
+    dest = "desktop",
+    action = "store_true",
+    default = desktop_default,
+    help = "Run in Desktop mode %s" %
+           ( "(DEFAULT)" if desktop_default else "" ),
+  )
+
+  parser.add_option(
+    "-s", "--server", 
+    dest = "desktop",
+    action = "store_false",
+    help = "Run in Server mode %s" %
+           ( "(DEFAULT)" if not desktop_default else "" ),
+  )
+
+  parser.add_option(
+    "-d", "--developement", 
+    dest = "development",
+    action = "store_true",
+    help = "Run in Development mode",
+  )
+
+  parser.add_option(
+    "-k", "--kill",
+    dest = "kill",
+    action = "store_true",
+    help = "Attempt to shutdown existing server and exit",
+  )
+
+  parser.add_option(
+    "-w", "--no_webbrowser",
+    dest = "no_webbrowser",
+    action = "store_true",
+    help = "Don't autolaunch web browser in Desktop mode",
+  )
+
+  ( options, args ) = parser.parse_args()
+  if args != []:
+    parser.error( "Unrecognised options: %s" % " ".join( args ) )
+
+  main(options)
