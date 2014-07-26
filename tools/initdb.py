@@ -148,13 +148,14 @@ def main( args = None ):
       return
 
   print "Initializing the database with default data."
-  host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" )
+  host = cherrypy.config[ u"luminotes.db_host" ] # TODO : this fails
   database = Database(
     host = host,
-    ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    ssl_mode = cherrypy.config[ u"luminotes.db_ssl_mode" ],
     data_dir = ".",
   )
-  initializer = Initializer( database, host, cherrypy.config.configMap, desktop, nuke )
+  #initializer = Initializer( database, host, cherrypy.config.configMap, desktop, nuke )
+  initializer = Initializer( database, host, cherrypy.config, desktop, nuke )
 
 
 def fix_note_contents( contents, notebook_id, note_ids, settings ):
