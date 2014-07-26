@@ -7,6 +7,7 @@ MEGABYTE = 1024 * 1024
 
 settings = { 
   "global": {
+    "tools.sessions.on":True,
     "server.socket_port": 8081,
     "server.environment": "production",
     "session_filter.on": True,
