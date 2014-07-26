@@ -116,9 +116,11 @@ def main( options ):
 
   cherrypy.lowercase_api = True
   root = Root( database, cherrypy.config )
-  cherrypy.root = root
+  #cherrypy.root = root
+  cherrypy.tree.mount(root, '/')
 
   cherrypy.engine.start_with_callback( callback, ( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser ) )
+  cherrypy.engine.block()
 
 
 def callback( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser = False ):
