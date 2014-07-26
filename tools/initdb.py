@@ -93,12 +93,12 @@ class Initializer( object ):
     from controller.Users import Users
     users = Users(
       self.database,
-      self.settings[ u"global" ].get( u"luminotes.http_url", u"" ),
-      self.settings[ u"global" ].get( u"luminotes.https_url", u"" ),
-      self.settings[ u"global" ].get( u"luminotes.support_email", u"" ),
-      self.settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
-      self.settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
-      self.settings[ u"global" ].get( u"luminotes.download_products", [] ),
+      self.settings[ u"luminotes.http_url"]  ,
+      self.settings[ u"luminotes.https_url"]  ,
+      self.settings[ u"luminotes.support_email"]  ,
+      self.settings[ u"luminotes.payment_email"]  ,
+      self.settings[ u"luminotes.rate_plans"] ,
+      self.settings[ u"luminotes.download_products"] ,
     )
 
     users.create_user( u"desktopuser" )
@@ -148,13 +148,14 @@ def main( args = None ):
       return
 
   print "Initializing the database with default data."
-  host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" )
+  host = cherrypy.config[ u"luminotes.db_host" ] # TODO : this fails
   database = Database(
     host = host,
-    ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    ssl_mode = cherrypy.config[ u"luminotes.db_ssl_mode" ],
     data_dir = ".",
   )
-  initializer = Initializer( database, host, cherrypy.config.configMap, desktop, nuke )
+  #initializer = Initializer( database, host, cherrypy.config.configMap, desktop, nuke )
+  initializer = Initializer( database, host, cherrypy.config, desktop, nuke )
 
 
 def fix_note_contents( contents, notebook_id, note_ids, settings ):

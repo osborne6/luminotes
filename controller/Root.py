@@ -37,7 +37,7 @@ class Root( object ):
     @type database: controller.Database
     @param database: database to use for all controllers
     @type settings: dict
-    @param settings: CherryPy-style settings with top-level "global" key
+    @param settings: CherryPy-style settings 
     @rtype: Root
     @return: newly constructed Root
     """
@@ -45,21 +45,21 @@ class Root( object ):
     self.__settings = settings
     self.__users = Users(
       database,
-      settings[ u"global" ].get( u"luminotes.http_url", u"" ),
-      settings[ u"global" ].get( u"luminotes.https_url", u"" ),
-      settings[ u"global" ].get( u"luminotes.support_email", u"" ),
-      settings[ u"global" ].get( u"luminotes.payment_email", u"" ),
-      settings[ u"global" ].get( u"luminotes.rate_plans", [] ),
-      settings[ u"global" ].get( u"luminotes.download_products", [] ),
+      settings[u"luminotes.http_url"],
+      settings[u"luminotes.https_url"],
+      settings[u"luminotes.support_email"],
+      settings[u"luminotes.payment_email"],
+      settings[u"luminotes.rate_plans"],
+      settings[u"luminotes.download_products"],
     )
     self.__groups = Groups( database, self.__users )
     self.__files = Files(
       database,
       self.__users,
-      settings[ u"global" ].get( u"luminotes.download_products", [] ),
-      settings[ u"global" ].get( u"luminotes.web_server", "" ),
+      settings[u"luminotes.download_products"],
+      settings[u"luminotes.web_server"],
     )
-    self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"global" ].get( u"luminotes.https_url", u"" ) )
+    self.__notebooks = Notebooks( database, self.__users, self.__files, settings[ u"luminotes.https_url"] )
     self.__forums = Forums( database, self.__notebooks, self.__users )
     self.__blog = Forum( database, self.__notebooks, self.__users, u"blog" )
     self.__suppress_exceptions = suppress_exceptions # used for unit tests
@@ -94,8 +94,8 @@ class Root( object ):
     """
     # if the user is logged in and not using https, and they request the sign up or login note, then
     # redirect to the https version of the page (if available)
-    https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
-    https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
+    https_url = self.__settings[u"luminotes.https_url"]
+    https_proxy_ip = self.__settings[u"luminotes.https_proxy_ip"]
     
     if note_title in ( u"sign_up", u"login" ) and https_url and cherrypy.request.remote_addr != https_proxy_ip:
       if invite_id:
@@ -194,12 +194,12 @@ class Root( object ):
     Provide the information necessary to display the web site's front page, potentially performing
     a redirect to the https version of the page or the user's first notebook.
     """
-    https_url = self.__settings[ u"global" ].get( u"luminotes.https_url" )
-    https_proxy_ip = self.__settings[ u"global" ].get( u"luminotes.https_proxy_ip" )
+    https_url = self.__settings[u"luminotes.https_url"]
+    https_proxy_ip = self.__settings[u"luminotes.https_proxy_ip"]
 
     # if the server is configured to auto-login a particular user, log that user in and redirect to
     # their first notebook
-    auto_login_username = self.__settings[ u"global" ].get( u"luminotes.auto_login_username" )
+    auto_login_username = self.__settings[u"luminotes.auto_login_username"]
     if auto_login_username:
       user = self.__database.select_one( User, User.sql_load_by_username( auto_login_username ), use_cache = True )
 
@@ -325,8 +325,8 @@ class Root( object ):
     else:
       result[ "first_notebook" ] = None
 
-    result[ "rate_plans" ] = self.__settings[ u"global" ].get( u"luminotes.rate_plans", [] )
-    result[ "unsubscribe_button" ] = self.__settings[ u"global" ].get( u"luminotes.unsubscribe_button" )
+    result[ "rate_plans" ] = self.__settings[u"luminotes.rate_plans"]
+    result[ "unsubscribe_button" ] = self.__settings[u"luminotes.unsubscribe_button"]
 
     return result
 
@@ -361,7 +361,7 @@ class Root( object ):
     else:
       result[ "first_notebook" ] = None
 
-    result[ "download_products" ] = self.__settings[ u"global" ].get( u"luminotes.download_products" )
+    result[ "download_products" ] = self.__settings[u"luminotes.download_products" ]
 
     referer = cherrypy.request.headerMap.get( u"Referer" )
     result[ "upgrade" ] = upgrade or ( referer and u"localhost:" in referer )
@@ -394,7 +394,7 @@ class Root( object ):
   @expose( view = Json )
   def shutdown( self ):
     # this is typically only allowed in the desktop configuration
-    if self.__settings[ u"global" ].get( u"luminotes.allow_shutdown_command" ) is not True:
+    if self.__settings[u"luminotes.allow_shutdown_command" ] is not True:
       return dict()
 
     cherrypy.server.stop()
@@ -404,7 +404,7 @@ class Root( object ):
   @expose( view = Close_page )
   def close( self ):
     # this is typically only allowed in the desktop configuration
-    if self.__settings[ u"global" ].get( u"luminotes.allow_shutdown_command" ) is not True:
+    if self.__settings[u"luminotes.allow_shutdown_command"] is not True:
       return dict()
 
     cherrypy.server.stop()
@@ -415,7 +415,7 @@ class Root( object ):
     """
     CherryPy HTTP error handler, used to display page not found and generic error pages.
     """
-    support_email = self.__settings[ u"global" ].get( u"luminotes.support_email" )
+    support_email = self.__settings[u"luminotes.support_email"]
 
     if status == 404:
       cherrypy.response.headerMap[ u"Status" ] = u"404 Not Found"
@@ -441,7 +441,7 @@ class Root( object ):
     """
     If a support email address is configured, send it an email with the current traceback.
     """
-    support_email = self.__settings[ u"global" ].get( u"luminotes.support_email" )
+    support_email = self.__settings[u"luminotes.support_email"]
     if not support_email: return False
 
     import smtplib

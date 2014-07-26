@@ -64,7 +64,8 @@ class Database( object ):
     os.putenv( "PGTZ", "UTC" )
 
     if host is None:
-      from pysqlite2 import dbapi2 as sqlite
+      #from pysqlite2 import dbapi2 as sqlite
+      import sqlite3 as sqlite
       from datetime import datetime
       from pytz import utc
 

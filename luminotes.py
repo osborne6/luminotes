@@ -54,11 +54,12 @@ def main( options ):
   if options.no_webbrowser:
     launch_browser = False
   else:
-    launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
+    #launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
+    launch_browser = cherrypy.config[ u"luminotes.launch_browser"]
 
   socket.setdefaulttimeout( INITIAL_SOCKET_TIMEOUT_SECONDS )
-  port_filename = cherrypy.config.configMap[ u"global" ].get( u"luminotes.port_file" )
-  socket_port = cherrypy.config.configMap[ u"global" ].get( u"server.socket_port" )
+  port_filename = cherrypy.config[ u"luminotes.port_file" ]
+  socket_port = cherrypy.config[ u"server.socket_port" ]
   existing_socket_port = port_filename and os.path.exists( port_filename ) and file( port_filename ).read() or socket_port
   server_url = u"http://localhost:%s/" % existing_socket_port
   server_present = True
@@ -85,18 +86,18 @@ def main( options ):
 
     sys.exit( 0 )
 
-  server_url = u"http://localhost:%s/" % socket_port
+  server_url = u"http://127.0.0.1:%s/" % socket_port
 
   # remove the existing log files, if any
   try:
-    log_access_file = cherrypy.config.configMap[ u"global" ].get( u"server.log_access_file" )
+    log_access_file = cherrypy.config[ u"server.log_access_file" ]
     if log_access_file:
       os.remove( log_access_file )
   except OSError:
     pass
 
   try:
-    log_file = cherrypy.config.configMap[ u"global" ].get( u"server.log_file" )
+    log_file = cherrypy.config[ u"server.log_file" ]
     if log_file:
       os.remove( log_file )
   except OSError:
@@ -105,8 +106,8 @@ def main( options ):
   socket.setdefaulttimeout( SOCKET_TIMEOUT_SECONDS )
 
   database = Database(
-    host = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_host" ),
-    ssl_mode = cherrypy.config.configMap[ u"global" ].get( u"luminotes.db_ssl_mode" ),
+    host = cherrypy.config[ u"luminotes.db_host" ],
+    ssl_mode = cherrypy.config[ u"luminotes.db_ssl_mode" ],
   )
 
   # if necessary, upgrade the database schema to match this current version of the code
@@ -114,10 +115,12 @@ def main( options ):
   schema_upgrader.upgrade_schema( to_version = VERSION )
 
   cherrypy.lowercase_api = True
-  root = Root( database, cherrypy.config.configMap )
-  cherrypy.root = root
+  root = Root( database, cherrypy.config )
+  #cherrypy.root = root
+  cherrypy.tree.mount(root, '/')
 
-  cherrypy.server.start_with_callback( callback, ( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser ) )
+  cherrypy.engine.start_with_callback( callback, ( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser ) )
+  cherrypy.engine.block()
 
 
 def callback( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser = False ):
