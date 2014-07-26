@@ -1,3 +1,8 @@
+
+1.7.0alpha: July 25, 2014
+ * Tracking down issues with a change to CherryPy 3.2
+ * Updated to use batteries included sqlite in Python 2.7
+
 1.6.18: 
  * Fixed a bug that prevented use of the AltGr key on Polish and other
    keyboards.
