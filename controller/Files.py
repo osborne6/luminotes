@@ -151,7 +151,8 @@ class Upload_file( object ):
   total_received_bytes = property( lambda self: self.__total_received_bytes )
 
 
-class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
+#class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
+class FieldStorage( cgi.FieldStorage ):
   """
   Derived from cherrypy._cpcgifs.FieldStorage, which is in turn derived from cgi.FieldStorage, which
   calls make_file() to create a temporary file where file uploads are stored. By wrapping this file
@@ -223,7 +224,8 @@ class FieldStorage( cherrypy._cpcgifs.FieldStorage ):
 
     self.file.write( line )
 
-cherrypy._cpcgifs.FieldStorage = FieldStorage
+#cherrypy._cpcgifs.FieldStorage = FieldStorage
+cgi.FieldStorage = FieldStorage
 
 
 class Files( object ):
