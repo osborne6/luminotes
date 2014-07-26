@@ -478,7 +478,7 @@ def end_transaction( function ):
     try:
       return function( *args, **kwargs )
     finally:
-      cherrypy.root.database.rollback()
+      cherrypy.request.app.root.database.rollback()
 
   return rollback
 

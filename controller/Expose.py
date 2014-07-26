@@ -63,7 +63,7 @@ def expose( view = None, rss = None ):
         else:
           import traceback
           traceback.print_exc()
-          cherrypy.root.report_traceback()
+          cherrypy.request.app.root.report_traceback()
           result = dict( error = u"An error occurred when processing your request. Please try again or contact support." )
 
       # if the result is a generator or a string, it's streaming data or just data, so just let CherryPy handle it
