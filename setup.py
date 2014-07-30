@@ -271,9 +271,9 @@ package_data = { ".": sum( [ pair[ 1 ] for pair in data_files ], [] ) }
 setup(
   name = "Luminotes",
   version = VERSION,
-  author = "Dan Helfman",
-  author_email = "support@luminotes.com",
-  url = "http://luminotes.com",
+  author = "John Osborne",
+  author_email = "osborne6@gmail.com",
+  url = "https://github.com/osborne6/luminotes",
   description = "personal wiki notebook",
   distclass = Luminotes,
   cmdclass = { "py2exe": Build_installer }, # override default py2exe class
