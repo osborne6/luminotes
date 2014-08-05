@@ -76,13 +76,7 @@ INSTALL file.
 User Guide
 ----------
 
-The Luminotes User Guide explains how to use Luminotes and even includes some
-tips on creating your wiki. You can check it out at:
-
-  http://luminotes.com/guide
-
-Enjoy!
-
+I will be trying to recreate the user guide sometime soon.
 
 Copyright
 ---------
