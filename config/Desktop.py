@@ -59,12 +59,15 @@ settings = {
       },
     ],
   },
+  "/": {
+    "tools.staticdir.root": os.path.abspath(os.getcwd()),
+  },
   "/static": {
-    "static_filter.on": True,
-    "static_filter.dir": "static",
+    "tools.staticdir.on": True,
+    "tools.staticdir.dir": 'static' ,
   },
   "/favicon.ico": {
-    "static_filter.on": True,
-    "static_filter.file": "static/images/favicon.ico",
+    "tools.staticfile.on": True,
+    "tools.staticfile.filename": os.path.join( os.path.abspath(os.getcwd()),'static/images/favicon.ico') ,
   },
 }
