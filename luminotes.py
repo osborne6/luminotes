@@ -37,7 +37,6 @@ def main( options ):
   change_to_main_dir()
 
   cherrypy.config.update( Common.settings )
-
   if options.development:
     from config import Development
     settings = Development.settings
@@ -54,7 +53,6 @@ def main( options ):
   if options.no_webbrowser:
     launch_browser = False
   else:
-    #launch_browser = cherrypy.config.configMap[ u"global" ].get( u"luminotes.launch_browser" )
     launch_browser = cherrypy.config[ u"luminotes.launch_browser"]
 
   socket.setdefaulttimeout( INITIAL_SOCKET_TIMEOUT_SECONDS )
@@ -116,8 +114,7 @@ def main( options ):
 
   cherrypy.lowercase_api = True
   root = Root( database, cherrypy.config )
-  #cherrypy.root = root
-  cherrypy.tree.mount(root, '/')
+  cherrypy.tree.mount(root, '/', config=settings )
 
   cherrypy.engine.start_with_callback( callback, ( log_access_file, log_file, server_url, port_filename, socket_port, launch_browser ) )
   cherrypy.engine.block()
