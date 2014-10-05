@@ -1,0 +1,5 @@
+simplejson
+pytz
+PIL
+chardet
+cherrypy>3.2
