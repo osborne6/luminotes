@@ -1,5 +1,5 @@
 simplejson
 pytz
-PIL
+Pillow
 chardet
 cherrypy>3.2
